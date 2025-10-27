@@ -1,3 +1,5 @@
+import SalesTerminal from "../sales-terminnal/SalesTerminal";
+
 interface LeftWindowProps {
   leftWidth: string;
 }
@@ -9,7 +11,9 @@ const LeftWindow = ({ leftWidth }: LeftWindowProps) => {
       style={{ width: leftWidth }}
     >
       <div className="box-border p-8 w-full h-full">
-        <div className="bg-primary-dark w-full h-full"></div>
+        <div className="bg-primary-dark w-full h-full">
+          <SalesTerminal />
+        </div>
       </div>
     </div>
   );
