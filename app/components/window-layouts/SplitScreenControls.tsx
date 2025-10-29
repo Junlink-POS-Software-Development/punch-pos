@@ -53,9 +53,19 @@ export function SplitScreenControls({
   mobileView,
   onToggleClick,
 }: ControlsProps) {
-  const { viewState, setViewState } = useView();
+  const { viewState, setViewState, setIsSplit } = useView();
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setViewState(Number(e.target.value));
+    // Convert the string value to a number once
+    const numericValue = Number(e.target.value);
+
+    setViewState(numericValue);
+
+    // Now, compare the numericValue to the number 1
+    if (numericValue !== 1) {
+      setIsSplit(false);
+    } else {
+      setIsSplit(true);
+    }
   };
   return (
     <div className="group bottom-0 left-1/2 z-10 absolute flex justify-center items-center w-72 h-20 -translate-x-1/2">
