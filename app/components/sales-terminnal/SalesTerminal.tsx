@@ -1,5 +1,6 @@
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
+import TerminalButtons from "./components/TerminalButtons";
 
 const SalesTerminal = () => {
   const { isSplit } = useView();
@@ -20,9 +21,7 @@ const SalesTerminal = () => {
         <div className="flex flex-col border border-green-400 w-full h-full">
           {" "}
           <FormFields />
-          <div className="border border-amber-100 w-full h-full grow">
-            <button className="btn-3d-glass">Press Me</button>
-          </div>
+          <TerminalButtons />
         </div>
 
         <div className="flex justify-center items-center border-2 border-amber-100 overflow-hidden text-white text-5xl">
