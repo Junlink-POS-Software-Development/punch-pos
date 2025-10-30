@@ -1,10 +1,19 @@
+import { useMediaQuery } from "@/app/hooks/useMediaQuery";
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
 import TerminalButtons from "./components/TerminalButtons";
 
 const SalesTerminal = () => {
   const { isSplit } = useView();
-  console.log(isSplit);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  function ScreenLogic() {
+    if (isSplit && !isMobile) {
+      return "grid-rows-2";
+    } else if (!isSplit && !isMobile) {
+      return "grid-cols-2";
+    }
+  }
 
   return (
     <div className="flex flex-col p-1 h-full">
@@ -16,9 +25,7 @@ const SalesTerminal = () => {
         <h2 className="text-text-primary">Welcome User!</h2>
       </div>
       <div
-        className={`gap-1 grid  ${
-          isSplit ? "grid-rows-2" : "grid-cols-2"
-        }  w-ful h-full overflow-hidden`}
+        className={`gap-1 grid  ${ScreenLogic()}  w-ful h-full overflow-hidden`}
       >
         <div className="flex flex-col w-full h-full">
           {" "}
