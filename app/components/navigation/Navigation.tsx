@@ -1,5 +1,4 @@
 import Link from "next/link";
-import React from "react";
 import {
   Archive,
   ArrowLeftRight,
@@ -11,10 +10,9 @@ import {
   StickyNote,
   TrendingDown,
   Users,
-} from "lucide-react"; // 1. Import icons
+} from "lucide-react";
 
 const Navigation = () => {
-  // 2. Add the 'Icon' component to your nav array
   const nav = [
     { id: "dashboard", text: "Dashboard", Icon: LayoutGrid },
     { id: "inventory", text: "Inventory", Icon: Archive },
@@ -22,25 +20,37 @@ const Navigation = () => {
     { id: "transactions", text: "Transactions", Icon: ArrowLeftRight },
     { id: "settings", text: "Settings", Icon: Settings },
     { id: "reports", text: "Reports", Icon: BarChart },
-    { id: "customers", text: "Customers", Icon: Users }, // Kept your spelling
+    { id: "costumers", text: "Costumers", Icon: Users },
     { id: "junfue-ai", text: "JunFue AI", Icon: Brain },
-    { id: "inbox", text: "Inbox", Icon: Inbox },
-    { id: "notes", text: "Notes", Icon: StickyNote },
+    {
+      id: "inbox",
+      text: "Inbox",
+      Icon: Inbox,
+      hasNotification: true, // <-- Added this
+    },
+    {
+      id: "notes",
+      text: "Notes",
+      Icon: StickyNote,
+      hasNotification: true, // <-- Added this
+    },
   ];
 
   return (
-    // 3. Use CSS Grid for the 5-column layout
     <nav className="gap-4 grid grid-cols-5 mb-8">
       {nav.map((item) => (
         <Link
-          key={item.id} // 4. Key is now on the Link component
+          key={item.id}
           href={`/${item.id}`}
-          // 5. Style the Link as the clickable card
-          className="flex flex-col justify-center items-center p-4 rounded-lg text-slate-300 hover:text-white text-center transition-all duration-200 glass-effect"
+          // 1. Added "relative" to make it a positioning container
+          className="relative flex flex-col justify-center items-center p-4 rounded-lg text-slate-300 hover:text-white text-center transition-all duration-200 glass-effect"
         >
-          {/* Render the icon */}
+          {/* 2. Conditionally render the notification dot */}
+          {item.hasNotification && (
+            <span className="top-3 right-3 absolute bg-red-500 rounded-full w-2.5 h-2.5" />
+          )}
+
           <item.Icon className="mb-2 w-8 h-8" />
-          {/* Render the text */}
           <span className="font-medium text-xs">{item.text}</span>
         </Link>
       ))}
