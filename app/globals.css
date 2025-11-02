@@ -97,7 +97,7 @@ body {
     content: "";
     position: absolute;
     top: 0;
-    left: -75%;
+    left: -75%; /* Keep initial position */
     width: 50%;
     height: 100%;
     background: linear-gradient(
@@ -106,7 +106,9 @@ body {
       rgba(255, 255, 255, 0.134) 50%,
       rgba(255, 255, 255, 0) 100%
     );
-    transform: skewX(-20deg);
+    transform: skewX(-20deg); /* Keep the skew */
+    /* Add will-change to hint to the browser about the upcoming transform */
+    will-change: transform;
   }
 
   /* Trigger shine on hover */
@@ -116,10 +118,16 @@ body {
 
   @keyframes shine {
     0% {
-      left: -75%;
+      /* Start at its original position (no translation) */
+      transform: skewX(-20deg) translateX(0);
     }
     100% {
-      left: 125%;
+      /* The original animation moved from left: -75% to left: 125%.
+        This is a total travel distance of 200% of the PARENT's width.
+        Since this element's width is 50% of the parent's,
+        we need to translate it by 400% of ITS OWN width.
+      */
+      transform: skewX(-20deg) translateX(400%);
     }
   }
 }

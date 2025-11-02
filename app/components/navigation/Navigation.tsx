@@ -11,8 +11,9 @@ import {
   TrendingDown,
   Users,
 } from "lucide-react";
+import React from "react";
 
-const Navigation = () => {
+const Navigation = React.memo(() => {
   const nav = [
     { id: "dashboard", text: "Dashboard", Icon: LayoutGrid },
     { id: "inventory", text: "Inventory", Icon: Archive },
@@ -56,6 +57,8 @@ const Navigation = () => {
       ))}
     </nav>
   );
-};
+});
+
+Navigation.displayName = "Navigation";
 
 export default Navigation;
