@@ -1,7 +1,7 @@
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
-import TerminalButtons from "./components/TerminalButtons";
+import TerminalButtons from "./components/buttons/TerminalButtons";
 
 const SalesTerminal = () => {
   const { isSplit } = useView();
