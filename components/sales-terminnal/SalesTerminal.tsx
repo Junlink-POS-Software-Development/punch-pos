@@ -1,17 +1,14 @@
-// SalesTerminal.tsx
-// (Revised to manage auth state)
-
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
 import TerminalButtons from "./components/buttons/TerminalButtons";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { SignIn } from "../sign-in/SignIn";
 import { SignUp } from "../sign-in/SignUp";
 import { X } from "lucide-react";
-
-// 1. Import the handleLogOut function
 import { handleLogOut } from "./components/buttons/handlers";
+import { supabase } from "@/lib/supabaseClient";
 
 type AuthModalState = "hidden" | "signIn" | "signUp";
 
@@ -22,28 +19,42 @@ const SalesTerminal = () => {
   const [authModalState, setAuthModalState] =
     useState<AuthModalState>("hidden");
 
-  // 2. Add state to track if the user is logged in
+  // This state will now be correctly set by the useEffect hook
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 3. --- ADD THIS ENTIRE useEffect BLOCK ---
+  useEffect(() => {
+    // This listener fires on page load and whenever auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        // If a session exists, the user is logged in
+        // If session is null, the user is logged out
+        setIsLoggedIn(!!session);
+      }
+    );
+
+    // Cleanup: remove the listener when the component unmounts
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []); // The empty array [] means this runs once when the component mounts
+  // ------------------------------------------
 
   const openSignInModal = () => setAuthModalState("signIn");
   const openSignUpModal = () => setAuthModalState("signUp");
   const closeModal = () => setAuthModalState("hidden");
 
-  // 3. Create a new handler for when sign-in is successful
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
     closeModal();
   };
 
-  // 4. Create a handler for the logout button click
   const handleLogoutClick = async () => {
     const loggedOut = await handleLogOut();
     if (loggedOut) {
       setIsLoggedIn(false);
-      // You could also show a "Logged out" toast or message here
     } else {
       console.error("Failed to log out.");
-      // You could show an error message to the user here
     }
   };
 
@@ -62,7 +73,6 @@ const SalesTerminal = () => {
         <h1 className="text-text-primary sm:text-1xl md:text-3xl lg:text-4xl">
           POINT OF SALE
         </h1>
-        {/* 5. Dynamically update welcome message */}
         <h2 className="text-text-primary">
           {isLoggedIn ? "Welcome User!" : "Please Sign In"}
         </h2>
@@ -73,7 +83,6 @@ const SalesTerminal = () => {
         <div className="relative flex flex-col w-full h-full">
           {" "}
           <FormFields />
-          {/* 6. Pass new props to TerminalButtons */}
           <TerminalButtons
             isLoggedIn={isLoggedIn}
             onSignInClick={openSignInModal}
@@ -103,7 +112,6 @@ const SalesTerminal = () => {
             {authModalState === "signIn" ? (
               <SignIn
                 onSwitchToSignUp={openSignUpModal}
-                // 7. Pass the new success handler to SignIn
                 onSuccess={handleLoginSuccess}
               />
             ) : (
