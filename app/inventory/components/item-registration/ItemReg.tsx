@@ -8,18 +8,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 
 // --- 1. Import the new API functions ---
-import { fetchItems, insertItem, updateItem, deleteItem } from "./lib/item.api"; // Adjust path as needed
+import { fetchItems, insertItem, updateItem, deleteItem } from "./lib/item.api";
+// ---
+// vvv 1. IMPORT YOUR NEW STATUS COMPONENT vvv
+// ---
+import { StatusDisplay } from "@/utils/StatusDisplay"; // Adjust path if needed
+// ---
 
-// ---
-// --- COMPONENT
-// ---
-// (All API logic, mappers, and types have been removed)
-//
+// ... (Rest of the imports and component start) ...
+
 const ItemReg = () => {
+  // ... (All state, useEffect, query, and mutation hooks remain the same) ...
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // Check user auth and RLS status on component mount
+  // ... (checkUser useEffect) ...
   React.useEffect(() => {
     const checkUser = async () => {
       const {
@@ -43,8 +46,7 @@ const ItemReg = () => {
     checkUser();
   }, []);
 
-  // --- DATA QUERY ---
-  // --- 2. 'queryFn' now just points to the imported function ---
+  // ... (useQuery hook) ...
   const {
     data: items,
     isLoading: isLoadingItems,
@@ -54,7 +56,7 @@ const ItemReg = () => {
     queryFn: fetchItems,
   });
 
-  // --- MUTATIONS ---
+  // ... (Mutations and handlers remain the same) ...
   const handleMutationError = (error: Error, operation: string) => {
     console.error(`${operation} mutation error:`, error);
     alert(`${operation} failed: ${error.message}`);
@@ -64,7 +66,6 @@ const ItemReg = () => {
     queryClient.invalidateQueries({ queryKey: ["items"] });
   };
 
-  // --- 3. 'mutationFn' points to the imported functions ---
   const createItemMutation = useMutation({
     mutationFn: insertItem,
     onSuccess: handleMutationSuccess,
@@ -91,7 +92,6 @@ const ItemReg = () => {
     onError: (error) => handleMutationError(error, "Delete"),
   });
 
-  // --- EVENT HANDLERS (No changes needed) ---
   const handleFormSubmit = (formData: Item) => {
     if (editingIndex !== null) {
       const itemToUpdate = items?.[editingIndex];
@@ -121,7 +121,6 @@ const ItemReg = () => {
     setEditingIndex(null);
   };
 
-  // --- RENDER LOGIC (No changes needed) ---
   const itemToEdit = editingIndex !== null ? items?.[editingIndex] : undefined;
 
   const isProcessing =
@@ -137,18 +136,21 @@ const ItemReg = () => {
         onCancelEdit={handleCancelEdit}
       />
 
+      {/* ---
+       vvv 2. REPLACE THE <p> TAGS WITH YOUR NEW COMPONENT vvv
+       --- */}
       {/* Loading/Error/Processing States */}
       {isLoadingItems && (
-        <p className="text-gray-400 text-center">Loading items...</p>
+        <StatusDisplay type="loading" text="Loading items..." />
       )}
-      {isProcessing && (
-        <p className="text-blue-400 text-center">Processing...</p>
-      )}
+      {isProcessing && <StatusDisplay type="processing" text="Processing..." />}
       {itemsError && (
-        <p className="text-red-500 text-center">
-          Error loading items: {itemsError.message}
-        </p>
+        <StatusDisplay
+          type="error"
+          text={`Error loading items: ${itemsError.message}`}
+        />
       )}
+      {/* --- */}
 
       {/* Data Table */}
       {!isLoadingItems && items && items.length > 0 && (
