@@ -105,3 +105,31 @@ export const deleteItem = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+export const checkItemExistence = async (
+  field: "sku" | "itemName",
+  value: string,
+  ignoreId?: string
+): Promise<boolean> => {
+  // Supabase uses 'item_name' for item name
+  const dbField = field === "itemName" ? "item_name" : field;
+
+  let query = supabase
+    .from("items")
+    // Select only 'id' for a quick count
+    .select("id", { count: "exact" })
+    .eq(dbField, value);
+
+  // If we are editing an item, exclude its own ID from the check
+  if (ignoreId) {
+    query = query.neq("id", ignoreId);
+  }
+
+  const { count, error } = await query.maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+  // Returns true if count > 0
+  return (count ?? 0) > 0;
+};

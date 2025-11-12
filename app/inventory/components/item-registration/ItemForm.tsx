@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useState } from "react"; // 1. Import useState
+import { useForm, FieldErrors } from "react-hook-form"; // 2. Import FieldErrors type (optional, for type safety)
 import { zodResolver } from "@hookform/resolvers/zod";
 import { XCircle } from "lucide-react";
 import { Item, itemSchema, defaultItemValues } from "./utils/itemTypes";
+// 3. Import the new API function (adjust path as needed)
+import { checkItemExistence } from "./lib/item.api";
 
 interface ItemFormProps {
   itemToEdit?: Item;
@@ -21,13 +23,15 @@ export const ItemForm: React.FC<ItemFormProps> = ({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    setError, // 4. Add setError to manually register errors
+    formState: { errors, isSubmitting }, // 5. Use isSubmitting for loading state
   } = useForm<Item>({
     resolver: zodResolver(itemSchema),
     defaultValues: defaultItemValues,
   });
 
   const isEditing = !!itemToEdit;
+  const ignoreId = isEditing && itemToEdit?.id ? itemToEdit.id : undefined;
 
   useEffect(() => {
     if (isEditing) {
@@ -37,33 +41,73 @@ export const ItemForm: React.FC<ItemFormProps> = ({
     }
   }, [itemToEdit, isEditing, reset]);
 
-  const onSubmit = (formData: Item) => {
+  // --- MODIFIED SUBMISSION HANDLER ---
+  const onSubmit = async (formData: Item) => {
+    let hasError = false;
+
+    // Check 1: Item Name Existence
+    if (formData.itemName) {
+      const itemExists = await checkItemExistence(
+        "itemName",
+        formData.itemName,
+        ignoreId
+      );
+      if (itemExists) {
+        setError(
+          "itemName",
+          {
+            type: "custom",
+            message: "This Item Name already exists.",
+          },
+          { shouldFocus: true }
+        );
+        hasError = true;
+      }
+    }
+
+    // Check 2: SKU Existence
+    if (formData.sku) {
+      const skuExists = await checkItemExistence("sku", formData.sku, ignoreId);
+      if (skuExists) {
+        setError(
+          "sku",
+          {
+            type: "custom",
+            message: "This SKU/Barcode already exists.",
+          },
+          { shouldFocus: !hasError }
+        ); // Only focus if itemName didn't get an error
+        hasError = true;
+      }
+    }
+
+    if (hasError) {
+      // Stop submission if async validation failed
+      return;
+    }
+
     onFormSubmit(formData);
-    // If registering a new item, clear the form after submission
-    // so the user can immediately enter the next item.
+
     if (!isEditing) {
       reset(defaultItemValues);
     }
   };
+  // ------------------------------------
 
-  // --- MODIFIED HANDLE KEY DOWN ---
+  // ... (handleKeyDown function remains the same) ...
   const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     const target = e.target as HTMLElement;
     const form = e.currentTarget;
 
-    // Case 1: Shift + Enter in Textarea -> Submit Form
     if (target.tagName === "TEXTAREA" && e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
-      // requestSubmit() triggers the native submit event, which React Hook Form's handleSubmit will catch.
       form.requestSubmit();
       return;
     }
 
-    // Case 2: Enter (alone) in regular Input -> Move Focus to Next
     if (target.tagName === "INPUT" && e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Prevent default form submission
+      e.preventDefault();
 
-      // Find all focusable data entry fields in standard DOM order
       const focusableFields = Array.from(
         form.querySelectorAll(
           'input:not([type="hidden"]):not([disabled]), textarea:not([disabled])'
@@ -72,14 +116,11 @@ export const ItemForm: React.FC<ItemFormProps> = ({
 
       const currentIndex = focusableFields.indexOf(target);
 
-      // If we found the current field and it's not the last one, move to the next
       if (currentIndex > -1 && currentIndex < focusableFields.length - 1) {
         focusableFields[currentIndex + 1].focus();
       }
     }
-    // Note: Regular 'Enter' in textarea will still perform its default action (new line)
   };
-  // --------------------------------
 
   return (
     <div>
@@ -92,7 +133,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         className="gap-6 grid grid-cols-1 md:grid-cols-2"
       >
         {/* Item Name */}
-        <div>
+        <div className="relative pb-5">
           <label
             htmlFor="item-name"
             className="block mb-2 font-medium text-slate-300 text-sm"
@@ -109,13 +150,13 @@ export const ItemForm: React.FC<ItemFormProps> = ({
             {...register("itemName")}
           />
           {errors.itemName && (
-            <p className="mt-1 text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-300 text-sm">
               {errors.itemName.message}
             </p>
           )}
         </div>
         {/* SKU / Barcode */}
-        <div>
+        <div className="relative pb-5">
           <label
             htmlFor="item-sku"
             className="block mb-2 font-medium text-slate-300 text-sm"
@@ -132,7 +173,9 @@ export const ItemForm: React.FC<ItemFormProps> = ({
             {...register("sku")}
           />
           {errors.sku && (
-            <p className="mt-1 text-red-300 text-sm">{errors.sku.message}</p>
+            <p className="bottom-0 absolute text-red-300 text-sm">
+              {errors.sku.message}
+            </p>
           )}
         </div>
         {/* Category */}
@@ -152,12 +195,12 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           />
         </div>
         {/* Cost Price */}
-        <div>
+        <div className="relative pb-5">
           <label
             htmlFor="cost-price"
             className="block mb-2 font-medium text-slate-300 text-sm"
           >
-            Cost Price ($)
+            Cost Price (₱)
           </label>
           <input
             type="number"
@@ -172,7 +215,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
             })}
           />
           {errors.costPrice && (
-            <p className="mt-1 text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-300 text-sm">
               {errors.costPrice.message}
             </p>
           )}
@@ -203,6 +246,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
               type="button"
               onClick={onCancelEdit}
               className="flex items-center gap-2 bg-gray-500/30 hover:bg-gray-500/40 border-gray-500/50 btn-3d-glass"
+              disabled={isSubmitting} // Disable while checking/submitting
             >
               <XCircle className="w-5 h-5" />
               Cancel
@@ -210,9 +254,17 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           )}
           <button
             type="submit"
-            className="bg-green-500/30 hover:bg-green-500/40 border-green-500/50 btn-3d-glass"
+            className="flex items-center gap-2 bg-green-500/30 hover:bg-green-500/40 border-green-500/50 btn-3d-glass"
+            disabled={isSubmitting} // Disable while checking/submitting
           >
-            {isEditing ? "Update Item" : "Register Item"}
+            {isSubmitting ? (
+              // Display a small spinner while checking the database
+              <div className="border-white border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
+            ) : isEditing ? (
+              "Update Item"
+            ) : (
+              "Register Item"
+            )}
           </button>
         </div>
       </form>
