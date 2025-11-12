@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { XCircle } from "lucide-react";
-import { Item, itemSchema, defaultItemValues } from "../utils/itemTypes";
+import { Item, itemSchema, defaultItemValues } from "./utils/itemTypes";
 
 interface ItemFormProps {
   itemToEdit?: Item;
