@@ -1,3 +1,5 @@
+// ItemReg.tsx
+
 "use client";
 
 import React, { useState } from "react";
@@ -18,7 +20,6 @@ import { StatusDisplay } from "@/utils/StatusDisplay"; // Adjust path if needed
 // ... (Rest of the imports and component start) ...
 
 const ItemReg = () => {
-  // ... (All state, useEffect, query, and mutation hooks remain the same) ...
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
@@ -129,17 +130,17 @@ const ItemReg = () => {
     deleteItemMutation.isPending;
 
   return (
-    <div className="space-y-8 p-6 glass-effect">
-      <ItemForm
-        onFormSubmit={handleFormSubmit}
-        itemToEdit={itemToEdit}
-        onCancelEdit={handleCancelEdit}
-      />
+    <div className="space-y-8 p-6">
+      {/* 🟢 Form Wrapper with glass-effect */}
+      <div className="p-6 glass-effect">
+        <ItemForm
+          onFormSubmit={handleFormSubmit}
+          itemToEdit={itemToEdit}
+          onCancelEdit={handleCancelEdit}
+        />
+      </div>
 
-      {/* ---
-       vvv 2. REPLACE THE <p> TAGS WITH YOUR NEW COMPONENT vvv
-       --- */}
-      {/* Loading/Error/Processing States */}
+      {/* --- Status Displays --- */}
       {isLoadingItems && (
         <StatusDisplay type="loading" text="Loading items..." />
       )}
@@ -152,9 +153,11 @@ const ItemReg = () => {
       )}
       {/* --- */}
 
-      {/* Data Table */}
+      {/* 🟢 Table Wrapper with glass-effect */}
       {!isLoadingItems && items && items.length > 0 && (
-        <ItemTable data={items} onEdit={handleEdit} onDelete={handleDelete} />
+        <div className="p-6 glass-effect">
+          <ItemTable data={items} onEdit={handleEdit} onDelete={handleDelete} />
+        </div>
       )}
 
       {/* Empty State */}
