@@ -4,7 +4,7 @@
 
 import React, { useState } from "react";
 import { ItemForm } from "./ItemForm";
-import { ItemTable } from "./item-table/ItemTable";
+
 import { Item } from "./utils/itemTypes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -15,6 +15,7 @@ import { fetchItems, insertItem, updateItem, deleteItem } from "./lib/item.api";
 // vvv 1. IMPORT YOUR NEW STATUS COMPONENT vvv
 // ---
 import { StatusDisplay } from "@/utils/StatusDisplay"; // Adjust path if needed
+import { ItemTable } from "./item-table/ItemTable";
 // ---
 
 // ... (Rest of the imports and component start) ...
