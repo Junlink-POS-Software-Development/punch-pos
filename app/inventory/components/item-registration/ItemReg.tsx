@@ -4,7 +4,7 @@
 
 import React, { useState } from "react";
 import { ItemForm } from "./ItemForm";
-import { ItemTable } from "./ItemTable";
+import { ItemTable } from "./item-table/ItemTable";
 import { Item } from "./utils/itemTypes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";

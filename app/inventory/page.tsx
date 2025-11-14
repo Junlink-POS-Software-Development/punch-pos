@@ -7,9 +7,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 // Import the view type and new nav component
-import InventoryNav, {
-  InventoryView,
-} from "./components/item-registration/utils/InventoryNav";
+import InventoryNav, { InventoryView } from "./components/InventoryNav";
 
 // Adjust component import paths to be relative
 import ItemReg from "./components/item-registration/ItemReg";
