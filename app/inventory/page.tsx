@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import InventoryNav, { InventoryView } from "./components/InventoryNav";
 import ItemReg from "./components/item-registration/ItemReg";
-import { StockManagement } from "./components/stock-form/StockManagement";
+import { StockManagement } from "./components/stock-management/StockManagement";
 import StocksMonitor from "./components/StocksMonitor";
 
 export default function InventoryPage() {
