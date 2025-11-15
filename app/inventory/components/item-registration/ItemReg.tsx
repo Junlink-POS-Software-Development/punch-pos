@@ -59,7 +59,7 @@ const ItemReg = () => {
 
   return (
     <div className="space-y-8 p-6">
-      {/* Form Section */}
+      {/* 🟢 Form Wrapper with glass-effect */}
       <div className="p-4 glass-effect">
         <ItemForm
           onFormSubmit={handleFormSubmit}
