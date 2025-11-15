@@ -121,7 +121,7 @@ const ItemReg = () => {
   return (
     <div className="space-y-8 p-6">
       {/* 🟢 Form Wrapper with glass-effect */}
-      <div className="p-6 glass-effect">
+      <div className="p-4 glass-effect">
         <ItemForm
           onFormSubmit={handleFormSubmit}
           itemToEdit={itemToEdit}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import InventoryNav, { InventoryView } from "./components/InventoryNav";
 import ItemReg from "./components/item-registration/ItemReg";
-import StockMgt from "./components/StockMgt";
+import { StockManagement } from "./components/stock-form/StockManagement";
 import StocksMonitor from "./components/StocksMonitor";
 
 export default function InventoryPage() {
@@ -16,7 +16,7 @@ export default function InventoryPage() {
       case "register":
         return <ItemReg />;
       case "manage":
-        return <StockMgt />;
+        return <StockManagement />;
       case "monitor":
         return <StocksMonitor />;
       default:

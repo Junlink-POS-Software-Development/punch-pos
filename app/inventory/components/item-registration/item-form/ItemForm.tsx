@@ -102,7 +102,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           <form
             onSubmit={handleRHFSubmit}
             onKeyDown={handleKeyDown}
-            className="gap-6 grid grid-cols-1 md:grid-cols-2"
+            className="gap-6 grid grid-cols-1 md:grid-cols-2 bg-slate-900 shadow-lg p-4 rounded-lg"
           >
             {/* Item Name */}
             <div className="relative pb-5">
