@@ -1,22 +1,19 @@
-// app/inventory/components/item-registration/ItemTablePagination.tsx
-
-"use client";
-
 import React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface ItemTablePaginationProps {
+interface PaginationProps {
   startRow: number;
   endRow: number;
   totalRows: number;
   rowsPerPage: number;
   paginationOptions: number[];
-  onRowsPerPageChange: (newSize: number) => void;
+  onRowsPerPageChange: (size: number) => void;
   currentPage: number;
   totalPages: number;
-  onPageChange: (newPage: number) => void;
+  onPageChange: (page: number) => void;
 }
 
-export const ItemTablePagination: React.FC<ItemTablePaginationProps> = ({
+export const ItemTablePagination: React.FC<PaginationProps> = ({
   startRow,
   endRow,
   totalRows,
@@ -28,24 +25,23 @@ export const ItemTablePagination: React.FC<ItemTablePaginationProps> = ({
   onPageChange,
 }) => {
   return (
-    <div className="flex justify-between items-center gap-4 bg-gray-900/50 p-3 border-gray-800 border-t text-sm">
-      <div className="text-gray-400">
-        Showing {startRow} - {endRow} of {totalRows} items
+    <div className="flex justify-between items-center bg-gray-900/50 p-4 border-gray-800 border-t">
+      <div className="text-gray-400 text-xs">
+        Showing{" "}
+        <span className="font-medium text-gray-200">
+          {totalRows > 0 ? startRow + 1 : 0}
+        </span>{" "}
+        to <span className="font-medium text-gray-200">{endRow}</span> of{" "}
+        <span className="font-medium text-gray-200">{totalRows}</span> results
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Rows per page selector */}
         <div className="flex items-center gap-2">
-          <label htmlFor="rowsPerPage" className="text-gray-400">
-            Rows:
-          </label>
+          <span className="text-gray-400 text-xs">Rows per page:</span>
           <select
-            id="rowsPerPage"
             value={rowsPerPage}
-            onChange={(e) => {
-              onRowsPerPageChange(Number(e.target.value));
-            }}
-            className="bg-gray-800 p-1 border border-gray-700 focus:border-blue-500 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+            onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
+            className="bg-gray-800 p-1 border border-gray-700 focus:border-gray-500 rounded outline-none text-gray-200 text-xs"
           >
             {paginationOptions.map((opt) => (
               <option key={opt} value={opt}>
@@ -55,24 +51,23 @@ export const ItemTablePagination: React.FC<ItemTablePaginationProps> = ({
           </select>
         </div>
 
-        {/* Page navigation */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 px-2 py-1 rounded disabled:cursor-not-allowed"
+            className="hover:bg-gray-800 disabled:hover:bg-transparent disabled:opacity-30 p-1 rounded text-gray-400 transition-colors"
           >
-            Previous
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="px-2 font-medium text-gray-300">
-            Page {currentPage} of {totalPages}
+          <span className="min-w-[3rem] text-gray-400 text-xs text-center">
+            Page {currentPage} of {totalPages || 1}
           </span>
           <button
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalRows === 0}
-            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 px-2 py-1 rounded disabled:cursor-not-allowed"
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="hover:bg-gray-800 disabled:hover:bg-transparent disabled:opacity-30 p-1 rounded text-gray-400 transition-colors"
           >
-            Next
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

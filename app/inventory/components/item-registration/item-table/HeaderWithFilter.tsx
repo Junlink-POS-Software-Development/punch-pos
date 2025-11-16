@@ -1,99 +1,64 @@
-// app/inventory/components/item-registration/HeaderWithFilter.tsx
-
-"use client";
-
-import React, { useState, useRef } from "react";
-import { createPortal } from "react-dom";
-import { RenderHeaderCellProps } from "react-data-grid";
-import { Item } from "../utils/itemTypes";
+import React, { useState } from "react";
 import { Filter } from "lucide-react";
-import { FilterDropdown } from "@/components/reusables/FilterDropdown"; // Ensure this path is correct
+import { Item } from "../utils/itemTypes";
 
-export interface HeaderWithFilterProps extends RenderHeaderCellProps<Item> {
+interface HeaderWithFilterProps {
+  column: { key: string; name: string | React.ReactNode };
   allData: Item[];
-  filters: Record<string, string[]>;
-  onApplyFilter: (
-    key: string,
-    vals: string[] | null,
-    sort?: "ASC" | "DESC"
-  ) => void;
+  filters: Record<string, string>;
+  onApplyFilter: (key: string, value: string) => void;
 }
 
-export const HeaderWithFilter = ({
+export const HeaderWithFilter: React.FC<HeaderWithFilterProps> = ({
   column,
-  allData,
   filters,
   onApplyFilter,
-}: HeaderWithFilterProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const columnKey = column.key as keyof Item;
-
-  const isActive = !!filters[columnKey];
-
-  const toggleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOpen) {
-      setIsOpen(false);
-      return;
-    }
-
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX,
-      });
-      setIsOpen(true);
-    }
-  };
+  const columnKey = String(column.key);
+  const currentValue = filters[columnKey] || "";
 
   return (
-    <>
-      <div className="group flex justify-between items-center w-full h-full">
-        <span className="truncate">{column.name}</span>
+    <div className="group relative flex justify-between items-center w-full">
+      <span>{column.name}</span>
+
+      <div className="relative">
         <button
-          ref={buttonRef}
-          onClick={toggleOpen}
-          className={`p-1 rounded hover:bg-gray-700 transition-opacity ml-1 ${
-            isActive || isOpen
-              ? "opacity-100 text-green-400 bg-gray-800"
-              : "opacity-0 group-hover:opacity-100 text-gray-400"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`p-1 rounded transition-colors ${
+            currentValue ? "text-blue-400" : "text-gray-600 hover:text-gray-300"
           }`}
         >
           <Filter className="w-3 h-3" />
         </button>
-      </div>
 
-      {isOpen &&
-        createPortal(
-          <div
-            className="z-2 isolate fixed inset-0"
-            onClick={() => setIsOpen(false)}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: coords.top,
-                left: coords.left,
-              }}
-              onClick={(e) => e.stopPropagation()}
+        {isOpen && (
+          <div className="top-full right-0 z-50 absolute bg-gray-800 shadow-xl mt-2 p-2 border border-gray-700 rounded w-48">
+            <input
+              autoFocus
+              type="text"
+              placeholder={`Filter ${column.name}...`}
+              className="bg-gray-900 p-2 border border-gray-700 focus:border-blue-500 rounded outline-none w-full text-gray-200 text-xs"
+              value={currentValue}
+              onChange={(e) => onApplyFilter(columnKey, e.target.value)}
+            />
+            <button
+              onClick={() => setIsOpen(false)}
+              className="mt-1 w-full text-[10px] text-gray-500 hover:text-gray-300 text-right"
             >
-              <FilterDropdown
-                columnKey={columnKey}
-                allData={allData}
-                currentSelection={filters[columnKey as string]}
-                onClose={() => setIsOpen(false)}
-                onApply={(vals, sortDir) => {
-                  onApplyFilter(columnKey as string, vals, sortDir);
-                  setIsOpen(false);
-                }}
-              />
-            </div>
-          </div>,
-          document.body
+              Close
+            </button>
+          </div>
         )}
-    </>
+
+        {/* Overlay to close when clicking outside */}
+        {isOpen && (
+          <div
+            className="z-40 fixed inset-0"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </div>
+    </div>
   );
 };

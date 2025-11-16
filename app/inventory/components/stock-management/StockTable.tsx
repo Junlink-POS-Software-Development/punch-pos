@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DataGrid, Column } from "react-data-grid";
+import "react-data-grid/lib/styles.css"; // Ensure styles are imported
 
 type StockRow = {
   id: number;
@@ -39,23 +40,52 @@ export default function StockTable() {
 
   const handleEdit = (id: number) => {
     alert(`Edit row with id: ${id}`);
-    // Replace with modal or form logic
   };
 
   const handleDelete = (id: number) => {
     setRows(rows.filter((row) => row.id !== id));
   };
 
+  // Defined the shared header styling here
+  const headerClass =
+    "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl";
+
   const columns: Column<StockRow>[] = [
-    { key: "itemName", name: "Item Name" },
-    { key: "stockFlow", name: "Stock Flow" },
-    { key: "quantity", name: "Quantity" },
-    { key: "capitalPrice", name: "Capital Price" },
-    { key: "notes", name: "Notes" },
-    { key: "timestamp", name: "Timestamp" },
+    {
+      key: "itemName",
+      name: "Item Name",
+      headerCellClass: headerClass,
+    },
+    {
+      key: "stockFlow",
+      name: "Stock Flow",
+      headerCellClass: headerClass,
+    },
+    {
+      key: "quantity",
+      name: "Quantity",
+      headerCellClass: headerClass,
+    },
+    {
+      key: "capitalPrice",
+      name: "Capital Price",
+      headerCellClass: headerClass,
+    },
+    {
+      key: "notes",
+      name: "Notes",
+      headerCellClass: headerClass,
+    },
+    {
+      key: "timestamp",
+      name: "Timestamp",
+      headerCellClass: headerClass,
+    },
     {
       key: "actions",
       name: "Actions",
+      width: 100, // Added width here
+      headerCellClass: headerClass, // Added class here
       renderCell: ({ row }) => (
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <button
@@ -66,6 +96,7 @@ export default function StockTable() {
               border: "none",
               padding: "4px 8px",
               cursor: "pointer",
+              borderRadius: "4px",
             }}
           >
             Edit
@@ -78,6 +109,7 @@ export default function StockTable() {
               border: "none",
               padding: "4px 8px",
               cursor: "pointer",
+              borderRadius: "4px",
             }}
           >
             Delete
@@ -88,8 +120,16 @@ export default function StockTable() {
   ];
 
   return (
-    <div style={{ height: 400 }}>
-      <DataGrid columns={columns} rows={rows} />
+    <div>
+      <DataGrid
+        columns={columns}
+        rows={rows}
+        className="border-none"
+        style={{ height: "63vh" }}
+        rowClass={(_, index) =>
+          `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800`
+        }
+      />
     </div>
   );
 }

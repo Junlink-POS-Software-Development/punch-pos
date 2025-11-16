@@ -1,17 +1,16 @@
-// app/inventory/components/item-registration/ItemTable.tsx
-
 "use client";
 
 import React, { useMemo } from "react";
 import { DataGrid, Column } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
+import { XCircle } from "lucide-react";
 import { Item } from "../utils/itemTypes";
-import { Edit, Trash2, XCircle } from "lucide-react";
 
-// 1. Import the new hook and components
+// Imports from our new modular files
 import { useProcessedItems } from "./hooks/useProcessedItems";
 import { HeaderWithFilter } from "./HeaderWithFilter";
 import { ItemTablePagination } from "./ItemTablePagination";
+import { ItemActions } from "./ItemActions";
 
 interface ItemTableProps {
   data: Item[];
@@ -24,7 +23,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   onEdit,
   onDelete,
 }) => {
-  // 2. Call the hook to get all state and logic
+  // 1. Use the Hook
   const {
     paginatedRows,
     totalRows,
@@ -41,10 +40,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     setCurrentPage,
   } = useProcessedItems(data);
 
-  // 3. Columns definition remains, but is now much cleaner
+  // 2. Define Columns
   const columns: Column<Item>[] = useMemo(() => {
-    const tailwindHeaderClass =
-      "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl ";
+    const headerClass =
+      "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl";
 
     const createColumn = (
       key: keyof Item,
@@ -54,11 +53,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       key,
       name,
       width,
-      headerCellClass: tailwindHeaderClass,
+      headerCellClass: headerClass,
       renderHeaderCell: (props) => (
         <HeaderWithFilter
           {...props}
-          allData={data} // Pass original data for filter options
+          allData={data}
           filters={activeFilters}
           onApplyFilter={handleApplyFilter}
         />
@@ -81,43 +80,27 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         key: "actions",
         name: "Actions",
         width: 100,
-        headerCellClass: tailwindHeaderClass,
+        headerCellClass: headerClass,
         renderCell: ({ row }) => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const originalIndex = data.findIndex((i) => i.id === row.id);
-                if (originalIndex !== -1) onEdit(originalIndex);
-              }}
-              className="hover:bg-blue-400/20 p-1 rounded text-blue-300 hover:text-blue-100"
-              title="Edit Item"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                const originalIndex = data.findIndex((i) => i.id === row.id);
-                if (originalIndex !== -1) onDelete(originalIndex);
-              }}
-              className="hover:bg-red-400/20 p-1 rounded text-red-400 hover:text-red-200"
-              title="Delete Item"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          <ItemActions
+            row={row}
+            data={data}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ),
       },
     ];
-  }, [data, activeFilters, onEdit, onDelete, handleApplyFilter]);
+  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete]);
 
-  // 4. The render is now just layout and prop-drilling
+  // 3. Render
   return (
     <div className="flex flex-col h-full">
+      {/* Table Header / Title Area */}
       <div className="flex items-center gap-4 mb-4">
         <h3 className="font-semibold text-gray-200 text-lg">
           Registered Items
         </h3>
-
         {Object.keys(activeFilters).length > 0 && (
           <button
             onClick={handleClearAllFilters}
@@ -128,10 +111,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         )}
       </div>
 
+      {/* The Grid */}
       <DataGrid<Item>
         columns={columns}
-        rows={paginatedRows} // Use paginated rows from hook
-        rowKeyGetter={(row: Item) => row.id!}
+        rows={paginatedRows}
+        rowKeyGetter={(row) => row.id!}
         className="border-none"
         style={{ height: "63vh" }}
         rowClass={(_, index) =>
@@ -139,6 +123,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         }
       />
 
+      {/* Pagination Footer */}
       <ItemTablePagination
         startRow={startRow}
         endRow={endRow}
@@ -147,13 +132,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         paginationOptions={paginationOptions}
         onRowsPerPageChange={(newSize) => {
           setRowsPerPage(newSize);
-          setCurrentPage(1); // Reset to page 1 on size change
+          setCurrentPage(1);
         }}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
-        onPageChange={(newPage) => {
-          setCurrentPage(newPage);
-        }}
+        onPageChange={setCurrentPage}
       />
     </div>
   );
