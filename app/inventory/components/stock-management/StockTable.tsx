@@ -1,135 +1,125 @@
 "use client";
 
-import { useState } from "react";
 import { DataGrid, Column } from "react-data-grid";
-import "react-data-grid/lib/styles.css"; // Ensure styles are imported
+import "react-data-grid/lib/styles.css";
+import { useStocks } from "./context/StockContext";
+import { StockData } from "./lib/stocks.api";
+import { Edit, Trash2 } from "lucide-react";
 
-type StockRow = {
-  id: number;
-  itemName: string;
-  stockFlow: string;
-  quantity: number;
-  capitalPrice: number;
-  notes: string;
-  timestamp: string;
-};
+interface StockTableProps {
+  onEdit?: (item: StockData) => void;
+}
 
-const initialRows: StockRow[] = [
-  {
-    id: 1,
-    itemName: "Widget A",
-    stockFlow: "In",
-    quantity: 50,
-    capitalPrice: 200,
-    notes: "First batch",
-    timestamp: new Date().toLocaleString(),
-  },
-  {
-    id: 2,
-    itemName: "Widget B",
-    stockFlow: "Out",
-    quantity: 10,
-    capitalPrice: 80,
-    notes: "Sold to client",
-    timestamp: new Date().toLocaleString(),
-  },
-];
+export default function StockTable({ onEdit }: StockTableProps) {
+  const { stocks, removeStockEntry, isLoading } = useStocks();
 
-export default function StockTable() {
-  const [rows, setRows] = useState<StockRow[]>(initialRows);
-
-  const handleEdit = (id: number) => {
-    alert(`Edit row with id: ${id}`);
+  const handleDelete = (id: string) => {
+    if (window.confirm("Delete this record?")) {
+      removeStockEntry(id);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setRows(rows.filter((row) => row.id !== id));
-  };
-
-  // Defined the shared header styling here
   const headerClass =
     "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl";
 
-  const columns: Column<StockRow>[] = [
+  const cellClass =
+    "truncate text-gray-300 text-xs h-full flex items-center px-2";
+
+  const uniformWidth = 160;
+
+  const columns: Column<StockData>[] = [
     {
-      key: "itemName",
+      key: "item_name",
       name: "Item Name",
       headerCellClass: headerClass,
+      cellClass: cellClass,
+      width: uniformWidth,
+      renderCell: ({ row }) => <span>{row.item_name}</span>,
     },
     {
-      key: "stockFlow",
-      name: "Stock Flow",
+      key: "flow",
+      name: "Flow",
       headerCellClass: headerClass,
+      cellClass: (row) =>
+        `${cellClass} ${
+          row.flow === "stock-in" ? "text-green-400" : "text-red-400"
+        }`,
+      width: 100,
     },
     {
       key: "quantity",
-      name: "Quantity",
+      name: "Qty",
       headerCellClass: headerClass,
+      cellClass: cellClass,
+      width: 100,
     },
     {
-      key: "capitalPrice",
+      key: "capital_price",
       name: "Capital Price",
       headerCellClass: headerClass,
+      cellClass: cellClass,
+      width: uniformWidth,
+      renderCell: ({ row }) => (
+        <span>₱{Number(row.capital_price).toFixed(2)}</span>
+      ),
     },
     {
       key: "notes",
       name: "Notes",
       headerCellClass: headerClass,
+      cellClass: cellClass,
+      width: uniformWidth,
     },
     {
-      key: "timestamp",
-      name: "Timestamp",
+      key: "time_stamp",
+      name: "Date",
       headerCellClass: headerClass,
+      cellClass: cellClass,
+      width: 200,
+      renderCell: ({ row }) => (
+        <span>{new Date(row.time_stamp).toLocaleString()}</span>
+      ),
     },
     {
       key: "actions",
       name: "Actions",
-      width: 100, // Added width here
-      headerCellClass: headerClass, // Added class here
+      width: 100,
+      headerCellClass: headerClass,
       renderCell: ({ row }) => (
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className="flex items-center gap-2 h-full">
           <button
-            onClick={() => handleEdit(row.id)}
-            style={{
-              background: "#4caf50",
-              color: "white",
-              border: "none",
-              padding: "4px 8px",
-              cursor: "pointer",
-              borderRadius: "4px",
-            }}
+            onClick={() => onEdit && onEdit(row)}
+            className="group hover:bg-blue-400/20 p-1.5 rounded-md text-blue-400 hover:text-blue-200 transition-all"
+            title="Edit Record"
           >
-            Edit
+            <Edit className="w-3.5 h-3.5" />
           </button>
+
           <button
             onClick={() => handleDelete(row.id)}
-            style={{
-              background: "#f44336",
-              color: "white",
-              border: "none",
-              padding: "4px 8px",
-              cursor: "pointer",
-              borderRadius: "4px",
-            }}
+            className="group hover:bg-red-400/20 p-1.5 rounded-md text-red-400 hover:text-red-200 transition-all"
+            title="Delete Record"
           >
-            Delete
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       ),
     },
   ];
 
+  if (isLoading)
+    return <div className="p-4 text-gray-400">Loading stocks...</div>;
+
   return (
-    <div>
-      <DataGrid
-        columns={columns}
-        rows={rows}
-        className="border-none"
-        style={{ height: "63vh" }}
-        rowClass={(_, index) =>
-          `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800`
-        }
-      />
-    </div>
+    <DataGrid
+      columns={columns}
+      rows={stocks}
+      rowKeyGetter={(row) => row.id}
+      className="border-none"
+      style={{ height: "63vh" }}
+      rowClass={(_, index) =>
+        `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800 backdrop-blur-2xl`
+      }
+    />
   );
 }

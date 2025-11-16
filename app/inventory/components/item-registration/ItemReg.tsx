@@ -9,7 +9,7 @@ import { StatusDisplay } from "@/utils/StatusDisplay";
 import { ItemTable } from "./item-table/ItemTable";
 import { useItems } from "./context/ItemsContext"; // Import the hook
 
-const ItemRegContent = () => {
+const ItemReg = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   // Consume the context
@@ -90,18 +90,6 @@ const ItemRegContent = () => {
         <p className="text-gray-500 text-center">No items found.</p>
       )}
     </div>
-  );
-};
-
-// 🟢 IMPORTANT: Export a wrapper that includes the Provider
-// Or, move <ItemsProvider> up to your layout.tsx if you want it truly global.
-import { ItemsProvider } from "./context/ItemsContext";
-
-const ItemReg = () => {
-  return (
-    <ItemsProvider>
-      <ItemRegContent />
-    </ItemsProvider>
   );
 };
 

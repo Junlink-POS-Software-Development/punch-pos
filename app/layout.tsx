@@ -4,6 +4,7 @@ import "./globals.css";
 import { ViewProvider } from "../components/window-layouts/ViewContext";
 import MainWindow from "../components/window-layouts/MainWindow";
 import { QueryProvider } from "@/context/QueryProvider";
+import { ItemsProvider } from "./inventory/components/item-registration/context/ItemsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <ViewProvider>
-            {" "}
-            <MainWindow>{children}</MainWindow>
-          </ViewProvider>
+          <ItemsProvider>
+            <ViewProvider>
+              {" "}
+              <MainWindow>{children}</MainWindow>
+            </ViewProvider>
+          </ItemsProvider>
         </QueryProvider>
       </body>
     </html>
