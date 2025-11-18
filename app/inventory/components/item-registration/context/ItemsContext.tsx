@@ -106,8 +106,6 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  console.log(items);
-
   const isProcessing =
     createMutation.isPending ||
     updateMutation.isPending ||

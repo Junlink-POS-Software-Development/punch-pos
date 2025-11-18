@@ -5,7 +5,7 @@ import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { stockFormSchema, StockFormSchema } from "./utils/types";
 import { StockData } from "./lib/stocks.api";
-import { ItemAutocomplete } from "@/utils/ItemAutoComplete";
+import ItemAutoComplete from "@/utils/ItemAutoComplete";
 
 interface StockFormProps {
   onSubmit: SubmitHandler<StockFormSchema>;
@@ -152,7 +152,7 @@ export function StockForm({
           name="itemName"
           control={control}
           render={({ field, fieldState: { error } }) => (
-            <ItemAutocomplete
+            <ItemAutoComplete
               {...field}
               disabled={!!itemToEdit}
               error={error?.message}

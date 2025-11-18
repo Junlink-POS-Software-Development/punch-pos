@@ -188,12 +188,13 @@ const SalesTerminal = () => {
           className={`gap-1 grid ${ScreenLogic()} w-full h-full overflow-hidden`}
         >
           <div className="relative flex flex-col w-full h-full">
-            <FormFields />
+            <FormFields onAddToCartClick={handleAddToCart} />{" "}
+            {/* <-- Pass prop here */}
             <TerminalButtons
               isLoggedIn={isLoggedIn}
               onSignInClick={openSignInModal}
               onLogoutClick={handleLogoutClick}
-              onAddToCartClick={handleAddToCart} // <-- PASS THE NEW HANDLER
+              onAddToCartClick={handleAddToCart}
             />
           </div>
 
