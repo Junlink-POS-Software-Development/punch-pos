@@ -88,7 +88,7 @@ export const FormFields = React.memo(() => {
 
   return (
     <div className="w-full h-full grow">
-      <div className="gap-2 grid grid-cols-6 grid-rows-4 p-4 w-full h-full text-white">
+      <div className="grid grid-cols-6 grid-rows-4 w-full h-full text-white">
         {fields.map((field) => (
           <React.Fragment key={field.id}>
             <label
@@ -127,6 +127,9 @@ export const FormFields = React.memo(() => {
                           // like price or quantity here using setValue if needed.
                           // setValue("quantity", 1);
                         }}
+                        // --- THIS IS THE FIX ---
+                        className="w-full h-3 text-[60%]! truncate input-dark"
+                        // -----------------------
                       />
                     </div>
                   )}
@@ -140,7 +143,7 @@ export const FormFields = React.memo(() => {
                     ...(field.type === "number" && { valueAsNumber: true }),
                   })}
                   readOnly={field.readOnly}
-                  className="w-full h-3 text-xs sm:text-sm truncate input-dark"
+                  className="w-full h-3 text-[60%]! truncate input-dark"
                   {...(field.type === "number" &&
                     (field.id === "payment" ||
                       field.id === "voucher" ||

@@ -1,4 +1,6 @@
 // app/inventory/components/stock-management/SalesTerminal.tsx
+"use client"; // Make sure this is present if using 'use client' directives
+
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
@@ -17,6 +19,11 @@ import { X } from "lucide-react";
 import { handleLogOut } from "./components/buttons/handlers";
 import { supabase } from "@/lib/supabaseClient";
 
+// --- NEW IMPORTS ---
+import "react-data-grid/lib/styles.css"; // <-- Import DataGrid CSS
+import { useItems } from "../../app/inventory/components/item-registration/context/ItemsContext";
+import TerminalCart, { CartItem } from "./components/TerminalCart"; // <-- Import new component and type
+
 type AuthModalState = "hidden" | "signIn" | "signUp";
 
 const SalesTerminal = () => {
@@ -32,6 +39,12 @@ const SalesTerminal = () => {
   });
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // --- NEW: Cart State ---
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // --- NEW: Get items from context ---
+  const { items: allItems } = useItems(); // 'items' from context has all product data
 
   // --- useEffect for auth state ---
   useEffect(() => {
@@ -62,6 +75,80 @@ const SalesTerminal = () => {
     }
   };
 
+  // --- NEW: Cart Handlers ---
+
+  /**
+   * Adds the item from the form to the cart state.
+   */
+  const handleAddToCart = () => {
+    const { barcode, quantity } = methods.getValues();
+
+    if (!barcode) {
+      alert("Please select an item first.");
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    // Find the full item details from our ItemsContext
+    const itemDetails = allItems.find((item) => item.sku === barcode);
+
+    if (!itemDetails) {
+      alert("Item not found. Please check the SKU/Barcode.");
+      return;
+    }
+
+    // Get Unit Price from context (as requested: items.costPrice)
+    const unitPrice = itemDetails.costPrice;
+    const total = quantity * unitPrice;
+
+    // Check if item is already in the cart
+    const existingItemIndex = cartItems.findIndex(
+      (item) => item.sku === barcode
+    );
+
+    if (existingItemIndex !== -1) {
+      // --- Update existing item ---
+      setCartItems((prevCart) =>
+        prevCart.map((item, index) => {
+          if (index === existingItemIndex) {
+            // Add to existing quantity and total
+            const newQuantity = item.quantity + quantity;
+            const newTotal = item.total + total;
+            return { ...item, quantity: newQuantity, total: newTotal };
+          }
+          return item;
+        })
+      );
+    } else {
+      // --- Add new item to cart ---
+      const newCartItem: CartItem = {
+        id: barcode, // Use SKU as the unique ID
+        sku: barcode,
+        itemName: itemDetails.itemName,
+        unitPrice: unitPrice,
+        quantity: quantity,
+        total: total,
+      };
+      setCartItems((prevCart) => [...prevCart, newCartItem]);
+    }
+
+    // --- Reset form fields ---
+    methods.resetField("barcode");
+    methods.resetField("quantity");
+    // You might also want to reset availableStocks if it's tied to the barcode field
+    methods.setValue("availableStocks", 0);
+  };
+
+  /**
+   * Removes an item from the cart by its SKU.
+   */
+  const handleRemoveItem = (sku: string) => {
+    setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
+  };
+
   // --- layout logic ---
   function ScreenLogic() {
     if (isSplit && !isMobile) {
@@ -75,15 +162,17 @@ const SalesTerminal = () => {
   // --- submit handler ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = (data) => {
     console.log("Form Data:", data);
+    console.log("Cart Items:", cartItems); // Also log the cart
     // Reset if needed:
     // methods.reset(getDefaultFormValues());
+    // setCartItems([]); // Clear cart on done
   };
 
   return (
     <div className="flex flex-col p-1 h-full">
       {/* Terminal Header */}
-      <div className="flex flex-col items-center">
-        <h1 className="text-text-primary sm:text-1xl md:text-3xl lg:text-4xl">
+      <div className="flex flex-col items-center bg-primary-dark marquee-screen">
+        <h1 className="text-text-primary sm:text-1xl md:text-3xl lg:text-4xl marquee-text">
           POINT OF SALE
         </h1>
         <h2 className="text-text-primary">
@@ -104,10 +193,12 @@ const SalesTerminal = () => {
               isLoggedIn={isLoggedIn}
               onSignInClick={openSignInModal}
               onLogoutClick={handleLogoutClick}
+              onAddToCartClick={handleAddToCart} // <-- PASS THE NEW HANDLER
             />
           </div>
-          <div className="flex justify-center items-center border border-primary-light rounded-2xl overflow-hidden text-white text-5xl">
-            TERMINAL CART
+
+          <div className="border border-primary-light rounded-2xl w-full h-full overflow-hidden">
+            <TerminalCart rows={cartItems} onRemoveItem={handleRemoveItem} />
           </div>
         </form>
       </FormProvider>

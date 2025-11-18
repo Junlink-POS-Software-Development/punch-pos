@@ -156,6 +156,7 @@ export function StockForm({
               {...field}
               disabled={!!itemToEdit}
               error={error?.message}
+              className="w-full input-dark"
               onItemSelect={() => {
                 stockFlowRef.current?.focus();
               }}

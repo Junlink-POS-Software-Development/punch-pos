@@ -35,10 +35,10 @@ export const getDefaultFormValues = (): PosFormValues => ({
   customerName: "", // This satisfies the `string | undefined` type from .optional()
   transactionNo: generateTransactionNo(),
   voucher: 0.0,
-  barcode: "eg-sku-123",
+  barcode: "",
   availableStocks: 21,
   grandTotal: 12312,
-  quantity: 1,
+  quantity: 0,
   discount: 0.0,
   change: 54321,
 });

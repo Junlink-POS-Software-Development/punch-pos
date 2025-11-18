@@ -14,9 +14,11 @@ interface ItemAutocompleteProps {
   // --- NEW PROP ---
   // This callback will be triggered when an item is selected
   onItemSelect?: (item: Item) => void;
+  className?: string;
 }
 
 export function ItemAutocomplete({
+  className,
   value,
   onChange,
   onBlur,
@@ -104,7 +106,7 @@ export function ItemAutocomplete({
         }}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className={`w-full input-dark ${
+        className={`${className} ${
           disabled ? "opacity-50 cursor-not-allowed text-slate-500" : ""
         } ${error ? "border-red-500" : ""}`}
         placeholder="e.g., 'Product A'"
