@@ -1,6 +1,6 @@
 // app/inventory/components/stock-management/utils/posSchema.ts
 import { z } from "zod";
-import dayjs from "dayjs";
+// Removed dayjs import
 
 const pesoFormat = z.number().min(0, "Value must be positive");
 
@@ -24,16 +24,30 @@ export const posSchema = z.object({
   barcode: z.string(),
   availableStocks: z.number(),
   grandTotal: z.number(),
-  quantity: z.number().int().min(0), // <--- CHANGE THIS LINE (from min(1) to min(0))
+  quantity: z.number().int().min(0),
   discount: pesoFormat,
   change: z.number(),
 });
 
 export type PosFormValues = z.infer<typeof posSchema>;
 
+// Get the correct locale-formatted time
+const getFormattedTime = () =>
+  new Date()
+    .toLocaleString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+    .replace(/,/, ""); // Match the format used in usePosForm
+
 export const getDefaultFormValues = (): PosFormValues => ({
   cashierName: "Junel Fuentes",
-  transactionTime: dayjs().format("MM/DD/YYYY hh:mm:ss"),
+  transactionTime: getFormattedTime(), // <-- Live time format
   payment: 0.0,
 
   // ✅ Explicitly set to null to satisfy string | null
@@ -42,9 +56,9 @@ export const getDefaultFormValues = (): PosFormValues => ({
   transactionNo: generateTransactionNo(),
   voucher: 0.0,
   barcode: "",
-  availableStocks: 21,
-  grandTotal: 12312,
+  availableStocks: 0, // <-- REVISED: Initial value set to 0
+  grandTotal: 0, // <-- REVISED: Initial value set to 0
   quantity: 0,
   discount: 0.0,
-  change: 54321,
+  change: 0, // <-- REVISED: Initial value set to 0
 });

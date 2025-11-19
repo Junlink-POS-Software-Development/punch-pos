@@ -35,6 +35,17 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
     }, [items, value]);
 
     const handleSelect = (item: Item) => {
+      // NOTE: We pass item.sku back to the form (via onChange) for the barcode field,
+      // but we use item.itemName for the visual display in the input.
+      // Since this component is used for the `barcode` field (which is tied to SKU),
+      // we need to pass the SKU as the value to the parent form.
+      // However, looking at FormFields.tsx:
+      // - The input is bound to `barcode` (an SKU).
+      // - The ItemAutocomplete onChange is used for the text input (likely item name or partial SKU).
+      // - The onItemSelect is used to set the final SKU via setValue("barcode", item.sku).
+      //
+      // To maintain the original behavior of this file, we will keep onChange(item.itemName)
+      // but ensure onItemSelect handles the form value update.
       onChange(item.itemName);
       setIsOpen(false);
       setActiveIndex(-1);
@@ -57,15 +68,17 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
         );
         setIsOpen(true);
       } else if (e.key === "Enter") {
-        // CRITICAL FIX: Always prevent default on Enter to stop form submission.
-        e.preventDefault();
         if (activeIndex >= 0 && suggestions[activeIndex]) {
+          // Case 1: An item is highlighted/selected from the dropdown.
+          e.preventDefault();
           handleSelect(suggestions[activeIndex]);
+        } else {
+          // Case 2: User pressed Enter on the text input without selecting a suggestion.
+          // We DO NOT call e.preventDefault() here.
+          // This allows the event to bubble up to FormFields.tsx's handleKeyDown,
+          // which will move focus to 'quantity'. The parent component will handle
+          // the form submission prevention.
         }
-        // NOTE: If no item is selected, the key is consumed, and the focus must move to quantity
-        // through other means (e.g., Tab key or if the ItemAutocomplete is designed to move focus
-        // to the next field when a value is confirmed). In this setup, hitting Enter
-        // on a non-highlighted item will stop the form submission.
       } else if (e.key === "Escape") {
         setIsOpen(false);
         setActiveIndex(-1);
