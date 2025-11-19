@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react"; // <-- ADD useEffect, useMemo
+// app/inventory/components/stock-management/components/form/usePosForm.ts
+import { useState, useEffect, useMemo } from "react";
 import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
@@ -18,6 +19,7 @@ interface UsePosFormReturn {
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
   triggerDoneSubmit: () => void;
+  liveTime: string;
 }
 
 export const usePosForm = (): UsePosFormReturn => {
@@ -25,9 +27,7 @@ export const usePosForm = (): UsePosFormReturn => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   // State for Live Clock
-  const [liveTime, setLiveTime] = useState(
-    getDefaultFormValues().transactionTime
-  ); // <-- NEW
+  const [liveTime, setLiveTime] = useState("");
 
   const methods = useForm<PosFormValues>({
     resolver: zodResolver(posSchema),
@@ -47,9 +47,9 @@ export const usePosForm = (): UsePosFormReturn => {
 
   // --- LIVE CLOCK EFFECT ---
   useEffect(() => {
-    const timer = setInterval(() => {
-      // We use the same format as in getDefaultFormValues
-      const currentTime = new Date()
+    // Helper function to get time in 12-hour format with AM/PM
+    const getNow = () =>
+      new Date()
         .toLocaleString("en-US", {
           month: "2-digit",
           day: "2-digit",
@@ -57,49 +57,38 @@ export const usePosForm = (): UsePosFormReturn => {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
-          hour12: false,
+          hour12: true, // <--- CHANGED TO TRUE
         })
-        .replace(/,/, ""); // Removes comma if present
+        .replace(/,/, ""); // Removes the comma between date and time
 
-      setValue("transactionTime", currentTime, {
-        shouldValidate: false,
-        shouldDirty: false,
-      });
-      setLiveTime(currentTime); // Update local state for display/debug
-    }, 1000); // Update every second
+    // Initial set
+    setLiveTime(getNow());
 
-    // Cleanup function
+    const timer = setInterval(() => {
+      setLiveTime(getNow());
+    }, 1000);
+
     return () => clearInterval(timer);
-  }, [setValue]);
+  }, []);
 
   // --- CALCULATION LOGIC ---
-
-  // 1. Calculate running cart total
   const cartTotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.total, 0);
   }, [cartItems]);
 
-  // 2. Watch payment and voucher fields
   const [payment, voucher] = watch(["payment", "voucher"]);
 
-  // 3. Effect to update Grand Total and Change
   useEffect(() => {
-    // a. Update Grand Total
     setValue("grandTotal", cartTotal, { shouldValidate: false });
 
-    // b. Calculate Change
-    const grandTotal = cartTotal; // Use the freshly calculated cartTotal
+    const grandTotal = cartTotal;
     const paymentAmount = payment || 0;
     const voucherAmount = voucher || 0;
-
-    // Change = Payment + Voucher - Grand Total
     const changeAmount = paymentAmount + voucherAmount - grandTotal;
 
-    // Only update 'change' if the new value is different (optional performance tweak)
     setValue("change", changeAmount, { shouldValidate: false });
-  }, [cartTotal, payment, voucher, setValue]); // Recalculate whenever these change
+  }, [cartTotal, payment, voucher, setValue]);
 
-  // 1. Wrapper for Add To Cart
   const onAddToCart = () => {
     handleAddToCart({
       getValues,
@@ -111,25 +100,19 @@ export const usePosForm = (): UsePosFormReturn => {
     });
   };
 
-  // 2. Wrapper for Clear
   const onClear = () => {
     handleClear({ setCartItems, reset });
-    // Optional: Focus back to customer name after clear
     setTimeout(() => setFocus("customerName"), 50);
   };
 
-  // 3. Local Remove Logic
   const onRemoveItem = (sku: string) => {
     setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
   };
 
-  // 4. Wrapper for Done
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
-    // We use your existing handleDone from done.ts
     const success = await handleDone(data, cartItems);
 
     if (success) {
-      // Reuse the clear logic if transaction was successful
       handleClear({ setCartItems, reset });
       setTimeout(() => {
         setFocus("customerName");
@@ -138,7 +121,6 @@ export const usePosForm = (): UsePosFormReturn => {
   };
 
   const triggerDoneSubmit = () => {
-    // Check for errors *before* submitting
     methods.trigger().then((isValid) => {
       if (!isValid) {
         console.error("Form Validation Failed:", methods.formState.errors);
@@ -155,5 +137,6 @@ export const usePosForm = (): UsePosFormReturn => {
     onClear,
     onDoneSubmit,
     triggerDoneSubmit,
+    liveTime,
   };
 };

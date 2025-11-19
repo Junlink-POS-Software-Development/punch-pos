@@ -5,10 +5,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-// 1. Import useMutation from TanStack Query
 import { useMutation } from "@tanstack/react-query";
-
 import {
   Mail,
   Lock,
@@ -19,15 +16,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-
-// Import schema and type from types.ts
 import { signUpSchema, SignUpFormValues } from "@/lib/types";
 
 interface SignUpProps {
   onSwitchToSignIn: () => void;
 }
 
-// 2. Define the asynchronous sign-up function outside the component
 const signUpUser = async (values: SignUpFormValues) => {
   const { error: authError } = await supabase.auth.signUp({
     email: values.email,
@@ -46,13 +40,11 @@ const signUpUser = async (values: SignUpFormValues) => {
   });
 
   if (authError) {
-    // TanStack Query relies on thrown errors to set the 'isError' state
     throw authError;
   }
 };
 
 export function SignUp({ onSwitchToSignIn }: SignUpProps) {
-  // We keep the success state to show the post-signup message
   const [success, setSuccess] = useState(false);
 
   const {
@@ -72,15 +64,12 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
     },
   });
 
-  // 3. Setup useMutation
   const mutation = useMutation({
     mutationFn: signUpUser,
     onSuccess: () => {
-      // 4. Show success message on successful sign-up
       setSuccess(true);
     },
     onError: (err: Error) => {
-      // 5. Use RHF's setError to show the server-side error message
       console.error("Error creating account:", err);
       setFormError("root.serverError", {
         type: "server",
@@ -89,9 +78,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
     },
   });
 
-  // 6. The onSubmit handler is simplified to just call mutation.mutate
   const onSubmit = (values: SignUpFormValues) => {
-    // Clear any previous server errors and success state before submitting
     setFormError("root.serverError", { message: "" });
     setSuccess(false);
     mutation.mutate(values);
@@ -130,7 +117,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="First Name"
                   {...register("firstName")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.firstName && (
@@ -150,7 +138,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Last Name"
                   {...register("lastName")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.lastName && (
@@ -170,7 +159,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Job Title (e.g., Sales Associate)"
                   {...register("jobTitle")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.jobTitle && (
@@ -190,7 +180,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="email"
                   placeholder="you@example.com"
                   {...register("email")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.email && (
@@ -210,7 +201,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="password"
                   placeholder="••••••••"
                   {...register("password")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.password && (
@@ -230,7 +222,8 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Enrollment ID (e.g., A7B2C9)"
                   {...register("enrollmentId")}
-                  className="pl-10 w-full input-dark"
+                  // FIX: Added pl-10!
+                  className="pl-10! w-full input-dark"
                 />
               </div>
               {errors.enrollmentId && (
@@ -240,7 +233,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
               )}
             </div>
 
-            {/* 7. Use mutation.isError and RHF errors for displaying the server message */}
             {mutation.isError && errors.root?.serverError && (
               <div className="flex items-center gap-2 text-red-300 text-sm">
                 <AlertTriangle className="w-5 h-5" />
@@ -248,7 +240,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
               </div>
             )}
 
-            {/* 8. Use mutation.isPending for the button state */}
             <button
               type="submit"
               className="flex justify-center items-center gap-2 w-full btn-3d-glass"
@@ -264,7 +255,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
               </span>
             </button>
 
-            {/* Switch to Sign In */}
             <p className="pt-4 text-slate-300 text-sm text-center">
               Already have an account?{" "}
               <button

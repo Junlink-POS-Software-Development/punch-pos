@@ -19,7 +19,6 @@ type AddToCartParams = {
 
 export const handleAddToCart = ({
   getValues,
-  setValue,
   resetField,
   allItems,
   cartItems,
@@ -80,6 +79,5 @@ export const handleAddToCart = ({
   // 4. Reset Fields
   resetField("barcode");
   resetField("quantity");
-  setValue("availableStocks", 0);
   console.log("--- [addToCart.ts] Item added successfully ---");
 };
