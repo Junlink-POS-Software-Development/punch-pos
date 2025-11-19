@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
 @import "tailwindcss";
 @import "./styles/my-styles.css";
 
@@ -186,5 +187,51 @@ body {
     .marquee-text {
       font-size: 2.25rem; /* lg:text-4xl */
     }
+  }
+
+  .font-retro {
+    font-family: "VT323", monospace;
+    /* Fallback to monospace if import fails */
+  }
+
+  .retro-lcd-container {
+    background: linear-gradient(to bottom, #000000, #1a1a1a);
+    border: 4px solid #333;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* The CRT Scanline effect overlay */
+  .retro-scanlines::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .text-retro-cyan {
+    color: #38bdf8; /* Bright Cyan */
+    text-shadow: 0 0 2px #38bdf8, 0 0 8px rgba(56, 189, 248, 0.6);
+    letter-spacing: 2px;
+  }
+
+  .retro-divider {
+    height: 2px;
+    background-color: #38bdf8;
+    width: 100%;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+    margin: 0.25rem 0;
   }
 }

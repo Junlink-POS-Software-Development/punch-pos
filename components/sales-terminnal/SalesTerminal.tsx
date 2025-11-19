@@ -26,18 +26,24 @@ const SalesTerminal = () => {
   const [authModalState, setAuthModalState] =
     useState<AuthModalState>("hidden");
 
-  // --- NEW: Use the modularized form hook ---
   const {
     methods,
     cartItems,
     onAddToCart,
     onRemoveItem,
     onDoneSubmit,
-    triggerDoneSubmit, // Used by Done button and Voucher field
-    onClear, // Used by Clear button
+    triggerDoneSubmit,
+    onClear,
   } = usePosForm();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // --- Hardcoded Values for 8-Bit Display ---
+  const displayTime = "18:25";
+  const displayProduct = "COKE";
+  const displayPrice = "₱25.00";
+  const displayStock = 21;
+  const displayUser = isLoggedIn ? "JUNEL FUENTES" : "PLEASE SIGN IN";
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -77,19 +83,42 @@ const SalesTerminal = () => {
 
   return (
     <div className="flex flex-col p-1 h-full">
-      <div className="flex flex-col items-center bg-primary-dark marquee-screen">
-        <h1 className="text-text-primary sm:text-1xl md:text-3xl lg:text-4xl marquee-text">
+      {/* --- NEW 8-BIT DISPLAY HEADER (Vertical spacing tightened) --- */}
+      <div className="flex flex-col justify-center items-center shadow-lg mb-2 px-4 py-1 rounded-md w-full min-h-[180px] font-retro retro-lcd-container retro-scanlines">
+        {/* Top Line: Title */}
+        {/* Reduced text size and removed bottom margin */}
+        <h1 className="mt-1 font-bold text-retro-cyan text-2xl md:text-3xl uppercase leading-none tracking-widest">
           POINT OF SALE
         </h1>
-        <h2 className="text-text-primary">
-          {isLoggedIn ? "Welcome User!" : "Please Sign In"}
+
+        {/* Divider with reduced margins */}
+        <div className="opacity-70 my-1 retro-divider"></div>
+
+        {/* Second Line: User and Time */}
+        <div className="flex justify-between items-center px-2 w-full text-retro-cyan text-lg md:text-xl leading-none tracking-wide">
+          <span className="max-w-[60%] truncate uppercase">{displayUser}</span>
+          <span>{displayTime}</span>
+        </div>
+
+        {/* Third Line: Product and Price */}
+        {/* Reduced from text-5xl to text-4xl and added padding */}
+        <div className="flex justify-center items-center gap-6 drop-shadow-md my-2 w-full font-bold text-retro-cyan text-3xl md:text-4xl leading-none">
+          <span>{displayProduct}</span>
+          <span className="text-retro-cyan/90">{displayPrice}</span>
+        </div>
+
+        <div className="opacity-70 my-1 retro-divider"></div>
+
+        {/* Bottom Line: Stocks */}
+        <h2 className="mb-1 text-retro-cyan text-lg md:text-xl uppercase leading-none tracking-wide">
+          STOCKS AVAILABLE: {displayStock}
         </h2>
       </div>
+      {/* -------------------------------- */}
 
       <FormProvider {...methods}>
         <form
           id="sales-form"
-          // Form submission is handled by react-hook-form validation wrapper
           onSubmit={methods.handleSubmit(onDoneSubmit)}
           className={`gap-1 grid ${ScreenLogic()} w-full h-full overflow-hidden`}
         >
@@ -103,7 +132,7 @@ const SalesTerminal = () => {
               onSignInClick={openSignInModal}
               onLogoutClick={handleLogoutClick}
               onAddToCartClick={onAddToCart}
-              onDoneClick={triggerDoneSubmit} // Passed to Done button
+              onDoneClick={triggerDoneSubmit}
               onClearClick={onClear}
             />
           </div>
