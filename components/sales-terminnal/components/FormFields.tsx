@@ -7,10 +7,11 @@ import ItemAutocomplete from "../../../utils/ItemAutoComplete";
 
 type FormFieldsProps = {
   onAddToCartClick: () => void;
+  onDoneSubmitTrigger: () => void; // <-- ADD THIS
 };
 
 export const FormFields = React.memo(
-  ({ onAddToCartClick }: FormFieldsProps) => {
+  ({ onAddToCartClick, onDoneSubmitTrigger }: FormFieldsProps) => {
     const { register, control, setValue, setFocus } =
       useFormContext<PosFormValues>();
 
@@ -20,29 +21,28 @@ export const FormFields = React.memo(
       const target = e.target as HTMLInputElement;
       const fieldId = target.id as keyof PosFormValues;
 
+      // Prevent the default "Enter" behavior (which can be form submission)
       e.preventDefault();
 
       switch (fieldId) {
         case "customerName":
           setFocus("barcode");
           break;
+        case "barcode":
+          // Action: Move focus to Quantity (Only runs if ItemAutocomplete did not consume the event)
+          setFocus("quantity");
+          break;
         case "quantity":
           onAddToCartClick();
           setFocus("barcode");
           break;
         case "payment":
-          // Keeps existing behavior: Jump to Voucher
           setFocus("voucher");
           break;
         case "voucher":
-          // 1. Trigger "Done" functionality (Form Submit)
-          target.closest("form")?.requestSubmit();
-
-          // 2. Jump focus to Customer Name
-          // Using setTimeout ensures the focus moves after the submit event processing starts
-          setTimeout(() => {
-            setFocus("customerName");
-          }, 0);
+          // Action: Trigger "Done" (Form Submission)
+          // target.closest("form")?.requestSubmit(); // <-- REMOVE THIS
+          onDoneSubmitTrigger(); // <-- ADD THIS
           break;
         default:
           break;
@@ -146,9 +146,13 @@ export const FormFields = React.memo(
                             setValue("barcode", item.sku, {
                               shouldValidate: true,
                             });
+                            // When an item is selected from dropdown, move focus to quantity
                             setFocus("quantity");
                           }}
                           className="w-full h-3 !text-[60%] truncate input-dark"
+                          // NOTE: The onKeyDown for moving focus must be on the ItemAutocomplete
+                          // component itself (which internally sets it on its input) for navigation,
+                          // but since it's an Autocomplete, we mostly rely on the change in ItemAutocomplete.tsx
                         />
                       </div>
                     )}
@@ -161,11 +165,12 @@ export const FormFields = React.memo(
                       ...(field.type === "number" && { valueAsNumber: true }),
                     })}
                     readOnly={field.readOnly}
-                    className="w-full h-3 !text-[60%] truncate input-dark"
+                    className="w-full h-3 text-[60%]! truncate input-dark"
                     {...(field.type === "number" &&
                       (field.id === "payment" ||
                         field.id === "voucher" ||
                         field.id === "discount") && { step: "0.01" })}
+                    // Attach the key handler specifically to the fields that need navigation logic
                     {...((field.id === "customerName" ||
                       field.id === "quantity" ||
                       field.id === "payment" ||

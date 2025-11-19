@@ -1,3 +1,4 @@
+// ItemAutocomplete.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, forwardRef } from "react";
@@ -56,10 +57,15 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
         );
         setIsOpen(true);
       } else if (e.key === "Enter") {
+        // CRITICAL FIX: Always prevent default on Enter to stop form submission.
+        e.preventDefault();
         if (activeIndex >= 0 && suggestions[activeIndex]) {
-          e.preventDefault();
           handleSelect(suggestions[activeIndex]);
         }
+        // NOTE: If no item is selected, the key is consumed, and the focus must move to quantity
+        // through other means (e.g., Tab key or if the ItemAutocomplete is designed to move focus
+        // to the next field when a value is confirmed). In this setup, hitting Enter
+        // on a non-highlighted item will stop the form submission.
       } else if (e.key === "Escape") {
         setIsOpen(false);
         setActiveIndex(-1);

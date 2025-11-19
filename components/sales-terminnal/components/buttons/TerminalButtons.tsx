@@ -1,35 +1,33 @@
+// app/inventory/components/stock-management/components/buttons/TerminalButtons.tsx
 "use client";
 
 import React from "react";
-import {
-  handleNewCustomer,
-  // handleAddToCart, // <-- REMOVE this import
-  handleDone,
-  handleClear,
-  handleMenu,
-} from "./handlers";
+import { handleNewCustomer, handleMenu } from "./handlers"; // Keep static handlers here
 
-// 1. Update prop types
 type TerminalButtonsProps = {
   isLoggedIn: boolean;
   onSignInClick: () => void;
   onLogoutClick: () => void;
-  onAddToCartClick: () => void; // <-- ADD this prop
+  onAddToCartClick: () => void;
+  onDoneClick: () => void;
+  onClearClick: () => void; // <--- ADD THIS
 };
 
 const TerminalButtons = React.memo(
-  // 2. Destructure new prop
   ({
     isLoggedIn,
     onSignInClick,
     onLogoutClick,
-    onAddToCartClick, // <-- ADD this prop
+    onAddToCartClick,
+    onDoneClick,
+    onClearClick, // <--- DESTRUCTURE
   }: TerminalButtonsProps) => {
+    // Map the button IDs to the props passed from SalesTerminal
     const terminalHandlers: Record<string, () => void> = {
       newCustomer: handleNewCustomer,
-      addToCart: onAddToCartClick, // <-- ASSIGN the prop here
-      done: handleDone,
-      clear: handleClear,
+      addToCart: onAddToCartClick,
+      done: onDoneClick,
+      clear: onClearClick, // <--- Use the prop, not the static import
       signIn: isLoggedIn ? onLogoutClick : onSignInClick,
       menu: handleMenu,
     };
@@ -47,7 +45,6 @@ const TerminalButtons = React.memo(
       <div className="gap-2 grid grid-cols-3 w-full h-full">
         {buttons.map((button) => (
           <React.Fragment key={button.id}>
-            {" "}
             <div className="w-full">
               <button
                 className="w-full h-[80%] text-nowrap btn-3d-glass"
@@ -57,7 +54,7 @@ const TerminalButtons = React.memo(
               </button>
             </div>
           </React.Fragment>
-        ))}{" "}
+        ))}
       </div>
     );
   }
