@@ -35,17 +35,6 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
     }, [items, value]);
 
     const handleSelect = (item: Item) => {
-      // NOTE: We pass item.sku back to the form (via onChange) for the barcode field,
-      // but we use item.itemName for the visual display in the input.
-      // Since this component is used for the `barcode` field (which is tied to SKU),
-      // we need to pass the SKU as the value to the parent form.
-      // However, looking at FormFields.tsx:
-      // - The input is bound to `barcode` (an SKU).
-      // - The ItemAutocomplete onChange is used for the text input (likely item name or partial SKU).
-      // - The onItemSelect is used to set the final SKU via setValue("barcode", item.sku).
-      //
-      // To maintain the original behavior of this file, we will keep onChange(item.itemName)
-      // but ensure onItemSelect handles the form value update.
       onChange(item.itemName);
       setIsOpen(false);
       setActiveIndex(-1);

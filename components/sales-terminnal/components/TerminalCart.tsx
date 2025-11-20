@@ -5,38 +5,31 @@ import React from "react";
 import { DataGrid, Column } from "react-data-grid";
 import { XCircle } from "lucide-react";
 
-// 1. Define the type for a cart item.
-// You could also move this to your 'posSchema.ts' file.
+// 1. Updated CartItem type to include 'discount'
 export type CartItem = {
-  id: string; // Must be unique for react-data-grid (we'll use SKU)
+  id: string;
   sku: string;
   itemName: string;
   unitPrice: number;
+  discount: number; // <-- Added this field
   quantity: number;
   total: number;
 };
 
-// 2. Define the props our component will receive
 type TerminalCartProps = {
   rows: CartItem[];
   onRemoveItem: (sku: string) => void;
 };
 
-// 3. Define a local type for formatter props
-
-// 4. Create a custom formatter for the "Delete" button
-// 1. Extend Column type with custom props
 type DeleteColumn<R> = Column<R> & {
   onRemoveItem: (sku: string) => void;
 };
 
-// 2. Update CustomFormatterProps to accept extended column
 type CustomFormatterProps<R> = {
   row: R;
   column: DeleteColumn<R>;
 };
 
-// 3. Formatter now has strongly typed access
 const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
   return (
     <button
@@ -50,45 +43,46 @@ const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
 };
 
 export const TerminalCart = ({ rows, onRemoveItem }: TerminalCartProps) => {
-  // --- THIS IS THE UPDATED SECTION ---
   const columns: readonly Column<CartItem>[] = [
     {
       key: "sku",
       name: "SKU",
       resizable: true,
-      // No 'width' prop = auto-size to fill
     },
     {
       key: "itemName",
       name: "Item Name",
       resizable: true,
-      // No 'width' prop = auto-size to fill
     },
     {
       key: "unitPrice",
       name: "Unit Price",
       renderCell: ({ row }) => <span>{row.unitPrice.toFixed(2)}</span>,
       resizable: true,
-      // No 'width' prop = auto-size to fill
     },
     {
       key: "quantity",
       name: "Quantity",
       renderCell: ({ row }) => <span>{row.quantity}</span>,
       resizable: true,
-      // No 'width' prop = auto-size to fill
+    },
+    // --- Added Discount Column ---
+    {
+      key: "discount",
+      name: "Discount",
+      renderCell: ({ row }) => <span>{(row.discount || 0).toFixed(2)}</span>,
+      resizable: true,
     },
     {
       key: "total",
       name: "Total",
       renderCell: ({ row }) => <span>{row.total.toFixed(2)}</span>,
       resizable: true,
-      // No 'width' prop = auto-size to fill
     },
     {
       key: "delete",
       name: "Delete",
-      width: 60, // <-- Only this column has a fixed width
+      width: 60,
       resizable: false,
       renderCell: (props) => (
         <DeleteFormatter
@@ -98,34 +92,24 @@ export const TerminalCart = ({ rows, onRemoveItem }: TerminalCartProps) => {
       ),
     } as DeleteColumn<CartItem>,
   ];
-  // --- END OF UPDATED SECTION ---
 
   return (
     <DataGrid
       columns={columns}
       rows={rows}
-      className="w-full h-full rdg-dark" // Use rdg-dark as the base
+      className="w-full h-full rdg-dark"
       headerRowHeight={35}
       rowHeight={30}
       style={
         {
-          // Main theme
           "--rdg-background-color": "#1f2937",
           "--rdg-color": "#d1d5db",
           "--rdg-border-color": "#374151",
-
-          // Header
           "--rdg-header-background-color": "#111827",
           "--rdg-header-color": "#9ca3af",
-
-          // Rows
           "--rdg-row-background-color": "#1f2937",
-          "--rdg-row-hover-background-color": "#37415L",
-
-          // Cells
+          "--rdg-row-hover-background-color": "#374151", // Fixed typo '37415L' to '374151'
           "--rdg-cell-selected-background-color": "#4b5563",
-
-          // Fit container
           border: "none",
           borderRadius: 0,
         } as React.CSSProperties

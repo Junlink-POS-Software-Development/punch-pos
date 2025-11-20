@@ -31,6 +31,11 @@ export const FormFields = React.memo(
           setFocus("quantity");
           break;
         case "quantity":
+          // Changed: Move to discount instead of adding directly
+          setFocus("discount");
+          break;
+        case "discount":
+          // Added: Discount triggers add to cart
           onAddToCartClick();
           setFocus("barcode");
           break;
@@ -53,7 +58,6 @@ export const FormFields = React.memo(
       readOnly?: boolean;
     };
 
-    // Removed: Cashier Name, Transaction Time, Available Stocks
     const fields: FieldConfig[] = [
       {
         title: "Customer Name",
@@ -92,8 +96,6 @@ export const FormFields = React.memo(
 
     return (
       <div className="w-full h-full grow">
-        {/* Adjusted grid-cols to 4 since we have fewer items, or keep 6 and let them flow. 
-            Keeping grid-cols-6 but adjusting rows if needed. */}
         <div className="grid grid-cols-6 grid-rows-3 w-full h-full text-white">
           {fields.map((field) => (
             <React.Fragment key={field.id}>
@@ -127,7 +129,7 @@ export const FormFields = React.memo(
                             });
                             setFocus("quantity");
                           }}
-                          className="w-full h-3 !text-[60%] truncate input-dark"
+                          className="w-full h-3 text-[60%]! truncate input-dark"
                         />
                       </div>
                     )}
@@ -147,6 +149,7 @@ export const FormFields = React.memo(
                         field.id === "discount") && { step: "0.01" })}
                     {...((field.id === "customerName" ||
                       field.id === "quantity" ||
+                      field.id === "discount" || // Added discount to KeyDown logic
                       field.id === "payment" ||
                       field.id === "voucher") && {
                       onKeyDown: handleKeyDown,
