@@ -25,7 +25,7 @@ interface UsePosFormReturn {
   onDoneSubmit: SubmitHandler<PosFormValues>;
   triggerDoneSubmit: () => void;
   liveTime: string;
-  isSubmitting: boolean; // <--- NEW: Expose loading state
+  isSubmitting: boolean;
 }
 
 export const usePosForm = (): UsePosFormReturn => {
@@ -33,7 +33,7 @@ export const usePosForm = (): UsePosFormReturn => {
   const { items: allItems } = useItems();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  // <--- NEW: Local state for submission loading
+  // Local state for submission loading
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
 
@@ -53,7 +53,7 @@ export const usePosForm = (): UsePosFormReturn => {
     control,
   } = methods;
 
-  // --- LIVE CLOCK (Unchanged) ---
+  // --- LIVE CLOCK ---
   useEffect(() => {
     const getNow = () =>
       new Date()
@@ -76,7 +76,7 @@ export const usePosForm = (): UsePosFormReturn => {
     };
   }, []);
 
-  // --- CALCULATION LOGIC (Unchanged) ---
+  // --- CALCULATION LOGIC ---
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.total, 0),
     [cartItems]
@@ -112,7 +112,10 @@ export const usePosForm = (): UsePosFormReturn => {
     setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
   };
 
+  // --- SUBMISSION HANDLER WITH LOGS ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
+    console.log("🚀 [UI START] Submit button clicked");
+
     if (!data.payment || data.payment <= 0) {
       alert("Payment must be greater than zero.");
       return;
@@ -122,27 +125,43 @@ export const usePosForm = (): UsePosFormReturn => {
       return;
     }
 
-    // <--- NEW: Start Loading
+    console.log("⏳ [UI] Setting loading state to TRUE");
     setIsSubmitting(true);
 
     try {
+      console.log("👉 [UI] Calling handleDone()...");
+      const startTime = performance.now();
+
+      // 1. Perform the transaction
       const success = await handleDone(data, cartItems);
 
-      if (success) {
-        // Invalidate queries to refresh tables
-        await queryClient.invalidateQueries({ queryKey: ["payments"] });
-        await queryClient.invalidateQueries({
-          queryKey: ["transaction-items"],
-        });
+      const duration = (performance.now() - startTime).toFixed(2);
+      console.log(
+        `✅ [UI] handleDone() finished in ${duration}ms. Success: ${success}`
+      );
 
+      if (success) {
+        // 2. STOP SPINNER IMMEDIATELY
+        console.log(
+          "🛑 [UI] Stopping loading spinner (setIsSubmitting: false)"
+        );
+        setIsSubmitting(false);
+
+        // 3. Reset Form
         handleClear({ setCartItems, reset });
         setTimeout(() => setFocus("customerName"), 100);
+
+        // 4. Refresh Data (Do NOT await this)
+        console.log("🔄 [UI] Triggering background query invalidation");
+        queryClient.invalidateQueries({ queryKey: ["payments"] });
+        queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
+      } else {
+        console.warn("⚠️ [UI] handleDone returned false. Stopping spinner.");
+        setIsSubmitting(false);
       }
     } catch (error) {
-      console.error("Submission error:", error);
+      console.error("❌ [UI CRASH] Error in submission flow:", error);
       alert("An unexpected error occurred.");
-    } finally {
-      // <--- NEW: Stop Loading regardless of success/failure
       setIsSubmitting(false);
     }
   };
@@ -160,6 +179,6 @@ export const usePosForm = (): UsePosFormReturn => {
     onDoneSubmit,
     triggerDoneSubmit,
     liveTime,
-    isSubmitting, // <--- Export this
+    isSubmitting,
   };
 };

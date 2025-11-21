@@ -16,44 +16,46 @@ const withTimeout = <T>(
         ms
       )
     ),
-  ]) as Promise<T>; // Cast to Promise<T> because Promise.race can return Promise<any>
+  ]) as Promise<T>;
 };
 
 export const handleDone = async (
   data: PosFormValues,
   cartItems: CartItem[]
 ): Promise<boolean> => {
-  console.log("--- [done.ts] Initiating Transaction Submission ---");
+  console.log("--- 🛠 [Logic] handleDone started ---");
 
   try {
-    // 1. Get User (Timeout after 5s)
-    // Using getUser() verifies the token on the server, which is safer but slower.
-    const { data: authData, error: authError } = await withTimeout(
-      supabase.auth.getUser(),
-      5000,
-      "Auth Check"
-    );
+    // STEP 1: AUTH (Changed to getSession for speed)
+    console.log("1️⃣ [Logic] Checking Session (local)...");
+    const { data: authData, error: authError } =
+      await supabase.auth.getSession();
 
-    if (authError || !authData.user) {
-      console.error("Auth Error:", authError);
+    // Note: getSession returns data.session.user
+    if (authError || !authData.session?.user) {
+      console.error("❌ [Logic] Auth failed:", authError);
       alert("Session expired or invalid. Please log in again.");
       return false;
     }
 
-    // 2. Prepare Header
+    const cashierId = authData.session.user.id;
+    console.log("✅ [Logic] Session Valid. User ID:", cashierId);
+
+    // STEP 2: PREPARE HEADER
+    console.log("2️⃣ [Logic] Preparing Payloads...");
     const headerPayload = {
       invoice_no: data.transactionNo,
-      costumer_name: data.customerName,
+      customer_name: data.customerName, // Fixed: 'costumer' -> 'customer'
       amount_rendered: data.payment,
       voucher: data.voucher || 0,
       grand_total: data.grandTotal,
       change: data.change,
       transaction_no: data.transactionNo,
       transaction_time: new Date().toISOString(),
-      cashier_name: authData.user.id,
+      cashier_name: cashierId,
     };
 
-    // 3. Prepare Items
+    // STEP 3: PREPARE ITEMS
     const itemsPayload = cartItems.map((item) => ({
       sku: item.sku,
       item_name: item.itemName,
@@ -63,26 +65,39 @@ export const handleDone = async (
       quantity: item.quantity,
     }));
 
-    // 4. Execute RPC (Timeout after 10s)
+    // *** DEBUG LOG: Check your browser console for this object ***
+    console.log("📦 [Logic] Payload to send:", {
+      header: headerPayload,
+      items: itemsPayload,
+    });
+
+    // STEP 4: EXECUTE RPC (Timeout after 15s)
+    console.log("3️⃣ [Logic] Sending RPC request to Supabase...");
+
     const { error } = await withTimeout(
       supabase.rpc("insert_new_payment_and_transaction", {
         header: headerPayload,
         items: itemsPayload,
       }),
-      10000,
+      15000, // Increased timeout slightly for debugging
       "Transaction Save"
     );
 
     if (error) {
-      console.error("Transaction RPC Error:", error.message);
+      console.error(
+        "❌ [Logic] RPC Error:",
+        error.message,
+        error.details,
+        error.hint
+      );
       alert(`Transaction Failed: ${error.message}`);
       return false;
     }
 
-    console.log("--- [done.ts] Transaction Saved Successfully ---");
+    console.log("✅ [Logic] RPC Success! Transaction Saved.");
     return true;
   } catch (err) {
-    console.error("Unexpected error in handleDone:", err);
+    console.error("❌ [Logic] Unexpected Crash in handleDone:", err);
     alert(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     return false;
   }

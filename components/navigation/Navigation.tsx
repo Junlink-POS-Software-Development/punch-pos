@@ -61,8 +61,8 @@ const Navigation = React.memo(() => {
       shortcuts: ["Sales", "Growth", "Tax"],
     },
     {
-      id: "costumers",
-      text: "Costumers",
+      id: "customers",
+      text: "Customers",
       Icon: Users,
       shortcuts: ["List", "Groups", "Feedback"],
     },

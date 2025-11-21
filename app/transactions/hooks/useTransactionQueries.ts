@@ -16,7 +16,7 @@ interface TransactionRow {
 interface PaymentRow {
   invoice_no: string;
   transaction_time: string;
-  costumer_name: string;
+  customer_name: string;
   amount_rendered: number;
   voucher: number;
   grand_total: number;
@@ -76,7 +76,7 @@ export const usePaymentHistory = () => {
       return (data as unknown as PaymentRow[]).map((p) => ({
         transactionNo: p.invoice_no,
         transactionTime: new Date(p.transaction_time).toLocaleString(),
-        costumerName: p.costumer_name,
+        customerName: p.customer_name,
         amountRendered: p.amount_rendered,
         voucher: p.voucher,
         grandTotal: p.grand_total,

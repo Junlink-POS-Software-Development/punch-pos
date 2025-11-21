@@ -55,7 +55,7 @@ export const PaymentHistoryTable = () => {
                   {pay.transactionTime}
                 </td>
                 <td className="px-6 py-4 font-medium text-white">
-                  {pay.costumerName || (
+                  {pay.customerName || (
                     <span className="opacity-50 italic">Walk-in</span>
                   )}
                 </td>

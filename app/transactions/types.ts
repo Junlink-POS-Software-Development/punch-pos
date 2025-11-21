@@ -15,7 +15,7 @@ export interface TransactionItem {
 export interface PaymentRecord {
   transactionNo: string;
   transactionTime: string;
-  costumerName: string;
+  customerName: string;
   amountRendered: number; // Mapped from "Amount Rendered"
   voucher: number; // Mapped from "Voucher"
   grandTotal: number;
