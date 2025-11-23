@@ -1,8 +1,8 @@
 "use client";
 
-import { Landmark, PieChart } from "lucide-react";
+import { Landmark, PieChart, ArrowRightLeft } from "lucide-react"; // Import new icon
 
-type View = "cashout" | "monitor";
+export type View = "cashout" | "monitor" | "cashflow"; // Add 'cashflow'
 
 type ExpensesNavProps = {
   currentView: View;
@@ -21,19 +21,25 @@ export function ExpensesNav({ currentView, setView }: ExpensesNavProps) {
       text: "Expenses Monitor",
       Icon: PieChart,
     },
+    {
+      id: "cashflow",
+      text: "Cash Flow",
+      Icon: ArrowRightLeft,
+    },
   ];
 
   return (
-    <nav className="gap-4 grid grid-cols-2 mb-8">
+    <nav className="gap-4 grid grid-cols-3 mb-8">
+      {" "}
+      {/* Changed grid-cols-2 to 3 */}
       {navButtons.map((button) => (
         <button
           key={button.id}
-          // Using btn-3d-glass class from your globals.css
           className={`btn-3d-glass flex flex-col items-center justify-center p-4 text-center transition-all duration-200
             ${
               currentView === button.id
-                ? "bg-white/20 text-white" // Active state
-                : "text-slate-300 hover:text-white" // Inactive state
+                ? "bg-white/20 text-white"
+                : "text-slate-300 hover:text-white"
             }
           `}
           onClick={() => setView(button.id as View)}
