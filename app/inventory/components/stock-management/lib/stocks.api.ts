@@ -13,6 +13,23 @@ export interface StockData {
   store_id: string;
 }
 
+// --- HELPER: Prevent Infinite Hanging ---
+const withTimeout = <T>(
+  promise: PromiseLike<T>,
+  ms: number,
+  label: string
+): Promise<T> => {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${ms}ms`)),
+        ms
+      )
+    ),
+  ]) as Promise<T>;
+};
+
 // 1. Fetch Stocks
 // (No change needed - RLS will handle security)
 export const fetchStocks = async (): Promise<StockData[]> => {
@@ -41,7 +58,7 @@ export const fetchStocks = async (): Promise<StockData[]> => {
   return data || [];
 };
 
-// 2. Insert Stock (--- THIS IS THE UPDATED FUNCTION ---)
+// 2. Insert Stock (--- UPDATED WITH TIMEOUT & LOGGING ---)
 // Calls a secure database function to handle multitenant logic.
 export const insertStock = async (data: {
   itemName: string;
@@ -50,17 +67,23 @@ export const insertStock = async (data: {
   capitalPrice: number;
   notes?: string;
 }) => {
-  // Call the database function
-  const { error } = await supabase.rpc("insert_new_stock_item", {
-    item_name_in: data.itemName,
-    flow_in: data.stockFlow,
-    quantity_in: data.quantity,
-    capital_price_in: data.capitalPrice,
-    notes_in: data.notes ?? null,
-  });
+  console.log("🚀 [API] Sending Stock Payload:", data);
+
+  // We wrap the RPC call in withTimeout to ensure it fails if the network hangs
+  const { error } = await withTimeout(
+    supabase.rpc("insert_new_stock_item", {
+      item_name_in: data.itemName,
+      flow_in: data.stockFlow,
+      quantity_in: data.quantity,
+      capital_price_in: data.capitalPrice,
+      notes_in: data.notes ?? null,
+    }),
+    10000, // 10-second timeout
+    "Insert Stock RPC"
+  );
 
   if (error) {
-    console.error("Insert Error:", error);
+    console.error("❌ [API] Insert Error:", error);
     throw new Error(error.message);
   }
 };

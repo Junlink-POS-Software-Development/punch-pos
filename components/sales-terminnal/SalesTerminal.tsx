@@ -1,4 +1,3 @@
-// app/inventory/components/stock-management/SalesTerminal.tsx
 "use client";
 
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
