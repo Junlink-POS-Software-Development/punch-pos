@@ -1,3 +1,4 @@
+// app/inventory/components/stock-management/components/form/usePosForm.ts
 import { useState, useEffect, useMemo } from "react";
 import {
   useForm,
@@ -14,7 +15,8 @@ import {
   posSchema,
 } from "../../utils/posSchema";
 import { CartItem } from "../TerminalCart";
-import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers";
+import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers"; // Ensure TransactionResult is exported from handlers/done
+import { TransactionResult } from "../buttons/handlers/done";
 
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
@@ -26,6 +28,8 @@ interface UsePosFormReturn {
   triggerDoneSubmit: () => void;
   liveTime: string;
   isSubmitting: boolean;
+  successData: TransactionResult | null; // <--- ADDED
+  closeSuccessModal: () => void; // <--- ADDED
 }
 
 export const usePosForm = (): UsePosFormReturn => {
@@ -33,9 +37,11 @@ export const usePosForm = (): UsePosFormReturn => {
   const { items: allItems } = useItems();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  // Local state for submission loading
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
+  const [successData, setSuccessData] = useState<TransactionResult | null>(
+    null
+  ); // <--- STATE FOR MODAL
 
   const methods = useForm<PosFormValues>({
     resolver: zodResolver(posSchema),
@@ -53,7 +59,7 @@ export const usePosForm = (): UsePosFormReturn => {
     control,
   } = methods;
 
-  // --- LIVE CLOCK ---
+  // ... (Existing useEffect for LIVE CLOCK - Keep as is) ...
   useEffect(() => {
     const getNow = () =>
       new Date()
@@ -76,7 +82,7 @@ export const usePosForm = (): UsePosFormReturn => {
     };
   }, []);
 
-  // --- CALCULATION LOGIC ---
+  // ... (Existing Calculation Logic - Keep as is) ...
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.total, 0),
     [cartItems]
@@ -112,10 +118,8 @@ export const usePosForm = (): UsePosFormReturn => {
     setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
   };
 
-  // --- SUBMISSION HANDLER WITH LOGS ---
+  // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
-    console.log("🚀 [UI START] Submit button clicked");
-
     if (!data.payment || data.payment <= 0) {
       alert("Payment must be greater than zero.");
       return;
@@ -125,38 +129,23 @@ export const usePosForm = (): UsePosFormReturn => {
       return;
     }
 
-    console.log("⏳ [UI] Setting loading state to TRUE");
     setIsSubmitting(true);
 
     try {
-      console.log("👉 [UI] Calling handleDone()...");
-      const startTime = performance.now();
-
       // 1. Perform the transaction
-      const success = await handleDone(data, cartItems);
+      // result is now the Payload Object (or null)
+      const result = await handleDone(data, cartItems);
 
-      const duration = (performance.now() - startTime).toFixed(2);
-      console.log(
-        `✅ [UI] handleDone() finished in ${duration}ms. Success: ${success}`
-      );
-
-      if (success) {
-        // 2. STOP SPINNER IMMEDIATELY
-        console.log(
-          "🛑 [UI] Stopping loading spinner (setIsSubmitting: false)"
-        );
+      if (result) {
         setIsSubmitting(false);
 
-        // 3. Reset Form
-        handleClear({ setCartItems, reset });
-        setTimeout(() => setFocus("customerName"), 100);
+        // 2. SET SUCCESS DATA (Opens Modal) - Do NOT clear form yet
+        setSuccessData(result);
 
-        // 4. Refresh Data (Do NOT await this)
-        console.log("🔄 [UI] Triggering background query invalidation");
+        // 3. Invalidate Queries (Background update)
         queryClient.invalidateQueries({ queryKey: ["payments"] });
         queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
       } else {
-        console.warn("⚠️ [UI] handleDone returned false. Stopping spinner.");
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -164,6 +153,12 @@ export const usePosForm = (): UsePosFormReturn => {
       alert("An unexpected error occurred.");
       setIsSubmitting(false);
     }
+  };
+
+  // This is called when the user clicks "Close" on the Modal
+  const closeSuccessModal = () => {
+    setSuccessData(null);
+    onClear(); // NOW we clear the form for the next customer
   };
 
   const triggerDoneSubmit = () => {
@@ -180,5 +175,7 @@ export const usePosForm = (): UsePosFormReturn => {
     triggerDoneSubmit,
     liveTime,
     isSubmitting,
+    successData, // Exported
+    closeSuccessModal, // Exported
   };
 };
