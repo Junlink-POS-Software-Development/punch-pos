@@ -117,7 +117,7 @@ export const FormFields = React.memo(
 
     return (
       <div className="w-full h-full grow">
-        <div className="grid grid-cols-6 grid-rows-3 w-full h-full text-white">
+        <div className="grid grid-cols-6 grid-rows-3 w-full h-[80%] text-white">
           {fields.map((field) => (
             <React.Fragment key={field.id}>
               <label

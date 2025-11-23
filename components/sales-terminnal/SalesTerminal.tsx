@@ -1,3 +1,4 @@
+// app/inventory/components/stock-management/SalesTerminal.tsx
 "use client";
 
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
@@ -6,23 +7,15 @@ import FormFields from "./components/FormFields";
 import TerminalButtons from "./components/buttons/TerminalButtons";
 import { useState, useEffect } from "react";
 import { FormProvider } from "react-hook-form";
-import { SignIn } from "../sign-in/SignIn";
-import { SignUp } from "../sign-in/SignUp";
-import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import "react-data-grid/lib/styles.css";
 import TerminalCart from "./components/TerminalCart";
 import { usePosForm } from "./components/form/usePosForm";
-import { handleLogOut } from "./components/buttons/handlers";
 import SuccessReceiptModal from "./utils/SuccessReceiptModal";
-
-type AuthModalState = "hidden" | "signIn" | "signUp";
 
 const SalesTerminal = () => {
   const { isSplit } = useView();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [authModalState, setAuthModalState] =
-    useState<AuthModalState>("hidden");
 
   const {
     methods,
@@ -33,16 +26,13 @@ const SalesTerminal = () => {
     triggerDoneSubmit,
     onClear,
     liveTime,
-    successData, // <--- Destructure
-    closeSuccessModal, // <--- Destructure
+    successData,
+    closeSuccessModal,
   } = usePosForm();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // We keep userName state for the LCD display,
+  // but we remove the modals/signIn buttons since page.tsx handles that.
   const [userName, setUserName] = useState("PLEASE SIGN IN");
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  // ... (Rest of authentication/user logic stays exactly the same) ...
-  // ... (useEffect for fetchUser logic stays the same) ...
 
   useEffect(() => {
     const fetchUser = async (userId: string) => {
@@ -59,12 +49,15 @@ const SalesTerminal = () => {
       }
     };
 
+    // Check session on load
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) fetchUser(data.session.user.id);
+    });
+
+    // Listen for changes (Login from the Header will update this LCD)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        const signedIn = !!session;
-        setIsLoggedIn(signedIn);
-
-        if (signedIn && session?.user) {
+        if (session?.user) {
           await fetchUser(session.user.id);
         } else {
           setUserName("PLEASE SIGN IN");
@@ -76,27 +69,6 @@ const SalesTerminal = () => {
       authListener?.subscription.unsubscribe();
     };
   }, []);
-
-  const openSignInModal = () => setAuthModalState("signIn");
-  const openSignUpModal = () => setAuthModalState("signUp");
-  const closeModal = () => setAuthModalState("hidden");
-
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
-    closeModal();
-  };
-
-  const handleLogoutClick = async () => {
-    setIsLoggingOut(true);
-    const loggedOut = await handleLogOut();
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    setIsLoggedIn(false);
-    setUserName("PLEASE SIGN IN");
-    onClear();
-    setIsLoggingOut(false);
-    openSignUpModal();
-  };
 
   const displayProduct = "COKE";
   const displayPrice = "₱25.00";
@@ -113,16 +85,6 @@ const SalesTerminal = () => {
 
   return (
     <div className="relative flex flex-col p-1 h-full">
-      {/* ... (Existing Logout Overlay) ... */}
-      {isLoggingOut && (
-        <div className="z-50 fixed inset-0 flex flex-col justify-center items-center bg-black/60 backdrop-blur-md transition-all duration-300">
-          <Loader2 className="mb-4 w-12 h-12 text-retro-cyan animate-spin" />
-          <span className="font-retro text-retro-cyan text-2xl tracking-widest">
-            LOGGING OUT...
-          </span>
-        </div>
-      )}
-
       {/* ... (Existing Header) ... */}
       <div className="flex flex-col justify-center items-center shadow-lg mb-2 px-4 py-1 rounded-md w-full min-h-[180px] font-retro retro-lcd-container retro-scanlines">
         <h1 className="mt-1 font-bold text-retro-cyan text-2xl md:text-3xl uppercase leading-none tracking-widest">
@@ -149,16 +111,13 @@ const SalesTerminal = () => {
           onSubmit={methods.handleSubmit(onDoneSubmit)}
           className={`gap-1 grid ${ScreenLogic()} w-full h-full overflow-hidden`}
         >
-          {/* ... (Existing Form and Cart Layout) ... */}
           <div className="relative flex flex-col w-full h-full">
             <FormFields
               onAddToCartClick={onAddToCart}
               onDoneSubmitTrigger={triggerDoneSubmit}
             />
+            {/* REMOVED AUTH PROPS */}
             <TerminalButtons
-              isLoggedIn={isLoggedIn}
-              onSignInClick={openSignInModal}
-              onLogoutClick={handleLogoutClick}
               onAddToCartClick={onAddToCart}
               onDoneClick={triggerDoneSubmit}
               onClearClick={onClear}
@@ -170,35 +129,9 @@ const SalesTerminal = () => {
         </form>
       </FormProvider>
 
-      {/* --- NEW SUCCESS RECEIPT MODAL --- */}
+      {/* --- SUCCESS RECEIPT MODAL --- */}
       {successData && (
         <SuccessReceiptModal data={successData} onClose={closeSuccessModal} />
-      )}
-
-      {/* ... (Existing Auth Modal) ... */}
-      {authModalState !== "hidden" && (
-        <div
-          className="z-40 fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm"
-          onClick={closeModal}
-        >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            {/* Auth Components... */}
-            <button
-              onClick={closeModal}
-              className="top-4 right-4 z-50 absolute p-2 text-slate-400 hover:text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            {authModalState === "signIn" ? (
-              <SignIn
-                onSwitchToSignUp={openSignUpModal}
-                onSuccess={handleLoginSuccess}
-              />
-            ) : (
-              <SignUp onSwitchToSignIn={openSignInModal} />
-            )}
-          </div>
-        </div>
       )}
     </div>
   );
