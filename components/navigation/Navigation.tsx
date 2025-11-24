@@ -28,63 +28,103 @@ const Navigation = React.memo(() => {
       id: "dashboard",
       text: "Dashboard",
       Icon: LayoutGrid,
-      shortcuts: ["Overview", "Real-time", "Widgets"],
+      shortcuts: [
+        { label: "Overview", href: "/dashboard" },
+        { label: "Real-time", href: "/dashboard" },
+        { label: "Widgets", href: "/dashboard" },
+      ],
     },
     {
       id: "inventory",
       text: "Inventory",
       Icon: Archive,
-      shortcuts: ["Add Item", "Stock Count", "Suppliers"],
+      shortcuts: [
+        { label: "Register Item", href: "/inventory?view=register" },
+        { label: "Manage Stocks", href: "/inventory?view=manage" },
+        { label: "Stocks Monitor", href: "/inventory?view=monitor" },
+      ],
     },
     {
       id: "expenses",
       text: "Expenses",
       Icon: TrendingDown,
-      shortcuts: ["New Expense", "Categories", "Receipts"],
+      shortcuts: [
+        { label: "New Expense", href: "/expenses" },
+        { label: "Categories", href: "/expenses" },
+        { label: "Receipts", href: "/expenses" },
+      ],
     },
     {
       id: "transactions",
       text: "Transactions",
       Icon: ArrowLeftRight,
-      shortcuts: ["History", "Pending", "Refunds"],
+      shortcuts: [
+        { label: "History", href: "/transactions" },
+        { label: "Pending", href: "/transactions" },
+        { label: "Refunds", href: "/transactions" },
+      ],
     },
     {
       id: "settings",
       text: "Settings",
       Icon: Settings,
-      shortcuts: ["General", "Security", "Billing"],
+      shortcuts: [
+        { label: "General", href: "/settings" },
+        { label: "Security", href: "/settings" },
+        { label: "Billing", href: "/settings" },
+      ],
     },
     {
       id: "reports",
       text: "Reports",
       Icon: BarChart,
-      shortcuts: ["Sales", "Growth", "Tax"],
+      shortcuts: [
+        { label: "Sales", href: "/reports" },
+        { label: "Growth", href: "/reports" },
+        { label: "Tax", href: "/reports" },
+      ],
     },
     {
       id: "customers",
       text: "Customers",
       Icon: Users,
-      shortcuts: ["List", "Groups", "Feedback"],
+      shortcuts: [
+        { label: "List", href: "/customers" },
+        { label: "Groups", href: "/customers" },
+        { label: "Feedback", href: "/customers" },
+      ],
     },
     {
       id: "junfue-ai",
       text: "JunFue AI",
       Icon: Brain,
-      shortcuts: ["Chat", "Insights", "Automations"],
+      shortcuts: [
+        { label: "Chat", href: "/junfue-ai" },
+        { label: "Insights", href: "/junfue-ai" },
+        { label: "Automations", href: "/junfue-ai" },
+      ],
     },
     {
       id: "inbox",
       text: "Inbox",
       Icon: Inbox,
       hasNotification: true,
-      shortcuts: ["Unread", "Archived", "Compose"],
+      shortcuts: [
+        { label: "Unread", href: "/inbox" },
+        { label: "Archived", href: "/inbox" },
+        { label: "Compose", href: "/inbox" },
+      ],
     },
     {
       id: "notes",
       text: "Notes",
       Icon: StickyNote,
       hasNotification: true,
-      shortcuts: ["New Note", "To-Do", "Shared"],
+      shortcuts: [
+        { label: "New Note", href: "/notes" },
+        { label: "To-Do", href: "/notes" },
+        { label: "Shared", href: "/notes" },
+      ],
     },
   ];
 
@@ -129,10 +169,13 @@ const Navigation = React.memo(() => {
               <ul className="space-y-1">
                 {(item.shortcuts || MOCK_SHORTCUTS).map((shortcut, idx) => (
                   <li key={idx}>
-                    <button className="flex justify-between items-center hover:bg-white/10 px-2 py-1.5 rounded-md w-full text-slate-300 hover:text-white text-sm text-left transition-colors">
-                      {shortcut}
+                    <Link
+                      href={shortcut.href}
+                      className="flex justify-between items-center hover:bg-white/10 px-2 py-1.5 rounded-md w-full text-slate-300 hover:text-white text-sm text-left transition-colors"
+                    >
+                      {shortcut.label}
                       <ChevronRight className="opacity-50 w-3 h-3" />
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
