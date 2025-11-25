@@ -119,6 +119,38 @@ export const handleDone = async (
 
     console.log("✅ [Logic] RPC Success! Transaction Saved.");
 
+    // --- VOUCHER AUTOMATION ---
+    if (data.voucher && data.voucher > 0) {
+      try {
+        console.log("🎫 [Logic] Processing Voucher Deduction...");
+        // Dynamic import to avoid circular dependencies if any, though likely fine here
+        const { fetchCategories } = await import("@/app/inventory/components/item-registration/lib/categories.api");
+        const { createExpense } = await import("@/app/expenses/lib/expenses.api");
+
+        const categories = await fetchCategories();
+        const defaultSource = categories.find(c => c.is_default_voucher_source);
+
+        if (defaultSource) {
+          await createExpense({
+            transaction_date: new Date().toISOString().split('T')[0],
+            source: defaultSource.category,
+            classification: "Voucher Deduction",
+            amount: Number(data.voucher),
+            receipt_no: data.transactionNo,
+            notes: `Automatic deduction for voucher usage. Transaction: ${data.transactionNo}`,
+          });
+          console.log(`✅ [Logic] Voucher expense recorded against ${defaultSource.category}`);
+        } else {
+          console.warn("⚠️ [Logic] Voucher used but no default source category set. Expense NOT recorded.");
+          // Optional: Alert the user or just log it. 
+          // alert("Warning: Voucher used but no default accounting category set in Settings.");
+        }
+      } catch (voucherError) {
+        console.error("❌ [Logic] Failed to record voucher expense:", voucherError);
+        // We don't fail the whole transaction for this, just log it
+      }
+    }
+
     // Return the payload to the UI for the Modal
     return headerPayload;
   } catch (err) {
