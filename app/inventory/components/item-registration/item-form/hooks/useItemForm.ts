@@ -25,6 +25,7 @@ export const useItemForm = ({
     handleSubmit,
     reset,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<Item>({
     resolver: zodResolver(itemSchema),
@@ -125,6 +126,7 @@ export const useItemForm = ({
   return {
     isEditing,
     register,
+    control,
     handleRHFSubmit: handleSubmit(onSubmitLogic), // Pre-wrapped submit handler
     handleKeyDown,
     errors,
