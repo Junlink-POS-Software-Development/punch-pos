@@ -13,6 +13,7 @@ import {
   getDefaultFormValues,
   PosFormValues,
   posSchema,
+  generateTransactionNo, // <--- Import this
 } from "../../utils/posSchema";
 import { CartItem } from "../TerminalCart";
 import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers"; // Ensure TransactionResult is exported from handlers/done
@@ -45,7 +46,10 @@ export const usePosForm = (): UsePosFormReturn => {
 
   const methods = useForm<PosFormValues>({
     resolver: zodResolver(posSchema),
-    defaultValues: getDefaultFormValues(),
+    defaultValues: {
+      ...getDefaultFormValues(),
+      transactionNo: "", // <--- Initialize empty to avoid hydration mismatch
+    },
     mode: "onChange",
   });
 
@@ -61,6 +65,9 @@ export const usePosForm = (): UsePosFormReturn => {
 
   // ... (Existing useEffect for LIVE CLOCK - Keep as is) ...
   useEffect(() => {
+    // Generate transaction number on client side only
+    setValue("transactionNo", generateTransactionNo());
+
     const getNow = () =>
       new Date()
         .toLocaleString("en-US", {
@@ -80,7 +87,7 @@ export const usePosForm = (): UsePosFormReturn => {
       clearTimeout(initialTimeout);
       clearInterval(timer);
     };
-  }, []);
+  }, [setValue]);
 
   // ... (Existing Calculation Logic - Keep as is) ...
   const cartTotal = useMemo(

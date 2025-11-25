@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { ExpensesNav } from "./utils/ExpensesNav";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ExpensesNav, View } from "./utils/ExpensesNav";
 import { Cashout } from "./components/Cashout";
 import { ExpensesMntr } from "./components/ExpensesMntr";
 
-type View = "cashout" | "monitor";
-
 export default function ExpensesPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const viewParam = searchParams.get("view") as View | null;
+
   const [view, setView] = useState<View>("cashout");
+
+  // Sync state with URL param
+  useEffect(() => {
+    if (viewParam && ["cashout", "monitor", "cashflow"].includes(viewParam)) {
+      setView(viewParam);
+    }
+  }, [viewParam]);
+
+  const handleViewChange = (newView: View) => {
+    setView(newView);
+    router.push(`/expenses?view=${newView}`);
+  };
 
   return (
     <div className="p-6 text-white">
@@ -28,12 +43,13 @@ export default function ExpensesPage() {
       <div className="mb-8 border border-slate-700"></div>
 
       {/* --- Navigation --- */}
-      <ExpensesNav currentView={view} setView={setView} />
+      <ExpensesNav currentView={view} setView={handleViewChange} />
 
       {/* --- Conditional Content --- */}
       <div>
         {view === "cashout" && <Cashout />}
         {view === "monitor" && <ExpensesMntr />}
+        {view === "cashflow" && <div className="p-4 text-slate-400">Cash Flow Module Coming Soon</div>}
       </div>
     </div>
   );

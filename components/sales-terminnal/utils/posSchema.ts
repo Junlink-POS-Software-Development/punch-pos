@@ -4,10 +4,11 @@ import { z } from "zod";
 const pesoFormat = z.number().min(0, "Value must be positive");
 
 // Helper to generate a random transaction number
+// Helper to generate a random transaction number
 export const generateTransactionNo = () => {
-  const randomPart1 = Math.floor(10000 + Math.random() * 90000);
-  const randomPart2 = Math.floor(10 + Math.random() * 90);
-  return `ABC-${randomPart1}-D${randomPart2}`;
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+  const randomPart = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+  return `TRX-${timestamp}-${randomPart}`;
 };
 
 export const posSchema = z.object({

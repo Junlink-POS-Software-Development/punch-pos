@@ -87,6 +87,31 @@ export const handleDone = async (
     );
 
     if (error) {
+      // --- IDEMPOTENCY CHECK ---
+      // Check if error is "duplicate key value violates unique constraint"
+      if (error.message.includes("duplicate key value") || error.message.includes("payments_pkey")) {
+        console.warn("⚠️ [Logic] Duplicate Key Error detected. Checking for existing transaction...");
+        
+        // Check if the transaction actually exists
+        const { data: existingPayment, error: fetchError } = await supabase
+          .from("payments")
+          .select("invoice_no, grand_total")
+          .eq("invoice_no", data.transactionNo)
+          .single();
+
+        if (existingPayment && !fetchError) {
+           // Verify it matches the current attempt (basic check)
+           if (Math.abs(existingPayment.grand_total - data.grandTotal) < 0.01) {
+             console.log("✅ [Logic] Transaction already exists and matches. Treating as success.");
+             return headerPayload;
+           } else {
+             console.error("❌ [Logic] Duplicate ID found but amounts do not match.");
+             alert("Transaction ID collision detected with different amount. Please try again.");
+             return null;
+           }
+        }
+      }
+
       console.error("❌ [Logic] RPC Error:", error.message);
       alert(`Transaction Failed: ${error.message}`);
       return null; // <--- Return null on failure

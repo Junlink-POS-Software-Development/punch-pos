@@ -4,14 +4,14 @@ import { TransactionItem, PaymentRecord } from "../types";
 
 // --- Types for Raw Supabase Responses ---
 interface TransactionRow {
-  invoice_no: string; // Ensure this matches your DB column (sometimes it's transaction_no)
+  invoice_no: string;
   sku: string;
   item_name: string;
   cost_price: number;
   discount: number;
   quantity: number;
   total_price: number;
-  created_at?: string; // Optional: Good to have for sorting
+  created_at?: string;
   id?: number;
 }
 
@@ -25,21 +25,56 @@ interface PaymentRow {
   change: number;
 }
 
-// --- 1. Hook for Line Items History (WITH PAGINATION) ---
-export const useTransactionHistory = (page: number, pageSize: number) => {
+export interface TransactionFilters {
+  startDate?: string;
+  endDate?: string;
+  [key: string]: string | undefined;
+}
+
+// --- 1. Hook for Line Items History (WITH PAGINATION & FILTERS) ---
+export const useTransactionHistory = (
+  page: number,
+  pageSize: number,
+  filters: TransactionFilters = {}
+) => {
   return useQuery({
-    queryKey: ["transaction-items", page, pageSize],
+    queryKey: ["transaction-items", page, pageSize, filters],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // CHECK DB: Ensure 'transactions' table has these columns
-      const { data, error, count } = await supabase
+      let query = supabase
         .from("transactions")
-        .select("*", { count: "exact" })
+        .select("*", { count: "exact" });
+
+      // Apply Date Filters
+      if (filters.startDate) {
+        query = query.gte("created_at", `${filters.startDate}T00:00:00`);
+      }
+      if (filters.endDate) {
+        query = query.lte("created_at", `${filters.endDate}T23:59:59`);
+      }
+
+      // Apply Column Filters
+      // Map frontend keys to DB columns
+      const columnMap: Record<string, string> = {
+        transactionNo: "invoice_no",
+        barcode: "sku",
+        ItemName: "item_name",
+      };
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && key !== "startDate" && key !== "endDate") {
+          const dbColumn = columnMap[key];
+          if (dbColumn) {
+            query = query.ilike(dbColumn, `%${value}%`);
+          }
+        }
+      });
+
+      const { data, error, count } = await query
         .range(from, to)
-        // Prefer sorting by created_at if available, otherwise fallback to id
         .order("id", { ascending: false });
 
       if (error) {
@@ -67,23 +102,56 @@ export const useTransactionHistory = (page: number, pageSize: number) => {
   });
 };
 
-// --- 2. Hook for Payment/Header History ---
-export const usePaymentHistory = () => {
+// --- 2. Hook for Payment/Header History (WITH PAGINATION & FILTERS) ---
+export const usePaymentHistory = (
+  page: number = 1,
+  pageSize: number = 50,
+  filters: TransactionFilters = {}
+) => {
   return useQuery({
-    queryKey: ["payments"], // Consider adding a limit key here if you paginate later
+    queryKey: ["payments", page, pageSize, filters],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
         .from("payments")
-        .select("*")
-        .order("transaction_time", { ascending: false })
-        .limit(50); // <--- CRITICAL FIX: Added limit to prevent crashing
+        .select("*", { count: "exact" });
+
+      // Apply Date Filters
+      if (filters.startDate) {
+        query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
+      }
+      if (filters.endDate) {
+        query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
+      }
+
+      // Apply Column Filters
+      const columnMap: Record<string, string> = {
+        transactionNo: "invoice_no",
+        customerName: "customer_name",
+      };
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && key !== "startDate" && key !== "endDate") {
+          const dbColumn = columnMap[key];
+          if (dbColumn) {
+            query = query.ilike(dbColumn, `%${value}%`);
+          }
+        }
+      });
+
+      const { data, error, count } = await query
+        .range(from, to)
+        .order("transaction_time", { ascending: false });
 
       if (error) {
         console.error("Error fetching payment history:", error);
         throw new Error(error.message);
       }
 
-      return (data as unknown as PaymentRow[]).map((p) => ({
+      const formattedData = (data as unknown as PaymentRow[]).map((p) => ({
         transactionNo: p.invoice_no,
         transactionTime: new Date(p.transaction_time).toLocaleString(),
         customerName: p.customer_name,
@@ -92,6 +160,11 @@ export const usePaymentHistory = () => {
         grandTotal: p.grand_total,
         change: p.change,
       })) as PaymentRecord[];
+
+      return {
+        data: formattedData,
+        count: count || 0,
+      };
     },
   });
 };

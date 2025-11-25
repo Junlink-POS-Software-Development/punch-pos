@@ -1,23 +1,30 @@
 "use client";
 
 import React, { useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
-import { useTransactionHistory } from "../../hooks/useTransactionQueries";
+import { Loader2, AlertCircle, XCircle } from "lucide-react";
+import { useTransactionHistory, TransactionFilters } from "../../hooks/useTransactionQueries";
 import { ItemTablePagination } from "@/components/reusables/ItemTablePagination";
-// Adjust this import path to where you placed the reusable component
+import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
+import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 
 export const TransactionHistoryTable = () => {
   // --- Pagination State ---
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // --- Fetch Data with Pagination Params ---
+  // --- Filter State ---
+  const [filters, setFilters] = useState<TransactionFilters>({
+    startDate: "",
+    endDate: "",
+  });
+
+  // --- Fetch Data with Pagination & Filters ---
   const {
     data: queryResult,
     isLoading,
     isError,
     error,
-  } = useTransactionHistory(currentPage, rowsPerPage);
+  } = useTransactionHistory(currentPage, rowsPerPage, filters);
 
   const transactions = queryResult?.data || [];
   const totalRows = queryResult?.count || 0;
@@ -34,6 +41,30 @@ export const TransactionHistoryTable = () => {
     setRowsPerPage(newSize);
     setCurrentPage(1); // Reset to first page on size change
   };
+
+  const handleDateChange = (key: "startDate" | "endDate", value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleClearDates = () => {
+    setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters({ startDate: "", endDate: "" });
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Object.keys(filters).some(
+    (key) => key !== "startDate" && key !== "endDate" && filters[key]
+  );
 
   if (isLoading) {
     return (
@@ -54,14 +85,52 @@ export const TransactionHistoryTable = () => {
 
   return (
     <div className="flex flex-col rounded-lg h-full overflow-hidden glass-effect">
+      {/* --- Filters Toolbar --- */}
+      <div className="flex justify-between items-center bg-slate-800/30 p-4 border-slate-700 border-b">
+        <DateRangeFilter
+          startDate={filters.startDate || ""}
+          endDate={filters.endDate || ""}
+          onStartDateChange={(val) => handleDateChange("startDate", val)}
+          onEndDateChange={(val) => handleDateChange("endDate", val)}
+          onClear={handleClearDates}
+        />
+        
+        {hasActiveFilters && (
+          <button
+            onClick={handleClearAllFilters}
+            className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-400 text-xs transition-all"
+          >
+            <XCircle className="w-3 h-3" /> Clear Column Filters
+          </button>
+        )}
+      </div>
+
       {/* Scrollable Table Container */}
       <div className="overflow-x-auto">
         <table className="w-full text-slate-300 text-sm text-left">
           <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase">
             <tr>
-              <th className="px-6 py-3 whitespace-nowrap">Invoice Ref</th>
-              <th className="px-6 py-3 whitespace-nowrap">Barcode</th>
-              <th className="px-6 py-3 whitespace-nowrap">Item Name</th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <HeaderWithFilter
+                  column={{ key: "transactionNo", name: "Invoice Ref" }}
+                  filters={filters as Record<string, string>}
+                  onApplyFilter={handleApplyFilter}
+                />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <HeaderWithFilter
+                  column={{ key: "barcode", name: "Barcode" }}
+                  filters={filters as Record<string, string>}
+                  onApplyFilter={handleApplyFilter}
+                />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <HeaderWithFilter
+                  column={{ key: "ItemName", name: "Item Name" }}
+                  filters={filters as Record<string, string>}
+                  onApplyFilter={handleApplyFilter}
+                />
+              </th>
               <th className="px-6 py-3 text-right whitespace-nowrap">
                 Unit Price
               </th>

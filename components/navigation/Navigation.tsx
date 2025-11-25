@@ -49,9 +49,9 @@ const Navigation = React.memo(() => {
       text: "Expenses",
       Icon: TrendingDown,
       shortcuts: [
-        { label: "New Expense", href: "/expenses" },
-        { label: "Categories", href: "/expenses" },
-        { label: "Receipts", href: "/expenses" },
+        { label: "Cashout", href: "/expenses?view=cashout" },
+        { label: "Expenses Monitor", href: "/expenses?view=monitor" },
+        { label: "Cash Flow", href: "/expenses?view=cashflow" },
       ],
     },
     {
@@ -59,9 +59,8 @@ const Navigation = React.memo(() => {
       text: "Transactions",
       Icon: ArrowLeftRight,
       shortcuts: [
-        { label: "History", href: "/transactions" },
-        { label: "Pending", href: "/transactions" },
-        { label: "Refunds", href: "/transactions" },
+        { label: "Transaction History", href: "/transactions?view=history" },
+        { label: "Payments History", href: "/transactions?view=payments" },
       ],
     },
     {

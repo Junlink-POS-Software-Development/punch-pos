@@ -1,9 +1,10 @@
 // app/transactions/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import TransactionsNav, {
   TransactionsView,
 } from "./components/TransactionsNav";
@@ -12,7 +13,23 @@ import { PaymentHistoryTable } from "./components/tables/PaymentHistoryTable";
 import { TransactionHistoryTable } from "./components/tables/TransactionHistoryTable";
 
 export default function TransactionsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const viewParam = searchParams.get("view") as TransactionsView | null;
+
   const [activeView, setActiveView] = useState<TransactionsView>("history");
+
+  // Sync state with URL param
+  useEffect(() => {
+    if (viewParam && ["history", "payments"].includes(viewParam)) {
+      setActiveView(viewParam);
+    }
+  }, [viewParam]);
+
+  const handleViewChange = (view: TransactionsView) => {
+    setActiveView(view);
+    router.push(`/transactions?view=${view}`);
+  };
 
   const renderView = () => {
     switch (activeView) {
@@ -64,7 +81,7 @@ export default function TransactionsPage() {
       <div className="top-0 z-10 sticky bg-primary-light/95 backdrop-blur-2xl border-slate-800 border-b">
         <TransactionsNav
           activeView={activeView}
-          setActiveView={setActiveView}
+          setActiveView={handleViewChange}
         />
       </div>
       {/* Main Content Area */}
