@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import ItemReg from "./components/item-registration/ItemReg";
 import { StockManagement } from "./components/stock-management/StockManagement";
 import StocksMonitor from "./components/stocks-monitor/StocksMonitor";
 
-export default function InventoryPage() {
+function InventoryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const viewParam = searchParams.get("view") as InventoryView | null;
@@ -66,5 +66,13 @@ export default function InventoryPage() {
 
       <div>{renderView()}</div>
     </div>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+      <InventoryContent />
+    </Suspense>
   );
 }

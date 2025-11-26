@@ -1,7 +1,7 @@
 // app/transactions/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import TransactionsNav, {
 import { PaymentHistoryTable } from "./components/tables/PaymentHistoryTable";
 import { TransactionHistoryTable } from "./components/tables/TransactionHistoryTable";
 
-export default function TransactionsPage() {
+function TransactionsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const viewParam = searchParams.get("view") as TransactionsView | null;
@@ -89,5 +89,13 @@ export default function TransactionsPage() {
         {renderView()}
       </div>
     </div>
+  );
+}
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+      <TransactionsContent />
+    </Suspense>
   );
 }
