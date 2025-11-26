@@ -4,14 +4,14 @@
 import React from "react";
 
 type TerminalButtonsProps = {
-  onAddToCartClick: () => void | Promise<void>; // Support both sync and async
+  onAddToCartClick: () => void; // Back to sync
   onDoneClick: () => void;
   onClearClick: () => void;
 };
 
 const TerminalButtons = React.memo(
   ({ onAddToCartClick, onDoneClick, onClearClick }: TerminalButtonsProps) => {
-    const terminalHandlers: Record<string, () => void | Promise<void>> = {
+    const terminalHandlers: Record<string, () => void> = {
       addToCart: onAddToCartClick,
       done: onDoneClick,
       clear: onClearClick,

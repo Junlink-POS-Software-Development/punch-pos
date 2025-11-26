@@ -6,7 +6,7 @@ import { PosFormValues } from "../utils/posSchema";
 import ItemAutocomplete from "../../../utils/ItemAutoComplete";
 
 type FormFieldsProps = {
-  onAddToCartClick: () => void | Promise<void>; // Support async
+  onAddToCartClick: () => void; // Back to sync
   onDoneSubmitTrigger: () => void;
 };
 

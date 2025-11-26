@@ -5,8 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
 import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchInventory } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
+import { useInventory } from "@/app/inventory/components/stocks-monitor/context/InventoryContext";
 
 type TerminalHeaderProps = {
   userName: string;
@@ -17,12 +16,8 @@ export const TerminalHeader = ({ userName, liveTime }: TerminalHeaderProps) => {
   const { watch } = useFormContext<PosFormValues>();
   const { items: allItems } = useItems();
   
-  // Fetch inventory data with stock information
-  const { data: inventoryData } = useQuery({
-    queryKey: ["inventory-monitor"],
-    queryFn: () => fetchInventory(),
-    refetchInterval: 5000, // Refresh every 5 seconds
-  });
+  // Use shared inventory context instead of independent fetch
+  const { inventory: inventoryData } = useInventory();
   
   // Watch the barcode field for changes
   const currentBarcode = watch("barcode");

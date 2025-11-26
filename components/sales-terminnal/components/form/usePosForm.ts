@@ -9,6 +9,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
+import { useInventory } from "@/app/inventory/components/stocks-monitor/context/InventoryContext";
 import {
   getDefaultFormValues,
   PosFormValues,
@@ -22,7 +23,7 @@ import { TransactionResult } from "../buttons/handlers/done";
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
   cartItems: CartItem[];
-  onAddToCart: () => Promise<void>; // Changed to async
+  onAddToCart: () => void; // Changed back to sync
   onRemoveItem: (sku: string) => void;
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
@@ -38,6 +39,7 @@ interface UsePosFormReturn {
 export const usePosForm = (): UsePosFormReturn => {
   const queryClient = useQueryClient();
   const { items: allItems } = useItems();
+  const { inventory: inventoryData } = useInventory(); // Use shared inventory context
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,8 +110,8 @@ export const usePosForm = (): UsePosFormReturn => {
     setValue("change", changeAmount, { shouldValidate: false });
   }, [cartTotal, payment, voucher, setValue]);
 
-  const onAddToCart = async () => {
-    await handleAddToCart({
+  const onAddToCart = () => {
+    handleAddToCart({
       getValues,
       setValue,
       resetField,
@@ -117,6 +119,7 @@ export const usePosForm = (): UsePosFormReturn => {
       cartItems,
       setCartItems,
       onError: (message) => setErrorMessage(message), // Pass error handler
+      inventoryData, // Pass inventory from context
     });
   };
 

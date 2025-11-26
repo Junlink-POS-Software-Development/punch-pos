@@ -1,22 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-
+import React from "react";
+import { Column } from "react-data-grid";
 import { Loader2, AlertTriangle, PackageCheck } from "lucide-react";
 import "react-data-grid/lib/styles.css";
-import { DataGrid, Column } from "react-data-grid";
-import { fetchInventory, InventoryItem } from "./lib/inventory.api";
+import { DataGrid } from "react-data-grid";
+import { InventoryItem } from "./lib/inventory.api";
+import { useInventory } from "./context/InventoryContext";
 
 export default function StocksMonitor() {
+  // Use shared inventory context
   const {
-    data: inventory,
+    inventory,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["stocks-monitor"], // Changed key to match component theme
-    queryFn: () => fetchInventory(),
-    refetchInterval: 30000, // Auto-refresh every 30s
-  });
+  } = useInventory();
 
   if (isLoading) {
     return (
