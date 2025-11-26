@@ -6,6 +6,7 @@ import Navigation from "../components/navigation/Navigation";
 import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
+import dayjs from "dayjs";
 
 // Import Local Components
 import SearchBar from "./components/SearchBar";
@@ -79,6 +80,77 @@ export default function HomePage() {
     setCurrentUser(null);
   };
 
+  // --- STATS DATA FETCHING ---
+  const [statsMetrics, setStatsMetrics] = useState({
+    totalCustomers: 0,
+    dailySales: 0,
+    netProfit: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+
+  
+  // Re-implementing the fetch correctly inside the effect
+  useEffect(() => {
+    async function fetchHomeStats() {
+      try {
+        setStatsLoading(true);
+        const today = dayjs();
+
+        const { data: payments } = await supabase
+          .from("payments")
+          .select("invoice_no, customer_name, grand_total, transaction_time");
+          
+        const { data: expenses } = await supabase
+          .from("expenses")
+          .select("amount, transaction_date");
+          
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select("cost_price, quantity, invoice_no");
+
+        const uniqueCustomers = new Set(
+          payments?.map((c) => c.customer_name).filter(Boolean)
+        ).size;
+
+        const todayPayments = payments?.filter(p => 
+          p.transaction_time && dayjs(p.transaction_time).isSame(today, 'day')
+        ) || [];
+        
+        const todaySales = todayPayments.reduce((sum, p) => sum + (Number(p.grand_total) || 0), 0);
+
+        // COGS
+        const invoiceDateMap = new Map();
+        payments?.forEach(p => {
+           if(p.invoice_no) invoiceDateMap.set(p.invoice_no, p.transaction_time);
+        });
+
+        const todayTransactions = transactions?.filter(t => {
+          const time = invoiceDateMap.get(t.invoice_no);
+          return time && dayjs(time).isSame(today, 'day');
+        }) || [];
+
+        const todayCOGS = todayTransactions.reduce((sum, t) => sum + ((Number(t.cost_price) || 0) * (Number(t.quantity) || 1)), 0);
+
+        const todayExpenses = expenses?.filter(e => 
+          dayjs(e.transaction_date).isSame(today, 'day')
+        ).reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0;
+
+        setStatsMetrics({
+          totalCustomers: uniqueCustomers,
+          dailySales: todaySales,
+          netProfit: todaySales - todayCOGS - todayExpenses
+        });
+
+      } catch (error) {
+        console.error("Error fetching home stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+    fetchHomeStats();
+  }, []);
+
   return (
     <div className="relative bg-[#0B1120] p-6 min-h-screen text-white">
       {/* --- LOGOUT OVERLAY --- */}
@@ -125,7 +197,7 @@ export default function HomePage() {
       <Navigation />
 
       {/* 3. STATS CARDS - Extracted to separate component for better code splitting */}
-      <DashboardStats />
+      <DashboardStats metrics={statsMetrics} loading={statsLoading} />
 
       {/* --- AUTH MODALS (Moved from SalesTerminal) --- */}
       {authModalState !== "hidden" && (
