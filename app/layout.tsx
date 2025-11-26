@@ -4,6 +4,7 @@ import "./globals.css";
 import { ViewProvider } from "../components/window-layouts/ViewContext";
 import MainWindow from "../components/window-layouts/MainWindow";
 import { QueryProvider } from "@/context/QueryProvider";
+import { SettingsProvider } from "@/context/SettingsContext";
 import { ItemsProvider } from "./inventory/components/item-registration/context/ItemsContext";
 import { Analytics } from "./components/Analytics";
 
@@ -47,11 +48,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <QueryProvider>
-          <ItemsProvider>
-            <ViewProvider>
-              <MainWindow>{children}</MainWindow>
-            </ViewProvider>
-          </ItemsProvider>
+          <SettingsProvider>
+            <ItemsProvider>
+              <ViewProvider>
+                <MainWindow>{children}</MainWindow>
+              </ViewProvider>
+            </ItemsProvider>
+          </SettingsProvider>
         </QueryProvider>
         <Analytics />
       </body>

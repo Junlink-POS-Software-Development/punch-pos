@@ -41,14 +41,14 @@ export default function VoucherSettings() {
     }
   };
 
-  if (loading) return <div className="p-4">Loading categories...</div>;
+  if (loading) return <div className="p-4 text-slate-400">Loading categories...</div>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 max-w-2xl">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+    <div className="max-w-2xl">
+      <h2 className="text-lg font-semibold mb-2 text-white">
         Voucher Deduction Settings
       </h2>
-      <p className="text-gray-600 mb-6 text-sm">
+      <p className="text-slate-400 mb-6 text-sm">
         Select the default product category where voucher deductions will be
         recorded as expenses.
       </p>
@@ -57,23 +57,25 @@ export default function VoucherSettings() {
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className={`flex items-center justify-between p-4 rounded-md border ${
+            className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
               cat.is_default_voucher_source
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:bg-gray-50"
+                ? "border-cyan-500/50 bg-cyan-500/10"
+                : "border-slate-700 bg-slate-800/50 hover:bg-slate-800"
             }`}
           >
-            <span className="font-medium text-gray-700">{cat.category}</span>
+            <span className={`font-medium ${cat.is_default_voucher_source ? 'text-cyan-400' : 'text-slate-300'}`}>
+              {cat.category}
+            </span>
             
             {cat.is_default_voucher_source ? (
-              <span className="px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+              <span className="px-3 py-1 text-xs font-semibold text-cyan-400 bg-cyan-500/20 rounded-full border border-cyan-500/20">
                 Default Source
               </span>
             ) : (
               <button
                 onClick={() => handleSetDefault(cat.id)}
                 disabled={updating}
-                className="text-sm text-gray-500 hover:text-blue-600 font-medium disabled:opacity-50"
+                className="text-sm text-slate-500 hover:text-cyan-400 font-medium disabled:opacity-50 transition-colors"
               >
                 Set as Default
               </button>
@@ -82,7 +84,7 @@ export default function VoucherSettings() {
         ))}
 
         {categories.length === 0 && (
-          <p className="text-gray-500 italic">No categories found.</p>
+          <p className="text-slate-500 italic">No categories found.</p>
         )}
       </div>
     </div>

@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { useSettings } from "@/context/SettingsContext";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export function DashboardStats() {
+  const { currency } = useSettings();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
     totalCustomers: 0,
@@ -86,7 +89,7 @@ export function DashboardStats() {
             <Loader2 className="mt-4 w-8 h-8 animate-spin text-slate-500" />
           ) : (
             <p className="mt-4 font-bold text-white text-6xl tracking-tighter">
-              ${metrics.dailySales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(metrics.dailySales, currency)}
             </p>
           )}
           <p className="flex items-center gap-2 mt-3 text-slate-400 text-base">
