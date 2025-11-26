@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import { Cashout } from "./components/Cashout";
 import { ExpensesMntr } from "./components/ExpensesMntr";
 import { CashFlow } from "./components/CashFlow";
 
-export default function ExpensesPage() {
+function ExpensesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const viewParam = searchParams.get("view") as View | null;
@@ -53,5 +53,13 @@ export default function ExpensesPage() {
         {view === "cashflow" && <CashFlow />}
       </div>
     </div>
+  );
+}
+
+export default function ExpensesPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+      <ExpensesContent />
+    </Suspense>
   );
 }
