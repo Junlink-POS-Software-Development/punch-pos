@@ -39,39 +39,55 @@ export default function DashboardPage() {
     lowStockItems: [],
     topProducts: [],
   });
-
   useEffect(() => {
     async function fetchDashboardData() {
       try {
         setLoading(true);
 
-        // 1. Fetch Payments (Sales & Customers)
-        const { data: paymentsData, error: paymentsError } = await supabase
-          .from("payments")
-          .select("invoice_no, customer_name, grand_total, transaction_time");
-        
-        if (paymentsError) throw paymentsError;
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Dashboard data fetch timed out")), 15000);
+        });
 
-        // 2. Fetch Transactions (Item details for categories, profit, top products)
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from("transactions")
-          .select("item_name, total_price, cost_price, quantity, category, invoice_no");
+        // Wrap the actual fetch logic
+        const fetchDataPromise = (async () => {
+          const [
+            { data: paymentsData, error: paymentsError },
+            { data: transactionsData, error: transactionsError },
+            { data: expensesData, error: expensesError },
+            { data: stockData, error: stockError },
+          ] = await Promise.all([
+            supabase
+              .from("payments")
+              .select("invoice_no, customer_name, grand_total, transaction_time"),
+            supabase
+              .from("transactions")
+              .select("item_name, total_price, cost_price, quantity, category, invoice_no"),
+            supabase
+              .from("expenses")
+              .select("amount, transaction_date"),
+            supabase
+              .from("stock_flow")
+              .select("item_name, flow, quantity"),
+          ]);
 
-        if (transactionsError) throw transactionsError;
+          if (paymentsError) throw paymentsError;
+          if (transactionsError) throw transactionsError;
+          if (expensesError) throw expensesError;
+          if (stockError) throw stockError;
 
-        // 3. Fetch Expenses
-        const { data: expensesData, error: expensesError } = await supabase
-          .from("expenses")
-          .select("amount, transaction_date");
+          return { paymentsData, transactionsData, expensesData, stockData };
+        })();
 
-        if (expensesError) throw expensesError;
+        // Race fetch against timeout
+        const result = await Promise.race([fetchDataPromise, timeoutPromise]) as {
+            paymentsData: any[];
+            transactionsData: any[];
+            expensesData: any[];
+            stockData: any[];
+        };
 
-        // 4. Fetch Stock Flow (For inventory)
-        const { data: stockData, error: stockError } = await supabase
-          .from("stock_flow")
-          .select("item_name, flow, quantity");
-
-        if (stockError) throw stockError;
+        const { paymentsData, transactionsData, expensesData, stockData } = result;
 
         // --- PROCESS DATA ---
 
@@ -89,18 +105,6 @@ export default function DashboardPage() {
         const todaySales = todayPayments.reduce((sum, p) => sum + (Number(p.grand_total) || 0), 0);
 
         // Calculate Today's Cost of Goods Sold (COGS)
-        // We need to match payments to transactions to get cost, or just sum cost of transactions today.
-        // Transactions table doesn't have 'transaction_time' directly usually, but it has created_at or links to invoice.
-        // Let's assume transactions created_at is reliable or link via invoice_no.
-        // We'll use transactions created_at for simplicity if available, or invoice_no.
-        // Schema says transactions has created_at? No, schema for transactions: id, sku, item_name, cost_price, total_price... 
-        // Wait, schema provided earlier: transactions (id, ..., invoice_no). No created_at in the CREATE TABLE snippet?
-        // Let's check schema again. 
-        // "CREATE TABLE public.transactions ... invoice_no text ..."
-        // It doesn't show created_at. But usually Supabase adds it. 
-        // If not, we rely on invoice_no -> payments.transaction_time.
-        
-        // Let's map invoice_no to date from payments
         const invoiceDateMap = new Map();
         paymentsData?.forEach(p => {
           if(p.invoice_no) invoiceDateMap.set(p.invoice_no, p.transaction_time);

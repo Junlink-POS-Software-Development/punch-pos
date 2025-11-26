@@ -16,22 +16,34 @@ export interface InventoryItem {
 export const fetchInventory = async (
   storeId?: string
 ): Promise<InventoryItem[]> => {
-  let query = supabase
-    .from("inventory_monitor_view")
-    .select("*")
-    .order("current_stock", { ascending: true }); // Show low stock items first
+  // Create a timeout promise that rejects after 10 seconds
+  const timeoutPromise = new Promise<InventoryItem[]>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error("Request timed out"));
+    }, 10000);
+  });
 
-  // Optional: Filter by store if your app handles multiple stores at once
-  if (storeId) {
-    query = query.eq("store_id", storeId);
-  }
+  const fetchPromise = (async () => {
+    let query = supabase
+      .from("inventory_monitor_view")
+      .select("*")
+      .order("current_stock", { ascending: true }); // Show low stock items first
 
-  const { data, error } = await query;
+    // Optional: Filter by store if your app handles multiple stores at once
+    if (storeId) {
+      query = query.eq("store_id", storeId);
+    }
 
-  if (error) {
-    console.error("Inventory Fetch Error:", error);
-    throw new Error(error.message);
-  }
+    const { data, error } = await query;
 
-  return data || [];
+    if (error) {
+      console.error("Inventory Fetch Error:", error);
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  })();
+
+  // Race the fetch against the timeout
+  return Promise.race([fetchPromise, timeoutPromise]);
 };
