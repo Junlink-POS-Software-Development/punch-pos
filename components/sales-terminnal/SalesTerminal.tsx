@@ -5,6 +5,7 @@ import { useMediaQuery } from "@/app/hooks/useMediaQuery";
 import { useView } from "../window-layouts/ViewContext";
 import FormFields from "./components/FormFields";
 import TerminalButtons from "./components/buttons/TerminalButtons";
+import TerminalHeader from "./components/TerminalHeader";
 import { useState, useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 import { supabase } from "@/lib/supabaseClient";
@@ -70,10 +71,6 @@ const SalesTerminal = () => {
     };
   }, []);
 
-  const displayProduct = "COKE";
-  const displayPrice = "₱25.00";
-  const displayStock = 21;
-
   function ScreenLogic() {
     if (isSplit && !isMobile) {
       return "grid-rows-2";
@@ -85,27 +82,10 @@ const SalesTerminal = () => {
 
   return (
     <div className="relative flex flex-col p-1 h-full">
-      {/* ... (Existing Header) ... */}
-      <div className="flex flex-col justify-center items-center shadow-lg mb-4 px-4 py-1 rounded-md w-full min-h-[180px] font-retro retro-lcd-container retro-scanlines">
-        <h1 className="mt-1 font-bold text-retro-cyan text-2xl md:text-3xl uppercase leading-none tracking-widest">
-          POINT OF SALE
-        </h1>
-        <div className="opacity-70 my-1 retro-divider"></div>
-        <div className="flex justify-between items-center px-2 w-full text-retro-cyan text-lg md:text-xl leading-none tracking-wide">
-          <span className="max-w-[60%] truncate uppercase">{userName}</span>
-          <span>{liveTime}</span>
-        </div>
-        <div className="flex justify-center items-center gap-6 drop-shadow-md my-2 w-full font-bold text-retro-cyan text-3xl md:text-4xl leading-none">
-          <span>{displayProduct}</span>
-          <span className="text-retro-cyan/90">{displayPrice}</span>
-        </div>
-        <div className="opacity-70 my-1 retro-divider"></div>
-        <h2 className="mb-1 text-retro-cyan text-lg md:text-xl uppercase leading-none tracking-wide">
-          STOCKS AVAILABLE: {displayStock}
-        </h2>
-      </div>
-
       <FormProvider {...methods}>
+        {/* Terminal Header with product info */}
+        <TerminalHeader userName={userName} liveTime={liveTime} />
+
         <form
           id="sales-form"
           onSubmit={methods.handleSubmit(onDoneSubmit)}
