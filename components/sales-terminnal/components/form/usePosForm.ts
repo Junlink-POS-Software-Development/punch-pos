@@ -132,11 +132,11 @@ export const usePosForm = (): UsePosFormReturn => {
   // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
     if (!data.payment || data.payment <= 0) {
-      alert("Payment must be greater than zero.");
+      setErrorMessage("Payment must be greater than zero.");
       return;
     }
     if (data.change < 0) {
-      alert("Insufficient payment amount.");
+      setErrorMessage("Insufficient payment amount.");
       return;
     }
 
@@ -161,7 +161,7 @@ export const usePosForm = (): UsePosFormReturn => {
       }
     } catch (error) {
       console.error("❌ [UI CRASH] Error in submission flow:", error);
-      alert("An unexpected error occurred.");
+      setErrorMessage("An unexpected error occurred.");
       setIsSubmitting(false);
     }
   };

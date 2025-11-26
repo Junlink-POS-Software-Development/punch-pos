@@ -47,8 +47,7 @@ export const handleDone = async (
 
     if (authError || !authData.session?.user) {
       console.error("❌ [Logic] Auth failed:", authError);
-      alert("Session expired or invalid. Please log in again.");
-      return null; // <--- Return null on failure
+      throw new Error("Session expired or invalid. Please log in again.");
     }
 
     const cashierId = authData.session.user.id;
@@ -106,15 +105,13 @@ export const handleDone = async (
              return headerPayload;
            } else {
              console.error("❌ [Logic] Duplicate ID found but amounts do not match.");
-             alert("Transaction ID collision detected with different amount. Please try again.");
-             return null;
+             throw new Error("Transaction ID collision detected with different amount. Please try again.");
            }
         }
       }
 
       console.error("❌ [Logic] RPC Error:", error.message);
-      alert(`Transaction Failed: ${error.message}`);
-      return null; // <--- Return null on failure
+      throw new Error(`Transaction Failed: ${error.message}`);
     }
 
     console.log("✅ [Logic] RPC Success! Transaction Saved.");
@@ -155,7 +152,6 @@ export const handleDone = async (
     return headerPayload;
   } catch (err) {
     console.error("❌ [Logic] Unexpected Crash in handleDone:", err);
-    alert(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
-    return null;
+    throw err; // Re-throw to be caught by usePosForm
   }
 };
