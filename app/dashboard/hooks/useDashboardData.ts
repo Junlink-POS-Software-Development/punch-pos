@@ -1,11 +1,9 @@
-// hooks/useDashboardData.ts
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
 import { useAuth } from "@/context/AuthContext";
 
-// --- Types ---
-
+// --- Types (Same as before) ---
 export interface Transaction {
   invoice_no: string;
   customer_name: string;
@@ -35,19 +33,26 @@ const initialMetrics: DashboardMetrics = {
   topProducts: [],
 };
 
-// --- Hook ---
-
 export function useDashboardData() {
   const { isAuthReady } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>(initialMetrics);
 
-  // Ref to track if component is mounted (prevents memory leaks/state updates on unmount)
+  // Ref to track mount state
   const isMounted = useRef(true);
+  // Ref to track the current abort controller so we can cancel previous clicks
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
-    // If auth isn't ready, we wait. The useEffect below handles the timeout safety.
+    // 1. Cancel any pending request from previous attempts
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Create new controller for this run
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     if (!isAuthReady) return;
 
     try {
@@ -56,130 +61,109 @@ export function useDashboardData() {
         setError(null);
       }
 
-      // 1. Verify Session
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User session not found. Please log in.");
+      console.log("DASHBOARD: Starting fetch sequence...");
 
-      // 2. Fetch Data (Parallel)
-      // We use a 30s timeout for the fetch itself
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Request timed out after 30s.")), 30000);
+      // 2. The "Hard" Timeout Wrapper
+      // This promise rejects if ANYTHING takes longer than 15 seconds
+      const timeoutPromise = new Promise((_, reject) => {
+        const id = setTimeout(() => reject(new Error("TIMEOUT_HARD")), 15000);
+        // If the operation finishes or is aborted, clear the timer
+        controller.signal.addEventListener('abort', () => clearTimeout(id));
       });
 
-      const fetchDataPromise = (async () => {
+      // 3. The Main Logic Wrapper
+      const operationPromise = async () => {
+        // STAGE A: Auth Check
+        console.log("DASHBOARD: Checking Auth...");
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) throw new Error("Authentication failed or session expired.");
+        if (controller.signal.aborted) throw new Error("ABORTED");
+
+        // STAGE B: Database Fetches
+        // We pass { abortSignal: controller.signal } to Supabase to kill connection if needed
+        console.log("DASHBOARD: Fetching DB data...");
+        
         const [payments, transactions, expenses, inventory] = await Promise.all([
-          supabase
-            .from("payments")
-            .select("invoice_no, customer_name, grand_total, transaction_time"),
-          supabase
-            .from("transactions")
-            .select("item_name, total_price, cost_price, quantity, category, invoice_no"),
-          supabase
-            .from("expenses")
-            .select("amount, transaction_date"),
-          supabase
-            .from("inventory_monitor_view")
-            .select("item_id, item_name, current_stock, low_stock_threshold")
-            .order("current_stock", { ascending: true })
+          supabase.from("payments").select("invoice_no, customer_name, grand_total, transaction_time").abortSignal(controller.signal),
+          supabase.from("transactions").select("item_name, total_price, cost_price, quantity, category, invoice_no").abortSignal(controller.signal),
+          supabase.from("expenses").select("amount, transaction_date").abortSignal(controller.signal),
+          supabase.from("inventory_monitor_view").select("item_id, item_name, current_stock, low_stock_threshold").order("current_stock", { ascending: true }).abortSignal(controller.signal)
         ]);
 
-        if (payments.error) throw new Error(`Payments: ${payments.error.message}`);
-        if (transactions.error) throw new Error(`Transactions: ${transactions.error.message}`);
-        if (expenses.error) throw new Error(`Expenses: ${expenses.error.message}`);
-        if (inventory.error) throw new Error(`Inventory: ${inventory.error.message}`);
+        if (controller.signal.aborted) throw new Error("ABORTED");
 
+        // Check for specific DB errors
+        if (payments.error) throw new Error(`Payments DB Error: ${payments.error.message}`);
+        if (transactions.error) throw new Error(`Transactions DB Error: ${transactions.error.message}`);
+        
         return {
           paymentsData: payments.data || [],
           transactionsData: transactions.data || [],
           expensesData: expenses.data || [],
           inventoryData: inventory.data || []
         };
-      })();
+      };
 
-      // Race fetch against timeout
-      const { paymentsData, transactionsData, expensesData, inventoryData } = 
-        await Promise.race([fetchDataPromise, timeoutPromise]) as any;
+      // 4. RACE: Run Logic vs Timeout
+      const result = await Promise.race([operationPromise(), timeoutPromise]) as any;
 
       if (!isMounted.current) return;
+      console.log("DASHBOARD: Data received. Processing...");
 
-      // --- DATA PROCESSING ---
+      // --- DATA PROCESSING (Calculations) ---
+      
+      const { paymentsData, transactionsData, expensesData, inventoryData } = result;
 
-      // Helper: Map Invoice Numbers to Dates
-      // (Required because 'transactions' table often lacks the timestamp)
+      // Map Dates
       const invoiceDateMap = new Map<string, string>();
       paymentsData.forEach((p: any) => {
-        if (p.invoice_no && p.transaction_time) {
-          invoiceDateMap.set(p.invoice_no, p.transaction_time);
-        }
+        if (p.invoice_no && p.transaction_time) invoiceDateMap.set(p.invoice_no, p.transaction_time);
       });
 
-      // A. Total Customers
-      const uniqueCustomers = new Set(
-        paymentsData.map((c: any) => c.customer_name).filter(Boolean)
-      ).size;
-
-      // B. Daily Stats (Today)
+      // Calcs...
+      const uniqueCustomers = new Set(paymentsData.map((c: any) => c.customer_name).filter(Boolean)).size;
       const today = dayjs();
       
-      // B1. Today's Revenue
-      const todayPayments = paymentsData.filter((p: any) => 
-        p.transaction_time && dayjs(p.transaction_time).isSame(today, 'day')
-      );
+      // Today Sales
+      const todayPayments = paymentsData.filter((p: any) => p.transaction_time && dayjs(p.transaction_time).isSame(today, 'day'));
       const todaySales = todayPayments.reduce((sum: number, p: any) => sum + (Number(p.grand_total) || 0), 0);
 
-      // B2. Today's COGS (Cost of Goods Sold)
+      // Today COGS
       const todayTransactions = transactionsData.filter((t: any) => {
         const time = invoiceDateMap.get(t.invoice_no);
         return time && dayjs(time).isSame(today, 'day');
       });
-      const todayCOGS = todayTransactions.reduce((sum: number, t: any) => 
-        sum + ((Number(t.cost_price) || 0) * (Number(t.quantity) || 1)), 0
-      );
+      const todayCOGS = todayTransactions.reduce((sum: number, t: any) => sum + ((Number(t.cost_price) || 0) * (Number(t.quantity) || 1)), 0);
 
-      // B3. Today's Expenses
-      const todayExpenses = expensesData.filter((e: any) => 
-        dayjs(e.transaction_date).isSame(today, 'day')
-      ).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
-
-      const netProfit = todaySales - todayCOGS - todayExpenses;
-
-      // C. Profit Trend (Last 30 Days)
-      const trendMap = new Map<string, { revenue: number; cost: number; expense: number }>();
+      // Today Expenses
+      const todayExpenses = expensesData.filter((e: any) => dayjs(e.transaction_date).isSame(today, 'day'))
+        .reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
       
-      // Initialize map with 0s for last 30 days
+      // Profit Trend
+      const trendMap = new Map<string, { revenue: number; cost: number; expense: number }>();
       for (let i = 29; i >= 0; i--) {
-        const dateKey = dayjs().subtract(i, 'day').format('YYYY-MM-DD');
-        trendMap.set(dateKey, { revenue: 0, cost: 0, expense: 0 });
+        trendMap.set(dayjs().subtract(i, 'day').format('YYYY-MM-DD'), { revenue: 0, cost: 0, expense: 0 });
       }
 
-      // C1. Fill Revenue
       paymentsData.forEach((p: any) => {
         if (!p.transaction_time) return;
-        const dateKey = dayjs(p.transaction_time).format('YYYY-MM-DD');
-        if (trendMap.has(dateKey)) {
-          trendMap.get(dateKey)!.revenue += Number(p.grand_total) || 0;
-        }
+        const d = dayjs(p.transaction_time).format('YYYY-MM-DD');
+        if (trendMap.has(d)) trendMap.get(d)!.revenue += Number(p.grand_total) || 0;
       });
-
-      // C2. Fill Costs (using invoiceDateMap)
+      
       transactionsData.forEach((t: any) => {
         const time = invoiceDateMap.get(t.invoice_no);
         if (time) {
-          const dateKey = dayjs(time).format('YYYY-MM-DD');
-          if (trendMap.has(dateKey)) {
-            const cost = (Number(t.cost_price) || 0) * (Number(t.quantity) || 1);
-            trendMap.get(dateKey)!.cost += cost;
-          }
+          const d = dayjs(time).format('YYYY-MM-DD');
+          if (trendMap.has(d)) trendMap.get(d)!.cost += (Number(t.cost_price) || 0) * (Number(t.quantity) || 1);
         }
       });
 
-      // C3. Fill Expenses
       expensesData.forEach((e: any) => {
         if (!e.transaction_date) return;
-        const dateKey = dayjs(e.transaction_date).format('YYYY-MM-DD');
-        if (trendMap.has(dateKey)) {
-          trendMap.get(dateKey)!.expense += Number(e.amount) || 0;
-        }
+        const d = dayjs(e.transaction_date).format('YYYY-MM-DD');
+        if (trendMap.has(d)) trendMap.get(d)!.expense += Number(e.amount) || 0;
       });
 
       const profitTrend = Array.from(trendMap.entries()).map(([date, val]) => ({
@@ -188,99 +172,88 @@ export function useDashboardData() {
         profit: Number((val.revenue - val.cost - val.expense).toFixed(2))
       }));
 
-      // D. Category Sales
+      // Top Products & Categories
       const categoryMap = new Map<string, number>();
+      const productMap = new Map<string, number>();
+      
       transactionsData.forEach((t: any) => {
         const cat = t.category || "Uncategorized";
-        const val = Number(t.total_price) || 0;
-        categoryMap.set(cat, (categoryMap.get(cat) || 0) + val);
+        categoryMap.set(cat, (categoryMap.get(cat) || 0) + (Number(t.total_price) || 0));
+        productMap.set(t.item_name, (productMap.get(t.item_name) || 0) + (Number(t.quantity) || 0));
       });
-      const categorySales = Array.from(categoryMap.entries())
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value);
 
-      // E. Top Products
-      const productMap = new Map<string, number>();
-      transactionsData.forEach((t: any) => {
-        const name = t.item_name;
-        const qty = Number(t.quantity) || 0;
-        productMap.set(name, (productMap.get(name) || 0) + qty);
-      });
-      const topProducts = Array.from(productMap.entries())
-        .map(([item_name, quantity]) => ({ item_name, quantity }))
-        .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 5);
+      const categorySales = Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+      const topProducts = Array.from(productMap.entries()).map(([item_name, quantity]) => ({ item_name, quantity })).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
 
-      // F. Low Stock
-      // Try to get setting, default to 10
-      const globalThreshold = typeof window !== 'undefined' 
-        ? parseInt(localStorage.getItem('pos-settings-low-stock-threshold') || '10', 10)
-        : 10;
-        
-      const lowStockItems = inventoryData
-        .filter((item: any) => {
-          const threshold = item.low_stock_threshold ?? globalThreshold;
-          return item.current_stock >= 0 && item.current_stock < threshold;
-        })
-        .map((item: any) => ({
-          id: item.item_id,
-          item_name: item.item_name,
-          stock: item.current_stock,
-          threshold: item.low_stock_threshold ?? globalThreshold
-        }))
-        .slice(0, 5);
-
-      // G. Recent Transactions
-      const recentTransactions = paymentsData
-        .sort((a: any, b: any) => dayjs(b.transaction_time).unix() - dayjs(a.transaction_time).unix())
-        .slice(0, 5);
+      // Low Stock
+      const globalThreshold = typeof window !== 'undefined' ? parseInt(localStorage.getItem('pos-settings-low-stock-threshold') || '10', 10) : 10;
+      const lowStockItems = inventoryData.filter((i: any) => i.current_stock < (i.low_stock_threshold ?? globalThreshold))
+        .map((i: any) => ({
+            id: i.item_id, item_name: i.item_name, stock: i.current_stock, threshold: i.low_stock_threshold ?? globalThreshold
+        })).slice(0, 5);
+      
+      const recentTransactions = paymentsData.sort((a: any, b: any) => dayjs(b.transaction_time).unix() - dayjs(a.transaction_time).unix()).slice(0, 5);
 
       setMetrics({
         totalCustomers: uniqueCustomers,
         dailySales: todaySales,
-        netProfit,
+        netProfit: todaySales - todayCOGS - todayExpenses,
         recentTransactions,
         profitTrend,
         categorySales,
         lowStockItems,
-        topProducts,
+        topProducts
       });
 
+      console.log("DASHBOARD: Success.");
+
     } catch (err: any) {
-      console.error("Dashboard fetch error:", err);
+      if (err.message === "ABORTED") {
+        console.log("DASHBOARD: Fetch aborted (likely navigation).");
+        return;
+      }
+      
+      console.error("DASHBOARD ERROR:", err);
+      
       if (isMounted.current) {
-        setError(err.message || "Failed to load dashboard data");
+        if (err.message === "TIMEOUT_HARD") {
+          setError("Connection timed out. Please check your internet.");
+        } else {
+          setError(err.message || "Failed to load dashboard.");
+        }
       }
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      if (isMounted.current) setLoading(false);
     }
   }, [isAuthReady]);
 
-  // --- Effects ---
-
+  // --- Strict Mode Safety Effect ---
   useEffect(() => {
     isMounted.current = true;
-    let authTimeout: NodeJS.Timeout;
 
+    // If Auth is taking forever (>5s) to even initialize, show error
+    let authWatchdog: NodeJS.Timeout;
+    
     if (!isAuthReady) {
-      // 1. SAFETY VALVE: If Auth takes > 5 seconds, kill the loader
-      authTimeout = setTimeout(() => {
+      authWatchdog = setTimeout(() => {
         if (isMounted.current && loading) {
-          console.warn("Auth initialization timed out in Dashboard.");
+          console.warn("DASHBOARD: Auth watchdog triggered.");
           setLoading(false);
-          setError("Connection slow. Please refresh.");
+          setError("Authentication stuck. Please refresh.");
         }
       }, 5000);
     } else {
-      // 2. Auth is ready, fetch data
+      // Auth is ready, start the fetch
       fetchDashboardData();
     }
 
     return () => {
       isMounted.current = false;
-      clearTimeout(authTimeout);
+      clearTimeout(authWatchdog);
+      // CLEANUP: Abort any running requests on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [isAuthReady, fetchDashboardData]);
 
