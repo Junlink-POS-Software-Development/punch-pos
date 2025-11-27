@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import Navigation from "../components/navigation/Navigation";
 import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { User } from "@supabase/supabase-js";
 import dayjs from "dayjs";
+import { useAuth } from "@/context/AuthContext";
 
 // Import Local Components
 import SearchBar from "./components/SearchBar";
@@ -35,32 +35,10 @@ type AuthModalState = "hidden" | "signIn" | "signUp";
 
 export default function HomePage() {
   // --- AUTH STATE MANAGEMENT ---
+  const { user, isAuthReady } = useAuth();
   const [authModalState, setAuthModalState] =
     useState<AuthModalState>("hidden");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isAuthLoading, setIsAuthLoading] = useState(true); // Prevent CLS during auth check
-
-  useEffect(() => {
-    // 1. Check initial session
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setCurrentUser(data.session?.user || null);
-      setIsAuthLoading(false); // Mark as loaded to prevent layout shift
-    };
-    checkSession();
-
-    // 2. Listen for changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setCurrentUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
 
   // --- HANDLERS ---
   const openSignInModal = () => setAuthModalState("signIn");
@@ -77,7 +55,6 @@ export default function HomePage() {
     // Artificial delay for UX
     await new Promise((resolve) => setTimeout(resolve, 800));
     setIsLoggingOut(false);
-    setCurrentUser(null);
   };
 
   // --- STATS DATA FETCHING ---
@@ -92,6 +69,9 @@ export default function HomePage() {
   
   // Re-implementing the fetch correctly inside the effect
   useEffect(() => {
+    // Wait for auth to be ready before fetching stats
+    if (!isAuthReady) return;
+
     async function fetchHomeStats() {
       try {
         setStatsLoading(true);
@@ -149,7 +129,7 @@ export default function HomePage() {
       }
     }
     fetchHomeStats();
-  }, []);
+  }, [isAuthReady]);
 
   return (
     <div className="relative bg-[#0B1120] p-6 min-h-screen text-white">
@@ -168,9 +148,9 @@ export default function HomePage() {
         <div>
           <h1 className="font-bold text-4xl tracking-tight">Home</h1>
           <p className="mt-2 text-slate-400 text-base">
-            {currentUser
+            {user
               ? `Welcome back, ${
-                  currentUser.user_metadata?.first_name || "Admin"
+                  user.user_metadata?.first_name || "Admin"
                 }`
               : "Welcome, Guest"}
           </p>
@@ -181,11 +161,11 @@ export default function HomePage() {
           <div className="hidden md:block bg-slate-700 mx-1 w-px h-8"></div>
           <Notifications />
           {/* Show skeleton during auth loading to prevent CLS */}
-          {isAuthLoading ? (
+          {!isAuthReady ? (
             <div className="w-10 h-10 bg-slate-800 animate-pulse rounded-full" />
           ) : (
             <UserProfile
-              currentUser={currentUser}
+              currentUser={user}
               onSignInClick={openSignInModal}
               onSignOutClick={onSignOutClick}
             />

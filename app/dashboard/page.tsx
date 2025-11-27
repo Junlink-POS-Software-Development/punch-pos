@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { DashboardStats } from "@/app/components/DashboardStats";
 import { ProfitTrendChart, CategoryDonutChart } from "@/app/components/DashboardCharts";
 import { LowStockWidget, TopProductsWidget } from "@/app/components/DashboardWidgets";
+import { useAuth } from "@/context/AuthContext";
 
 interface Transaction {
   invoice_no: string;
@@ -28,6 +29,7 @@ interface DashboardMetrics {
 }
 
 export default function DashboardPage() {
+  const { isAuthReady } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalCustomers: 0,
@@ -41,6 +43,9 @@ export default function DashboardPage() {
   });
   
   useEffect(() => {
+    // Wait for auth to be ready before fetching data
+    if (!isAuthReady) return;
+
     async function fetchDashboardData() {
       try {
         setLoading(true);
@@ -236,7 +241,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData();
-  }, []);
+  }, [isAuthReady]);
 
   if (loading) {
     return (
