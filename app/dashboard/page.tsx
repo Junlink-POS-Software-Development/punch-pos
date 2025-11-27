@@ -31,6 +31,7 @@ interface DashboardMetrics {
 export default function DashboardPage() {
   const { isAuthReady } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalCustomers: 0,
     dailySales: 0,
@@ -49,10 +50,11 @@ export default function DashboardPage() {
     async function fetchDashboardData() {
       try {
         setLoading(true);
+        setError(null);
 
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Dashboard data fetch timed out")), 15000);
+        // Create a timeout promise (reduced from 15s to 10s for faster feedback)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("Dashboard data fetch timed out after 10 seconds")), 10000);
         });
 
         // Wrap the actual fetch logic
@@ -235,6 +237,7 @@ export default function DashboardPage() {
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        setError(error instanceof Error ? error.message : "Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -247,6 +250,26 @@ export default function DashboardPage() {
     return (
       <div className="flex justify-center items-center min-h-screen text-white">
         <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center gap-4 min-h-screen text-white">
+        <div className="flex items-center gap-2 text-red-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-semibold">Failed to load dashboard</span>
+        </div>
+        <p className="text-slate-400 text-sm">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
