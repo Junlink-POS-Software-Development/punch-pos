@@ -18,77 +18,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
-    // Initialize session on mount
-    const initializeAuth = async () => {
+    // 1. Initial Load
+    const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        console.error("Auth Init Error:", error);
       } finally {
-        // Mark auth as ready regardless of success/failure
         setIsAuthReady(true);
       }
     };
 
-    initializeAuth();
+    initAuth();
 
-    // Set up auth state listener
+    // 2. Listen for standard auth changes (Login, Logout, Auto-Refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
         setSession(newSession);
+        // Ensure we mark as ready if we somehow missed the init
+        setIsAuthReady(true);
       }
     );
 
-    // --- NEW: Handle Tab Sleep / Wake Up ---
-    const handleVisibilityChange = async () => {
+    // 3. Simple "Wake Up" Refresh
+    // No complex detection. Just ensure session is valid when user returns.
+    const handleFocus = async () => {
       if (document.visibilityState === 'visible') {
-        console.log("Tab woke up. Verifying session...");
-        
-        // 1. Try to get the user with a short timeout to detect "zombie" connections
-        const timeoutMs = 2000;
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("AUTH_TIMEOUT")), timeoutMs)
-        );
-
-        try {
-          // Race the getUser call against the timeout
-          await Promise.race([
-            supabase.auth.getUser(),
-            timeoutPromise
-          ]);
-          // If we get here, connection is likely okay.
-          // We can optionally refresh the session just to be safe if it's close to expiry,
-          // but getUser() usually handles validation.
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-          if (!error && currentSession) {
-             setSession(currentSession);
-          }
-        } catch (err: any) {
-          if (err.message === "AUTH_TIMEOUT") {
-            console.warn("Auth check timed out (Zombie connection). Forcing session refresh...");
-            // Force a refresh if possible, or just let the user know they might need to reload
-            // Attempting to refresh session might also hang if the socket is dead, 
-            // but it's worth a try or we can rely on the next user action to trigger re-auth.
-            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-            if (!refreshError && refreshedSession) {
-               setSession(refreshedSession);
-               console.log("Session recovered.");
-            } else {
-               console.error("Failed to recover session:", refreshError);
-            }
-          }
-        }
+         // This automatically handles dead sockets by forcing a new handshake
+         await supabase.auth.refreshSession(); 
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
 
     return () => {
       subscription.unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
     };
   }, []);
 

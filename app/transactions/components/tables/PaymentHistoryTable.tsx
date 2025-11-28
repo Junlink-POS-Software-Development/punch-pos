@@ -1,36 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Loader2, AlertCircle, XCircle } from "lucide-react";
-import { usePaymentHistory, TransactionFilters } from "../../hooks/useTransactionQueries";
+import { usePaymentContext } from "../../context/PaymentContext"; // New Import
 import { ItemTablePagination } from "@/components/reusables/ItemTablePagination";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 
 export const PaymentHistoryTable = () => {
-  // --- Pagination State ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  // --- Filter State ---
-  const [filters, setFilters] = useState<TransactionFilters>({
-    startDate: "",
-    endDate: "",
-  });
-
-  // --- Fetch Data with Pagination & Filters ---
+  // 1. Consume Context
   const {
-    data: queryResult,
+    payments,
+    totalRows,
     isLoading,
     isError,
     error,
-  } = usePaymentHistory(currentPage, rowsPerPage, filters);
+    currentPage,
+    rowsPerPage,
+    filters,
+    setCurrentPage,
+    setRowsPerPage,
+    setFilters,
+  } = usePaymentContext();
 
-  const payments = queryResult?.data || [];
-  const totalRows = queryResult?.count || 0;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
-  // --- Handlers ---
+  // 2. Handlers (Now update the Context state)
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -39,21 +34,21 @@ export const PaymentHistoryTable = () => {
 
   const handleRowsPerPageChange = (newSize: number) => {
     setRowsPerPage(newSize);
-    setCurrentPage(1); // Reset to first page on size change
+    setCurrentPage(1); // Reset to first page
   };
 
   const handleDateChange = (key: "startDate" | "endDate", value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters({ ...filters, [key]: value });
     setCurrentPage(1);
   };
 
   const handleClearDates = () => {
-    setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));
+    setFilters({ ...filters, startDate: "", endDate: "" });
     setCurrentPage(1);
   };
 
   const handleApplyFilter = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters({ ...filters, [key]: value });
     setCurrentPage(1);
   };
 
@@ -66,6 +61,7 @@ export const PaymentHistoryTable = () => {
     (key) => key !== "startDate" && key !== "endDate" && filters[key]
   );
 
+  // 3. UI States
   if (isLoading) {
     return (
       <div className="flex justify-center p-10 rounded-lg glass-effect">
@@ -78,7 +74,7 @@ export const PaymentHistoryTable = () => {
     return (
       <div className="flex items-center gap-2 p-10 rounded-lg text-red-400 glass-effect">
         <AlertCircle className="w-5 h-5" />
-        <span>Error loading payments: {(error as Error).message}</span>
+        <span>Error loading payments: {error?.message}</span>
       </div>
     );
   }

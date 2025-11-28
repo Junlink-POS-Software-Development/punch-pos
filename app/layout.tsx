@@ -8,6 +8,10 @@ import { SettingsProvider } from "@/context/SettingsContext";
 import { ItemsProvider } from "./inventory/components/item-registration/context/ItemsContext";
 import { Analytics } from "./components/Analytics";
 import { AuthProvider } from "@/context/AuthContext";
+import { TransactionProvider } from "./transactions/context/TransactionContext";
+import { PaymentProvider } from "./transactions/context/PaymentContext";
+import { ExpenseProvider } from "./expenses/context/ExpenseContext";
+import { DashboardProvider } from "./dashboard/context/DashboardContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +54,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <QueryProvider>
+            <DashboardProvider>
+            <TransactionProvider>
+              <PaymentProvider>
+                <ExpenseProvider>
             <SettingsProvider>
               <ItemsProvider>
                 <ViewProvider>
@@ -57,6 +65,10 @@ export default function RootLayout({
                 </ViewProvider>
               </ItemsProvider>
             </SettingsProvider>
+            </ExpenseProvider>
+            </PaymentProvider>
+            </TransactionProvider>
+            </DashboardProvider>
           </QueryProvider>
           <Analytics />
         </AuthProvider>

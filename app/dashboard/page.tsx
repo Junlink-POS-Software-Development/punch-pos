@@ -11,9 +11,9 @@ import { RecentTransactionsWidget } from "./components/RecentTransactionsWidget"
 
 export default function DashboardPage() {
   // Logic is now one line
-  const { metrics, loading, error } = useDashboardData();
+  const { metrics, isLoading, error } = useDashboardData();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen text-white">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -30,7 +30,7 @@ export default function DashboardPage() {
           </svg>
           <span className="font-semibold">Failed to load dashboard</span>
         </div>
-        <p className="text-slate-400 text-sm">{error}</p>
+        <p className="text-slate-400 text-sm">{error?.message}</p>
         <button 
           onClick={() => window.location.reload()} 
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
@@ -61,7 +61,7 @@ export default function DashboardPage() {
           dailySales: metrics.dailySales,
           netProfit: metrics.netProfit
         }} 
-        loading={loading} 
+        loading={isLoading} 
       />
 
       {/* 2. CHARTS */}
