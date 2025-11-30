@@ -1,6 +1,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { TransactionItem, PaymentRecord } from "../types";
+import { useAuth } from "@/context/AuthContext";
 
 // --- Types for Raw Supabase Responses ---
 interface TransactionRow {
@@ -11,7 +12,7 @@ interface TransactionRow {
   discount: number;
   quantity: number;
   total_price: number;
-  created_at?: string;
+  transaction_time?: string; // Added this
   id?: number;
 }
 
@@ -31,15 +32,18 @@ export interface TransactionFilters {
   [key: string]: string | undefined;
 }
 
-// --- 1. Hook for Line Items History (WITH PAGINATION & FILTERS) ---
+// --- 1. Hook for Line Items History ---
 export const useTransactionHistory = (
   page: number,
   pageSize: number,
   filters: TransactionFilters = {}
 ) => {
+  const { isAuthenticated } = useAuth();
+
   return useQuery({
     queryKey: ["transaction-items", page, pageSize, filters],
     placeholderData: keepPreviousData,
+    enabled: isAuthenticated,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -48,16 +52,15 @@ export const useTransactionHistory = (
         .from("transactions")
         .select("*", { count: "exact" });
 
-      // Apply Date Filters
+      // --- DATE FILTERS (Now working with new column) ---
       if (filters.startDate) {
-        query = query.gte("created_at", `${filters.startDate}T00:00:00`);
+        query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
       }
       if (filters.endDate) {
-        query = query.lte("created_at", `${filters.endDate}T23:59:59`);
+        query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
       }
 
-      // Apply Column Filters
-      // Map frontend keys to DB columns
+      // --- COLUMN FILTERS ---
       const columnMap: Record<string, string> = {
         transactionNo: "invoice_no",
         barcode: "sku",
@@ -73,9 +76,10 @@ export const useTransactionHistory = (
         }
       });
 
+      // Sort by the new transaction_time column
       const { data, error, count } = await query
         .range(from, to)
-        .order("id", { ascending: false });
+        .order("transaction_time", { ascending: false });
 
       if (error) {
         console.error("Error fetching transaction history:", error);
@@ -85,6 +89,7 @@ export const useTransactionHistory = (
       const formattedData = (data as unknown as TransactionRow[]).map(
         (item) => ({
           transactionNo: item.invoice_no || "N/A",
+          transactionTime: item.transaction_time ? new Date(item.transaction_time).toLocaleString() : "N/A", // Optional: display time
           barcode: item.sku,
           ItemName: item.item_name,
           unitPrice: item.cost_price,
@@ -102,15 +107,18 @@ export const useTransactionHistory = (
   });
 };
 
-// --- 2. Hook for Payment/Header History (WITH PAGINATION & FILTERS) ---
+// --- 2. Hook for Payment/Header History ---
 export const usePaymentHistory = (
   page: number = 1,
   pageSize: number = 50,
   filters: TransactionFilters = {}
 ) => {
+  const { isAuthenticated } = useAuth();
+
   return useQuery({
     queryKey: ["payments", page, pageSize, filters],
     placeholderData: keepPreviousData,
+    enabled: isAuthenticated,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
