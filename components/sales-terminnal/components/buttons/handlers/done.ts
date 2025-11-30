@@ -1,12 +1,10 @@
-// app/inventory/components/stock-management/buttons/done.ts
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { CartItem } from "../../TerminalCart";
 import { supabase } from "@/lib/supabaseClient";
 
-// Define the return type based on your headerPayload
 export type TransactionResult = {
   invoice_no: string;
-  customer_name: string | null; // Allow null for customer_name
+  customer_name: string | null;
   amount_rendered: number;
   voucher: number;
   grand_total: number;
@@ -16,7 +14,6 @@ export type TransactionResult = {
   cashier_name: string;
 } | null;
 
-// Helper to prevent infinite hanging
 const withTimeout = <T>(
   promise: PromiseLike<T>,
   ms: number,
@@ -33,26 +30,24 @@ const withTimeout = <T>(
   ]) as Promise<T>;
 };
 
+// 1. UPDATE ARGUMENTS: Accept cashierId directly
 export const handleDone = async (
   data: PosFormValues,
-  cartItems: CartItem[]
+  cartItems: CartItem[],
+  cashierId: string 
 ): Promise<TransactionResult> => {
-  // <--- CHANGED RETURN TYPE
   console.log("--- 🛠 [Logic] handleDone started ---");
 
   try {
-    console.log("1️⃣ [Logic] Checking Session (local)...");
-    const { data: authData, error: authError } =
-      await supabase.auth.getSession();
-
-    if (authError || !authData.session?.user) {
-      console.error("❌ [Logic] Auth failed:", authError);
-      throw new Error("Session expired or invalid. Please log in again.");
+    // 2. REMOVED: await supabase.auth.getSession()
+    // This removes the "Checking Session (local)..." hang entirely.
+    
+    if (!cashierId) {
+       throw new Error("User ID missing. Cannot process transaction.");
     }
 
-    const cashierId = authData.session.user.id;
-
     console.log("2️⃣ [Logic] Preparing Payloads...");
+    
     const headerPayload = {
       invoice_no: data.transactionNo,
       customer_name: data.customerName,
@@ -62,7 +57,7 @@ export const handleDone = async (
       change: data.change,
       transaction_no: data.transactionNo,
       transaction_time: new Date().toISOString(),
-      cashier_name: cashierId,
+      cashier_name: cashierId, // Use the passed ID
     };
 
     const itemsPayload = cartItems.map((item) => ({
@@ -86,12 +81,9 @@ export const handleDone = async (
     );
 
     if (error) {
-      // --- IDEMPOTENCY CHECK ---
-      // Check if error is "duplicate key value violates unique constraint"
       if (error.message.includes("duplicate key value") || error.message.includes("payments_pkey")) {
         console.warn("⚠️ [Logic] Duplicate Key Error detected. Checking for existing transaction...");
         
-        // Check if the transaction actually exists
         const { data: existingPayment, error: fetchError } = await supabase
           .from("payments")
           .select("invoice_no, grand_total")
@@ -99,17 +91,15 @@ export const handleDone = async (
           .single();
 
         if (existingPayment && !fetchError) {
-           // Verify it matches the current attempt (basic check)
            if (Math.abs(existingPayment.grand_total - data.grandTotal) < 0.01) {
              console.log("✅ [Logic] Transaction already exists and matches. Treating as success.");
              return headerPayload;
            } else {
              console.error("❌ [Logic] Duplicate ID found but amounts do not match.");
-             throw new Error("Transaction ID collision detected with different amount. Please try again.");
+             throw new Error("Transaction ID collision detected. Please refresh.");
            }
         }
       }
-
       console.error("❌ [Logic] RPC Error:", error.message);
       throw new Error(`Transaction Failed: ${error.message}`);
     }
@@ -120,7 +110,6 @@ export const handleDone = async (
     if (data.voucher && data.voucher > 0) {
       try {
         console.log("🎫 [Logic] Processing Voucher Deduction...");
-        // Dynamic import to avoid circular dependencies if any, though likely fine here
         const { fetchCategories } = await import("@/app/inventory/components/item-registration/lib/categories.api");
         const { createExpense } = await import("@/app/expenses/lib/expenses.api");
 
@@ -136,22 +125,15 @@ export const handleDone = async (
             receipt_no: data.transactionNo,
             notes: `Automatic deduction for voucher usage. Transaction: ${data.transactionNo}`,
           });
-          console.log(`✅ [Logic] Voucher expense recorded against ${defaultSource.category}`);
-        } else {
-          console.warn("⚠️ [Logic] Voucher used but no default source category set. Expense NOT recorded.");
-          // Optional: Alert the user or just log it. 
-          // alert("Warning: Voucher used but no default accounting category set in Settings.");
         }
       } catch (voucherError) {
         console.error("❌ [Logic] Failed to record voucher expense:", voucherError);
-        // We don't fail the whole transaction for this, just log it
       }
     }
 
-    // Return the payload to the UI for the Modal
     return headerPayload;
   } catch (err) {
     console.error("❌ [Logic] Unexpected Crash in handleDone:", err);
-    throw err; // Re-throw to be caught by usePosForm
+    throw err;
   }
 };

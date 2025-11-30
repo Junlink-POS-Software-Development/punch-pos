@@ -33,6 +33,7 @@ type CustomFormatterProps<R> = {
 const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
   return (
     <button
+      type="button"
       className="flex justify-center items-center w-full h-full text-red-500 hover:text-red-300"
       onClick={() => column.onRemoveItem(row.sku)}
       aria-label="Remove item"

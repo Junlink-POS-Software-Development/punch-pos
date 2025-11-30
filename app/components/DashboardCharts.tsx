@@ -34,8 +34,10 @@ export function ProfitTrendChart({ data }: { data: ProfitData[] }) {
   const { currency } = useSettings();
 
   return (
-    <div className="w-full h-64 min-h-[250px]">
-      <ResponsiveContainer width="100%" height="100%">
+    // FIX 1: Add 'min-w-0' to ensure Grid containers don't collapse width to 0
+    <div className="w-full h-64 min-h-[250px] min-w-1">
+      {/* FIX 2: Add minWidth={0} prop to satisfy Recharts */}
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <LineChart
           data={data}
           margin={{
@@ -89,8 +91,10 @@ export function CategoryDonutChart({ data }: { data: CategoryData[] }) {
   const { currency } = useSettings();
 
   return (
-    <div className="w-full h-64 min-h-[250px]">
-      <ResponsiveContainer width="100%" height="100%">
+    // FIX 1: Add 'min-w-0'
+    <div className="w-full h-64 min-h-[250px] min-w-0">
+      {/* FIX 2: Add minWidth={0} */}
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <PieChart>
           <Pie
             data={data}

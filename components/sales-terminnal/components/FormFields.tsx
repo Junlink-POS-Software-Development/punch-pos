@@ -15,41 +15,44 @@ export const FormFields = React.memo(
     const { register, control, setValue, setFocus } =
       useFormContext<PosFormValues>();
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key !== "Enter") return;
+    
+const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key !== "Enter") return;
 
-      const target = e.target as HTMLInputElement;
-      const fieldId = target.id as keyof PosFormValues;
+  const target = e.target as HTMLInputElement;
+  const fieldId = target.id as keyof PosFormValues;
 
-      // Only prevent default for non-submit fields
-      if (fieldId !== "voucher") {
-        e.preventDefault();
-      }
+  // 1. Always prevent default to stop page reloads or double submissions
+  if (fieldId !== "voucher") {
+    e.preventDefault();
+  }
 
-      switch (fieldId) {
-        case "customerName":
-          setFocus("barcode");
-          break;
-        case "barcode":
-          setFocus("quantity");
-          break;
-        case "quantity":
-          setFocus("discount");
-          break;
-        case "discount":
-          onAddToCartClick();
-          setFocus("barcode");
-          break;
-        case "payment":
-          setFocus("voucher");
-          break;
-        case "voucher":
-          // Allow natural form submission
-          break;
-        default:
-          break;
-      }
-    };
+  switch (fieldId) {
+    case "customerName":
+      setFocus("barcode");
+      break;
+    case "barcode":
+      setFocus("quantity");
+      break;
+    case "quantity":
+      setFocus("discount");
+      break;
+    case "discount":
+      onAddToCartClick();
+      setFocus("barcode");
+      break;
+    case "payment":
+      setFocus("voucher");
+      break;
+    case "voucher":
+      // FIX: Explicitly trigger the done action logic
+      e.preventDefault(); // Stop natural form submit
+      onDoneSubmitTrigger(); // Call the parent handler
+      break;
+    default:
+      break;
+  }
+};
 
     type FieldConfig = {
       title: string;

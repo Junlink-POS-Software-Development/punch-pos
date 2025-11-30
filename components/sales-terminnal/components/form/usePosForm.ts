@@ -1,4 +1,3 @@
-// app/inventory/components/stock-management/components/form/usePosForm.ts
 import { useState, useEffect, useMemo } from "react";
 import {
   useForm,
@@ -10,52 +9,52 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
 import { useInventory } from "@/app/inventory/components/stocks-monitor/context/InventoryContext";
+import { useAuth } from "@/context/AuthContext"; // <--- 1. IMPORT AUTH CONTEXT
 import {
   getDefaultFormValues,
   PosFormValues,
   posSchema,
-  generateTransactionNo, // <--- Import this
+  generateTransactionNo,
 } from "../../utils/posSchema";
 import { CartItem } from "../TerminalCart";
-import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers"; // Ensure TransactionResult is exported from handlers/done
+import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers"; 
 import { TransactionResult } from "../buttons/handlers/done";
 
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
   cartItems: CartItem[];
-  onAddToCart: () => void; // Changed back to sync
+  onAddToCart: () => void;
   onRemoveItem: (sku: string) => void;
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
   triggerDoneSubmit: () => void;
   liveTime: string;
   isSubmitting: boolean;
-  successData: TransactionResult | null; // <--- ADDED
-  closeSuccessModal: () => void; // <--- ADDED
-  errorMessage: string | null; // <--- ERROR MESSAGE STATE
-  clearErrorMessage: () => void; // <--- CLEAR ERROR
+  successData: TransactionResult | null;
+  closeSuccessModal: () => void;
+  errorMessage: string | null;
+  clearErrorMessage: () => void;
 }
 
 export const usePosForm = (): UsePosFormReturn => {
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // <--- 2. GET USER FROM CONTEXT
   const { items: allItems } = useItems();
-  const { inventory: inventoryData } = useInventory(); // Use shared inventory context
+  const { inventory: inventoryData } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
-  const [successData, setSuccessData] = useState<TransactionResult | null>(
-    null
-  ); // <--- STATE FOR MODAL
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // <--- ERROR STATE
+  const [successData, setSuccessData] = useState<TransactionResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const methods = useForm<PosFormValues>({
     resolver: zodResolver(posSchema),
     defaultValues: {
       ...getDefaultFormValues(),
-      transactionNo: "", // <--- Initialize empty to avoid hydration mismatch
+      transactionNo: "",
     },
-    mode: "onBlur", // Changed from onChange to improve INP - validates on blur instead of every keystroke
+    mode: "onBlur",
   });
 
   const {
@@ -68,9 +67,8 @@ export const usePosForm = (): UsePosFormReturn => {
     control,
   } = methods;
 
-  // ... (Existing useEffect for LIVE CLOCK - Keep as is) ...
+  // --- LIVE CLOCK ---
   useEffect(() => {
-    // Generate transaction number on client side only
     setValue("transactionNo", generateTransactionNo());
 
     const getNow = () =>
@@ -94,7 +92,7 @@ export const usePosForm = (): UsePosFormReturn => {
     };
   }, [setValue]);
 
-  // ... (Existing Calculation Logic - Keep as is) ...
+  // --- CALCULATIONS ---
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.total, 0),
     [cartItems]
@@ -118,12 +116,13 @@ export const usePosForm = (): UsePosFormReturn => {
       allItems,
       cartItems,
       setCartItems,
-      onError: (message) => setErrorMessage(message), // Pass error handler
-      inventoryData, // Pass inventory from context
+      onError: (message) => setErrorMessage(message),
+      inventoryData,
     });
   };
 
   const onClear = () => {
+    console.log("🧹 [Form] onClear triggered");
     handleClear({ setCartItems, reset });
     setTimeout(() => setFocus("customerName"), 50);
   };
@@ -135,6 +134,13 @@ export const usePosForm = (): UsePosFormReturn => {
   // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
     console.log("📝 [Form] onDoneSubmit triggered", data);
+    
+    // 3. VALIDATE USER SESSION
+    if (!user || !user.id) {
+      setErrorMessage("Session invalid or expired. Please reload/login.");
+      return;
+    }
+
     const totalPayment = (data.payment || 0) + (data.voucher || 0);
     if (totalPayment <= 0) {
       setErrorMessage(
@@ -150,33 +156,37 @@ export const usePosForm = (): UsePosFormReturn => {
     setIsSubmitting(true);
 
     try {
-      // 1. Perform the transaction
-      // result is now the Payload Object (or null)
-      const result = await handleDone(data, cartItems);
+      // 4. PASS USER ID TO HANDLER (Removes the need for supabase.auth.getSession())
+      // Ensure you have updated 'done.ts' to accept this 3rd argument!
+      const result = await handleDone(data, cartItems, user.id);
+      
+      console.log("📝 [Form] handleDone result:", result);
 
       if (result) {
         setIsSubmitting(false);
 
-        // 2. SET SUCCESS DATA (Opens Modal) - Do NOT clear form yet
+        // Set success data to open modal
         setSuccessData(result);
 
-        // 3. Invalidate Queries (Background update)
+        // Invalidate queries to refresh history tables
         queryClient.invalidateQueries({ queryKey: ["payments"] });
         queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
+        // Also refresh dashboard metrics if needed
+        queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] }); 
       } else {
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ [UI CRASH] Error in submission flow:", error);
-      setErrorMessage("An unexpected error occurred.");
+      setErrorMessage(error.message || "An unexpected error occurred.");
       setIsSubmitting(false);
     }
   };
 
-  // This is called when the user clicks "Close" on the Modal
   const closeSuccessModal = () => {
+    console.log("❎ [Form] closeSuccessModal triggered");
     setSuccessData(null);
-    onClear(); // NOW we clear the form for the next customer
+    onClear(); // Clear form for next customer
   };
 
   const clearErrorMessage = () => {
@@ -200,9 +210,9 @@ export const usePosForm = (): UsePosFormReturn => {
     triggerDoneSubmit,
     liveTime,
     isSubmitting,
-    successData, // Exported
-    closeSuccessModal, // Exported
-    errorMessage, // Exported
-    clearErrorMessage, // Exported
+    successData,
+    closeSuccessModal,
+    errorMessage,
+    clearErrorMessage,
   };
 };
