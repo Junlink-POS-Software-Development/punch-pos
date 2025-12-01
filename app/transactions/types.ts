@@ -9,6 +9,7 @@ export interface TransactionItem {
   discount: number;
   quantity: number;
   totalPrice: number;
+  transactionTime: string;
 }
 
 // Matches the 'paymentInfo' object in done.ts

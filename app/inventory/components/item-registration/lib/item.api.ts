@@ -47,6 +47,7 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
 
 // 4. 'fromDatabaseObject' remains the same, correctly typed
 // Maps DB snake_case (ItemDbRow) to JS camelCase (Item)
+
 const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
   const { item_name, cost_price, category, description, low_stock_threshold, ...rest } = dbItem;
   return {

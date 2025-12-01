@@ -2,13 +2,12 @@
 
 import React from "react";
 import { Loader2, AlertCircle, XCircle } from "lucide-react";
-import { useTransactionContext } from "../../context/TransactionContext"; // New Import
+import { useTransactionContext } from "../../context/TransactionContext";
 import { ItemTablePagination } from "@/components/reusables/ItemTablePagination";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 
 export const TransactionHistoryTable = () => {
-  // Use Context instead of local state/hooks
   const {
     transactions,
     totalRows,
@@ -25,7 +24,7 @@ export const TransactionHistoryTable = () => {
 
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
-  // --- Handlers (Simplified to use Context Setters) ---
+  // --- Handlers ---
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
   };
@@ -95,13 +94,15 @@ export const TransactionHistoryTable = () => {
         )}
       </div>
 
-      {/* Table Body (Same as before) */}
       <div className="overflow-x-auto">
         <table className="w-full text-slate-300 text-sm text-left">
-           {/* ... Table Header and Body logic remains identical, using 'transactions' array ... */}
-           {/* Copy existing Table logic here */}
-           <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase">
+          <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase">
             <tr>
+              {/* Added Date Column Header */}
+              <th className="px-6 py-3 whitespace-nowrap">
+                Date (Sorted)
+              </th>
+              
               <th className="px-6 py-3 whitespace-nowrap">
                 <HeaderWithFilter
                   column={{ key: "transactionNo", name: "Invoice Ref" }}
@@ -109,11 +110,23 @@ export const TransactionHistoryTable = () => {
                   onApplyFilter={handleApplyFilter}
                 />
               </th>
-               {/* ... other headers ... */}
-               <th className="px-6 py-3 whitespace-nowrap">Item Name</th>
-               <th className="px-6 py-3 text-right whitespace-nowrap">Price</th>
-               <th className="px-6 py-3 text-right whitespace-nowrap">Qty</th>
-               <th className="px-6 py-3 font-bold text-white text-right whitespace-nowrap">Total</th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <HeaderWithFilter
+                  column={{ key: "barcode", name: "SKU" }}
+                  filters={filters as Record<string, string>}
+                  onApplyFilter={handleApplyFilter}
+                />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                 <HeaderWithFilter
+                  column={{ key: "ItemName", name: "Item Name" }}
+                  filters={filters as Record<string, string>}
+                  onApplyFilter={handleApplyFilter}
+                />
+              </th>
+              <th className="px-6 py-3 text-right whitespace-nowrap">Price</th>
+              <th className="px-6 py-3 text-right whitespace-nowrap">Qty</th>
+              <th className="px-6 py-3 font-bold text-white text-right whitespace-nowrap">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -122,8 +135,13 @@ export const TransactionHistoryTable = () => {
             ) : (
               transactions.map((item, index) => (
                 <tr key={`${item.transactionNo}-${index}`} className="hover:bg-slate-800/30 border-slate-700 border-b transition-colors">
+                  {/* Added Date Column Cell */}
+                  <td className="px-6 py-4 text-slate-400 text-xs whitespace-nowrap">
+                    {item.transactionTime}
+                  </td>
+                  
                   <td className="px-6 py-4 text-slate-500 text-xs">{item.transactionNo}</td>
-                  {/* ... other cells ... */}
+                  <td className="px-6 py-4 text-slate-500 text-xs">{item.barcode}</td>
                   <td className="px-6 py-4 font-medium text-white">{item.ItemName}</td>
                   <td className="px-6 py-4 text-right">₱{item.unitPrice.toFixed(2)}</td>
                   <td className="px-6 py-4 text-right">{item.quantity}</td>

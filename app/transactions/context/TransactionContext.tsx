@@ -17,6 +17,7 @@ interface TransactionContextType {
   currentPage: number;
   rowsPerPage: number;
   filters: TransactionFilters;
+  fetchStatus: string;
   
   // Actions
   setCurrentPage: (page: number) => void;
@@ -32,7 +33,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState<TransactionFilters>({ startDate: "", endDate: "" });
 
-  const { data, isLoading, isError, error, refetch } = useTransactionHistory(
+  const { data, isLoading, isError, error, refetch, fetchStatus } = useTransactionHistory(
     currentPage, 
     rowsPerPage, 
     filters
@@ -51,8 +52,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setRowsPerPage,
     setFilters,
     refresh: refetch,
+    fetchStatus,
   };
-
+// --- ADD THIS DEBUGGING BLOCK ---
+  React.useEffect(() => {
+    console.log("--- Transaction Context Debug ---");
+    console.log("Loading:", isLoading);
+    console.log("Fetch Status:", fetchStatus); // 'fetching', 'paused', or 'idle'
+    console.log("Has Error:", isError);
+    console.log("Error Details:", error);
+    console.log("Data Received:", data);
+    console.log("-------------------------------");
+  }, [isLoading, isError, error, data, fetchStatus]);
+  // -------------------------------
   return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>;
 }
 

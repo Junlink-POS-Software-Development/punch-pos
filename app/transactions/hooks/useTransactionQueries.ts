@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 
 // --- Types for Raw Supabase Responses ---
 interface TransactionRow {
+  id: string; // Changed to string for UUID
   invoice_no: string;
   sku: string;
   item_name: string;
@@ -12,8 +13,10 @@ interface TransactionRow {
   discount: number;
   quantity: number;
   total_price: number;
-  transaction_time?: string; // Added this
-  id?: number;
+  transaction_time: string; // This is the basis for sorting
+  store_id: string; // Normalized column name
+  category_id?: string; // New foreign key
+  category?: string; // Snapshot text
 }
 
 interface PaymentRow {
@@ -24,6 +27,7 @@ interface PaymentRow {
   voucher: number;
   grand_total: number;
   change: number;
+  cashier_id?: string; // Renamed from cashier_name
 }
 
 export interface TransactionFilters {
@@ -48,11 +52,13 @@ export const useTransactionHistory = (
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
+      // We select * to get all columns including the new UUIDs and timestamps
       let query = supabase
         .from("transactions")
         .select("*", { count: "exact" });
 
-      // --- DATE FILTERS (Now working with new column) ---
+      // --- DATE FILTERS (Inclusive Range) ---
+      // Ensures that selecting "Today" covers 00:00:00 to 23:59:59
       if (filters.startDate) {
         query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
       }
@@ -65,6 +71,7 @@ export const useTransactionHistory = (
         transactionNo: "invoice_no",
         barcode: "sku",
         ItemName: "item_name",
+        // category: "category", // Uncomment if you want to filter by the category snapshot
       };
 
       Object.entries(filters).forEach(([key, value]) => {
@@ -76,7 +83,7 @@ export const useTransactionHistory = (
         }
       });
 
-      // Sort by the new transaction_time column
+      // Sort by transaction_time (The Date Column)
       const { data, error, count } = await query
         .range(from, to)
         .order("transaction_time", { ascending: false });
@@ -89,7 +96,10 @@ export const useTransactionHistory = (
       const formattedData = (data as unknown as TransactionRow[]).map(
         (item) => ({
           transactionNo: item.invoice_no || "N/A",
-          transactionTime: item.transaction_time ? new Date(item.transaction_time).toLocaleString() : "N/A", // Optional: display time
+          // Format the date for display, but keep the sorting logic in the query
+          transactionTime: item.transaction_time 
+            ? new Date(item.transaction_time).toLocaleString() 
+            : "N/A", 
           barcode: item.sku,
           ItemName: item.item_name,
           unitPrice: item.cost_price,

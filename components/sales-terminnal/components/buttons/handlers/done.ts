@@ -10,7 +10,7 @@ export type TransactionResult = {
   grand_total: number;
   change: number;
   transaction_no: string;
-  transaction_time: string;
+  // transaction_time: string; // Removed from return type as it is now DB generated
   cashier_name: string;
 } | null;
 
@@ -30,7 +30,6 @@ const withTimeout = <T>(
   ]) as Promise<T>;
 };
 
-// 1. UPDATE ARGUMENTS: Accept cashierId directly
 export const handleDone = async (
   data: PosFormValues,
   cartItems: CartItem[],
@@ -39,9 +38,6 @@ export const handleDone = async (
   console.log("--- 🛠 [Logic] handleDone started ---");
 
   try {
-    // 2. REMOVED: await supabase.auth.getSession()
-    // This removes the "Checking Session (local)..." hang entirely.
-    
     if (!cashierId) {
        throw new Error("User ID missing. Cannot process transaction.");
     }
@@ -56,8 +52,8 @@ export const handleDone = async (
       grand_total: data.grandTotal,
       change: data.change,
       transaction_no: data.transactionNo,
-      transaction_time: new Date().toISOString(),
-      cashier_name: cashierId, // Use the passed ID
+      // REMOVED: transaction_time: new Date().toISOString(), 
+      cashier_name: cashierId, 
     };
 
     const itemsPayload = cartItems.map((item) => ({
@@ -93,7 +89,8 @@ export const handleDone = async (
         if (existingPayment && !fetchError) {
            if (Math.abs(existingPayment.grand_total - data.grandTotal) < 0.01) {
              console.log("✅ [Logic] Transaction already exists and matches. Treating as success.");
-             return headerPayload;
+             // Note: headerPayload no longer has transaction_time, which matches our new logic
+             return headerPayload as TransactionResult; 
            } else {
              console.error("❌ [Logic] Duplicate ID found but amounts do not match.");
              throw new Error("Transaction ID collision detected. Please refresh.");
@@ -131,7 +128,7 @@ export const handleDone = async (
       }
     }
 
-    return headerPayload;
+    return headerPayload as TransactionResult;
   } catch (err) {
     console.error("❌ [Logic] Unexpected Crash in handleDone:", err);
     throw err;
