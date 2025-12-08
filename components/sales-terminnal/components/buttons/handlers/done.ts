@@ -10,7 +10,7 @@ export type TransactionResult = {
   grand_total: number;
   change: number;
   transaction_no: string;
-  // transaction_time: string; // Removed from return type as it is now DB generated
+  transaction_time: string;
   cashier_name: string; 
 } | null;
 
@@ -91,7 +91,7 @@ export const handleDone = async (
            if (Math.abs(existingPayment.grand_total - data.grandTotal) < 0.01) {
              console.log("✅ [Logic] Transaction already exists and matches. Treating as success.");
              // Note: headerPayload no longer has transaction_time, which matches our new logic
-             return headerPayload as TransactionResult; 
+             return { ...headerPayload, transaction_time: new Date().toISOString() } as TransactionResult; 
            } else {
              console.error("❌ [Logic] Duplicate ID found but amounts do not match.");
              throw new Error("Transaction ID collision detected. Please refresh.");
@@ -129,7 +129,7 @@ export const handleDone = async (
       }
     }
 
-    return headerPayload as TransactionResult;
+    return { ...headerPayload, transaction_time: new Date().toISOString() } as TransactionResult;
   } catch (err) {
     console.error("❌ [Logic] Unexpected Crash in handleDone:", err);
     throw err;
