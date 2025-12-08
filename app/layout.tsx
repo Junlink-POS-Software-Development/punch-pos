@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, VT323 } from "next/font/google";
 import "./globals.css";
-import { ViewProvider } from "../components/window-layouts/ViewContext";
+
 import MainWindow from "../components/window-layouts/MainWindow";
 import { QueryProvider } from "@/context/QueryProvider";
-import { SettingsProvider } from "@/context/SettingsContext";
-import { ItemsProvider } from "./inventory/components/item-registration/context/ItemsContext";
+
+
 import { Analytics } from "./components/Analytics";
-import { AuthProvider } from "@/context/AuthContext";
-import { TransactionProvider } from "./transactions/context/TransactionContext";
-import { PaymentProvider } from "./transactions/context/PaymentContext";
-import { ExpenseProvider } from "./expenses/context/ExpenseContext";
-import { DashboardProvider } from "./dashboard/context/DashboardContext";
+import { AuthInit } from "@/components/AuthInit";
+
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,26 +51,24 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${vt323.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
+        <AuthInit>
           <QueryProvider>
-            <DashboardProvider>
-            <TransactionProvider>
-              <PaymentProvider>
-                <ExpenseProvider>
-            <SettingsProvider>
-              <ItemsProvider>
-                <ViewProvider>
+
+
+
+
+
+
                   <MainWindow>{children}</MainWindow>
-                </ViewProvider>
-              </ItemsProvider>
-            </SettingsProvider>
-            </ExpenseProvider>
-            </PaymentProvider>
-            </TransactionProvider>
-            </DashboardProvider>
+
+
+
+
+
+
           </QueryProvider>
           <Analytics />
-        </AuthProvider>
+        </AuthInit>
       </body>
     </html>
   );

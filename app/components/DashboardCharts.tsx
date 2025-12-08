@@ -14,7 +14,7 @@ import {
   Legend,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useSettings } from "@/context/SettingsContext";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 interface ProfitData {
   date: string;
@@ -31,7 +31,7 @@ interface CategoryData {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
 export function ProfitTrendChart({ data }: { data: ProfitData[] }) {
-  const { currency } = useSettings();
+  const { currency } = useSettingsStore();
 
   return (
     // FIX 1: Add 'min-w-0' to ensure Grid containers don't collapse width to 0
@@ -88,7 +88,7 @@ export function ProfitTrendChart({ data }: { data: ProfitData[] }) {
 }
 
 export function CategoryDonutChart({ data }: { data: CategoryData[] }) {
-  const { currency } = useSettings();
+  const { currency } = useSettingsStore();
 
   return (
     // FIX 1: Add 'min-w-0'

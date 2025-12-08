@@ -7,9 +7,9 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
-import { useInventory } from "@/app/inventory/components/stocks-monitor/context/InventoryContext";
-import { useAuth } from "@/context/AuthContext"; // <--- 1. IMPORT AUTH CONTEXT
+import { useItems } from "@/app/inventory/hooks/useItems";
+import { useInventory } from "@/app/inventory/hooks/useInventory";
+import { useAuthStore } from "@/store/useAuthStore"; // <--- 1. IMPORT AUTH CONTEXT
 import {
   getDefaultFormValues,
   PosFormValues,
@@ -38,7 +38,7 @@ interface UsePosFormReturn {
 
 export const usePosForm = (): UsePosFormReturn => {
   const queryClient = useQueryClient();
-  const { user } = useAuth(); // <--- 2. GET USER FROM CONTEXT
+  const { user } = useAuthStore(); // <--- 2. GET USER FROM CONTEXT
   const { items: allItems } = useItems();
   const { inventory: inventoryData } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);

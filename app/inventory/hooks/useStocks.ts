@@ -1,6 +1,3 @@
-"use client";
-
-import React, { createContext, useContext, ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchStocks,
@@ -8,7 +5,7 @@ import {
   updateStock,
   deleteStock,
   StockData,
-} from "../lib/stocks.api";
+} from "../components/stock-management/lib/stocks.api";
 
 export interface StockInput {
   itemName: string;
@@ -23,22 +20,7 @@ interface StockMutationOptions {
   onError?: (error: Error) => void;
 }
 
-interface StockContextType {
-  stocks: StockData[];
-  isLoading: boolean;
-  isProcessing: boolean;
-  addStockEntry: (data: StockInput, options?: StockMutationOptions) => void;
-  editStockEntry: (
-    id: string,
-    data: StockInput,
-    options?: StockMutationOptions
-  ) => void;
-  removeStockEntry: (id: string, options?: StockMutationOptions) => void;
-}
-
-const StockContext = createContext<StockContextType | undefined>(undefined);
-
-export const StockProvider = ({ children }: { children: ReactNode }) => {
+export const useStocks = () => {
   const queryClient = useQueryClient();
 
   const { data: stocks = [], isLoading } = useQuery<StockData[]>({
@@ -76,7 +58,6 @@ export const StockProvider = ({ children }: { children: ReactNode }) => {
     data: StockInput,
     options?: StockMutationOptions
   ) => {
-    // Fix: The mutationFn for updateStock expects an object with id and the StockInput properties.
     updateMutation.mutate(
       {
         id,
@@ -104,24 +85,12 @@ export const StockProvider = ({ children }: { children: ReactNode }) => {
     deleteMutation.isPending ||
     updateMutation.isPending;
 
-  return (
-    <StockContext.Provider
-      value={{
-        stocks,
-        isLoading,
-        isProcessing,
-        addStockEntry,
-        editStockEntry,
-        removeStockEntry,
-      }}
-    >
-      {children}
-    </StockContext.Provider>
-  );
-};
-
-export const useStocks = () => {
-  const context = useContext(StockContext);
-  if (!context) throw new Error("useStocks must be used within StockProvider");
-  return context;
+  return {
+    stocks,
+    isLoading,
+    isProcessing,
+    addStockEntry,
+    editStockEntry,
+    removeStockEntry,
+  };
 };

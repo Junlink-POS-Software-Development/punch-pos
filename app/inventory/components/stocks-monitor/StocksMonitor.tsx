@@ -6,7 +6,7 @@ import { Loader2, AlertTriangle, PackageCheck } from "lucide-react";
 import "react-data-grid/lib/styles.css";
 import { DataGrid } from "react-data-grid";
 import { InventoryItem } from "./lib/inventory.api";
-import { useInventory } from "./context/InventoryContext";
+import { useInventory } from "../../hooks/useInventory";
 
 export default function StocksMonitor() {
   // Use shared inventory context

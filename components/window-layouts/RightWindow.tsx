@@ -18,7 +18,7 @@ const RightWindow = ({ rightWidth, children }: RightWindowProps) => {
             I've also added 'overflow-y-auto' so your
             pages can scroll if they are long.
         */}
-        <div className="border-2 border-primary-light rounded-3xl w-full h-full overflow-y-auto">
+        <div className="border-2 border-primary-light rounded-3xl w-full h-full overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </div>

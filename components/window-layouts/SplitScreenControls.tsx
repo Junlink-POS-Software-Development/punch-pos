@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useView } from "./ViewContext";
+import { useViewStore } from "./store/useViewStore";
 
 // --- Prop Types ---
 type ControlsProps = {
@@ -53,7 +53,7 @@ export function SplitScreenControls({
   mobileView,
   onToggleClick,
 }: ControlsProps) {
-  const { viewState, setViewState, setIsSplit } = useView();
+  const { viewState, setViewState, setIsSplit } = useViewStore();
 
   // 1. onChange handler: Only updates the slider's visual state.
   // This is a fast operation.

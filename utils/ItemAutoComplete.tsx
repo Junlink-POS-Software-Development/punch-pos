@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, forwardRef } from "react";
-import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
+import { useItems } from "@/app/inventory/hooks/useItems";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 
 export interface ItemAutocompleteProps {

@@ -2,7 +2,7 @@
 
 import { DataGrid, Column } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
-import { useStocks } from "./context/StockContext";
+import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
 import { Edit, Trash2 } from "lucide-react";
 

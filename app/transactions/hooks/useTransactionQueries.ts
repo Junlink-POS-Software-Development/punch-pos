@@ -1,7 +1,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createClient } from "@/utils/supabase/client";
 import { TransactionItem, PaymentRecord } from "../types";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // --- Types for Raw Supabase Responses ---
 interface TransactionRow {
@@ -42,7 +42,7 @@ export const useTransactionHistory = (
   pageSize: number,
   filters: TransactionFilters = {}
 ) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthStore();
 
   return useQuery({
     queryKey: ["transaction-items", page, pageSize, filters],
@@ -124,7 +124,7 @@ export const usePaymentHistory = (
   pageSize: number = 50,
   filters: TransactionFilters = {}
 ) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthStore();
 
   return useQuery({
     queryKey: ["payments", page, pageSize, filters],

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Loader2, AlertCircle, XCircle } from "lucide-react";
-import { useTransactionContext } from "../../context/TransactionContext";
+import { useTransactionData } from "../../hooks/useTransactionData";
 import { ItemTablePagination } from "@/components/reusables/ItemTablePagination";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
@@ -20,7 +20,7 @@ export const TransactionHistoryTable = () => {
     setCurrentPage,
     setRowsPerPage,
     setFilters
-  } = useTransactionContext();
+  } = useTransactionData();
 
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 

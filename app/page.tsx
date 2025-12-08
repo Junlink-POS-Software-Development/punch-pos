@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Navigation from "../components/navigation/Navigation";
 import { X, Loader2, AlertTriangle } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useDashboardData } from "./dashboard/hooks/useDashboardData";
 
 // --- Local Components ---
@@ -52,7 +52,7 @@ type AuthModalState = "hidden" | "signIn" | "signUp";
 
 export default function HomePage() {
   // --- AUTH STATE MANAGEMENT ---
-  const { user, isAuthReady, signOut } = useAuth();
+  const { user, isAuthReady, signOut } = useAuthStore();
   const [authModalState, setAuthModalState] =
     useState<AuthModalState>("hidden");
   const [isLoggingOut, setIsLoggingOut] = useState(false);

@@ -2,7 +2,7 @@
 "use client";
 
 import { useMediaQuery } from "@/app/hooks/useMediaQuery";
-import { useView } from "../window-layouts/ViewContext";
+import { useViewStore } from "../window-layouts/store/useViewStore";
 import FormFields from "./components/FormFields";
 import TerminalButtons from "./components/buttons/TerminalButtons";
 import TerminalHeader from "./components/TerminalHeader";
@@ -16,7 +16,7 @@ import SuccessReceiptModal from "./utils/SuccessReceiptModal";
 import ErrorMessage from "./components/ErrorMessage";
 
 const SalesTerminal = () => {
-  const { isSplit } = useView();
+  const { isSplit } = useViewStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const {

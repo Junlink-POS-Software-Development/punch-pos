@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Loader2, AlertCircle, XCircle } from "lucide-react";
-import { usePaymentContext } from "../../context/PaymentContext"; // New Import
+import { usePaymentData } from "../../hooks/usePaymentData"; // New Import
 import { ItemTablePagination } from "@/components/reusables/ItemTablePagination";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
@@ -21,7 +21,7 @@ export const PaymentHistoryTable = () => {
     setCurrentPage,
     setRowsPerPage,
     setFilters,
-  } = usePaymentContext();
+  } = usePaymentData();
 
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 

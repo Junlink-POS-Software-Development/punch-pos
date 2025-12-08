@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useMediaQuery } from "../../app/hooks/useMediaQuery";
 import { SplitScreenControls } from "./SplitScreenControls";
 import RightWindow from "./RightWindow";
-import { useView } from "./ViewContext";
+import { useViewStore } from "./store/useViewStore";
 
 // Dynamic import for LeftWindow (contains SalesTerminal) - improves INP
 const LeftWindow = dynamic(() => import("./LeftWindow"), {
@@ -53,7 +53,7 @@ export default function MainWindow({
 }) {
   const [mobileView, setMobileView] = useState<"left" | "right">("left");
   const [isInitial, setIsInitial] = useState(true);
-  const { viewState } = useView();
+  const { viewState } = useViewStore();
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 

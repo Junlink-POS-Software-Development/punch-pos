@@ -7,7 +7,7 @@ import { ItemForm } from "./item-form/ItemForm";
 import { Item } from "./utils/itemTypes";
 import { StatusDisplay } from "@/utils/StatusDisplay";
 import { ItemTable } from "./item-table/ItemTable";
-import { useItems } from "./context/ItemsContext"; // Import the hook
+import { useItems } from "../../hooks/useItems"; // Import the hook
 
 const ItemReg = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);

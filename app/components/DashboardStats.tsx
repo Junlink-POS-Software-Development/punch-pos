@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import dayjs from "dayjs";
 import Link from "next/link";
-import { useSettings } from "@/context/SettingsContext";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { formatCurrency } from "@/lib/utils/currency";
 
 interface DashboardStatsProps {
@@ -18,7 +18,7 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ metrics, loading }: DashboardStatsProps) {
-  const { currency } = useSettings();
+  const { currency } = useSettingsStore();
 
   return (
     <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mt-6">

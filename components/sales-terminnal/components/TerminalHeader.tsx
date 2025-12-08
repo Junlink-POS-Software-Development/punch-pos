@@ -3,9 +3,9 @@
 
 import { useFormContext } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
-import { useItems } from "@/app/inventory/components/item-registration/context/ItemsContext";
+import { useItems } from "@/app/inventory/hooks/useItems";
 import { useMemo } from "react";
-import { useInventory } from "@/app/inventory/components/stocks-monitor/context/InventoryContext";
+import { useInventory } from "@/app/inventory/hooks/useInventory";
 
 type TerminalHeaderProps = {
   userName: string;

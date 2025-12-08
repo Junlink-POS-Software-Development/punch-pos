@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { StockForm } from "./StockForm";
 import StockTable from "./StockTable";
-import { StockProvider, useStocks } from "./context/StockContext";
+import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
 import { StockFormSchema } from "./utils/types";
 
@@ -72,8 +72,6 @@ const StockManagementContent = () => {
 
 export function StockManagement() {
   return (
-    <StockProvider>
       <StockManagementContent />
-    </StockProvider>
   );
 }

@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Loader2 } from "lucide-react";
-import { useExpenseContext } from "../context/ExpenseContext";
+import { useExpenses } from "../hooks/useExpenses";
 import { ExpenseInput } from "../lib/expenses.api";
 import { fetchFlowCategories } from "../lib/cashflow.api";
 import { useQuery } from "@tanstack/react-query"; // ✅ FIXED: added missing source
@@ -17,7 +17,7 @@ const getLocalDate = () => {
 };
 
 export function Cashout() {
-  const { expenses, addExpense, isLoading, isSubmitting } = useExpenseContext();
+  const { expenses, addExpense, isLoading, isSubmitting } = useExpenses();
 
 const amountRef = useRef<HTMLElement | null>(null);
 const classificationRef = useRef<HTMLElement | null>(null);

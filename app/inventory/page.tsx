@@ -8,7 +8,7 @@ import InventoryNav, { InventoryView } from "./components/InventoryNav";
 import ItemReg from "./components/item-registration/ItemReg";
 import { StockManagement } from "./components/stock-management/StockManagement";
 import StocksMonitor from "./components/stocks-monitor/StocksMonitor";
-import { InventoryProvider } from "./components/stocks-monitor/context/InventoryContext";
+
 
 function InventoryContent() {
   const searchParams = useSearchParams();
@@ -73,9 +73,7 @@ function InventoryContent() {
 export default function InventoryPage() {
   return (
     <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
-      <InventoryProvider>
         <InventoryContent />
-      </InventoryProvider>
     </Suspense>
   );
 }
