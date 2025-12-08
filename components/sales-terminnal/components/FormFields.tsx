@@ -122,8 +122,8 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
     return (
-      <div className="w-full h-full grow p-2">
-        <div className="gap-y-4 gap-x-2 grid grid-cols-6 grid-rows-3 w-full h-full text-white">
+      <div className="flex flex-col justify-center w-full h-full grow p-2">
+        <div className="gap-y-4 gap-x-2 grid grid-cols-6 grid-rows-3 w-full h-auto text-white">
           {fields.map((field) => (
             <React.Fragment key={field.id}>
               <label

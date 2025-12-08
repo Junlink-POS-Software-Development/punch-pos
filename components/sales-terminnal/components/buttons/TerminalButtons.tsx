@@ -20,7 +20,7 @@ const TerminalButtons = React.memo(
       { id: "clear", name: "Clear" },
     ];
     return (
-      <div className="gap-2 grid grid-cols-3 w-full h-[50%]">
+      <div className="gap-2 grid grid-cols-3 w-full h-24 shrink-0">
         {buttons.map((button) => (
           <React.Fragment key={button.id}>
             <div className="w-full">
