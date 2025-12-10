@@ -15,9 +15,9 @@ import {
 import { Item } from "../utils/itemTypes";
 import { useItemForm } from "./hooks/useItemForm";
 import { useItemBatchUpload } from "./hooks/useItemBatchUpload";
-
-// Import our new component
 import { CategorySelect } from "../utils/CategorySelect";
+
+
 
 interface ItemFormProps {
   itemToEdit?: Item;

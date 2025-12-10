@@ -5,20 +5,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   ChevronDown, 
   Plus, 
-  MoreVertical, 
   Edit2, 
   Trash2, 
   Check, 
   X, 
-  Loader2 
+  Loader2,
+  AlertCircle
 } from "lucide-react";
-import { 
-  fetchCategories, 
-  createCategory, 
-  updateCategory, 
-  deleteCategory, 
-  Category 
-} from "../lib/categories.api";
+
+import { Category } from "../lib/categories.api";
+import { useCategoryStore } from "../store/useCategoryStore";
 
 interface CategorySelectProps {
   value?: string;
@@ -33,47 +29,55 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   error,
   disabled
 }) => {
-  // State
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
+  // --- STORE ACCESS ---
+  const { 
+    categories, 
+    isLoading: storeLoading, 
+    loadCategories, 
+    addCategory, 
+    updateCategory, 
+    deleteCategory 
+  } = useCategoryStore();
+
+  // --- LOCAL UI STATE ---
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false); // For inline actions
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // --- 1. Load Data ---
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchCategories();
-      setCategories(data);
-    } catch (err) {
-      console.error("Failed to load categories", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 1. Initial Load (Idempotent via store)
   useEffect(() => {
     loadCategories();
-    // Close dropdown on click outside
+  }, [loadCategories]);
+
+  // 2. Close dropdown on click outside
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
-        setEditingId(null); // Cancel edits on close
+        setEditingId(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- 2. Handlers ---
+  // 3. Sync internal search with external value
+  useEffect(() => {
+    // Only update search if it's empty or we are not actively typing/searching
+    // checking !isOpen prevents overwriting user's typing if the parent value changes unexpectedly
+    if (value && !isOpen) {
+      setSearch(value);
+    }
+  }, [value, isOpen]);
+
+  // --- HANDLERS ---
   
   const handleSelect = (categoryName: string) => {
     onChange(categoryName);
@@ -85,12 +89,14 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     if (!search.trim()) return;
     try {
       setActionLoading(true);
-      await createCategory(search);
-      await loadCategories(); // Refresh list
-      onChange(search); // Auto-select
+      await addCategory(search); // Store action
+      
+      // Store updates automatically, no need to reload
+      onChange(search); 
       setIsOpen(false);
     } catch (err) {
-      alert("Failed to create category");
+      console.error(err);
+      // Error is handled in store, but we can show a toast here if needed
     } finally {
       setActionLoading(false);
     }
@@ -107,15 +113,17 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     if (!editingId || !editValue.trim()) return;
     try {
       setActionLoading(true);
-      await updateCategory(editingId, editValue);
-      await loadCategories();
+      await updateCategory(editingId, editValue); // Store action
+      
       setEditingId(null);
       // Update selected value if we just edited the currently selected one
-      if (value === categories.find(c => c.id === editingId)?.category) {
+      const wasSelected = categories.find(c => c.id === editingId)?.category === value;
+      if (wasSelected) {
         onChange(editValue);
+        setSearch(editValue);
       }
     } catch (err) {
-      alert("Failed to update category");
+      console.error(err);
     } finally {
       setActionLoading(false);
     }
@@ -126,22 +134,22 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     if (!confirm("Are you sure? This cannot be undone.")) return;
     try {
       setActionLoading(true);
-      await deleteCategory(id);
-      await loadCategories();
-      if (value === categories.find(c => c.id === id)?.category) {
-        onChange(""); // Clear selection if deleted
+      
+      // Check if we are deleting the currently selected item
+      const isSelected = categories.find(c => c.id === id)?.category === value;
+      
+      await deleteCategory(id); // Store action
+      
+      if (isSelected) {
+        onChange(""); 
+        setSearch("");
       }
     } catch (err) {
-      alert("Failed to delete category");
+      console.error(err);
     } finally {
       setActionLoading(false);
     }
   };
-
-  // Sync internal search with external value if needed (initial load)
-  useEffect(() => {
-    if (value) setSearch(value);
-  }, [value]);
 
   // Filter Logic
   const filtered = categories.filter(c => 
@@ -158,22 +166,29 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            onChange(e.target.value); // Allow free typing as well
+            // Only fire onChange if it matches an existing category, 
+            // OR if you want free-text input. Usually select inputs require a match.
+            // Keeping your original logic of "onChange(e.target.value)":
+            onChange(e.target.value); 
             if (!isOpen) setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          disabled={disabled}
-          placeholder="Select or create category..."
+          disabled={disabled || storeLoading}
+          placeholder={storeLoading ? "Loading..." : "Select or create category..."}
           className={`w-full input-dark pr-10 ${error ? "border-red-500" : ""}`}
         />
         <button 
             type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
             onClick={() => setIsOpen(!isOpen)}
+            disabled={disabled}
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : <ChevronDown className="w-4 h-4" />}
+          {storeLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
+
+      {/* Error Message from Store or Props */}
+      {error && <p className="mt-1 text-red-400 text-xs flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {error}</p>}
 
       {/* Dropdown Menu */}
       {isOpen && !disabled && (
@@ -196,10 +211,10 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
                         autoFocus
                     />
                     <button onClick={saveEdit} disabled={actionLoading} className="text-green-400 hover:text-green-300">
-                        <Check className="w-4 h-4"/>
+                        {actionLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Check className="w-3 h-3"/>}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="text-red-400 hover:text-red-300">
-                        <X className="w-4 h-4"/>
+                        <X className="w-3 h-3"/>
                     </button>
                 </div>
               ) : (
@@ -223,7 +238,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
                         className="p-1 hover:bg-slate-700 rounded text-red-400" 
                         title="Delete"
                     >
-                        <Trash2 className="w-3 h-3" />
+                       {actionLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Trash2 className="w-3 h-3" />}
                     </button>
                   </div>
                 </>
