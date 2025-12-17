@@ -1,7 +1,10 @@
-// lib/expenses.api.ts
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface ExpenseData {
   id: string;
@@ -17,6 +20,7 @@ export type ExpenseInput = Omit<ExpenseData, "id">;
 
 // 1. Fetch Expenses
 export const fetchExpenses = async (): Promise<ExpenseData[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("expenses")
     .select("*")
@@ -29,6 +33,7 @@ export const fetchExpenses = async (): Promise<ExpenseData[]> => {
 
 // 2. Create Expense
 export const createExpense = async (input: ExpenseInput) => {
+  const supabase = await getSupabase();
   // A. Get Current User
   const {
     data: { user },

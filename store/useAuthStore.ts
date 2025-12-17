@@ -1,9 +1,7 @@
 import { create } from 'zustand';
-import { createClient } from '@/utils/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
-  session: Session | null;
   user: User | null;
   isAuthenticated: boolean;
   isAuthReady: boolean;
@@ -12,61 +10,40 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  session: null,
   user: null,
   isAuthenticated: false,
   isAuthReady: false,
 
   initializeAuth: async () => {
-    // Prevent multiple initializations if already ready? 
-    // Actually, we might want to re-init if needed, but usually once per app load.
+    // Prevent multiple initializations if already ready
     if (get().isAuthReady) return;
 
-    const supabase = createClient();
-
     try {
-      // 1. Initial Load
-      // Use getUser() for security
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      // Use Server Action to check session
+      const { checkSession } = await import('@/app/actions/auth');
+      const result = await checkSession();
 
-      if (user) {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        set({ session, user, isAuthenticated: !!session });
+      if (result.success && result.user) {
+        set({ user: result.user as User, isAuthenticated: true });
       } else {
-        set({ session: null, user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: false });
       }
     } catch (error) {
       console.error('Auth Init Error:', error);
+      set({ user: null, isAuthenticated: false });
     } finally {
       set({ isAuthReady: true });
     }
 
-    // 2. Listen for auth changes
-    // We need to store the subscription cleanup somewhere if we want to unsubscribe.
-    // But for a global store initialized once, we might not need to unsubscribe until app unmount (which happens on refresh).
-    // However, strictly speaking, we should handle it. 
-    // But Zustand stores don't have a natural "unmount" lifecycle.
-    // We can just set up the listener.
-    supabase.auth.onAuthStateChange((_event, newSession) => {
-      set({ 
-        session: newSession, 
-        user: newSession?.user || null, 
-        isAuthenticated: !!newSession, 
-        isAuthReady: true 
-      });
-    });
+    // We removed the real-time auth listener since we can't use createClient.
+    // The SessionMonitor component will handle tab focus checks.
   },
 
   signOut: async () => {
-    const supabase = createClient();
     try {
-      await supabase.auth.signOut();
-      set({ session: null, user: null, isAuthenticated: false });
+      const { logout } = await import('@/app/actions/auth');
+      await logout();
+      set({ user: null, isAuthenticated: false });
     } catch (error) {
       console.error('Error signing out:', error);
     }

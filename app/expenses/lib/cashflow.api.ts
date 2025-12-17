@@ -1,6 +1,10 @@
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface CashFlowEntry {
   store_id: string;
@@ -19,6 +23,7 @@ export interface DateRange {
 
 // 1. Fetch Categories for the Dropdown
 export const fetchFlowCategories = async (): Promise<string[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("product_category")
     .select("category")
@@ -38,6 +43,7 @@ export const fetchCashFlowLedger = async (
 ): Promise<CashFlowEntry[]> => {
   if (!category) return [];
 
+  const supabase = await getSupabase();
   let query = supabase
     .from("categorical_cash_flow")
     .select("*")

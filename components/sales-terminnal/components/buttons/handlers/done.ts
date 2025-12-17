@@ -1,7 +1,5 @@
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { CartItem } from "../../TerminalCart";
-// CHANGE: We import the factory directly to create a fresh instance every time
-import { createBrowserClient } from "@supabase/ssr";
 
 export type TransactionResult = {
   invoice_no: string;
@@ -36,37 +34,11 @@ export const handleDone = async (
   cartItems: CartItem[],
   cashierId: string 
 ): Promise<TransactionResult> => {
-  console.log("--- 🛠 [Logic] handleDone started (Fresh Client Mode) ---");
+  console.log("--- 🛠 [Logic] handleDone started ---");
   
-  // ---------------------------------------------------------
-  // 🚀 FIX: CREATE FRESH CLIENT
-  // We bypass the global singleton entirely. This creates a temporary, 
-  // brand-new connection just for this transaction. It ensures we 
-  // don't use a "sleeping" or "stale" socket from the background tab.
-  // ---------------------------------------------------------
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   try {
     if (!cashierId) {
        throw new Error("User ID missing. Cannot process transaction.");
-    }
-
-    // 1. Force the client to load the session from cookies immediately
-    // This ensures the client is "hydrated" before we try to use it.
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    // 2. If the token is expired/missing, try one hard refresh before failing
-    if (sessionError || !sessionData.session) {
-        console.warn("⚠️ [Logic] Token stale on fresh client. Forcing refresh...");
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-            console.error("❌ [Logic] Critical: Could not refresh session.");
-            throw new Error("SESSION_EXPIRED");
-        }
-        console.log("✅ [Logic] Session refreshed successfully.");
     }
 
     console.log("2️⃣ [Logic] Preparing Payloads...");
@@ -91,73 +63,42 @@ export const handleDone = async (
       quantity: item.quantity,
     }));
 
-    console.log("3️⃣ [Logic] Sending RPC request...");
+    console.log("3️⃣ [Logic] Sending RPC request to Supabase (via Server Action)...");
 
+    const { processTransaction } = await import("@/app/actions/transactions");
     let rpcResult: any = null;
 
-    // Retry logic (3 attempts)
+    // Retry logic for Timeout (3 attempts)
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         rpcResult = await withTimeout<any>(
-          supabase.rpc("insert_new_payment_and_transaction", {
-            header: headerPayload,
-            items: itemsPayload,
-          }),
+          processTransaction(headerPayload, itemsPayload),
           20000, 
           "Transaction Save"
         );
-        break; 
+        
+        if (rpcResult.success) {
+            break;
+        } else {
+            throw new Error(rpcResult.error);
+        }
+
       } catch (err: any) {
         console.warn(`⚠️ [Logic] Attempt ${attempt} failed:`, err);
-        if (attempt === 3) throw err;
+        if (attempt === 3) throw err; 
         await new Promise(res => setTimeout(res, 1000));
       }
     }
 
-    if (!rpcResult) {
-        throw new Error("Transaction failed (No response).");
-    }
-
-    const { error } = rpcResult;
-
-    if (error) {
-      if (error.message.includes("duplicate key value") || error.message.includes("payments_pkey")) {
-        console.warn("⚠️ [Logic] Duplicate detected. Verifying...");
-        
-        const { data: existingPayment, error: fetchError } = await supabase
-          .from("payments")
-          .select("invoice_no, grand_total")
-          .eq("invoice_no", data.transactionNo)
-          .single();
-
-        if (existingPayment && !fetchError) {
-           if (Math.abs(existingPayment.grand_total - data.grandTotal) < 0.01) {
-             console.log("✅ [Logic] Duplicate matched. Success.");
-             return { ...headerPayload, transaction_time: new Date().toISOString() } as TransactionResult; 
-           } else {
-             throw new Error("Transaction ID collision detected. Please refresh.");
-           }
-        }
-      }
-      
-      console.error("❌ [Logic] RPC Error:", error.message);
-      throw new Error(`Transaction Failed: ${error.message}`);
-    }
-
-    console.log("✅ [Logic] Success! Transaction Saved.");
+    console.log("✅ [Logic] RPC Success! Transaction Saved.");
 
     // --- VOUCHER AUTOMATION ---
     if (data.voucher && data.voucher > 0) {
       try {
-        // We use the fresh client for this too to avoid issues
+        console.log("🎫 [Logic] Processing Voucher Deduction...");
         const { fetchCategories } = await import("@/app/inventory/components/item-registration/lib/categories.api");
         const { createExpense } = await import("@/app/expenses/lib/expenses.api");
 
-        // Note: You might need to check if 'createExpense' uses the global client internally.
-        // If it does, it might still fail. Ideally, pass 'supabase' to it if possible, 
-        // but for now we wrap it in try/catch so it doesn't block the sale.
-        
-        console.log("🎫 [Logic] Processing Voucher...");
         const categories = await fetchCategories();
         const defaultSource = categories.find(c => c.is_default_voucher_source);
 
@@ -168,7 +109,7 @@ export const handleDone = async (
             classification: "Voucher Deduction",
             amount: Number(data.voucher),
             receipt_no: data.transactionNo,
-            notes: `Auto-deduction for transaction: ${data.transactionNo}`,
+            notes: `Auto-deduction: ${data.transactionNo}`,
           });
         }
       } catch (voucherError) {

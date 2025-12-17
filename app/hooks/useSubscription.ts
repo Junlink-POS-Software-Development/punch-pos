@@ -1,6 +1,6 @@
+"use client";
+
 import { useState, useEffect } from 'react';
-import { createClient } from "@/utils/supabase/client";
-import dayjs from 'dayjs';
 
 export interface Subscription {
   id: string;
@@ -23,58 +23,22 @@ export function useSubscription() {
   const [payments, setPayments] = useState<SubscriptionPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [storeId, setStoreId] = useState<string | null>(null);
-  const supabase = createClient();
 
   useEffect(() => {
-    fetchSubscriptionData();
+    fetchData();
   }, []);
 
-  const fetchSubscriptionData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("No user found");
-        return;
-      }
-
-      const { data: memberData, error: memberError } = await supabase
-        .from("members")
-        .select("store_id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (memberError || !memberData) {
-        console.log("No member data found", memberError);
-        return;
-      }
+      const { fetchSubscriptionData } = await import("@/app/actions/subscription");
+      const result = await fetchSubscriptionData();
       
-      setStoreId(memberData.store_id);
-
-      // Fetch Subscription
-      const { data: subData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('store_id', memberData.store_id)
-        .maybeSingle();
-
-      if (subError) {
-          console.error("Error fetching subscription:", subError);
+      if (result.success) {
+        setStoreId(result.storeId || null);
+        setSubscription(result.subscription || null);
+        setPayments(result.payments || []);
       }
-      setSubscription(subData);
-
-      // Fetch Payments
-      const { data: payData, error: payError } = await supabase
-        .from('subscription_payments')
-        .select('*')
-        .eq('store_id', memberData.store_id)
-        .order('created_at', { ascending: false });
-
-      if (payError) {
-          console.error("Error fetching payments:", payError);
-      }
-      setPayments(payData || []);
-
     } catch (error) {
       console.error("Error in fetchSubscriptionData:", error);
     } finally {
@@ -82,7 +46,7 @@ export function useSubscription() {
     }
   };
 
-  const subscribe = async (): Promise<{ success: boolean; error?: string }> => {
+  const subscribeAction = async (): Promise<{ success: boolean; error?: string }> => {
     if (!storeId) {
       return { success: false, error: "Store ID not found. Please make sure you're logged in." };
     }
@@ -90,54 +54,18 @@ export function useSubscription() {
     try {
       setLoading(true);
       
-      // 1. Mock Payment Delay
+      // Mock Payment Delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const startDate = dayjs().toISOString();
-      const endDate = dayjs().add(30, 'day').toISOString();
+      const { subscribe } = await import("@/app/actions/subscription");
+      const result = await subscribe(storeId);
 
-      // 2. Create or Update Subscription
-      const { data: subData, error: subError } = await supabase
-        .from('subscriptions')
-        .upsert({
-          store_id: storeId,
-          status: 'active',
-          current_period_start: startDate,
-          current_period_end: endDate,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'store_id' })
-        .select()
-        .single();
-
-      if (subError) {
-        console.error("Subscription upsert error:", subError);
-        throw new Error(`Failed to create subscription: ${subError.message || JSON.stringify(subError)}`);
-      }
-
-      if (!subData) {
-        throw new Error("No subscription data returned from database");
-      }
-
-      // 3. Record Payment
-      const { error: payError } = await supabase
-        .from('subscription_payments')
-        .insert({
-          subscription_id: subData.id,
-          store_id: storeId,
-          amount: 450.00,
-          currency: 'PHP',
-          status: 'succeeded',
-          payment_method: 'mock_card',
-          transaction_id: `txn_${Date.now()}`
-        });
-
-      if (payError) {
-        console.error("Payment insert error:", payError);
-        throw new Error(`Failed to record payment: ${payError.message || JSON.stringify(payError)}`);
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       // Refresh data
-      await fetchSubscriptionData();
+      await fetchData();
       return { success: true };
 
     } catch (error) {
@@ -151,5 +79,5 @@ export function useSubscription() {
     }
   };
 
-  return { subscription, payments, loading, subscribe };
+  return { subscription, payments, loading, subscribe: subscribeAction };
 }

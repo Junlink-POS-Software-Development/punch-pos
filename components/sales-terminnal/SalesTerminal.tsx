@@ -8,7 +8,6 @@ import TerminalButtons from "./components/buttons/TerminalButtons";
 import TerminalHeader from "./components/TerminalHeader";
 import { useState, useEffect } from "react";
 import { FormProvider } from "react-hook-form";
-import { createClient } from "@/utils/supabase/client";
 import "react-data-grid/lib/styles.css";
 import TerminalCart from "./components/TerminalCart";
 import { usePosForm } from "./components/form/usePosForm";
@@ -37,42 +36,31 @@ const SalesTerminal = () => {
   // We keep userName state for the LCD display,
   // but we remove the modals/signIn buttons since page.tsx handles that.
   const [userName, setUserName] = useState("PLEASE SIGN IN");
-  const supabase = createClient();
 
   useEffect(() => {
     const fetchUser = async (userId: string) => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("first_name, last_name")
-        .eq("user_id", userId)
-        .single();
+      const { getUserProfile } = await import("@/app/actions/user");
+      const result = await getUserProfile(userId);
 
-      if (data && !error) {
-        setUserName(`${data.first_name} ${data.last_name}`.toUpperCase());
+      if (result.success && result.data) {
+        setUserName(`${result.data.first_name} ${result.data.last_name}`.toUpperCase());
       } else {
         setUserName("UNKNOWN USER");
       }
     };
 
     // Check session on load
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) fetchUser(data.session.user.id);
-    });
-
-    // Listen for changes (Login from the Header will update this LCD)
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          await fetchUser(session.user.id);
-        } else {
-          setUserName("PLEASE SIGN IN");
-        }
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
+    const check = async () => {
+       const { checkSession } = await import("@/app/actions/auth");
+       const result = await checkSession();
+       if (result.success && result.user) {
+         fetchUser(result.user.id);
+       }
     };
+    check();
+
+    // We removed the real-time auth listener because we don't have createClient anymore.
+    // The SessionMonitor will handle reloads on visibility change.
   }, []);
 
   function ScreenLogic() {

@@ -1,7 +1,10 @@
-// lib/inventory.api.ts
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface InventoryItem {
   item_id: string;
@@ -27,6 +30,7 @@ export const fetchInventory = async (
   });
 
   const fetchPromise = (async () => {
+    const supabase = await getSupabase();
     let query = supabase
       .from("inventory_monitor_view")
       .select("*")

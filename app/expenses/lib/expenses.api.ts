@@ -1,6 +1,10 @@
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface ExpenseData {
   id: string;
@@ -22,6 +26,7 @@ export interface Classification {
 
 // 1. Fetch Expenses
 export const fetchExpenses = async (): Promise<ExpenseData[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("expenses")
     .select("*")
@@ -34,6 +39,7 @@ export const fetchExpenses = async (): Promise<ExpenseData[]> => {
 
 // 2. Create Expense (RPC VERSION)
 export const createExpense = async (input: ExpenseInput) => {
+  const supabase = await getSupabase();
   const { error } = await supabase.rpc("insert_new_expense", {
     transaction_date_in: input.transaction_date,
     source_in: input.source,
@@ -53,6 +59,7 @@ export const createExpense = async (input: ExpenseInput) => {
 
 // 3. Fetch Classifications
 export const fetchClassifications = async (): Promise<Classification[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("classification")
     .select("*")
@@ -67,6 +74,7 @@ export const fetchClassifications = async (): Promise<Classification[]> => {
 
 // 4. Create Classification (RPC)
 export const createClassification = async (name: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase.rpc("insert_new_classification", {
     name_in: name,
   });
@@ -79,6 +87,7 @@ export const createClassification = async (name: string) => {
 
 // 5. Update Classification
 export const updateClassification = async (id: string, name: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase
     .from("classification")
     .update({ name })
@@ -92,6 +101,7 @@ export const updateClassification = async (id: string, name: string) => {
 
 // 6. Delete Classification
 export const deleteClassification = async (id: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase
     .from("classification")
     .delete()

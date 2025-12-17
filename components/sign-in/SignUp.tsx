@@ -12,35 +12,12 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
 import { signUpSchema, SignUpFormValues } from "@/lib/types";
+import { signUp } from "@/app/actions/auth";
 
 interface SignUpProps {
   onSwitchToSignIn: () => void;
 }
-
-const signUpUser = async (values: SignUpFormValues) => {
-  const supabase = createClient();
-  const { error: authError } = await supabase.auth.signUp({
-    email: values.email,
-    password: values.password,
-    options: {
-      data: {
-        signup_type: "member",
-        role: "member",
-        first_name: values.firstName,
-        last_name: values.lastName,
-        contact_email: values.email,
-        job_title: values.jobTitle,
-        enrollment_id: values.enrollmentId,
-      },
-    },
-  });
-
-  if (authError) {
-    throw authError;
-  }
-};
 
 export function SignUp({ onSwitchToSignIn }: SignUpProps) {
   const [success, setSuccess] = useState(false);
@@ -68,7 +45,10 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
     setSuccess(false);
     setIsPending(true);
     try {
-      await signUpUser(values);
+      const result = await signUp(values);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       setSuccess(true);
     } catch (err) {
       console.error("Error creating account:", err);
@@ -114,7 +94,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="First Name"
                   {...register("firstName")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>
@@ -135,7 +114,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Last Name"
                   {...register("lastName")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>
@@ -156,7 +134,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Job Title (e.g., Sales Associate)"
                   {...register("jobTitle")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>
@@ -177,7 +154,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="email"
                   placeholder="you@example.com"
                   {...register("email")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>
@@ -198,7 +174,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="password"
                   placeholder="••••••••"
                   {...register("password")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>
@@ -219,7 +194,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   type="text"
                   placeholder="Enrollment ID (e.g., A7B2C9)"
                   {...register("enrollmentId")}
-                  // FIX: Added pl-10!
                   className="pl-10! w-full input-dark"
                 />
               </div>

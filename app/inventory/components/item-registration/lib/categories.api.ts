@@ -1,7 +1,10 @@
-// app/inventory/components/item-registration/lib/categories.api.ts
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface Category {
   id: string;
@@ -11,6 +14,7 @@ export interface Category {
 
 // 1. Fetch
 export const fetchCategories = async (): Promise<Category[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("product_category")
     .select("id, category, is_default_voucher_source")
@@ -22,6 +26,7 @@ export const fetchCategories = async (): Promise<Category[]> => {
 
 // 2. Create (Using the RPC we created for safe insertion)
 export const createCategory = async (name: string): Promise<Category | null> => {
+  const supabase = await getSupabase();
   // Option A: If using RPC (Recommended for strict RLS)
   const { error } = await supabase.rpc("insert_product_category", {
     category_name: name,
@@ -41,6 +46,7 @@ export const createCategory = async (name: string): Promise<Category | null> => 
 
 // 3. Update
 export const updateCategory = async (id: string, name: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase
     .from("product_category")
     .update({ category: name })
@@ -51,6 +57,7 @@ export const updateCategory = async (id: string, name: string) => {
 
 // 4. Delete
 export const deleteCategory = async (id: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase
     .from("product_category")
     .delete()
@@ -61,10 +68,7 @@ export const deleteCategory = async (id: string) => {
 
 // 5. Set Default Voucher Source
 export const setDefaultVoucherSource = async (id: string) => {
-  // First, we rely on the database trigger/function to handle the "only one true" logic
-  // But to be safe and explicit, we can just update the target to true.
-  // The trigger `trigger_ensure_single_default_voucher_source` will handle setting others to false.
-  
+  const supabase = await getSupabase();
   const { error } = await supabase
     .from("product_category")
     .update({ is_default_voucher_source: true })

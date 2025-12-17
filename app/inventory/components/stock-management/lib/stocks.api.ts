@@ -1,6 +1,10 @@
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface StockData {
   id: string;
@@ -34,6 +38,7 @@ const withTimeout = <T>(
 // 1. Fetch Stocks
 // (No change needed - RLS will handle security)
 export const fetchStocks = async (): Promise<StockData[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("stock_flow")
     .select(
@@ -69,6 +74,7 @@ export const insertStock = async (data: {
 }) => {
   console.log("🚀 [API] Sending Stock Payload:", data);
 
+  const supabase = await getSupabase();
   // We wrap the RPC call in withTimeout to ensure it fails if the network hangs
   const { error } = await withTimeout(
     supabase.rpc("insert_new_stock_item", {
@@ -91,6 +97,7 @@ export const insertStock = async (data: {
 // 3. Delete Stock
 // (No change needed - RLS will handle security)
 export const deleteStock = async (id: string) => {
+  const supabase = await getSupabase();
   const { error } = await supabase.from("stock_flow").delete().eq("id", id);
   if (error) throw new Error(error.message);
 };
@@ -104,6 +111,7 @@ export const updateStock = async (data: {
   capital_price: number;
   notes?: string;
 }) => {
+  const supabase = await getSupabase();
   const { data: result, error } = await supabase
     .from("stock_flow")
     .update({

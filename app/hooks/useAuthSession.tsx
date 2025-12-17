@@ -1,35 +1,32 @@
 // Example custom hook to get auth state
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
-import type { Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 export function useAuthSession() {
-  // ✅ State should hold Session | null, not a Promise
-  const [session, setSession] = useState<Session | null>(null);
+  // ✅ State should hold User | null
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsAuthenticated(!!session);
-    });
-
-    // Set up a listener for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setIsAuthenticated(!!newSession);
-    });
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
+    const check = async () => {
+      const { checkSession } = await import("@/app/actions/auth");
+      const result = await checkSession();
+      if (result.success && result.user) {
+        setUser(result.user as User);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     };
+    
+    check();
+    // We removed the real-time subscription. 
+    // This hook is now a one-time check on mount.
   }, []);
 
-  // Return the session and a simple boolean flag
-  return { session, isAuthenticated };
+  // Return the user and a simple boolean flag
+  // We map 'session' to 'user' to keep some backward compatibility if needed, 
+  // but ideally consumers should use 'user'.
+  return { session: { user }, user, isAuthenticated };
 }

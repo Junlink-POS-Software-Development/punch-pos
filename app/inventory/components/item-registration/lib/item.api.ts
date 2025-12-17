@@ -1,8 +1,12 @@
 // app/inventory/components/item-registration/lib/item.api.ts
 
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
+
+const getSupabase = async () => {
+  return await createClient();
+};
 import { Item } from "../utils/itemTypes";
 
 // 1. Interface for the database row (snake_case)
@@ -66,6 +70,7 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
 // --- API Functions (No further changes needed) ---
 
 export const fetchItems = async (): Promise<Item[]> => {
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("items")
     .select("id, sku, category, description, item_name, cost_price, low_stock_threshold");
@@ -79,6 +84,7 @@ export const fetchItems = async (): Promise<Item[]> => {
 };
 
 export const insertItem = async (item: Item): Promise<Item> => {
+  const supabase = await getSupabase();
   // We map the Item object to the RPC parameters
   const { data, error } = await supabase.rpc("insert_item_secure", {
     p_item_name: item.itemName,
@@ -103,6 +109,7 @@ export const updateItem = async (item: Item): Promise<Item> => {
 
   const dbItem = toDatabaseObject(item); // 'item' includes 'id'
 
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("items")
     .update(dbItem)
@@ -118,6 +125,7 @@ export const updateItem = async (item: Item): Promise<Item> => {
 };
 
 export const deleteItem = async (id: string): Promise<void> => {
+  const supabase = await getSupabase();
   const { error } = await supabase.from("items").delete().eq("id", id);
 
   if (error) {
@@ -133,6 +141,7 @@ export const checkItemExistence = async (
 ): Promise<boolean> => {
   const dbField = field === "itemName" ? "item_name" : "sku";
 
+  const supabase = await getSupabase();
   let query = supabase
     .from("items")
     .select("id", { count: "exact", head: true })
@@ -158,6 +167,7 @@ export const insertManyItems = async (items: Item[]): Promise<Item[]> => {
     return toDatabaseObject(rest);
   });
 
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("items")
     .insert(itemsToInsert)

@@ -1,39 +1,46 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { checkSession } from "@/app/actions/auth";
 
 export default function SessionMonitor() {
   useEffect(() => {
-    // We create a client instance inside the effect to ensure browser context
-    const supabase = createClient();
-
     const handleVisibilityChange = async () => {
-      // Only run this when the user comes BACK to the tab
       if (document.visibilityState === "visible") {
-        console.log("⚡ Tab woke up. Checking Supabase session...");
+        console.log("⚡ [Monitor] Tab woke up. Starting session check...");
         
-        // Check if session is valid; if not, force a refresh
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error || !session) {
-          console.warn("⚠️ Session stale. Attempting auto-refresh...");
-          await supabase.auth.refreshSession();
-        } else {
-          // Optional: You can force a refresh anyway just to be safe
-          // await supabase.auth.refreshSession();
-          console.log("✅ Session is active.");
+        const startTime = performance.now();
+
+        try {
+          // Check session using Server Action
+          const result = await checkSession();
+
+          const duration = (performance.now() - startTime).toFixed(2);
+          console.log(`⏱️ [Monitor] Session check took: ${duration}ms`);
+
+          if (!result.success) {
+            console.warn(`⚠️ [Monitor] Session invalid or expired (Time: ${duration}ms). Refreshing...`);
+            // We can't refresh from client side without createClient. 
+            // If session is dead, we might need to redirect or let the next server action fail and redirect.
+            // For now, we just log it. The next action will handle the redirect.
+            window.location.reload(); // Simplest recovery: reload to trigger middleware/server checks
+          } else {
+            console.log(`✅ [Monitor] Session Valid (Time: ${duration}ms).`);
+          }
+
+        } catch (err: any) {
+          const duration = (performance.now() - startTime).toFixed(2);
+          console.error(`❌ [Monitor] Unexpected error after ${duration}ms:`, err);
         }
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Cleanup the listener when the component unmounts
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
-  return null; // This component is invisible
+  return null;
 }

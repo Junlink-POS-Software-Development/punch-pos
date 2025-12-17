@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, LogIn, AlertTriangle, Loader2 } from "lucide-react";
 import { signInSchema, SignInFormValues } from "@/lib/types";
-import { createClient } from "@/utils/supabase/client";
+import { login } from "@/app/actions/auth";
 
 interface SignInProps {
   onSwitchToSignUp: () => void;
@@ -13,44 +13,10 @@ interface SignInProps {
 }
 
 const signInUser = async (values: SignInFormValues) => {
-  const APP_TYPE = "member";
-  const supabase = createClient();
+  const result = await login(values);
 
-  const { data: sessionData, error: signInError } =
-    await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-
-  if (signInError) {
-    throw signInError;
-  }
-
-  if (!sessionData?.user) {
-    throw new Error("Sign in successful but no user data found.");
-  }
-
-  const { data: userData, error: profileError } = await supabase
-    .from("users")
-    .select("role")
-    .eq("user_id", sessionData.user.id)
-    .single();
-
-  if (profileError) {
-    await supabase.auth.signOut();
-    console.error("Error fetching user profile:", profileError.message);
-    throw new Error("Could not verify user role. Please try again.");
-  }
-
-  if (userData.role !== APP_TYPE) {
-    await supabase.auth.signOut();
-    if (userData.role === "admin") {
-      throw new Error("Access denied. Admins must sign in via the admin app.");
-    } else {
-      throw new Error(
-        `Access denied. Your role (${userData.role}) is not 'member'.`
-      );
-    }
+  if (!result.success) {
+    throw new Error(result.error);
   }
 };
 

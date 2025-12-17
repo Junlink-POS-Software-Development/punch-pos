@@ -1,7 +1,11 @@
-import { createClient } from "@/utils/supabase/client";
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
 import dayjs from "dayjs";
 
-const supabase = createClient();
+const getSupabase = async () => {
+  return await createClient();
+};
 
 export interface CashFlowEntry {
   store_id: string;
@@ -20,6 +24,7 @@ export const fetchDailyCashFlow = async (
 ): Promise<CashFlowEntry[]> => {
   
   // Pass the abortSignal to Supabase
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("categorical_cash_flow")
     .select("*")

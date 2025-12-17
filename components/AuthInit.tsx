@@ -2,13 +2,9 @@
 
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { createClient } from "@/utils/supabase/client";
 
 export function AuthInit({ children }: { children: React.ReactNode }) {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
-  
-  // We expose a manual check function from the store or just use the client directly here
-  // to keep it simple, we'll trigger a session check.
   
   useEffect(() => {
     // 1. Run initial auth check
@@ -16,14 +12,14 @@ export function AuthInit({ children }: { children: React.ReactNode }) {
 
     // 2. Add listener for when the tab becomes active again
     const handleFocus = async () => {
-      const supabase = createClient();
+      const { checkSession } = await import("@/app/actions/auth");
       
       // Force a session refresh check
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const result = await checkSession();
       
-      if (error || !session) {
-        // If session is dead, we might want to sign out or just let the store update naturally
+      if (!result.success) {
         console.log("Session invalid on resume, attempting refresh...");
+        window.location.reload();
       }
     };
 
