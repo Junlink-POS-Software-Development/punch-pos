@@ -17,19 +17,16 @@ export interface CashFlowEntry {
   balance: number;
 }
 
-// Accept the query context to get the signal
 export const fetchDailyCashFlow = async (
   date: string = dayjs().format("YYYY-MM-DD"),
   signal?: AbortSignal 
 ): Promise<CashFlowEntry[]> => {
-  
-  // Pass the abortSignal to Supabase
   const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("categorical_cash_flow")
     .select("*")
     .eq("date", date)
-    .abortSignal(signal as AbortSignal); // Supabase supports abortSignal
+    .abortSignal(signal as AbortSignal);
 
   if (error) {
     console.error("Error fetching daily cash flow:", error);
@@ -37,4 +34,25 @@ export const fetchDailyCashFlow = async (
   }
 
   return data || [];
+};
+
+// OPTIMIZED: Uses Database RPC to return a single number
+export const fetchCashFlowByRange = async (
+  startDate: string,
+  endDate: string
+): Promise<number> => {
+  const supabase = await getSupabase();
+  
+  const { data, error } = await supabase
+    .rpc('get_range_gross', { 
+      start_date: startDate, 
+      end_date: endDate 
+    });
+
+  if (error) {
+    console.error("Error fetching cash flow range:", error);
+    throw new Error(error.message);
+  }
+
+  return data || 0;
 };

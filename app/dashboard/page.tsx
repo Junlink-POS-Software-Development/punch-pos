@@ -3,12 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useDashboardMetrics } from "./hooks/useDashboardMetrics"; // Import the new hook
+import { useDashboardMetrics } from "./hooks/useDashboardMetrics";
 import CashOnHandCard from "./components/CashOnHandCard";
-import ExpensesCard from "./components/ExpensesCard";
+import DailyExpensesCard from "./components/DailyExpensesCard"; // Renamed import
+import DailyGrossIncomeCard from "./components/DailyGrossIncomeCard"; // New import
+import MonthlyGrossCard from "./components/MonthlyGrossCard";
 
 export default function DashboardPage() {
-  // Use the hook instead of the store
   const { data: metrics, isLoading, error } = useDashboardMetrics();
 
   return (
@@ -39,16 +40,26 @@ export default function DashboardPage() {
       )}
 
       {!isLoading && !error && metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Pass data via props */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card 1: Cash on Hand (Net Sales) */}
           <CashOnHandCard 
             totalNetSales={metrics.totalNetSales} 
             cashFlow={metrics.cashFlow} 
           />
-          <ExpensesCard 
+
+          {/* Card 2: Daily Gross Income (New) */}
+          <DailyGrossIncomeCard 
+            cashFlow={metrics.cashFlow} 
+          />
+          
+          {/* Card 3: Daily Expenses (Renamed) */}
+          <DailyExpensesCard 
             totalExpenses={metrics.totalExpenses} 
             cashFlow={metrics.cashFlow} 
           />
+          
+          {/* Card 4: Monthly Gross (Date Range Picker) */}
+          <MonthlyGrossCard />
         </div>
       )}
     </div>
