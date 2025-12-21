@@ -1,5 +1,3 @@
-// app/inventory/components/item-registration/lib/item.api.ts
-
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
@@ -9,61 +7,55 @@ const getSupabase = async () => {
   return await createClient();
 };
 
-// 1. Interface for the database row (snake_case)
-// UPDATED: 'category' text column is gone, replaced by 'category_id'
+// 1. UPDATE: Interface to include the new column from RPC
 interface ItemDbRow {
   id: string;
   item_name: string;
   sku: string;
-  category_id: string | null; // Changed from 'category'
+  category_id: string | null;
+  category_name: string | null; // New field from RPC
   cost_price: number;
   description: string | null;
   low_stock_threshold: number | null;
 }
 
-// 2. NEW: A specific type for the object we send to Supabase
+// ... (DbItemObject and toDatabaseObject remain UNCHANGED) ...
 type DbItemObject = Partial<ItemDbRow>;
 
-// 3. FIX: 'toDatabaseObject' now maps JS 'category' (UUID) to DB 'category_id'
 const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
   const dbItem: DbItemObject = {};
-
-  // Pass-through fields
   if (item.id !== undefined) dbItem.id = item.id;
   if (item.sku !== undefined) dbItem.sku = item.sku;
-
-  // Mapped fields
   if (item.itemName !== undefined) dbItem.item_name = item.itemName;
   if (item.costPrice !== undefined) dbItem.cost_price = item.costPrice;
-
-  // Mapped fields that handle 'undefined' -> 'null'
-  
-  // UPDATED: Map the JS 'category' field (which holds the ID) to 'category_id'
-  if (item.category !== undefined) {
-    dbItem.category_id = item.category ?? null;
-  }
-  
-  if (item.description !== undefined) {
-    dbItem.description = item.description ?? null;
-  }
-  if (item.lowStockThreshold !== undefined) {
-    dbItem.low_stock_threshold = item.lowStockThreshold ?? null;
-  }
-
+  // Map JS 'category' (UUID) -> DB 'category_id'
+  if (item.category !== undefined) dbItem.category_id = item.category ?? null;
+  if (item.description !== undefined) dbItem.description = item.description ?? null;
+  if (item.lowStockThreshold !== undefined) dbItem.low_stock_threshold = item.lowStockThreshold ?? null;
   return dbItem;
 };
 
-// 4. 'fromDatabaseObject' maps DB 'category_id' back to JS 'category'
+// 2. UPDATE: Mapper to handle the new field
 const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
-  // Destructure 'category_id' instead of 'category'
-  const { item_name, cost_price, category_id, description, low_stock_threshold, ...rest } = dbItem;
+  const { 
+    item_name, 
+    cost_price, 
+    category_id, 
+    category_name, // Destructure the new field
+    description, 
+    low_stock_threshold, 
+    ...rest 
+  } = dbItem;
   
   return {
     ...rest,
     itemName: item_name,
     costPrice: cost_price,
-    // Map 'category_id' (DB) -> 'category' (JS) so the Select component gets the ID
+    // Keep 'category' as ID so your "Select" inputs in forms still work
     category: category_id ?? undefined,
+    // NEW: Map 'categoryName' for your UI Table
+    // (Ensure you add 'categoryName?: string' to your Item type definition)
+    categoryName: category_name ?? undefined, 
     description: description ?? undefined,
     lowStockThreshold: low_stock_threshold ?? null,
   };
@@ -73,26 +65,25 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
 
 export const fetchItems = async (): Promise<Item[]> => {
   const supabase = await getSupabase();
-  // UPDATED: Select 'category_id' instead of 'category'
+  
+  // 3. UPDATE: Call the RPC function
   const { data, error } = await supabase
-    .from("items")
-    .select("id, sku, category_id, description, item_name, cost_price, low_stock_threshold");
+    .rpc('get_items_with_category');
 
   if (error) {
     console.error("Supabase fetch error:", error);
     throw new Error(error.message);
   }
 
-  // @ts-ignore - Supabase types might not perfectly infer the alias mapping immediately
+  // @ts-ignore
   return data.map(fromDatabaseObject);
 };
 
+
+
 export const insertItem = async (item: Item): Promise<Item> => {
   const supabase = await getSupabase();
-  
-  // UPDATED: Switched from RPC to standard insert. 
-  // The old RPC likely expected a category NAME, which no longer exists.
-  // Standard insert uses the ID mapping defined in 'toDatabaseObject'.
+
   
   const dbItem = toDatabaseObject(item);
   

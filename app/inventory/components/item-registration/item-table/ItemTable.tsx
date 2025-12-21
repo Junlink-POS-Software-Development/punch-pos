@@ -67,7 +67,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     return [
       createColumn("itemName", "Item Name"),
       createColumn("sku", "SKU / Barcode"),
-      createColumn("category", "Category"),
+      createColumn("categoryName", "Category"),
       {
         ...createColumn("costPrice", "Cost Price", 120),
         renderCell: ({ row }) =>
