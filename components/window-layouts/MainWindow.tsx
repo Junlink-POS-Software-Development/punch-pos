@@ -72,10 +72,7 @@ export default function MainWindow({
       rightWidth = "100%";
     }
   } else {
-    if (viewState === 0) {
-      leftWidth = "100%";
-      rightWidth = "0%";
-    } else if (viewState === 2) {
+    if (viewState === 2) {
       leftWidth = "0%";
       rightWidth = "100%";
     }

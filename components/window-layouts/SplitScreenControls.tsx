@@ -55,27 +55,14 @@ export function SplitScreenControls({
 }: ControlsProps) {
   const { viewState, setViewState, setIsSplit } = useViewStore();
 
-  // 1. onChange handler: Only updates the slider's visual state.
-  // This is a fast operation.
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numericValue = Number(e.target.value);
-    setViewState(numericValue);
-  };
-
-  // 2. onMouseUp/onTouchEnd handler: Triggers the expensive layout change ONCE.
-  // This fires when the user lets go of the slider.
-  const handleSliderRelease = () => {
-    // We can use the viewState directly since it was updated by onChange
-    if (viewState !== 1) {
-      setIsSplit(false);
-    } else {
-      setIsSplit(true);
-    }
+  const handleToggle = () => {
+    // Toggle between 1 (Split) and 2 (Right Full)
+    const newState = viewState === 1 ? 2 : 1;
+    setViewState(newState);
+    setIsSplit(newState === 1);
   };
 
   return (
-    // We add `will-change-transform` here to hint to the browser
-    // This element should be optimized, preventing layout shift.
     <div className="group bottom-0 left-1/2 z-10 absolute flex justify-center items-center w-72 h-20 -translate-x-1/2 will-change-transform">
       <div
         className={`
@@ -92,34 +79,34 @@ export function SplitScreenControls({
           >
             {mobileView === "left" ? (
               <>
-                <span>View Right</span>
-                <ArrowRightIcon />
+                <span>Hide Terminal</span>
+                <ArrowLeftIcon />
               </>
             ) : (
               <>
-                <ArrowLeftIcon />
-                <span>View Left</span>
+                <ArrowRightIcon />
+                <span>View Terminal</span>
               </>
             )}
           </button>
         ) : (
-          // This div with backdrop-blur is the source of the presentation delay.
-          // Adding will-change-transform tells the browser to promote it
-          // to its own layer, isolating it from child (input) updates.
-          <div className="bg-white/80 shadow-lg backdrop-blur-sm p-2 px-4 rounded-full will-change-transform">
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="1"
-              value={viewState}
-              onChange={handleSliderChange} // 3. Fast update
-              onMouseUp={handleSliderRelease} // 4. Expensive update on release
-              onTouchEnd={handleSliderRelease} // 5. Expensive update on release
-              className="bg-gray-300 rounded-lg w-52 h-2 accent-blue-600 appearance-none cursor-pointer"
-              aria-label="View switcher"
-            />
-          </div>
+          <button
+            onClick={handleToggle}
+            className="flex justify-center items-center gap-2 bg-white/80 shadow-lg backdrop-blur-sm px-4 py-2 rounded-full font-semibold text-blue-600 active:scale-95 transition-transform"
+            aria-label="Toggle view"
+          >
+            {viewState === 1 ? (
+              <>
+                <span>Hide Terminal</span>
+                <ArrowLeftIcon />
+              </>
+            ) : (
+              <>
+                <ArrowRightIcon />
+                <span>Show Terminal</span>
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>

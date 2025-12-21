@@ -50,7 +50,7 @@ const SalesTerminal = () => {
         <form
           id="sales-form"
           onSubmit={methods.handleSubmit(onDoneSubmit)}
-          className={`gap-4 grid ${ScreenLogic()} w-full h-full overflow-hidden`}
+          className={`gap-4 grid w-full h-full overflow-hidden`}
         >
           <div className="relative flex flex-col w-full h-full">
             <FormFields
