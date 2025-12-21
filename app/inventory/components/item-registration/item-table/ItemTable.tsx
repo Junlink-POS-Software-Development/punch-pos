@@ -30,6 +30,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     paginatedRows,
     totalRows,
     activeFilters,
+    sortState,
+    handleSort,
     handleApplyFilter,
     handleClearAllFilters,
     safeCurrentPage,
@@ -61,6 +63,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({
           {...props}
           allData={data}
           filters={activeFilters}
+          sortState={sortState}
+          onSort={handleSort}
           onApplyFilter={handleApplyFilter}
         />
       ),
@@ -103,7 +107,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         ),
       },
     ];
-  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete]);
+  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete, sortState, handleSort]);
 
   // 3. Render
   return (

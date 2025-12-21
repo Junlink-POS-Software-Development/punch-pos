@@ -11,8 +11,8 @@ const safeString = (val: unknown) =>
 
 export const useProcessedItems = (initialData: Item[]) => {
   // 1. State
-  // Changed to Record<string, string> to support text search inputs
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
+  // Changed to Record<string, string[]> to support multi-select filters
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(
     {}
   );
 
@@ -29,16 +29,18 @@ export const useProcessedItems = (initialData: Item[]) => {
   const processedRows = useMemo(() => {
     let rows = [...initialData];
 
-    // A. Filter (Partial Match / Search)
+    // A. Filter (Exact Match from List)
     if (Object.keys(activeFilters).length > 0) {
       rows = rows.filter((row) => {
-        return Object.entries(activeFilters).every(([key, filterValue]) => {
-          if (!filterValue) return true;
+        return Object.entries(activeFilters).every(([key, filterValues]) => {
+          // If no values selected for this filter, ignore it (or treat as "show all")
+          if (!filterValues || filterValues.length === 0) return true;
 
           const rowValue = safeString(row[key as keyof Item]);
-          const searchTerm = filterValue.toLowerCase();
-
-          return rowValue.includes(searchTerm);
+          
+          // Check if the row's value is in the selected filter values
+          // We compare lowercased strings for consistency
+          return filterValues.some(val => val.toLowerCase() === rowValue);
         });
       });
     }
@@ -84,13 +86,13 @@ export const useProcessedItems = (initialData: Item[]) => {
   }, [processedRows, startRow, endRow]);
 
   // 4. Handlers
-  const handleApplyFilter = (key: string, value: string) => {
+  const handleApplyFilter = (key: string, values: string[]) => {
     setActiveFilters((prev) => {
       const next = { ...prev };
-      if (!value) {
+      if (!values || values.length === 0) {
         delete next[key];
       } else {
-        next[key] = value;
+        next[key] = values;
       }
       return next;
     });
