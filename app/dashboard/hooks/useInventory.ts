@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { fetchInventory, InventoryItem } from "../components/stocks-monitor/lib/inventory.api";
+import { fetchInventory } from "../../inventory/components/stocks-monitor/lib/inventory.api";
 
 export const useInventory = () => {
   const {

@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
 import { useItems } from "@/app/inventory/hooks/useItems";
 import { useMemo } from "react";
-import { useInventory } from "@/app/inventory/hooks/useInventory";
+import { useInventory } from "@/app/dashboard/hooks/useInventory";
 
 import { useAuthStore } from "@/store/useAuthStore";
 

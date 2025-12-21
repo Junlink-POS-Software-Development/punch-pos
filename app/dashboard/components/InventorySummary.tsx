@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useInventory } from "../../inventory/hooks/useInventory";
+import { useInventory } from "../hooks/useInventory";
 import { AlertTriangle, PackageCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 

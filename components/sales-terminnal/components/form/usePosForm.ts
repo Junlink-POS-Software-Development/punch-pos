@@ -8,7 +8,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSWRConfig } from "swr";
 import { useItems } from "@/app/inventory/hooks/useItems";
-import { useInventory } from "@/app/inventory/hooks/useInventory";
+import { useInventory } from "@/app/dashboard/hooks/useInventory";
 import { useAuthStore } from "@/store/useAuthStore"; // <--- 1. IMPORT AUTH CONTEXT
 import {
   getDefaultFormValues,
