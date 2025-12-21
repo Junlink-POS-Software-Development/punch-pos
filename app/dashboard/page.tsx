@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { LayoutDashboard, FileText, Loader2 } from "lucide-react";
+import { LayoutDashboard, FileText, Loader2, ArrowLeft } from "lucide-react";
 import { FinancialReportContainer } from "./components/financial-report/FinancialReportContainer";
 import { useDashboardMetrics } from "./hooks/useDashboardMetrics";
 import { DashboardGrid } from "./components/DashboardGrid";
+import Link from "next/link";
 
 
 const DEFAULT_ITEMS = [
@@ -28,9 +29,18 @@ const { data: metrics, isLoading, error } = useDashboardMetrics();
       
       {/* Header & View Switcher */}
       <div className="flex justify-between items-center">
+        <div className="">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 mb-2 pt-2 pl-2 text-slate-400 hover:text-white text-sm transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Home</span>
+        </Link>
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
           <p className="text-slate-400 text-sm">Overview of your store performance</p>
+        </div>
         </div>
 
         <div className="bg-slate-800 p-1 rounded-lg flex items-center border border-slate-700">
