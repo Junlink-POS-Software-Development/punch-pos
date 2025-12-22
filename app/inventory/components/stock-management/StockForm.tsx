@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { stockFormSchema, StockFormSchema } from "./utils/types";
 import { StockData } from "./lib/stocks.api";
 import ItemAutoComplete from "@/utils/ItemAutoComplete";
+import { useViewStore } from "@/components/window-layouts/store/useViewStore";
+
 
 interface StockFormProps {
   onSubmit: SubmitHandler<StockFormSchema>;
@@ -18,6 +20,8 @@ export function StockForm({
   itemToEdit,
   onCancelEdit,
 }: StockFormProps) {
+  const { isSplit } = useViewStore();
+
   const {
     register,
     handleSubmit,
@@ -36,10 +40,9 @@ export function StockForm({
     },
   });
 
-  // --- (1) DESTRUCTURE 'onChange' FROM RHF's REGISTER ---
   const {
     ref: rhfStockFlowRef,
-    onChange: rhfStockFlowOnChange, // <-- (FIX) Get RHF's onChange
+    onChange: rhfStockFlowOnChange,
     ...stockFlowRest
   } = register("stockFlow");
 
@@ -52,14 +55,12 @@ export function StockForm({
   );
   const { ref: rhfNotesRef, ...notesRest } = register("notes");
 
-  // Refs for focus management
   const stockFlowRef = useRef<HTMLSelectElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
   const capitalPriceRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
-  // useEffect for resetting (no change)
   useEffect(() => {
     if (itemToEdit) {
       reset({
@@ -81,13 +82,11 @@ export function StockForm({
     }
   }, [itemToEdit, reset, setFocus]);
 
-  // handleFormSubmit (no change)
   const handleFormSubmit: SubmitHandler<StockFormSchema> = (data) => {
     onSubmit(data);
     if (!itemToEdit) reset();
   };
 
-  // handleKeyDown (Updated)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
@@ -99,12 +98,9 @@ export function StockForm({
       e.preventDefault();
       const target = e.target as HTMLElement;
 
-      // --- (2) REMOVE 'stockFlow' LOGIC FROM HERE ---
-      // This allows 'Enter' to be used for confirming the select
       if (target.id === "stockFlow") {
-        return; // Do nothing, let the onChange event handle it
+        return;
       }
-      // --- (END FIX) ---
 
       if (target.id === "quantity") {
         capitalPriceRef.current?.focus();
@@ -116,17 +112,34 @@ export function StockForm({
     }
   };
 
+  const gridLayoutClass = !isSplit
+    ? "grid-cols-1"
+    : "grid-cols-1 md:grid-cols-2";
+
   return (
     <form
       onKeyDown={handleKeyDown}
       onSubmit={handleSubmit(handleFormSubmit)}
-      className={`gap-x-6 gap-y-8 grid grid-cols-1 md:grid-cols-2 shadow-lg p-6 rounded-lg transition-colors ${
-        itemToEdit ? "bg-blue-900/20 border border-blue-500/30" : "bg-slate-900"
-      }`}
+      className={`
+        overflow-y-auto w-full
+        grid ${gridLayoutClass} 
+        gap-4 md:gap-6 
+        p-4 md:p-6 
+        rounded-lg shadow-lg 
+        transition-all duration-200
+        ${
+          itemToEdit
+            ? "bg-blue-900/20 border border-blue-500/30"
+            : "bg-slate-900"
+        }
+      `}
     >
-      {/* Editing banner (no change) */}
       {itemToEdit && (
-        <div className="flex justify-between items-center md:col-span-2 mb-2 pb-2 border-blue-500/30 border-b">
+        <div
+          className={`flex justify-between items-center mb-2 pb-2 border-blue-500/30 border-b ${
+            !isSplit ? "" : "md:col-span-2"
+          }`}
+        >
           <h3 className="font-semibold text-blue-200 text-sm">
             ✏️ Editing Record
           </h3>
@@ -140,7 +153,7 @@ export function StockForm({
         </div>
       )}
 
-      {/* Item Name (no change) */}
+      {/* Item Name */}
       <div>
         <label
           htmlFor="itemName"
@@ -165,7 +178,7 @@ export function StockForm({
         />
       </div>
 
-      {/* Stock Flow (Updated) */}
+      {/* Stock Flow */}
       <div>
         <label
           htmlFor="stockFlow"
@@ -175,17 +188,15 @@ export function StockForm({
         </label>
         <select
           id="stockFlow"
-          {...stockFlowRest} // Use the rest props (name, onBlur)
+          {...stockFlowRest}
           ref={(el) => {
             rhfStockFlowRef(el);
             stockFlowRef.current = el;
           }}
-          // --- (3) ADD CUSTOM 'onChange' HANDLER ---
           onChange={(e) => {
-            rhfStockFlowOnChange(e); // Call RHF's onChange
-            quantityRef.current?.focus(); // Jump to next field
+            rhfStockFlowOnChange(e);
+            quantityRef.current?.focus();
           }}
-          // --- (END FIX) ---
           className={`w-full input-dark ${
             errors.stockFlow ? "border-red-500" : ""
           }`}
@@ -201,7 +212,7 @@ export function StockForm({
         )}
       </div>
 
-      {/* Quantity (no change) */}
+      {/* Quantity */}
       <div>
         <label
           htmlFor="quantity"
@@ -227,7 +238,7 @@ export function StockForm({
         )}
       </div>
 
-      {/* Capital Price (no change) */}
+      {/* Capital Price */}
       <div>
         <label
           htmlFor="capitalPrice"
@@ -256,8 +267,8 @@ export function StockForm({
         )}
       </div>
 
-      {/* Notes (no change) */}
-      <div className="md:col-span-2">
+      {/* Notes */}
+      <div className={!isSplit ? "" : "md:col-span-2"}>
         <label
           htmlFor="notes"
           className="block mb-1 font-medium text-slate-300 text-sm"
@@ -279,8 +290,10 @@ export function StockForm({
         ></textarea>
       </div>
 
-      {/* Buttons (no change) */}
-      <div className="flex justify-end gap-3 md:col-span-2">
+      {/* Buttons */}
+      <div
+        className={`flex justify-end gap-3 ${!isSplit ? "" : "md:col-span-2"}`}
+      >
         {itemToEdit && (
           <button
             type="button"
