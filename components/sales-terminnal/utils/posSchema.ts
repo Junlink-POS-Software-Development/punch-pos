@@ -15,29 +15,29 @@ export const generateTransactionNo = () => {
 };
 
 export const posSchema = z.object({
-  payment: pesoFormat,
+  payment: pesoFormat.nullable(),
   // Use nullable instead of optional so it's always part of the type
   customerName: z.string().nullable(),
   transactionNo: z.string(),
-  voucher: pesoFormat,
+  voucher: pesoFormat.nullable(),
   barcode: z.string(),
   grandTotal: z.number(),
-  quantity: z.number().int().min(0),
-  discount: pesoFormat,
+  quantity: z.number().int().min(0).nullable(),
+  discount: pesoFormat.nullable(),
   change: z.number(),
 });
 
 export type PosFormValues = z.infer<typeof posSchema>;
 
 export const getDefaultFormValues = (): PosFormValues => ({
-  payment: 0.0,
+  payment: null,
   // Explicitly set to null to satisfy string | null
   customerName: null,
   transactionNo: generateTransactionNo(),
-  voucher: 0.0,
+  voucher: null,
   barcode: "",
   grandTotal: 0,
-  quantity: 0,
-  discount: 0.0,
+  quantity: null,
+  discount: null,
   change: 0,
 });

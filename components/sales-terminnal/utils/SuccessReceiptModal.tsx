@@ -78,7 +78,7 @@ const SuccessReceiptModal: React.FC<SuccessReceiptModalProps> = ({
           </button>
           <button
             onClick={onClose}
-            className="flex flex-1 justify-center items-center gap-2 bg-retro-cyan hover:bg-cyan-600 py-3 rounded font-bold text-black transition-colors"
+            className="flex flex-1 justify-center items-center gap-2 bg-gray-800 hover:bg-gray-700 py-3 rounded font-bold transition-colors"
           >
             <X size={18} /> CLOSE (NEW)
           </button>

@@ -131,7 +131,6 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
           className={`${className} ${
             disabled ? "opacity-50 cursor-not-allowed text-slate-500" : ""
           } ${error ? "border-red-500" : ""}`}
-          placeholder="e.g., 'Product A'"
           autoComplete="off"
         />
         {isOpen && suggestions.length > 0 && (

@@ -17,7 +17,7 @@ import {
   generateTransactionNo,
 } from "../../utils/posSchema";
 import { CartItem } from "../TerminalCart";
-import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers"; 
+import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers";
 import { TransactionResult } from "../buttons/handlers/done";
 
 interface UsePosFormReturn {
@@ -45,7 +45,9 @@ export const usePosForm = (): UsePosFormReturn => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
-  const [successData, setSuccessData] = useState<TransactionResult | null>(null);
+  const [successData, setSuccessData] = useState<TransactionResult | null>(
+    null
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const methods = useForm<PosFormValues>({
@@ -134,7 +136,7 @@ export const usePosForm = (): UsePosFormReturn => {
   // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
     console.log("📝 [Form] onDoneSubmit triggered", data);
-    
+
     // 3. VALIDATE USER SESSION
     if (!user || !user.id) {
       setErrorMessage("Session invalid or expired. Please reload/login.");
@@ -156,29 +158,28 @@ export const usePosForm = (): UsePosFormReturn => {
     setIsSubmitting(true);
 
     try {
-      // 4. PASS USER ID TO HANDLER (Removes the need for supabase.auth.getSession())
-      // Ensure you have updated 'done.ts' to accept this 3rd argument!
       const result = await handleDone(data, cartItems, user.id);
-      
+
       console.log("📝 [Form] handleDone result:", result);
 
       if (result) {
         setIsSubmitting(false);
-
-        // Set success data to open modal
         setSuccessData(result);
 
-        // Invalidate queries to refresh history tables
         mutate((key) => Array.isArray(key) && key[0] === "payments");
         mutate((key) => Array.isArray(key) && key[0] === "transaction-items");
-        // Also refresh dashboard metrics if needed
-        mutate("dashboard-metrics"); 
+        mutate("dashboard-metrics");
       } else {
         setIsSubmitting(false);
       }
-    } catch (error: any) {
-      console.error("❌ [UI CRASH] Error in submission flow:", error);
-      setErrorMessage(error.message || "An unexpected error occurred.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("❌ [UI CRASH] Error in submission flow:", error);
+        setErrorMessage(error.message);
+      } else {
+        console.error("❌ [UI CRASH] Unknown error:", error);
+        setErrorMessage("An unexpected error occurred.");
+      }
       setIsSubmitting(false);
     }
   };
