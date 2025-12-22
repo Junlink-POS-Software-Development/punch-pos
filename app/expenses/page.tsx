@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,19 +12,22 @@ import { CashFlow } from "./components/CashFlow";
 function ExpensesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const viewParam = searchParams.get("view") as View | null;
+  const viewParam = searchParams.get("view");
 
-  const [view, setView] = useState<View>("cashout");
-
-  // Sync state with URL param
-  useEffect(() => {
-    if (viewParam && ["cashout", "monitor", "cashflow"].includes(viewParam)) {
-      setView(viewParam);
-    }
-  }, [viewParam]);
+  // --- DERIVED STATE (The Fix) ---
+  // Instead of syncing local state with an effect (which causes the error),
+  // we derive the active view directly from the URL.
+  // If the URL param is valid, use it; otherwise, default to "cashout".
+  const validViews = ["cashout", "monitor", "cashflow"];
+  const currentView: View =
+    viewParam && validViews.includes(viewParam)
+      ? (viewParam as View)
+      : "cashout";
 
   const handleViewChange = (newView: View) => {
-    setView(newView);
+    // We simply update the URL.
+    // Next.js will detect the change, re-render this component,
+    // and 'currentView' will automatically update based on the new params.
     router.push(`/expenses?view=${newView}`);
   };
 
@@ -44,13 +47,13 @@ function ExpensesContent() {
       <div className="mb-8 border border-slate-700"></div>
 
       {/* --- Navigation --- */}
-      <ExpensesNav currentView={view} setView={handleViewChange} />
+      <ExpensesNav currentView={currentView} setView={handleViewChange} />
 
       {/* --- Conditional Content --- */}
       <div>
-        {view === "cashout" && <Cashout />}
-        {view === "monitor" && <ExpensesMntr />}
-        {view === "cashflow" && <CashFlow />}
+        {currentView === "cashout" && <Cashout />}
+        {currentView === "monitor" && <ExpensesMntr />}
+        {currentView === "cashflow" && <CashFlow />}
       </div>
     </div>
   );

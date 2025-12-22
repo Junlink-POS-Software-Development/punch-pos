@@ -31,9 +31,9 @@ interface CashoutFormProps {
       e: React.KeyboardEvent,
       nextRef: React.RefObject<HTMLElement | null>
     ) => void;
-    // FIX: Add setRef definition
     setRef: (key: keyof CashoutRefs, node: HTMLElement | null) => void;
   };
+  isWide?: boolean; // <--- Add this line
 }
 
 export const CashoutForm = ({
@@ -43,6 +43,7 @@ export const CashoutForm = ({
   isSubmitting,
   isCategoriesLoading,
   handlers,
+  isWide = false, // <--- Add this line
 }: CashoutFormProps) => {
   const {
     register,
@@ -51,7 +52,6 @@ export const CashoutForm = ({
     formState: { errors },
   } = form;
 
-  // Destructure setRef
   const { onSubmit, handleKeyDown, setRef } = handlers;
 
   const { ref: amountHookRef, ...amountRest } = register("amount", {
@@ -69,11 +69,16 @@ export const CashoutForm = ({
   });
 
   return (
-    <div className="relative p-6 glass-effect">
+    <div className="relative p-6 h-full glass-effect">
       <h2 className="mb-4 font-semibold text-white text-xl">
         Register New Expense
       </h2>
-      <form className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <form
+        className={`gap-x-6 gap-y-2 grid grid-cols-1 md:grid-cols-2 ${
+          // Switch between 2-column grid (fullscreen/split) and 3-column grid (standard)
+          isWide ? "xl:grid-cols-2" : "xl:grid-cols-3"
+        }`}
+      >
         {/* 1. Amount */}
         <div className="relative pb-5">
           <label className="block mb-2 font-medium text-slate-300 text-sm">
@@ -83,20 +88,19 @@ export const CashoutForm = ({
             type="number"
             step="0.01"
             {...amountRest}
-            // FIX: Use setRef instead of assigning to refs.amount.current
             ref={(e) => {
               amountHookRef(e);
               setRef("amount", e);
             }}
             onKeyDown={(e) => handleKeyDown(e, refs.classification)}
             className={`w-full input-dark ${
-              errors.amount ? "border-red-500" : ""
+              errors.amount ? "border-red-500 text-red-200" : ""
             }`}
             placeholder="0.00"
             autoFocus
           />
           {errors.amount && (
-            <p className="bottom-0 absolute text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-400 text-xs">
               Amount is required
             </p>
           )}
@@ -127,7 +131,7 @@ export const CashoutForm = ({
             )}
           />
           {errors.classification && (
-            <p className="bottom-0 absolute text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-400 text-xs">
               {errors.classification.message}
             </p>
           )}
@@ -160,7 +164,7 @@ export const CashoutForm = ({
             ))}
           </select>
           {errors.source && (
-            <p className="bottom-0 absolute text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-400 text-xs">
               Source is required
             </p>
           )}
@@ -184,24 +188,7 @@ export const CashoutForm = ({
           />
         </div>
 
-        {/* 5. Notes */}
-        <div className="relative md:col-span-2 lg:col-span-2 pb-5">
-          <label className="block mb-2 font-medium text-slate-300 text-sm">
-            Notes
-          </label>
-          <textarea
-            {...notesRest}
-            ref={(e) => {
-              notesHookRef(e);
-              setRef("notes", e);
-            }}
-            onKeyDown={(e) => handleKeyDown(e, refs.date)}
-            className="w-full h-20 resize-none input-dark"
-            placeholder="Additional details..."
-          />
-        </div>
-
-        {/* 6. Date */}
+        {/* 5. Date */}
         <div className="relative pb-5">
           <label className="block mb-2 font-medium text-slate-300 text-sm">
             Date
@@ -219,23 +206,45 @@ export const CashoutForm = ({
             }`}
           />
           {errors.transaction_date && (
-            <p className="bottom-0 absolute text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-400 text-xs">
               Date is required
             </p>
           )}
         </div>
 
+        {/* 6. Notes - Always takes full width in 2-column layout */}
+        <div
+          className={`relative pb-5 md:col-span-2 ${
+            isWide ? "xl:col-span-2" : "xl:col-span-1"
+          }`}
+        >
+          <label className="block mb-2 font-medium text-slate-300 text-sm">
+            Notes
+          </label>
+          <textarea
+            {...notesRest}
+            ref={(e) => {
+              notesHookRef(e);
+              setRef("notes", e);
+            }}
+            onKeyDown={(e) => handleKeyDown(e, refs.date)}
+            className="w-full h-[42px] md:h-20 resize-none input-dark"
+            placeholder="Additional details..."
+          />
+        </div>
+
         {/* Submit Button */}
-        {/* Submit Button */}
-        <div className="flex justify-end lg:col-span-3">
+        <div
+          className={`flex justify-end pt-2 md:col-span-2 ${
+            isWide ? "xl:col-span-2" : "xl:col-span-3"
+          }`}
+        >
           <button
             type="button"
-            // FIX: Removed the duplicate "ref={refs.submitBtn}" line.
-            // We only use this callback to set the ref in the parent safely.
             ref={(e) => setRef("submitBtn", e)}
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="flex items-center gap-2 disabled:opacity-50 px-8 btn-3d-glass"
+            className="flex items-center gap-2 disabled:opacity-50 px-8 h-12 btn-3d-glass"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             {isSubmitting ? "Submitting..." : "Submit Expense (Shift+Enter)"}

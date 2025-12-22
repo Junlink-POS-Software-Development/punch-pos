@@ -2,12 +2,7 @@ import useSWR from "swr";
 import { fetchInventory } from "../../inventory/components/stocks-monitor/lib/inventory.api";
 
 export const useInventory = () => {
-  const {
-    data,
-    isLoading,
-    error,
-    mutate,
-  } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     "inventory-monitor",
     () => fetchInventory(),
     {
