@@ -1,36 +1,54 @@
 import { CashFlowEntry } from "../lib/types";
+import { DragHandleProps } from "./DashboardGrid";
 
 interface Props {
   totalNetSales: number;
   cashFlow: CashFlowEntry[];
+  dragHandleProps?: DragHandleProps;
 }
 
-const CashOnHandCard = ({ totalNetSales, cashFlow }: Props) => {
+const CashOnHandCard = ({
+  totalNetSales,
+  cashFlow,
+  dragHandleProps,
+}: Props) => {
   return (
-    <div className="bg-slate-800 shadow-lg p-6 rounded-xl text-white">
-      <h2 className="mb-4 font-bold text-xl">Cash on Hand</h2>
-      
-      <div className="mb-6">
-        <p className="text-slate-400 text-sm">Total Net Sales</p>
-        <p className="font-bold text-3xl text-emerald-400">
-          ₱{totalNetSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
+    <div className="bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full overflow-hidden text-white">
+      <div
+        {...dragHandleProps?.attributes}
+        {...dragHandleProps?.listeners}
+        className="hover:bg-slate-700/30 p-6 pb-2 transition-colors cursor-grab active:cursor-grabbing"
+      >
+        <h2 className="font-bold text-xl">Cash on Hand</h2>
       </div>
 
-      <div>
-        <h3 className="mb-3 font-semibold text-lg">Categorical Net Sales</h3>
+      <div className="p-6 pt-2">
+        <div className="mb-6">
+          <p className="text-slate-400 text-sm">Total Net Sales</p>
+          <p className="font-bold text-emerald-400 text-3xl">
+            ₱
+            {totalNetSales.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
         <div className="space-y-3">
           {cashFlow.map((entry) => (
-            <div key={entry.category} className="flex justify-between items-center border-slate-700 pb-2 border-b last:border-0">
+            <div
+              key={entry.category}
+              className="flex justify-between items-center pb-2 border-slate-700 last:border-0 border-b"
+            >
               <span className="text-slate-300">{entry.category}</span>
               <span className="font-medium">
-                ₱{entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₱
+                {entry.balance.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           ))}
-          {cashFlow.length === 0 && (
-            <p className="text-slate-500 text-sm italic">No data available for today.</p>
-          )}
         </div>
       </div>
     </div>

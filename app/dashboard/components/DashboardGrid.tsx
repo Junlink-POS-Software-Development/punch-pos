@@ -9,7 +9,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DraggableAttributes,
 } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import {
   arrayMove,
   SortableContext,
@@ -18,7 +20,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripHorizontal } from "lucide-react";
 
 import CashOnHandCard from "./CashOnHandCard";
 import DailyExpensesCard from "./DailyExpensesCard";
@@ -26,8 +27,18 @@ import DailyGrossIncomeCard from "./DailyGrossIncomeCard";
 import MonthlyGrossCard from "./MonthlyGrossCard";
 import { DashboardMetrics } from "../hooks/useDashboardMetrics";
 
-// 1. Sortable Wrapper Component
-const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+// Define strict types for the drag handle
+export interface DragHandleProps {
+  attributes: DraggableAttributes;
+  listeners: SyntheticListenerMap | undefined;
+}
+
+interface SortableItemProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+const SortableItem = ({ id, children }: SortableItemProps) => {
   const {
     attributes,
     listeners,
@@ -44,29 +55,37 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
     opacity: isDragging ? 0.8 : 1,
   };
 
+  // Inject props safely into children
+  const childrenWithProps = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(
+        child as React.ReactElement<{ dragHandleProps: DragHandleProps }>,
+        {
+          dragHandleProps: { attributes, listeners },
+        }
+      );
+    }
+    return child;
+  });
+
   return (
-    <div ref={setNodeRef} style={style} className="relative group h-full">
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-4 right-4 z-20 p-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700/50 hover:bg-slate-600 rounded-lg text-slate-300"
-      >
-        <GripHorizontal className="w-5 h-5" />
-      </div>
-      <div className="h-full">{children}</div>
+    <div ref={setNodeRef} style={style} className="h-full">
+      {childrenWithProps}
     </div>
   );
 };
 
-// 2. Main Grid Interface
 interface DashboardGridProps {
   metrics: DashboardMetrics;
   items: string[];
   onOrderChange: (newOrder: string[]) => void;
 }
 
-export const DashboardGrid = ({ metrics, items, onOrderChange }: DashboardGridProps) => {
+export const DashboardGrid = ({
+  metrics,
+  items,
+  onOrderChange,
+}: DashboardGridProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -84,11 +103,22 @@ export const DashboardGrid = ({ metrics, items, onOrderChange }: DashboardGridPr
   const renderCard = (id: string) => {
     switch (id) {
       case "cash-on-hand":
-        return <CashOnHandCard totalNetSales={metrics.totalNetSales} cashFlow={metrics.cashFlow} />;
+        return (
+          <CashOnHandCard
+            totalNetSales={metrics.totalNetSales}
+            cashFlow={metrics.cashFlow}
+          />
+        );
       case "daily-gross":
+        // FIX: Ensure this card only receives what it needs
         return <DailyGrossIncomeCard cashFlow={metrics.cashFlow} />;
       case "daily-expenses":
-        return <DailyExpensesCard totalExpenses={metrics.totalExpenses} cashFlow={metrics.cashFlow} />;
+        return (
+          <DailyExpensesCard
+            totalExpenses={metrics.totalExpenses}
+            cashFlow={metrics.cashFlow}
+          />
+        );
       case "monthly-gross":
         return <MonthlyGrossCard />;
       default:
@@ -103,7 +133,7 @@ export const DashboardGrid = ({ metrics, items, onOrderChange }: DashboardGridPr
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={items} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {items.map((id) => (
             <SortableItem key={id} id={id}>
               {renderCard(id)}
