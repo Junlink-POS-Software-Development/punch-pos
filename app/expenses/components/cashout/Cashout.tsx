@@ -1,16 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import { CashoutForm } from "./CashoutForm";
 import { CashoutTable } from "./CashoutTable";
 import { useCashout } from "../../hooks/useCashout";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
+import { useExpenses } from "../../hooks/useExpenses";
 
 export function Cashout() {
-  const { form, refs, data, handlers } = useCashout();
-  const { viewState } = useViewStore();
+  const getToday = () => new Date().toISOString().split("T")[0];
 
-  // viewState 2 is the right-side fullscreen mode
+  // Default to today
+  const [dateRange, setDateRange] = useState({
+    start: getToday(),
+    end: getToday(),
+  });
+
+  const { form, refs, data: hookData, handlers } = useCashout();
+
+  // Fetch data based on the date range
+  const { expenses: filteredExpenses, isLoading: isFilteredLoading } =
+    useExpenses(dateRange.start || dateRange.end ? dateRange : undefined);
+
+  const { viewState } = useViewStore();
   const isRightFullscreen = viewState === 2;
+
+  const handleDateChange = (start: string, end: string) => {
+    setDateRange({ start, end });
+  };
 
   return (
     <div
@@ -24,17 +41,22 @@ export function Cashout() {
         <CashoutForm
           form={form}
           refs={refs}
-          categories={data.categories}
-          isSubmitting={data.isSubmitting}
-          isCategoriesLoading={data.isCategoriesLoading}
+          categories={hookData.categories}
+          isSubmitting={hookData.isSubmitting}
+          isCategoriesLoading={hookData.isCategoriesLoading}
           handlers={handlers}
-          // Pass this down so the form can adjust its internal layout
           isWide={isRightFullscreen}
         />
       </div>
 
-      <div className="w-full">
-        <CashoutTable expenses={data.expenses} isLoading={data.isLoading} />
+      <div className="flex flex-col gap-4 w-full">
+        {/* Pass state and handlers directly to the table */}
+        <CashoutTable
+          expenses={filteredExpenses}
+          isLoading={isFilteredLoading}
+          dateRange={dateRange}
+          onDateChange={handleDateChange}
+        />
       </div>
     </div>
   );

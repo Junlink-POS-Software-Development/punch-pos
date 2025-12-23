@@ -1,3 +1,4 @@
+// useExpenses.ts
 import useSWR, { useSWRConfig } from "swr";
 import { useState } from "react";
 import {
@@ -6,17 +7,28 @@ import {
   ExpenseInput,
 } from "../lib/expenses.api";
 
-export function useExpenses() {
+export interface DateRange {
+  start: string;
+  end: string;
+}
+
+export function useExpenses(dateRange?: DateRange) {
   const { mutate } = useSWRConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: expenses, isLoading } = useSWR("expenses", fetchExpenses);
+  // SWR Key includes dates, so it auto-refetches when they change
+  const swrKey = ["expenses", dateRange?.start, dateRange?.end];
+
+  const { data: expenses, isLoading } = useSWR(swrKey, ([_, start, end]) =>
+    fetchExpenses(start, end)
+  );
 
   const addExpense = async (data: ExpenseInput) => {
     setIsSubmitting(true);
     try {
       await createExpense(data);
-      mutate("expenses");
+      // Invalidate the current view
+      mutate(swrKey);
     } finally {
       setIsSubmitting(false);
     }
@@ -27,6 +39,6 @@ export function useExpenses() {
     isLoading,
     isSubmitting,
     addExpense,
-    refresh: () => mutate("expenses"),
+    refresh: () => mutate(swrKey),
   };
 }

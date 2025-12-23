@@ -40,10 +40,14 @@ export interface Classification {
   store_id: string;
 }
 
-export const fetchExpenses = async (): Promise<ExpenseData[]> => {
+// Update the function signature to accept date arguments
+export const fetchExpenses = async (
+  startDate?: string,
+  endDate?: string
+): Promise<ExpenseData[]> => {
   const supabase = await getSupabase();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("expenses")
     .select(
       `
@@ -55,6 +59,16 @@ export const fetchExpenses = async (): Promise<ExpenseData[]> => {
     )
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false });
+
+  // Apply Date Filters if provided
+  if (startDate) {
+    query = query.gte("transaction_date", startDate);
+  }
+  if (endDate) {
+    query = query.lte("transaction_date", endDate);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
 
