@@ -6,8 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ExpensesNav, View } from "./utils/ExpensesNav";
 import { Cashout } from "./components/cashout/Cashout";
-import { ExpensesMntr } from "./components/ExpensesMntr";
 import { CashFlow } from "./components/CashFlow";
+import { ExpensesBreakdown } from "./components/expenses-breakdown/ExpensesBreakdown";
 
 function ExpensesContent() {
   const searchParams = useSearchParams();
@@ -52,7 +52,7 @@ function ExpensesContent() {
       {/* --- Conditional Content --- */}
       <div>
         {currentView === "cashout" && <Cashout />}
-        {currentView === "monitor" && <ExpensesMntr />}
+        {currentView === "monitor" && <ExpensesBreakdown />}
         {currentView === "cashflow" && <CashFlow />}
       </div>
     </div>
