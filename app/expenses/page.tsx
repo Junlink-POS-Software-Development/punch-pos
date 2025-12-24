@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ExpensesNav, View } from "./utils/ExpensesNav";
 import { Cashout } from "./components/cashout/Cashout";
-import { CashFlow } from "./components/CashFlow";
+import { CashFlow } from "./components/cashflow/CashFlow";
 import { ExpensesBreakdown } from "./components/expenses-breakdown/ExpensesBreakdown";
 
 function ExpensesContent() {

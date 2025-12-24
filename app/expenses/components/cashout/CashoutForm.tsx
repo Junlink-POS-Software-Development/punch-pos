@@ -2,7 +2,7 @@ import React from "react";
 import { UseFormReturn, Controller } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { ExpenseInput } from "../../lib/expenses.api";
-import { ClassificationSelect } from "../ClassificationSelect";
+import { ClassificationSelect } from "../../utils/ClassificationSelect";
 
 export interface CategoryItem {
   id: string | number;

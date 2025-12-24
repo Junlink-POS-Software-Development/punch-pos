@@ -8,20 +8,26 @@ import {
   Trash2,
   Check,
   X,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Classification } from "../lib/expenses.api";
 import { useClassifications } from "@/app/expenses/hooks/useClassifications";
 
 // Accept standard input props but override onChange/value to use controlled string API
 interface ClassificationSelectProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "onChange" | "value"
+  > {
   value?: string;
   onChange: (value: string) => void;
   error?: string;
 }
 
-export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationSelectProps>(
+export const ClassificationSelect = forwardRef<
+  HTMLInputElement,
+  ClassificationSelectProps
+>(
   (
     {
       value,
@@ -37,12 +43,12 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
     ref
   ) => {
     // Store state
-    const { 
-      classifications, 
-      isLoading: loading, 
-      addClassification, 
-      editClassification, 
-      removeClassification 
+    const {
+      classifications,
+      isLoading: loading,
+      addClassification,
+      editClassification,
+      removeClassification,
     } = useClassifications();
 
     // UI state
@@ -60,11 +66,12 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
     // Refs
     const containerRef = useRef<HTMLDivElement>(null);
 
-
-
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        if (
+          containerRef.current &&
+          !containerRef.current.contains(e.target as Node)
+        ) {
           setIsOpen(false);
           setEditingId(null);
           setHighlightIndex(-1);
@@ -72,7 +79,8 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
       };
 
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     // Keep internal search in sync with external value
@@ -189,7 +197,11 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
                 e.preventDefault();
                 setIsOpen(true);
                 setHighlightIndex((prev) =>
-                  prev < filtered.length - 1 ? prev + 1 : filtered.length > 0 ? 0 : -1
+                  prev < filtered.length - 1
+                    ? prev + 1
+                    : filtered.length > 0
+                    ? 0
+                    : -1
                 );
                 return;
               }
@@ -197,12 +209,20 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
               if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setHighlightIndex((prev) =>
-                  prev > 0 ? prev - 1 : filtered.length > 0 ? filtered.length - 1 : -1
+                  prev > 0
+                    ? prev - 1
+                    : filtered.length > 0
+                    ? filtered.length - 1
+                    : -1
                 );
                 return;
               }
 
-              if (e.key === "Enter" && highlightIndex >= 0 && filtered[highlightIndex]) {
+              if (
+                e.key === "Enter" &&
+                highlightIndex >= 0 &&
+                filtered[highlightIndex]
+              ) {
                 e.preventDefault();
                 handleSelect(filtered[highlightIndex].name);
                 return;
@@ -220,14 +240,16 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
             }}
             disabled={disabled}
             placeholder={placeholder || "Select or create classification..."}
-            className={`w-full input-dark pr-10 ${error ? "border-red-500" : ""}`}
+            className={`w-full input-dark pr-10 ${
+              error ? "border-red-500" : ""
+            }`}
             autoComplete="off"
             {...props}
           />
 
           <button
             type="button"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
+            className="top-1/2 right-2 absolute text-slate-400 -translate-y-1/2"
             onClick={() => {
               const next = !isOpen;
               setIsOpen(next);
@@ -245,7 +267,7 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
 
         {/* Dropdown */}
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-in fade-in zoom-in-95">
+          <div className="z-50 absolute bg-slate-900 shadow-xl mt-1 border border-slate-700 rounded-lg w-full max-h-60 overflow-y-auto animate-in fade-in zoom-in-95">
             {filtered.map((cls, idx) => (
               <div
                 key={cls.id}
@@ -264,7 +286,7 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
                     onClick={(e) => e.stopPropagation()}
                   >
                     <input
-                      className="bg-slate-950 border border-slate-600 rounded px-2 py-1 text-xs w-full text-white focus:outline-none"
+                      className="bg-slate-950 px-2 py-1 border border-slate-600 rounded focus:outline-none w-full text-white text-xs"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       autoFocus
@@ -294,13 +316,13 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => startEdit(e, cls)}
-                        className="p-1 hover:bg-slate-700 rounded text-blue-400"
+                        className="hover:bg-slate-700 p-1 rounded text-blue-400"
                       >
                         <Edit2 className="w-3 h-3" />
                       </button>
                       <button
                         onClick={(e) => handleDelete(e, cls.id)}
-                        className="p-1 hover:bg-slate-700 rounded text-red-400"
+                        className="hover:bg-slate-700 p-1 rounded text-red-400"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -315,19 +337,19 @@ export const ClassificationSelect = forwardRef<HTMLInputElement, ClassificationS
                 type="button"
                 onClick={handleCreate}
                 disabled={actionLoading}
-                className="w-full text-left px-3 py-2 text-sm text-cyan-400 hover:bg-slate-800 border-t border-slate-800 flex items-center gap-2"
+                className="flex items-center gap-2 hover:bg-slate-800 px-3 py-2 border-slate-800 border-t w-full text-cyan-400 text-sm text-left"
               >
                 {actionLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
-                Create "{search}"
+                Create &quot;{search}&quot;
               </button>
             )}
 
             {filtered.length === 0 && search.trim() === "" && (
-              <div className="px-3 py-4 text-center text-xs text-slate-500">
+              <div className="px-3 py-4 text-slate-500 text-xs text-center">
                 Start typing to add...
               </div>
             )}

@@ -31,9 +31,12 @@ export const fetchFlowCategories = async (): Promise<string[]> => {
 
   if (error) {
     console.error("Error fetching categories:", error);
-    return [];
+    return ["Overall"];
   }
-  return data?.map((d) => d.category) || [];
+
+  // Prepend "Overall" to the list of categories
+  const categories = data?.map((d) => d.category) || [];
+  return ["Overall", ...categories];
 };
 
 // 2. Fetch Ledger Data with Filters
@@ -44,18 +47,24 @@ export const fetchCashFlowLedger = async (
   if (!category) return [];
 
   const supabase = await getSupabase();
-  let query = supabase
-    .from("categorical_cash_flow")
+
+  // Determine which view/table to query based on selection
+  const tableName =
+    category === "Overall" ? "overall_cash_flow" : "categorical_cash_flow";
+
+  const query = supabase
+    .from(tableName)
     .select("*")
+    // If it's overall, the view already has 'Overall' as category, but we filter just to be safe/consistent
     .eq("category", category)
     .gte("date", range.start)
     .lte("date", range.end)
-    .order("date", { ascending: true }); // <--- CHANGED TO TRUE (Oldest First)
+    .order("date", { ascending: true });
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching ledger:", error);
+    console.error(`Error fetching ledger from ${tableName}:`, error);
     throw new Error(error.message);
   }
 
