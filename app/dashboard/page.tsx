@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { LayoutDashboard, FileText, Loader2, ArrowBigLeft } from "lucide-react";
+import { Loader2, ArrowBigLeft } from "lucide-react";
 import { FinancialReportContainer } from "./components/financial-report/FinancialReportContainer";
 import { useDashboardMetrics } from "./hooks/useDashboardMetrics";
 import { DashboardGrid } from "./components/DashboardGrid";
 import Link from "next/link";
 import { InventorySummary } from "./components/InventorySummary";
+import { DashboardNav, DashboardView } from "./utils/DashboardNav";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const DEFAULT_ITEMS = [
   "cash-on-hand",
@@ -16,7 +18,29 @@ const DEFAULT_ITEMS = [
 ];
 
 export default function DashboardPage() {
-  const [viewMode, setViewMode] = useState<"grid" | "report">("grid");
+  // --- URL State Management ---
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // 1. Derive active view from URL
+  const viewParam = searchParams.get("view");
+  const validViews = ["grid", "report"];
+
+  const viewMode: DashboardView =
+    viewParam && validViews.includes(viewParam)
+      ? (viewParam as DashboardView)
+      : "grid"; // Default to "grid" if param is missing or invalid
+
+  // 2. Handle View Change
+  const setViewMode = (newView: DashboardView) => {
+    // Create new params object to preserve other potential query params
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+
+    // Update URL without reloading the page
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const [items, setItems] = useState<string[]>(DEFAULT_ITEMS);
 
@@ -26,7 +50,7 @@ export default function DashboardPage() {
     <div className="space-y-6 mx-auto p-6 max-w-7xl">
       {/* Header & View Switcher */}
       <div className="flex justify-between items-center">
-        <div className="">
+        <div>
           <Link
             href="/"
             className="inline-flex items-center gap-2 mb-2 pt-2 pl-2 text-slate-400 hover:text-white text-sm transition-colors"
@@ -34,38 +58,13 @@ export default function DashboardPage() {
             <ArrowBigLeft className="w-4 h-4" />
             <span>Back to Home</span>
           </Link>
-          <div>
-            <h1 className="font-bold text-white text-3xl">Dashboard</h1>
-            <p className="text-slate-400 text-sm">
-              Overview of your store performance
-            </p>
-          </div>
+          <h1 className="pl-2 font-bold text-white text-3xl tracking-tight">
+            Dashboard
+          </h1>
         </div>
 
-        <div className="flex items-center bg-slate-800 p-1 border border-slate-700 rounded-lg">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              viewMode === "grid"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </button>
-          <button
-            onClick={() => setViewMode("report")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              viewMode === "report"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            Financial Report
-          </button>
-        </div>
+        {/* Navigation Component */}
+        <DashboardNav currentView={viewMode} setView={setViewMode} />
       </div>
 
       {/* Content Area */}
@@ -81,7 +80,6 @@ export default function DashboardPage() {
               Error loading dashboard metrics.
             </div>
           ) : (
-            /* --- FIX: Pass the required props here --- */
             <div className="space-y-6">
               <DashboardGrid
                 metrics={metrics}
