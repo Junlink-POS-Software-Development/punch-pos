@@ -21,11 +21,11 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import CashOnHandCard from "./CashOnHandCard";
 import DailyExpensesCard from "./DailyExpensesCard";
 import DailyGrossIncomeCard from "./DailyGrossIncomeCard";
 import MonthlyGrossCard from "./MonthlyGrossCard";
 import { DashboardMetrics } from "../hooks/useDashboardMetrics";
+import DailyNetSales from "./DailyNetSales";
 
 // Define strict types for the drag handle
 export interface DragHandleProps {
@@ -104,7 +104,7 @@ export const DashboardGrid = ({
     switch (id) {
       case "cash-on-hand":
         return (
-          <CashOnHandCard
+          <DailyNetSales
             totalNetSales={metrics.totalNetSales}
             cashFlow={metrics.cashFlow}
           />
