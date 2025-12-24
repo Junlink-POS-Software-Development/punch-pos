@@ -5,12 +5,14 @@ interface DateColumnFilterProps {
   startDate: string;
   endDate: string;
   onDateChange: (start: string, end: string) => void;
+  align?: "center" | "start" | "end"; // <--- Add this optional prop
 }
 
 export const DateColumnFilter = ({
   startDate,
   endDate,
   onDateChange,
+  align = "start", // <--- Set a default (usually "start" or "center")
 }: DateColumnFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,9 @@ export const DateColumnFilter = ({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="top-full left-0 z-50 absolute flex flex-col gap-4 bg-slate-900/95 shadow-2xl backdrop-blur-md mt-2 p-4 border border-slate-700 rounded-xl w-72">
+        <div className={`top-full z-50 absolute flex flex-col gap-4 bg-slate-900/95 shadow-2xl backdrop-blur-md mt-2 p-4 border border-slate-700 rounded-xl w-72 ${
+          align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0"
+        }`}>
           {/* Header */}
           <div className="flex justify-between items-center pb-2 border-slate-700 border-b">
             <span className="font-semibold text-slate-200 text-sm">
