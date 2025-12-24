@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import dayjs from "dayjs";
-
 import { SourceBreakdownTable } from "./SourceBreakdownTable";
 import { BreakdownChart } from "./BreakdownChart";
 import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
-import { Loader2 } from "lucide-react";
+import { Loader2, Filter } from "lucide-react";
 import { useExpensesBreakdown } from "../../hooks/useExpensesBreakdown";
 
 export const ExpensesBreakdown = () => {
-  // 1. Initialize local state with Today's date
+  // 1. Initialize local state
   const today = dayjs().format("YYYY-MM-DD");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 
-  // 2. Handler for the filter
+  // 2. We only store the user's *intent* to select a specific source.
+  const [selectedSourceId, setSelectedSourceId] = useState<string>("");
+
   const handleDateChange = (start: string, end: string) => {
     setStartDate(start);
     setEndDate(end);
@@ -23,21 +24,59 @@ export const ExpensesBreakdown = () => {
 
   const { data, loading } = useExpensesBreakdown(startDate, endDate);
 
+  // 3. DERIVED STATE (The Fix):
+  // Calculate which source to show during render.
+  // If the user's selected ID exists in the new data, use it.
+  // Otherwise, fallback to the first item (data[0]).
+  const activeSourceData = useMemo(() => {
+    if (!data || data.length === 0) return null;
+
+    // Try to find the one the user selected previously
+    const userSelection = data.find((d) => d.sourceName === selectedSourceId);
+
+    // If found, return it. If not (or if selection is empty), default to the first one.
+    return userSelection || data[0];
+  }, [data, selectedSourceId]);
+
   return (
     <div className="space-y-6 animate-in duration-500 fade-in">
       {/* Header Section */}
-      <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-4 border border-slate-800 rounded-xl">
+      <div className="flex xl:flex-row flex-col justify-between items-start xl:items-center gap-4 bg-slate-900/50 p-4 border border-slate-800 rounded-xl">
         <div>
           <h2 className="font-bold text-emerald-400 text-xl">
             Expense Breakdown
           </h2>
           <p className="text-slate-400 text-sm">
-            Visualizing expenses by source and classification
+            Analyze expenses by classification per source
           </p>
         </div>
 
-        {/* Date Filter Component - Connected to local state */}
-        <div className="flex items-center gap-2">
+        <div className="flex sm:flex-row flex-col items-stretch sm:items-center gap-4 w-full xl:w-auto">
+          {/* SOURCE SELECTOR DROPDOWN */}
+          {data && data.length > 0 && activeSourceData && (
+            <div className="group relative">
+              <div className="left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none">
+                <Filter className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <select
+                // 4. Bind value to the *derived* active source
+                value={activeSourceData.sourceName}
+                onChange={(e) => setSelectedSourceId(e.target.value)}
+                className="bg-slate-800 hover:bg-slate-700/50 py-2 pr-8 pl-10 border border-slate-700 focus:border-emerald-500 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/50 w-full sm:w-64 text-white text-sm transition-colors appearance-none cursor-pointer"
+              >
+                {data.map((source) => (
+                  <option key={source.sourceName} value={source.sourceName}>
+                    {source.sourceName}
+                  </option>
+                ))}
+              </select>
+              <div className="right-0 absolute inset-y-0 flex items-center pr-3 text-slate-500 text-xs pointer-events-none">
+                ▼
+              </div>
+            </div>
+          )}
+
+          {/* DATE FILTER */}
           <DateColumnFilter
             startDate={startDate}
             endDate={endDate}
@@ -48,11 +87,11 @@ export const ExpensesBreakdown = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center border border-slate-800 border-dashed rounded-xl w-full h-64 text-slate-400">
+        <div className="flex justify-center items-center border border-slate-800 border-dashed rounded-xl w-full h-96 text-slate-400">
           <Loader2 className="mr-2 w-6 h-6 text-emerald-500 animate-spin" />
           Loading breakdown...
         </div>
-      ) : !data || data.length === 0 ? (
+      ) : !activeSourceData ? (
         <div className="bg-slate-900/20 p-12 border border-slate-800 border-dashed rounded-xl text-center">
           <p className="text-slate-500 text-lg">
             No expense data found for this period.
@@ -62,30 +101,27 @@ export const ExpensesBreakdown = () => {
           </p>
         </div>
       ) : (
-        <>
+        <div className="space-y-6">
           {/* Chart Section */}
-          <BreakdownChart data={data} />
+          <BreakdownChart
+            data={activeSourceData.breakdown}
+            sourceName={activeSourceData.sourceName}
+          />
 
-          {/* Tables Section */}
+          {/* Table Section */}
           <div>
-            <h3 className="flex items-center gap-2 mb-4 font-bold text-white text-lg">
-              Detailed Breakdown
-              <span className="bg-slate-800 px-2 py-0.5 rounded-full font-normal text-slate-500 text-xs">
-                {data.length} Sources
-              </span>
+            <h3 className="mb-4 font-bold text-white text-lg">
+              Detailed Report
             </h3>
-            <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-              {data.map((source) => (
-                <SourceBreakdownTable
-                  key={source.sourceName}
-                  sourceName={source.sourceName}
-                  data={source.breakdown}
-                  total={source.total}
-                />
-              ))}
+            <div className="w-full">
+              <SourceBreakdownTable
+                sourceName={activeSourceData.sourceName}
+                data={activeSourceData.breakdown}
+                total={activeSourceData.total}
+              />
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
