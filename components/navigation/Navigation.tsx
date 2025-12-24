@@ -29,9 +29,8 @@ const Navigation = React.memo(() => {
       text: "Dashboard",
       Icon: LayoutGrid,
       shortcuts: [
-        { label: "Overview", href: "/dashboard" },
-        { label: "Real-time", href: "/dashboard" },
-        { label: "Widgets", href: "/dashboard" },
+        { label: "Overview", href: "/dashboard?view=grid" },
+        { label: "Financial Report", href: "/dashboard?view=report" },
       ],
     },
     {
