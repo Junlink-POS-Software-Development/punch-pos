@@ -1,6 +1,13 @@
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { CartItem } from "../../TerminalCart";
 
+// 1. Define the inferred structure of the Server Action response
+interface TransactionActionResponse {
+  success: boolean;
+  error?: string;
+  data?: unknown; // Optional: in case you return the inserted row later
+}
+
 export type TransactionResult = {
   invoice_no: string;
   customer_name: string | null;
@@ -10,7 +17,7 @@ export type TransactionResult = {
   change: number;
   transaction_no: string;
   transaction_time: string;
-  cashier_name: string; 
+  cashier_name: string;
 } | null;
 
 const withTimeout = <T>(
@@ -32,26 +39,26 @@ const withTimeout = <T>(
 export const handleDone = async (
   data: PosFormValues,
   cartItems: CartItem[],
-  cashierId: string 
+  cashierId: string
 ): Promise<TransactionResult> => {
   console.log("--- 🛠 [Logic] handleDone started ---");
-  
+
   try {
     if (!cashierId) {
-       throw new Error("User ID missing. Cannot process transaction.");
+      throw new Error("User ID missing. Cannot process transaction.");
     }
 
     console.log("2️⃣ [Logic] Preparing Payloads...");
-    
+
     const headerPayload = {
       invoice_no: data.transactionNo,
       customer_name: data.customerName,
-      amount_rendered: data.payment,
+      amount_rendered: data.payment || 0,
       voucher: data.voucher || 0,
       grand_total: data.grandTotal,
       change: data.change,
       transaction_no: data.transactionNo,
-      cashier_name: cashierId, 
+      cashier_name: cashierId,
     };
 
     const itemsPayload = cartItems.map((item) => ({
@@ -63,30 +70,41 @@ export const handleDone = async (
       quantity: item.quantity,
     }));
 
-    console.log("3️⃣ [Logic] Sending RPC request to Supabase (via Server Action)...");
+    console.log(
+      "3️⃣ [Logic] Sending RPC request to Supabase (via Server Action)..."
+    );
 
     const { processTransaction } = await import("@/app/actions/transactions");
-    let rpcResult: any = null;
+
+    // 2. Replace 'any' with the specific interface
+    let rpcResult: TransactionActionResponse | null = null;
 
     // Retry logic for Timeout (3 attempts)
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        rpcResult = await withTimeout<any>(
+        // 3. Pass the type to the generic function
+        rpcResult = await withTimeout<TransactionActionResponse>(
           processTransaction(headerPayload, itemsPayload),
-          20000, 
+          20000,
           "Transaction Save"
         );
-        
+
         if (rpcResult.success) {
-            break;
+          break;
         } else {
-            throw new Error(rpcResult.error);
+          throw new Error(rpcResult.error || "Unknown RPC error");
         }
 
-      } catch (err: any) {
+        // 4. Handle error safely without 'any'
+      } catch (err: unknown) {
         console.warn(`⚠️ [Logic] Attempt ${attempt} failed:`, err);
-        if (attempt === 3) throw err; 
-        await new Promise(res => setTimeout(res, 1000));
+
+        if (attempt === 3) {
+          // Re-throw safely
+          if (err instanceof Error) throw err;
+          throw new Error("Transaction failed with unknown error");
+        }
+        await new Promise((res) => setTimeout(res, 1000));
       }
     }
 
@@ -96,15 +114,21 @@ export const handleDone = async (
     if (data.voucher && data.voucher > 0) {
       try {
         console.log("🎫 [Logic] Processing Voucher Deduction...");
-        const { fetchCategories } = await import("@/app/inventory/components/item-registration/lib/categories.api");
-        const { createExpense } = await import("@/app/expenses/lib/expenses.api");
+        const { fetchCategories } = await import(
+          "@/app/inventory/components/item-registration/lib/categories.api"
+        );
+        const { createExpense } = await import(
+          "@/app/expenses/lib/expenses.api"
+        );
 
         const categories = await fetchCategories();
-        const defaultSource = categories.find(c => c.is_default_voucher_source);
+        const defaultSource = categories.find(
+          (c) => c.is_default_voucher_source
+        );
 
         if (defaultSource) {
           await createExpense({
-            transaction_date: new Date().toISOString().split('T')[0],
+            transaction_date: new Date().toISOString().split("T")[0],
             source: defaultSource.category,
             classification: "Voucher Deduction",
             amount: Number(data.voucher),
@@ -113,11 +137,17 @@ export const handleDone = async (
           });
         }
       } catch (voucherError) {
-        console.error("❌ [Logic] Voucher expense failed (non-fatal):", voucherError);
+        console.error(
+          "❌ [Logic] Voucher expense failed (non-fatal):",
+          voucherError
+        );
       }
     }
 
-    return { ...headerPayload, transaction_time: new Date().toISOString() } as TransactionResult;
+    return {
+      ...headerPayload,
+      transaction_time: new Date().toISOString(),
+    } as TransactionResult;
   } catch (err) {
     console.error("❌ [Logic] Crash in handleDone:", err);
     throw err;
