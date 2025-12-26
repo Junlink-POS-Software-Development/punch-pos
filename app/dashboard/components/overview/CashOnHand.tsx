@@ -2,12 +2,12 @@ import { CashFlowEntry } from "../../lib/types";
 import { DragHandleProps } from "./DashboardGrid";
 
 interface Props {
-  totalNetSales: number;
+  totalNetBalance: number;
   cashFlow: CashFlowEntry[];
   dragHandleProps?: DragHandleProps;
 }
 
-const DailyNetSales = ({ totalNetSales, cashFlow, dragHandleProps }: Props) => {
+const CashOnHand = ({ totalNetBalance, cashFlow, dragHandleProps }: Props) => {
   return (
     <div className="bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full overflow-hidden text-white">
       <div
@@ -15,15 +15,15 @@ const DailyNetSales = ({ totalNetSales, cashFlow, dragHandleProps }: Props) => {
         {...dragHandleProps?.listeners}
         className="hover:bg-slate-700/30 p-6 pb-2 transition-colors cursor-grab active:cursor-grabbing"
       >
-        <h2 className="font-bold text-xl">Daily Net Sales</h2>
+        <h2 className="font-bold text-xl">Cash On Hand</h2>
       </div>
 
       <div className="p-6 pt-2">
         <div className="mb-6">
-          <p className="text-slate-400 text-sm">Total Net Sales</p>
+          <p className="text-slate-400 text-sm">Total Net Balance</p>
           <p className="font-bold text-emerald-400 text-3xl">
             ₱
-            {totalNetSales.toLocaleString(undefined, {
+            {totalNetBalance.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -50,4 +50,4 @@ const DailyNetSales = ({ totalNetSales, cashFlow, dragHandleProps }: Props) => {
     </div>
   );
 };
-export default DailyNetSales;
+export default CashOnHand;
