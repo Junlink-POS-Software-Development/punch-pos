@@ -17,7 +17,7 @@ const CashOnHand = ({ totalNetBalance, cashFlow, dragHandleProps }: Props) => {
       >
         <h2 className="font-bold text-xl">Cash On Hand</h2>
       </div>
-
+      x
       <div className="p-6 pt-2">
         <div className="mb-6">
           <p className="text-slate-400 text-sm">Total Net Balance</p>
