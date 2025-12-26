@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface Subscription {
   id: string;
   store_id: string;
-  status: 'active' | 'inactive' | 'past_due';
-  current_period_start: string;
-  current_period_end: string;
+  status: "PENDING" | "PAID" | "EXPIRED" | "active"; // Added 'active' just in case legacy
+  amount_paid: number;
+  start_date: string;
+  end_date: string; // Changed from current_period_end to match Supabase schema
 }
 
 export interface SubscriptionPayment {
@@ -31,11 +32,15 @@ export function useSubscription() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { fetchSubscriptionData } = await import("@/app/actions/subscription");
+      // We import the fetcher server action
+      const { fetchSubscriptionData } = await import(
+        "@/app/actions/subscription"
+      );
       const result = await fetchSubscriptionData();
-      
+
       if (result.success) {
         setStoreId(result.storeId || null);
+
         setSubscription(result.subscription || null);
         setPayments(result.payments || []);
       }
@@ -46,36 +51,27 @@ export function useSubscription() {
     }
   };
 
-  const subscribeAction = async (): Promise<{ success: boolean; error?: string }> => {
+  const subscribeAction = async () => {
     if (!storeId) {
-      return { success: false, error: "Store ID not found. Please make sure you're logged in." };
+      alert("Store ID not found. Please reload.");
+      return;
     }
 
     try {
       setLoading(true);
-      
-      // Mock Payment Delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const { subscribe } = await import("@/app/actions/subscription");
-      const result = await subscribe(storeId);
+      // Import the Xendit Server Action
+      const { createXenditSubscription } = await import(
+        "@/app/actions/subscription"
+      );
 
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      // Refresh data
-      await fetchData();
-      return { success: true };
-
+      // This will trigger a redirect to Xendit.
+      // The code below this line won't execute if redirect happens successfully.
+      await createXenditSubscription(storeId);
     } catch (error) {
-      console.error("Subscription failed:", error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "An unknown error occurred. Please check the console for details.";
-      return { success: false, error: errorMessage };
-    } finally {
+      console.error("Subscription initiation failed:", error);
       setLoading(false);
+      alert("Failed to initialize payment. Please check console.");
     }
   };
 

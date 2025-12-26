@@ -31,23 +31,55 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: This reads the cookie and refreshes it if necessary
+  // 1. Authenticate User
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // 2. SUBSCRIPTION GUARD LOGIC
+  if (user) {
+    // Check if user belongs to a store
+    const { data: member } = await supabase
+      .from("members")
+      .select("store_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (member?.store_id) {
+      // Check subscription status for that store
+      const { data: sub } = await supabase
+        .from("store_subscriptions")
+        .select("status, end_date")
+        .eq("store_id", member.store_id)
+        .single();
+
+      const now = new Date();
+      const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+
+      // Consider active if status is PAID and date is in the future
+      const isActive = sub?.status === "PAID" && endDate && endDate > now;
+
+      // Define paths to exempt (so they don't get stuck in a redirect loop)
+      const isSubscriptionPage = request.nextUrl.pathname.startsWith(
+        "/dashboard/settings"
+      ); // Assuming settings is where subscription is
+      const isApiRoute = request.nextUrl.pathname.startsWith("/api");
+
+      // If inactive and NOT on the subscription page, redirect them
+      if (!isActive && !isSubscriptionPage && !isApiRoute) {
+        // Redirect to your subscription settings page
+        return NextResponse.redirect(
+          new URL("/dashboard/settings", request.url)
+        );
+      }
+    }
+  }
 
   return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
