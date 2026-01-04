@@ -17,19 +17,14 @@ export const TerminalHeader = ({ liveTime }: TerminalHeaderProps) => {
   const { watch } = useFormContext<PosFormValues>();
   const { items: allItems } = useItems();
   const { inventory: inventoryData } = useInventory();
-  
-const {user} = useAuthStore()
-  
-const currentBarcode = watch("barcode");
+  const { user } = useAuthStore();
+
+  const currentBarcode = watch("barcode");
 
   const currentProduct = useMemo(() => {
-    if (!currentBarcode) {
-      return { name: "NO ITEM", price: "₱0.00", stock: 0 };
-    }
+    if (!currentBarcode) return { name: "NO ITEM", price: "₱0.00", stock: 0 };
     const item = allItems.find((item) => item.sku === currentBarcode);
-    if (!item) {
-      return { name: "NOT FOUND", price: "₱0.00", stock: 0 };
-    }
+    if (!item) return { name: "NOT FOUND", price: "₱0.00", stock: 0 };
     const stockInfo = inventoryData?.find((inv) => inv.sku === currentBarcode);
     return {
       name: item.itemName.toUpperCase(),
@@ -38,28 +33,32 @@ const currentBarcode = watch("barcode");
     };
   }, [currentBarcode, allItems, inventoryData]);
 
-
-
   return (
-    <div className="flex flex-col justify-center items-center shadow-lg mb-4 px-4 py-1 rounded-md w-full min-h-[180px] font-retro retro-lcd-container retro-scanlines">
-      <h1 className="mt-1 font-bold text-retro-cyan text-2xl md:text-3xl uppercase leading-none tracking-widest">
-        POINT OF SALE
-      </h1>
-      <div className="opacity-70 my-1 retro-divider"></div>
-      <div className="flex justify-between items-center px-2 w-full text-retro-cyan text-lg md:text-xl leading-none tracking-wide">
-        <span className="max-w-[60%] truncate uppercase">{user ? user?.user_metadata?.first_name + " " + user?.user_metadata?.last_name : "Initializing..."}</span>
+    <div className="glass-effect flex flex-col justify-between items-center mb-4 px-6 py-4 rounded-xl w-full min-h-[200px] text-white shadow-xl">
+      {/* Header */}
+      <div className="flex justify-between items-center w-full text-cyan-400 text-xl font-semibold tracking-widest">
+        <span>{user ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : "Initializing..."}</span>
         <span>{liveTime}</span>
       </div>
-      <div className="flex justify-center items-center gap-6 drop-shadow-md my-2 w-full font-bold text-retro-cyan text-3xl md:text-4xl leading-none">
-        <span>{currentProduct.name}</span>
-        <span className="text-retro-cyan/90">{currentProduct.price}</span>
+
+      {/* Divider */}
+      <div className="w-full h-[2px] bg-cyan-400/60 my-2 rounded"></div>
+
+      {/* Item Display */}
+      <div className="flex flex-col items-center justify-center text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-cyan-300 tracking-wider">{currentProduct.name}</h1>
+        <p className="text-2xl md:text-3xl text-cyan-200 mt-1">{currentProduct.price}</p>
       </div>
-      <div className="opacity-70 my-1 retro-divider"></div>
-      <h2 className="mb-1 text-retro-cyan text-lg md:text-xl uppercase leading-none tracking-wide">
-        STOCKS AVAILABLE: {currentProduct.stock}
-      </h2>
+
+      {/* Inventory Status */}
+      <div className="mt-4 w-full text-center">
+        <p className={`text-lg md:text-xl font-medium tracking-wide ${currentProduct.stock === 0 ? "text-red-400" : "text-green-400"}`}>
+          STOCKS AVAILABLE: {currentProduct.stock}
+        </p>
+      </div>
     </div>
   );
 };
+
 
 export default TerminalHeader;

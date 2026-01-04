@@ -29,7 +29,7 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "JunFue POS",
+  title: "JunLink POS",
   description: "Next Gen Point of Sale",
 };
 

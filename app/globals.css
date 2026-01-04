@@ -248,4 +248,30 @@ body {
     box-shadow: 0 0 8px rgba(154, 237, 201, 0.8);
     margin: 0.25rem 0;
   }
+
+  /* Text Shine Animation */
+  @keyframes text-shine {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  .animate-text-shine {
+    background: linear-gradient(
+      to right,
+      #22d3ee 0%,
+      #818cf8 25%,
+      #c084fc 50%,
+      #818cf8 75%,
+      #22d3ee 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: text-shine 4s linear infinite;
+  }
 }

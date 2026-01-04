@@ -13,7 +13,7 @@ const LeftWindow = ({ leftWidth, isTransitioning }: LeftWindowProps) => {
       style={{ width: leftWidth }}
     >
       <div className="box-border pl-3 pr-1.5 py-3 w-full h-full">
-        <div className="w-full h-full glass-effect rounded-3xl overflow-hidden relative">
+        <div className="w-full h-full rounded-3xl overflow-hidden relative">
           {isTransitioning ? (
             <WindowLoading />
           ) : (

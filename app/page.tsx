@@ -79,7 +79,7 @@ export default function HomePage() {
       {/* 1. HEADER SECTION */}
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="font-bold text-4xl tracking-tight">Home</h1>
+          <h1 className="font-bold text-4xl tracking-tight animate-text-shine">JUNLINK</h1>
           <p className="mt-2 text-slate-400 text-base">
             {user
               ? `Welcome back, ${user.user_metadata?.first_name || "Admin"}`
