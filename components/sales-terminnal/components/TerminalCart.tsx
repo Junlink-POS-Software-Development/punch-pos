@@ -32,7 +32,7 @@ type CustomFormatterProps<R> = {
   column: DeleteColumn<R>;
 };
 
-const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
+export const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
   return (
     <button
       type="button"
@@ -42,6 +42,68 @@ const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>) => {
     >
       <XCircle size={18} />
     </button>
+  );
+};
+
+const EditablePriceCell = ({ 
+  initialValue, 
+  onUpdate 
+}: { 
+  initialValue: number; 
+  onUpdate: (val: number) => void; 
+}) => {
+  const [value, setValue] = useState(initialValue.toString());
+  const [error, setError] = useState(false);
+
+  // Sync with external changes
+  React.useEffect(() => {
+    setValue(initialValue.toString());
+  }, [initialValue]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    setValue(newVal);
+    
+    // Check if it's a valid number
+    if (newVal === "" || isNaN(Number(newVal))) {
+      setError(true);
+    } else {
+      setError(false);
+    }
+  };
+
+  const handleBlur = () => {
+    if (error || value === "") {
+      // Reset to original value if invalid
+      setValue(initialValue.toString());
+      setError(false);
+    } else {
+      // Commit valid value
+      onUpdate(Number(value));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      className={`w-full bg-slate-800 text-white px-1 py-0.5 rounded border outline-none text-right transition-colors ${
+        error 
+          ? "border-red-500 focus:border-red-500" 
+          : "border-slate-600 focus:border-cyan-500"
+      }`}
+      value={value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      onClick={(e) => e.stopPropagation()}
+      autoFocus
+    />
   );
 };
 
@@ -79,17 +141,9 @@ export const TerminalCart = ({ rows, onRemoveItem, onUpdateItem }: TerminalCartP
       renderCell: ({ row }) => {
         if (isPriceEditingEnabled && isEditingActive) {
           return (
-            <input
-              type="number"
-              className="w-full bg-slate-800 text-white px-1 py-0.5 rounded border border-slate-600 focus:border-cyan-500 outline-none text-right"
-              value={row.unitPrice}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                if (!isNaN(val)) {
-                  onUpdateItem(row.sku, { unitPrice: val });
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
+            <EditablePriceCell 
+              initialValue={row.unitPrice} 
+              onUpdate={(newPrice) => onUpdateItem(row.sku, { unitPrice: newPrice })} 
             />
           );
         }

@@ -151,8 +151,23 @@ export const usePosForm = (): UsePosFormReturn => {
   };
 
   // --- SUBMISSION HANDLER ---
-  const onDoneSubmit: SubmitHandler<PosFormValues> = async (data) => {
+  const onDoneSubmit: SubmitHandler<PosFormValues> = async (data, event) => {
     console.log("📝 [Form] onDoneSubmit triggered", data);
+
+    // Prevent submission on Enter key for non-voucher inputs
+    if (event) {
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement && activeElement.tagName === "INPUT") {
+        const name = activeElement.getAttribute("name");
+        console.log(`[Form] Submission attempt from input: ${name}`);
+        if (name !== "voucher") {
+          console.log(
+            "[Form] Blocking submission from non-voucher input. Only voucher input can trigger submit via Enter."
+          );
+          return;
+        }
+      }
+    }
 
     // 3. VALIDATE USER SESSION
     if (!user || !user.id) {
