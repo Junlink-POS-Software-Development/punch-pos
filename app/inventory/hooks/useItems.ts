@@ -16,9 +16,15 @@ export const useItems = () => {
     data: items = [],
     isLoading,
     error,
-  } = useSWR<Item[]>("items", fetchItems);
+  } = useSWR<Item[]>("items", async () => {
+    console.log("Fetching items...");
+    const data = await fetchItems();
+    console.log("Fetched items:", data);
+    return data;
+  });
 
   const handleSuccess = (operation: string, callback?: () => void) => {
+    console.log(`${operation} successful`);
     mutate("items");
     setIsProcessing(false);
     if (callback) callback();
@@ -39,6 +45,7 @@ export const useItems = () => {
     item: Item,
     options?: { onSuccess?: () => void; onError?: (err: Error) => void }
   ) => {
+    console.log("Adding item:", item);
     setIsProcessing(true);
     try {
       await insertItem(item);
@@ -52,6 +59,7 @@ export const useItems = () => {
     item: Item,
     options?: { onSuccess?: () => void; onError?: (err: Error) => void }
   ) => {
+    console.log("Updating item:", item);
     setIsProcessing(true);
     try {
       await updateItem(item);
@@ -65,6 +73,7 @@ export const useItems = () => {
     id: string,
     options?: { onSuccess?: () => void; onError?: (err: Error) => void }
   ) => {
+    console.log("Deleting item ID:", id);
     setIsProcessing(true);
     try {
       await deleteItem(id);

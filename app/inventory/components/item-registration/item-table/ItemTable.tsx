@@ -2,8 +2,8 @@
 
 "use client";
 
-import React, { useMemo } from "react";
-import { DataGrid, Column } from "react-data-grid";
+import React, { useMemo, useState, useCallback } from "react";
+import { DataGrid, Column, RenderEditCellProps } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 import { XCircle } from "lucide-react";
 import { Item } from "../utils/itemTypes";
@@ -18,13 +18,52 @@ interface ItemTableProps {
   data: Item[];
   onEdit: (index: number) => void;
   onDelete: (index: number) => void;
+  onSaveEdit?: (item: Item) => void;
+}
+
+// Text editor for editable cells
+function TextEditor<T>({ row, column, onRowChange, onClose }: RenderEditCellProps<T>) {
+  const value = row[column.key as keyof T];
+  return (
+    <input
+      className="w-full h-full bg-gray-800 text-white border border-blue-500 rounded px-2 outline-none"
+      autoFocus
+      value={value as string ?? ""}
+      onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
+      onBlur={() => onClose(true)}
+    />
+  );
+}
+
+// Number editor for costPrice and lowStockThreshold
+function NumberEditor<T>({ row, column, onRowChange, onClose }: RenderEditCellProps<T>) {
+  const value = row[column.key as keyof T];
+  return (
+    <input
+      type="number"
+      className="w-full h-full bg-gray-800 text-white border border-blue-500 rounded px-2 outline-none"
+      autoFocus
+      value={value as number ?? ""}
+      onChange={(e) => {
+        const val = e.target.value === "" ? null : parseFloat(e.target.value);
+        onRowChange({ ...row, [column.key]: val });
+      }}
+      onBlur={() => onClose(true)}
+    />
+  );
 }
 
 export const ItemTable: React.FC<ItemTableProps> = ({
   data,
   onEdit,
   onDelete,
+  onSaveEdit,
 }) => {
+  // State for tracking which row is being edited
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  // State for the edited row data
+  const [editedRow, setEditedRow] = useState<Item | null>(null);
+
   // 1. Use the Hook
   const {
     paginatedRows,
@@ -43,6 +82,43 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     setRowsPerPage,
     setCurrentPage,
   } = useProcessedItems(data);
+
+  // Handle entering edit mode
+  const handleStartEdit = useCallback((row: Item) => {
+    setEditingRowId(row.id!);
+    setEditedRow({ ...row });
+  }, []);
+
+  // Handle saving edits
+  const handleSaveEdit = useCallback(() => {
+    if (editedRow && onSaveEdit) {
+      onSaveEdit(editedRow);
+    }
+    setEditingRowId(null);
+    setEditedRow(null);
+  }, [editedRow, onSaveEdit]);
+
+  // Handle canceling edits
+  const handleCancelEdit = useCallback(() => {
+    setEditingRowId(null);
+    setEditedRow(null);
+  }, []);
+
+  // Handle row changes during inline editing
+  const handleRowsChange = useCallback((rows: Item[]) => {
+    const changedRow = rows.find((r) => r.id === editingRowId);
+    if (changedRow) {
+      setEditedRow(changedRow);
+    }
+  }, [editingRowId]);
+
+  // Merge edited row into displayed rows
+  const displayRows = useMemo(() => {
+    if (!editingRowId || !editedRow) return paginatedRows;
+    return paginatedRows.map((row) => 
+      row.id === editingRowId ? editedRow : row
+    );
+  }, [paginatedRows, editingRowId, editedRow]);
 
   // 2. Define Columns
   const columns: Column<Item>[] = useMemo(() => {
@@ -70,32 +146,44 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       ),
     });
 
+    const createEditableColumn = (
+      key: keyof Item,
+      name: string,
+      width?: number,
+      isNumber: boolean = false
+    ): Column<Item> => ({
+      ...createColumn(key, name, width),
+      editable: (row) => row.id === editingRowId,
+      renderEditCell: isNumber ? NumberEditor : TextEditor,
+    });
+
     return [
-      createColumn("itemName", "Item Name"),
-      createColumn("sku", "SKU / Barcode"),
-      createColumn("categoryName", "Category"),
+      createEditableColumn("itemName", "Item Name"),
+      createEditableColumn("sku", "SKU / Barcode"),
       {
-        ...createColumn("costPrice", "Cost Price", 120),
+        ...createColumn("categoryName", "Category"),
+        // Category is not editable inline (needs dropdown)
+      },
+      {
+        ...createEditableColumn("costPrice", "Cost Price", 120, true),
         renderCell: ({ row }) =>
           typeof row.costPrice === "number"
             ? `₱${row.costPrice.toFixed(2)}`
             : "N/A",
       },
-      // --- NEW COLUMN ADDED HERE ---
       {
-        ...createColumn("lowStockThreshold", "Low Stock", 110),
+        ...createEditableColumn("lowStockThreshold", "Low Stock", 110, true),
         renderCell: ({ row }) => (
           <div className="text-center">
              {row.lowStockThreshold ?? "—"}
           </div>
         )
       },
-      // -----------------------------
-      createColumn("description", "Description"),
+      createEditableColumn("description", "Description"),
       {
         key: "actions",
         name: "Actions",
-        width: 100,
+        width: 120,
         headerCellClass: headerClass,
         renderCell: ({ row }) => (
           <ItemActions
@@ -103,11 +191,15 @@ export const ItemTable: React.FC<ItemTableProps> = ({
             data={data}
             onEdit={onEdit}
             onDelete={onDelete}
+            isEditing={row.id === editingRowId}
+            onStartEdit={() => handleStartEdit(row)}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
           />
         ),
       },
     ];
-  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete, sortState, handleSort]);
+  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete, sortState, handleSort, editingRowId, handleStartEdit, handleSaveEdit, handleCancelEdit]);
 
   // 3. Render
   return (
@@ -130,13 +222,14 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       {/* The Grid */}
       <DataGrid<Item>
         columns={columns}
-        rows={paginatedRows}
+        rows={displayRows}
         rowKeyGetter={(row) => row.id!}
         className="border-none"
         style={{ height: "63vh" }}
-        rowClass={(_, index) =>
-          `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800`
+        rowClass={(row, index) =>
+          `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800 ${row.id === editingRowId ? "ring-1 ring-blue-500/50 bg-blue-500/10" : ""}`
         }
+        onRowsChange={handleRowsChange}
       />
 
       {/* Pagination Footer */}

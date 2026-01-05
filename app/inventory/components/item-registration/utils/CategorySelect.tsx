@@ -81,12 +81,14 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   // --- HANDLERS ---
   
   const handleSelect = (categoryId: string, categoryName: string) => {
+    console.log("📝 [CategorySelect] handleSelect triggered", { categoryId, categoryName });
     onChange(categoryId); // Send UUID to parent
     setSearch(categoryName); // Show Name to user
     setIsOpen(false);
   };
 
   const handleCreate = async () => {
+    console.log("📝 [CategorySelect] handleCreate triggered", { search });
     if (!search.trim()) return;
     try {
       setActionLoading(true);
@@ -112,6 +114,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   };
 
   const saveEdit = async (e: React.MouseEvent) => {
+    console.log("📝 [CategorySelect] saveEdit triggered", { editingId, editValue });
     e.stopPropagation();
     if (!editingId || !editValue.trim()) return;
     try {
@@ -132,6 +135,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
+    console.log("📝 [CategorySelect] handleDelete triggered", { id });
     e.stopPropagation();
     if (!confirm("Are you sure? This cannot be undone.")) return;
     try {
@@ -207,10 +211,10 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
                         onChange={e => setEditValue(e.target.value)}
                         autoFocus
                     />
-                    <button onClick={saveEdit} disabled={actionLoading} className="text-green-400 hover:text-green-300">
+                    <button type="button" onClick={saveEdit} disabled={actionLoading} className="text-green-400 hover:text-green-300">
                         {actionLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Check className="w-3 h-3"/>}
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="text-red-400 hover:text-red-300">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="text-red-400 hover:text-red-300">
                         <X className="w-3 h-3"/>
                     </button>
                 </div>
@@ -223,6 +227,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
                   
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
+                        type="button"
                         onClick={(e) => startEdit(e, cat)}
                         className="p-1 hover:bg-slate-700 rounded text-blue-400" 
                         title="Edit"
@@ -230,6 +235,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
                         <Edit2 className="w-3 h-3" />
                     </button>
                     <button 
+                        type="button"
                         onClick={(e) => handleDelete(e, cat.id)}
                         className="p-1 hover:bg-slate-700 rounded text-red-400" 
                         title="Delete"

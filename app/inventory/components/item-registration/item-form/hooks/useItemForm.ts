@@ -50,6 +50,7 @@ export const useItemForm = ({
 
   // Custom submission logic with async validation
   const onSubmitLogic = async (formData: Item) => {
+    console.log("📝 [ItemForm] onSubmitLogic triggered", formData);
     let hasError = false;
 
     // Check 1: Item Name Existence
@@ -105,7 +106,8 @@ export const useItemForm = ({
     const target = e.target as HTMLElement;
     const form = e.currentTarget;
 
-    if (target.tagName === "TEXTAREA" && e.key === "Enter" && e.shiftKey) {
+    // Allow Shift + Enter to submit from ANY input or textarea
+    if ((target.tagName === "TEXTAREA" || target.tagName === "INPUT") && e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
       form.requestSubmit();
       return;

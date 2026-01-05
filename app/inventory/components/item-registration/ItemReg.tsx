@@ -55,6 +55,13 @@ const ItemReg = () => {
   const handleEdit = (index: number) => setEditingIndex(index);
   const handleCancelEdit = () => setEditingIndex(null);
 
+  // Handle inline edit save from the table
+  const handleSaveInlineEdit = (updatedItem: Item) => {
+    if (updatedItem.id) {
+      editItem(updatedItem);
+    }
+  };
+
   const itemToEdit = editingIndex !== null ? items[editingIndex] : undefined;
 
   return (
@@ -81,7 +88,12 @@ const ItemReg = () => {
       {/* Table Section */}
       {!isLoading && items.length > 0 && (
         <div className="p-6 glass-effect">
-          <ItemTable data={items} onEdit={handleEdit} onDelete={handleDelete} />
+          <ItemTable 
+            data={items} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete}
+            onSaveEdit={handleSaveInlineEdit}
+          />
         </div>
       )}
 
