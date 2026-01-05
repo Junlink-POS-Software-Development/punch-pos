@@ -37,12 +37,15 @@ export function useSubscription() {
         "@/app/actions/subscription"
       );
       const result = await fetchSubscriptionData();
+      console.log("fetchSubscriptionData result:", result);
 
       if (result.success) {
         setStoreId(result.storeId || null);
 
         setSubscription(result.subscription || null);
         setPayments(result.payments || []);
+      } else {
+        console.error("fetchSubscriptionData failed:", result.error);
       }
     } catch (error) {
       console.error("Error in fetchSubscriptionData:", error);

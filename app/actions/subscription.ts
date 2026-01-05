@@ -10,26 +10,44 @@ export async function fetchSubscriptionData() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) {
+    console.error("fetchSubscriptionData: Not authenticated");
+    return { success: false, error: "Not authenticated" };
+  }
 
-  // Get Store
-  const { data: member } = await supabase
-    .from("members")
+  // UPDATED: Get Store ID directly from the 'users' table
+  // This is the source of truth and avoids RLS recursion on the members table.
+  const { data: userData, error: userError } = await supabase
+    .from("users")
     .select("store_id")
     .eq("user_id", user.id)
     .single();
 
-  if (!member) return { success: false, error: "No store found" };
+  if (userError) {
+    console.error("fetchSubscriptionData: Error fetching user data", userError);
+    return { success: false, error: "Failed to fetch user data" };
+  }
+
+  if (!userData?.store_id) {
+    console.error("fetchSubscriptionData: No store_id found on user record");
+    return { success: false, error: "No store found" };
+  }
+
+  const storeId = userData.store_id;
+  console.log("fetchSubscriptionData: Found store_id", storeId);
 
   // Get Subscription
-  const { data: subscription } = await supabase
+  const { data: subscription, error: subError } = await supabase
     .from("store_subscriptions")
     .select("*")
-    .eq("store_id", member.store_id)
-    .single();
+    .eq("store_id", storeId)
+    .maybeSingle();
 
-  // Get Payments (Optional: you might need a separate table or query based on invoice IDs if you save them)
-  // For now, let's just return the current subscription as a "payment" history item if it exists
+  if (subError) {
+    console.error("fetchSubscriptionData: Subscription query error", subError);
+  }
+
+  // Get Payments (Optional: returning the current subscription as a history item)
   const payments = subscription
     ? [
         {
@@ -44,11 +62,12 @@ export async function fetchSubscriptionData() {
 
   return {
     success: true,
-    storeId: member.store_id,
+    storeId: storeId,
     subscription,
     payments,
   };
 }
+
 
 // 2. Xendit Payment Creator
 export async function createXenditSubscription(storeId: string) {
@@ -58,15 +77,23 @@ export async function createXenditSubscription(storeId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  // Verify Member
-  const { data: member } = await supabase
-    .from("members")
-    .select("email")
+  // FIX: Fetch from 'users' table instead of 'members'
+  // This works for both Store Owners and Team Members
+  const { data: userData, error } = await supabase
+    .from("users")
+    .select("email, store_id")
     .eq("user_id", user.id)
-    .eq("store_id", storeId)
     .single();
 
-  if (!member) throw new Error("Unauthorized");
+  if (error || !userData) {
+    console.error("User lookup failed:", error);
+    throw new Error("User not found");
+  }
+
+  // Security Check: Ensure the user actually belongs to this store
+  if (userData.store_id !== storeId) {
+    throw new Error("Unauthorized: You do not belong to this store");
+  }
 
   // Xendit Logic
   const externalId = `sub_${storeId}_${Date.now()}`;
@@ -76,9 +103,9 @@ export async function createXenditSubscription(storeId: string) {
 
   const payload = {
     external_id: externalId,
-    amount: 450,
-    payer_email: member.email || "customer@example.com",
-    description: `Monthly Subscription for Store (User: ${user.email})`,
+    amount: 500,
+    payer_email: userData.email || "customer@example.com",
+    description: `Monthly Subscription for Store (User: ${userData.email})`,
     invoice_duration: 86400,
     success_redirect_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings?payment=success`,
     failure_redirect_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings?payment=failure`,
