@@ -1,25 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import dayjs from "dayjs";
 import { SourceBreakdownTable } from "./SourceBreakdownTable";
 import { BreakdownChart } from "./BreakdownChart";
 import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
 import { Loader2, Filter } from "lucide-react";
 import { useExpensesBreakdown } from "../../hooks/useExpensesBreakdown";
+import { useDashboardDateStore } from "@/app/dashboard/store/useDashboardDateStore";
 
 export const ExpensesBreakdown = () => {
-  // 1. Initialize local state
-  const today = dayjs().format("YYYY-MM-DD");
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
+  // 1. Use shared date store for uniform date values across components
+  const { startDate, endDate, setDateRange } = useDashboardDateStore();
 
   // 2. We only store the user's *intent* to select a specific source.
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
 
   const handleDateChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
+    setDateRange(start, end);
   };
 
   const { data, loading } = useExpensesBreakdown(startDate, endDate);
