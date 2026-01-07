@@ -14,8 +14,8 @@ type ControlsProps = {
 const ArrowRightIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
+    width="24"
+    height="24"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -31,8 +31,8 @@ const ArrowRightIcon = () => (
 const ArrowLeftIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
+    width="24"
+    height="24"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -61,6 +61,24 @@ export function SplitScreenControls({
     setIsSplit(newState === 1);
   };
 
+  // --- MOBILE / TOUCH LAYOUT ---
+  // Persistent, bottom-left, icon-only button
+  if (isMobile) {
+    return (
+      <div className="fixed bottom-6 left-6 z-50">
+        <button
+          onClick={onToggleClick}
+          className="flex items-center justify-center w-12 h-12 bg-white shadow-xl rounded-full text-blue-600 active:scale-90 transition-transform border border-blue-100/50"
+          aria-label={mobileView === "left" ? "Hide Terminal" : "Show Terminal"}
+        >
+          {mobileView === "left" ? <ArrowLeftIcon /> : <ArrowRightIcon />}
+        </button>
+      </div>
+    );
+  }
+
+  // --- DESKTOP LAYOUT ---
+  // Centered, pill-shaped, reveals on hover
   return (
     <div className="group bottom-0 left-1/2 z-10 absolute flex justify-center items-center w-72 h-20 -translate-x-1/2 will-change-transform">
       <div
@@ -70,43 +88,23 @@ export function SplitScreenControls({
           group-hover:opacity-100
         `}
       >
-        {isMobile ? (
-          <button
-            onClick={onToggleClick}
-            className="flex justify-center items-center gap-2 bg-white/80 shadow-lg backdrop-blur-sm px-4 py-2 rounded-full font-semibold text-blue-600 active:scale-95 transition-transform"
-            aria-label="Toggle view"
-          >
-            {mobileView === "left" ? (
-              <>
-                <span>Hide Terminal</span>
-                <ArrowLeftIcon />
-              </>
-            ) : (
-              <>
-                <ArrowRightIcon />
-                <span>View Terminal</span>
-              </>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={handleToggle}
-            className="flex justify-center items-center gap-2 bg-white/80 shadow-lg backdrop-blur-sm px-4 py-2 rounded-full font-semibold text-blue-600 active:scale-95 transition-transform"
-            aria-label="Toggle view"
-          >
-            {viewState === 1 ? (
-              <>
-                <span>Hide Terminal</span>
-                <ArrowLeftIcon />
-              </>
-            ) : (
-              <>
-                <ArrowRightIcon />
-                <span>Show Terminal</span>
-              </>
-            )}
-          </button>
-        )}
+        <button
+          onClick={handleToggle}
+          className="flex justify-center items-center gap-2 bg-white/80 shadow-lg backdrop-blur-sm px-4 py-2 rounded-full font-semibold text-blue-600 active:scale-95 transition-transform"
+          aria-label="Toggle view"
+        >
+          {viewState === 1 ? (
+            <>
+              <span>Hide Terminal</span>
+              <ArrowLeftIcon />
+            </>
+          ) : (
+            <>
+              <ArrowRightIcon />
+              <span>Show Terminal</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
