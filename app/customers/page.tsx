@@ -1,6 +1,6 @@
 import React from "react";
 import { fetchCustomerFeatureData } from "./api/services";
-import CustomerFeatureLayout from "./components/CustomerFeatureLayout";
+import CustomerFeatureLayout from "./CustomerFeatureLayout";
 
 export default async function CustomerPage() {
   // 1. Fetch data on the server (Server Side Rendering)

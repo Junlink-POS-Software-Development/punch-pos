@@ -1,9 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
-import { useMediaQuery } from "@/app/hooks/useMediaQuery";
-import { useViewStore } from "../window-layouts/store/useViewStore";
 import FormFields from "./components/FormFields";
 
 import TerminalHeader from "./components/TerminalHeader";
@@ -14,11 +10,10 @@ import TerminalCart from "./components/TerminalCart";
 import { usePosForm } from "./components/form/usePosForm";
 import SuccessReceiptModal from "./utils/SuccessReceiptModal";
 import ErrorMessage from "./components/ErrorMessage";
+// 1. Import the new hook
+import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts"; // Adjust path as needed
 
 const SalesTerminal = () => {
-  const { isSplit } = useViewStore();
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
   const {
     methods,
     cartItems,
@@ -35,28 +30,9 @@ const SalesTerminal = () => {
     clearErrorMessage,
   } = usePosForm();
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClear();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClear]);
-
-
-  function ScreenLogic() {
-    if (isSplit && !isMobile) {
-      return "grid-rows-2";
-    } else if (!isSplit && !isMobile) {
-      return "grid-cols-2";
-    }
-    return "";
-  }
+  // 2. Call the hook and pass the onClear function
+  // This replaces the previous useEffect for the "Escape" key
+  useTerminalShortcuts({ onClear });
 
   return (
     <div className="relative flex flex-col p-1 h-full">
@@ -75,9 +51,9 @@ const SalesTerminal = () => {
             />
           </div>
           <div className="border border-primary-light rounded-2xl w-full h-full overflow-hidden">
-            <TerminalCart 
-              rows={cartItems} 
-              onRemoveItem={onRemoveItem} 
+            <TerminalCart
+              rows={cartItems}
+              onRemoveItem={onRemoveItem}
               onUpdateItem={onUpdateItem}
             />
           </div>
