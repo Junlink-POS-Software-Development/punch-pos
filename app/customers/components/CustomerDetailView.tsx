@@ -158,7 +158,9 @@ export const CustomerDetailView = () => {
                       <Image
                         src={docUrl}
                         alt={`Document ${idx + 1}`}
-                        className="opacity-80 group-hover:opacity-100 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 640px) 50vw, 33vw"
+                        className="opacity-80 group-hover:opacity-100 object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 flex justify-center items-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded font-medium text-white text-xs">
@@ -204,7 +206,7 @@ export const CustomerDetailView = () => {
           <button className="top-4 right-4 absolute hover:bg-white/10 p-2 rounded-full text-white hover:text-gray-300 transition-colors">
             <X size={32} />
           </button>
-          <Image
+          <img
             src={previewImage}
             alt="Preview"
             className="shadow-2xl rounded-lg max-w-full max-h-[90vh] object-contain"
