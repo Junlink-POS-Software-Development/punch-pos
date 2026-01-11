@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { UseFormReturn, Controller } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, CalendarClock, AlertCircle } from "lucide-react";
 import { ExpenseInput } from "../../lib/expenses.api";
 import { ClassificationSelect } from "../../utils/ClassificationSelect";
+
+import dayjs from "dayjs";
+import { useStaffPermissions } from "@/app/settings/backdating/stores/useStaffPermissions";
+import { useTransactionStore } from "@/app/settings/backdating/stores/useTransactionStore";
 
 export interface CategoryItem {
   id: string | number;
@@ -33,7 +37,7 @@ interface CashoutFormProps {
     ) => void;
     setRef: (key: keyof CashoutRefs, node: HTMLElement | null) => void;
   };
-  isWide?: boolean; // <--- Add this line
+  isWide?: boolean;
 }
 
 export const CashoutForm = ({
@@ -43,16 +47,44 @@ export const CashoutForm = ({
   isSubmitting,
   isCategoriesLoading,
   handlers,
-  isWide = false, // <--- Add this line
+  isWide = false,
 }: CashoutFormProps) => {
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = form;
 
+  // [NEW] 1. Get Permission and Store Data
+  const { canBackdate, isLoading: isPermsLoading } = useStaffPermissions();
+  const { customTransactionDate } = useTransactionStore();
+
   const { onSubmit, handleKeyDown, setRef } = handlers;
+
+  // [NEW] 2. Intelligent Date Handling
+  useEffect(() => {
+    // Wait for permissions to load
+    if (isPermsLoading) return;
+
+    const today = dayjs().format("YYYY-MM-DD");
+
+    if (!canBackdate) {
+      // CASE A: No Permission -> Force Date to Today
+      setValue("transaction_date", today);
+    } else {
+      // CASE B: Has Permission -> Check if Global Session is active
+      if (customTransactionDate) {
+        // Auto-fill from the global "Backdating Session"
+        setValue(
+          "transaction_date",
+          dayjs(customTransactionDate).format("YYYY-MM-DD")
+        );
+      }
+      // Else: Leave it blank or whatever user types (User has freedom)
+    }
+  }, [canBackdate, customTransactionDate, isPermsLoading, setValue]);
 
   const { ref: amountHookRef, ...amountRest } = register("amount", {
     required: true,
@@ -70,12 +102,24 @@ export const CashoutForm = ({
 
   return (
     <div className="relative p-6 h-full glass-effect">
-      <h2 className="mb-4 font-semibold text-white text-xl">
-        Register New Expense
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-semibold text-white text-xl">
+          Register New Expense
+        </h2>
+
+        {/* [NEW] Session Indicator Badge */}
+        {canBackdate && customTransactionDate && (
+          <div className="flex items-center gap-2 bg-amber-950/40 px-3 py-1.5 border border-amber-500/20 rounded-full text-amber-400 text-xs animate-pulse">
+            <CalendarClock className="w-3 h-3" />
+            <span className="font-bold uppercase tracking-wide">
+              Backdating Active
+            </span>
+          </div>
+        )}
+      </div>
+
       <form
         className={`gap-x-6 gap-y-2 grid grid-cols-1 md:grid-cols-2 ${
-          // Switch between 2-column grid (fullscreen/split) and 3-column grid (standard)
           isWide ? "xl:grid-cols-2" : "xl:grid-cols-3"
         }`}
       >
@@ -188,11 +232,21 @@ export const CashoutForm = ({
           />
         </div>
 
-        {/* 5. Date */}
+        {/* 5. Date (Logic Applied Here) */}
         <div className="relative pb-5">
-          <label className="block mb-2 font-medium text-slate-300 text-sm">
-            Date
-          </label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block font-medium text-slate-300 text-sm">
+              Date
+            </label>
+            {/* Show Lock Icon if No Permission */}
+            {!canBackdate && !isPermsLoading && (
+              <div className="flex items-center gap-1 bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-500">
+                <Lock className="w-3 h-3" />
+                <span>Locked</span>
+              </div>
+            )}
+          </div>
+
           <input
             type="date"
             {...dateRest}
@@ -201,8 +255,14 @@ export const CashoutForm = ({
               setRef("date", e);
             }}
             onKeyDown={(e) => handleKeyDown(e, refs.submitBtn)}
+            // [NEW] Logic: Disable if user cannot backdate
+            disabled={!canBackdate}
             className={`w-full input-dark ${
               errors.transaction_date ? "border-red-500" : ""
+            } ${
+              !canBackdate
+                ? "opacity-50 cursor-not-allowed bg-slate-900/50 text-slate-500"
+                : "cursor-pointer focus:ring-cyan-500"
             }`}
           />
           {errors.transaction_date && (
@@ -212,7 +272,7 @@ export const CashoutForm = ({
           )}
         </div>
 
-        {/* 6. Notes - Always takes full width in 2-column layout */}
+        {/* 6. Notes */}
         <div
           className={`relative pb-5 md:col-span-2 ${
             isWide ? "xl:col-span-2" : "xl:col-span-1"
