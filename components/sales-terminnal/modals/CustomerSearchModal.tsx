@@ -11,6 +11,16 @@ export type CustomerResult = {
   phone_number?: string;
 };
 
+// [NEW] Define the expected shape from the database query
+interface CustomerSearchRow {
+  id: string;
+  full_name: string;
+  phone_number: string | null;
+  customer_groups: {
+    name: string;
+  } | null; // Supabase returns an object for Many-to-One relations
+}
+
 interface CustomerSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,12 +70,18 @@ export const CustomerSearchModal = ({
 
         if (error) throw error;
 
-        const mapped = (data || []).map((c: any) => ({
+        // [FIX] Use the interface instead of 'any'
+        // We cast 'data' to unknown first to safely cast to our specific type array
+        // or just type the argument 'c' if data is loosely typed.
+        const rows = (data || []) as unknown as CustomerSearchRow[];
+
+        const mapped = rows.map((c) => ({
           id: c.id,
           full_name: c.full_name,
-          phone_number: c.phone_number,
+          phone_number: c.phone_number ?? undefined, // Convert null to undefined for optional type
           group_name: c.customer_groups?.name,
         }));
+
         setResults(mapped);
       } catch (err) {
         console.error("Search error:", err);
