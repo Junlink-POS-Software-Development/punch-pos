@@ -1,0 +1,101 @@
+import React from "react";
+import { useCustomerData } from "../hooks/useCustomerData";
+import { Calendar, User, FileText, Search } from "lucide-react";
+
+export const GuestTransactionsTable = () => {
+  const { guestTransactions, isLoading } = useCustomerData();
+
+  if (isLoading) {
+    return (
+      <div className="p-10 text-slate-500 text-center">Loading records...</div>
+    );
+  }
+
+  if (guestTransactions.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center bg-slate-800/20 border-2 border-slate-700/50 border-dashed rounded-xl h-96">
+        <div className="bg-slate-800 mb-3 p-4 rounded-full">
+          <Search className="w-8 h-8 text-slate-500" />
+        </div>
+        <p className="font-medium text-slate-400 text-lg">
+          No Guest Transactions Found
+        </p>
+        <p className="text-slate-600 text-sm">
+          Any transaction without a linked customer ID will appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Table Container */}
+      <div className="flex-1 bg-slate-900 shadow-xl border border-slate-700 rounded-xl overflow-hidden">
+        <div className="h-full overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="top-0 z-10 sticky bg-slate-950 font-medium text-slate-400 text-xs uppercase">
+              <tr>
+                <th className="bg-slate-950 px-6 py-4">Invoice #</th>
+                <th className="bg-slate-950 px-6 py-4">Customer Name</th>
+                <th className="bg-slate-950 px-6 py-4">Date & Time</th>
+                <th className="bg-slate-950 px-6 py-4 text-right">
+                  Total Amount
+                </th>
+                <th className="bg-slate-950 px-6 py-4 text-center">Cashier</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/50">
+              {guestTransactions.map((tx) => (
+                <tr
+                  key={tx.invoice_no}
+                  className="group hover:bg-slate-800/40 transition-colors"
+                >
+                  <td className="px-6 py-4 font-mono font-medium text-cyan-400">
+                    {tx.invoice_no}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-slate-200">
+                    <div className="flex items-center gap-2">
+                      <div className="flex justify-center items-center bg-amber-500/10 rounded-full w-8 h-8 text-amber-500 shrink-0">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <span>{tx.customer_name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="opacity-50 w-4 h-4" />
+                      <span className="whitespace-nowrap">
+                        {new Date(tx.transaction_time).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <span className="bg-emerald-500/10 px-2 py-1 rounded font-mono font-medium text-emerald-400">
+                      ₱
+                      {Number(tx.grand_total).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-500 text-xs text-center">
+                    <span
+                      title={tx.cashier_id}
+                      className="border-slate-600 border-b border-dotted cursor-help"
+                    >
+                      View ID
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -8,6 +8,15 @@ export type CustomerGroup = {
 
 import { z } from "zod";
 
+export interface GuestTransaction {
+  store_id: string;
+  invoice_no: string;
+  customer_name: string;
+  grand_total: number;
+  transaction_time: string; // ISO String from DB
+  cashier_id: string;
+}
+
 export const customerSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   phone_number: z.string().optional().or(z.literal("")),
