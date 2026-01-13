@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Folder, FolderPlus, Layers, Trash2, Users, Edit2, Check, X } from "lucide-react";
+import { Folder, FolderPlus, Layers, Trash2, Users, Edit2, Check, X, ChevronLeft } from "lucide-react";
 import { useCustomerStore } from "../store/useCustomerStore";
 import {
   useCustomerData,
@@ -7,7 +7,12 @@ import {
 } from "../hooks/useCustomerData";
 import { deleteGroup, renameCustomerGroup } from "../api/services";
 
-export const CustomerSidebar = () => {
+interface CustomerSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps) => {
   const { groups, customers } = useCustomerData();
   const { refreshData } = useCustomerMutations();
   const { selectedGroupId, setSelectedGroupId, openGroupModal } =
@@ -53,12 +58,24 @@ export const CustomerSidebar = () => {
       <div className="p-5 border-gray-700 border-b shrink-0">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-gray-100 text-lg">Groups</h2>
-          <button
-            onClick={openGroupModal}
-            className="bg-blue-600/20 hover:bg-blue-600 p-2 rounded-lg text-blue-400 hover:text-white transition"
-          >
-            <FolderPlus size={18} />
-          </button>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={openGroupModal}
+              className="bg-blue-600/20 hover:bg-blue-600 p-2 rounded-lg text-blue-400 hover:text-white transition"
+            >
+              <FolderPlus size={18} />
+            </button>
+            {/* Mobile Close Button */}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="lg:hidden bg-gray-700/50 hover:bg-gray-700 p-2 rounded-lg text-gray-400 hover:text-white transition"
+                aria-label="Close sidebar"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

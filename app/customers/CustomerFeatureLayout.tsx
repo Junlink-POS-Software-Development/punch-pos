@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { SWRConfig } from "swr";
 import Link from "next/link";
-import { ArrowBigLeft } from "lucide-react";
+import { ArrowBigLeft, Menu } from "lucide-react";
 
 // Components
 import { CustomerSidebar } from "./components/CustomerSidebar";
@@ -28,25 +28,56 @@ interface Props {
 }
 
 export default function CustomerFeatureLayout({ initialData }: Props) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <SWRConfig value={{ fallback: { "customer-feature-data": initialData } }}>
       <div className="flex flex-col bg-gray-900 max-w-screen h-screen overflow-hidden font-sans text-gray-100">
         {/* Top Nav (Fixed) */}
         <div className="px-6 py-3 border-gray-700 border-b shrink-0">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors"
-          >
-            <ArrowBigLeft size={20} />
-            Back to Dashboard
-          </Link>
+          <div className="flex justify-between items-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors"
+            >
+              <ArrowBigLeft size={20} />
+              Back to Dashboard
+            </Link>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-gray-400 hover:text-white transition"
+              aria-label="Open sidebar"
+            >
+              <Menu size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content Grid */}
-        <div className="flex-1 grid grid-cols-[280px_1fr] overflow-hidden">
-          {/* Sidebar (Fixed) */}
-          <div className="bg-gray-800 border-gray-700 border-r h-full overflow-hidden">
-            <CustomerSidebar />
+        <div className="flex-1 grid lg:grid-cols-[280px_1fr] grid-cols-1 overflow-hidden relative">
+          {/* Sidebar Overlay for Mobile */}
+          {isSidebarOpen && (
+            <div
+              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
+          {/* Sidebar (Fixed on desktop, sliding on mobile) */}
+          <div
+            className={`
+              bg-gray-800 border-gray-700 border-r h-full overflow-hidden
+              lg:relative lg:translate-x-0
+              fixed inset-y-0 left-0 z-50 w-[280px]
+              transition-transform duration-300 ease-in-out
+              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}
+          >
+            <CustomerSidebar 
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+            />
           </div>
 
           {/* Main Content Area */}
