@@ -1,20 +1,34 @@
 "use client";
-
 import React from "react";
-import { CashFlowEntry } from "../../lib/types";
+import { useDashboardMetrics } from "../../hooks/useDashboardMetrics";
 import { DragHandleProps } from "./DashboardGrid";
+import { Loader2 } from "lucide-react";
 
 interface Props {
-  totalExpenses: number;
-  cashFlow: CashFlowEntry[];
   dragHandleProps?: DragHandleProps;
 }
 
-const DailyExpensesCard = ({
-  totalExpenses,
-  cashFlow,
-  dragHandleProps,
-}: Props) => {
+const DailyExpensesCard = ({ dragHandleProps }: Props) => {
+  const { data: metrics, isLoading, error } = useDashboardMetrics();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full min-h-[200px]">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="flex justify-center items-center bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full min-h-[200px] text-red-400">
+        Error loading data
+      </div>
+    );
+  }
+
+  const { totalExpenses, cashFlow } = metrics;
+
   return (
     <div className="bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full overflow-hidden text-white">
       <div

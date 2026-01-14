@@ -3,7 +3,6 @@
 import React, { Suspense, useState } from "react";
 import { Loader2, ArrowBigLeft } from "lucide-react";
 import { FinancialReportContainer } from "./components/financial-report/FinancialReportContainer";
-import { useDashboardMetrics } from "./hooks/useDashboardMetrics";
 import { DashboardGrid } from "./components/overview/DashboardGrid";
 import Link from "next/link";
 import { InventorySummary } from "./components/overview/InventorySummary";
@@ -44,8 +43,6 @@ export function DashboardContent() {
 
   const [items, setItems] = useState<string[]>(DEFAULT_ITEMS);
 
-  const { data: metrics, isLoading, error } = useDashboardMetrics();
-
   return (
     <div className="space-y-6 mx-auto p-6 max-w-7xl">
       {/* Header & View Switcher */}
@@ -71,24 +68,10 @@ export function DashboardContent() {
       <div className="slide-in-from-bottom-4 animate-in duration-500 fade-in">
         {viewMode === "grid" ? (
           // GRID VIEW
-          isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-            </div>
-          ) : error ? (
-            <div className="p-10 text-red-400 text-center">
-              Error loading dashboard metrics.
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <DashboardGrid
-                metrics={metrics}
-                items={items}
-                onOrderChange={setItems}
-              />
-              <InventorySummary />
-            </div>
-          )
+          <div className="space-y-6">
+            <DashboardGrid items={items} onOrderChange={setItems} />
+            <InventorySummary />
+          </div>
         ) : (
           // REPORT VIEW
           <FinancialReportContainer />

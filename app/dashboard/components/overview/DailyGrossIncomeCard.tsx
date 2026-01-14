@@ -1,21 +1,38 @@
 "use client";
-
 import React, { useMemo } from "react";
-import { CashFlowEntry } from "../../lib/types";
+import { useDashboardMetrics } from "../../hooks/useDashboardMetrics";
 import { DragHandleProps } from "./DashboardGrid";
+import { Loader2 } from "lucide-react";
 
 interface DailyGrossIncomeProps {
-  cashFlow: CashFlowEntry[];
   dragHandleProps?: DragHandleProps;
 }
 
-const DailyGrossIncomeCard = ({
-  cashFlow,
-  dragHandleProps,
-}: DailyGrossIncomeProps) => {
+const DailyGrossIncomeCard = ({ dragHandleProps }: DailyGrossIncomeProps) => {
+  const { data: metrics, isLoading, error } = useDashboardMetrics();
+
   const totalGross = useMemo(() => {
-    return cashFlow.reduce((acc, curr) => acc + (curr.cash_in || 0), 0);
-  }, [cashFlow]);
+    if (!metrics) return 0;
+    return metrics.cashFlow.reduce((acc, curr) => acc + (curr.cash_in || 0), 0);
+  }, [metrics]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full min-h-[200px]">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="flex justify-center items-center bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full min-h-[200px] text-red-400">
+        Error loading data
+      </div>
+    );
+  }
+
+  const { cashFlow } = metrics;
 
   return (
     <div className="bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full overflow-hidden text-white">

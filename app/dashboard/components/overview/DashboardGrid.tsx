@@ -24,7 +24,6 @@ import { CSS } from "@dnd-kit/utilities";
 import DailyExpensesCard from "./DailyExpensesCard";
 import DailyGrossIncomeCard from "./DailyGrossIncomeCard";
 import MonthlyGrossCard from "./MonthlyGrossCard";
-import { DashboardMetrics } from "../../hooks/useDashboardMetrics";
 import CashOnHand from "./CashOnHand";
 
 // Define strict types for the drag handle
@@ -76,13 +75,11 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
 };
 
 interface DashboardGridProps {
-  metrics: DashboardMetrics;
   items: string[];
   onOrderChange: (newOrder: string[]) => void;
 }
 
 export const DashboardGrid = ({
-  metrics,
   items,
   onOrderChange,
 }: DashboardGridProps) => {
@@ -103,22 +100,11 @@ export const DashboardGrid = ({
   const renderCard = (id: string) => {
     switch (id) {
       case "cash-on-hand":
-        return (
-          <CashOnHand
-            totalNetBalance={metrics.totalNetBalance}
-            cashFlow={metrics.cashFlow}
-          />
-        );
+        return <CashOnHand />;
       case "daily-gross":
-        // FIX: Ensure this card only receives what it needs
-        return <DailyGrossIncomeCard cashFlow={metrics.cashFlow} />;
+        return <DailyGrossIncomeCard />;
       case "daily-expenses":
-        return (
-          <DailyExpensesCard
-            totalExpenses={metrics.totalExpenses}
-            cashFlow={metrics.cashFlow}
-          />
-        );
+        return <DailyExpensesCard />;
       case "monthly-gross":
         return <MonthlyGrossCard />;
       default:
