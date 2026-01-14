@@ -96,13 +96,16 @@ export const createCustomer = async (formData: FormData) => {
   const birthdateRaw = formData.get("birthdate") as string;
   const birthdate = birthdateRaw || null;
   const dateRegRaw = formData.get("date_of_registration") as string;
-  const date_of_registration = dateRegRaw || new Date().toISOString();
+  const date_of_registration = dateRegRaw || new Date().toISOString().split("T")[0];
 
   const groupIdRaw = formData.get("group_id") as string;
   const group_id = groupIdRaw && groupIdRaw !== "" ? groupIdRaw : null;
 
   const civil_status = (formData.get("civil_status") as string) || null;
   const gender = (formData.get("gender") as string) || null;
+
+  const store_id = user.user_metadata?.store_id;
+  if (!store_id) throw new Error("User has no associated store_id");
 
   // 2. Handle Image Uploads
   const files = formData.getAll("documents");
@@ -162,7 +165,7 @@ export const createCustomer = async (formData: FormData) => {
     civil_status,
     gender,
     documents: uploadedUrls,
-    store_id: user.user_metadata?.store_id,
+    store_id,
   });
 };
 
