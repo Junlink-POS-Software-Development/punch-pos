@@ -104,8 +104,19 @@ export const createCustomer = async (formData: FormData) => {
   const civil_status = (formData.get("civil_status") as string) || null;
   const gender = (formData.get("gender") as string) || null;
 
-  const store_id = user.user_metadata?.store_id;
-  if (!store_id) throw new Error("User has no associated store_id");
+  // Fetch store_id from members table instead of metadata
+  const { data: memberData, error: memberError } = await supabase
+    .from("members")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (memberError || !memberData?.store_id) {
+    console.error("Store ID fetch error:", memberError);
+    throw new Error("User has no associated store_id in members table");
+  }
+  
+  const store_id = memberData.store_id;
 
   // 2. Handle Image Uploads
   const files = formData.getAll("documents");
