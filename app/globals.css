@@ -4,6 +4,15 @@
 /* Fonts now loaded via Next.js font optimization in layout.tsx */
 body {
   font-family: var(--font-geist-sans), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
 }
 
 @theme inline {
