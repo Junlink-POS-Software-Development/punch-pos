@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { useMediaQuery } from "../../app/hooks/useMediaQuery";
 import { SplitScreenControls } from "./SplitScreenControls";
 import RightWindow from "./RightWindow";
@@ -31,12 +32,21 @@ export default function MainWindow({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [mobileView, setMobileView] = useState<"left" | "right">("left");
   const [isInitial, setIsInitial] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { viewState } = useViewStore();
 
   const isMobile = useMediaQuery("(max-width: 1024px)");
+
+  // Bypass split-screen layout for specific routes (maintenance, login, etc.)
+  const fullScreenRoutes = ["/maintenance", "/login"];
+  const isFullScreenRoute = fullScreenRoutes.some(route => pathname?.startsWith(route));
+  
+  if (isFullScreenRoute) {
+    return <>{children}</>;
+  }
 
   const handleToggleClick = () => {
     setMobileView((current) => (current === "left" ? "right" : "left"));
