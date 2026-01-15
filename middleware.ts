@@ -67,7 +67,27 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 2. SUBSCRIPTION GUARD LOGIC
+  // ============================================
+  // AUTHENTICATION GUARD
+  // ============================================
+  // Define public routes that don't require authentication
+  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api");
+  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage;
+
+  // If user is not logged in and trying to access a protected route
+  if (!user && !isPublicRoute) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // If user is logged in and trying to access login page, redirect to home
+  if (user && isLoginPage) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // ============================================
+  // SUBSCRIPTION GUARD LOGIC
+  // ============================================
   if (user) {
     // Check if user belongs to a store
     const { data: member } = await supabase
@@ -94,7 +114,6 @@ export async function middleware(request: NextRequest) {
       const isSubscriptionPage =
         request.nextUrl.pathname.startsWith("/settings") ||
         request.nextUrl.pathname.startsWith("/subscribe-required"); // Assuming settings is where subscription is
-      const isApiRoute = request.nextUrl.pathname.startsWith("/api");
 
       // If inactive and NOT on the subscription page, redirect them
       if (!isActive && !isSubscriptionPage && !isApiRoute) {
