@@ -26,6 +26,14 @@ export interface TransactionItem {
   quantity: number;
 }
 
+export interface TransactionFilters {
+  startDate?: string | null;
+  endDate?: string | null;
+  transactionNo?: string;
+  barcode?: string;
+  ItemName?: string;
+}
+
 interface ActionResponse<T = any> {
   success: boolean;
   error?: string;
@@ -95,7 +103,7 @@ export interface TransactionRecord {
 export async function getTransactionHistory(
   page: number = 1,
   pageSize: number = 10,
-  storeId?: string
+  filters: TransactionFilters = {}
 ): Promise<ActionResponse<TransactionRecord[]>> {
   const supabase = await createClient();
 
@@ -105,16 +113,30 @@ export async function getTransactionHistory(
 
   let query = supabase
     .from("transactions")
-    .select("*", { count: "exact" })
-    .order("transaction_time", { ascending: false })
-    .range(from, to);
+    .select("*", { count: "exact" });
 
-  // Filter by store if provided (though RLS usually handles this)
-  if (storeId) {
-    query = query.eq("store_id", storeId);
+  // Apply Filters
+  if (filters.startDate) {
+    query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
+  }
+  if (filters.endDate) {
+    query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
   }
 
-  const { data, error, count } = await query;
+  // Handle Text Search Filters
+  if (filters.transactionNo) {
+    query = query.ilike("invoice_no", `%${filters.transactionNo}%`);
+  }
+  if (filters.barcode) {
+    query = query.ilike("sku", `%${filters.barcode}%`);
+  }
+  if (filters.ItemName) {
+    query = query.ilike("item_name", `%${filters.ItemName}%`);
+  }
+
+  const { data, error, count } = await query
+    .order("transaction_time", { ascending: false })
+    .range(from, to);
 
   if (error) {
     console.error("Error fetching transactions:", error);
