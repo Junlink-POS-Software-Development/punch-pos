@@ -30,7 +30,7 @@ export const ShortcutsGuide = () => {
   ];
 
   const terminalShortcuts = [
-    { key: "Spacebar", label: "Open Payment / Finish", alt: "Alt + Enter to submit directly" },
+    { key: "Spacebar", label: "Open Payment / Finish", alt: "Enter to confirm in popup" },
     { key: "Alt + F1", label: "Search Customer" },
   ];
 
