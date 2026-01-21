@@ -39,6 +39,8 @@ const withTimeout = <T>(
   ]) as Promise<T>;
 };
 
+let isTransactionInProgress = false;
+
 export const handleDone = async (
   data: PosFormValues,
   cartItems: CartItem[],
@@ -46,6 +48,12 @@ export const handleDone = async (
   customDate: Date | null, // <--- [NEW] Accept the custom date
   customerId: string | null
 ): Promise<TransactionResult> => {
+  if (isTransactionInProgress) {
+    console.warn("⚠️ [Logic] Transaction already in progress. Ignoring double submission.");
+    return null;
+  }
+  
+  isTransactionInProgress = true;
   console.log("--- 🛠 [Logic] handleDone started ---");
 
   try {
@@ -173,5 +181,7 @@ export const handleDone = async (
   } catch (err) {
     console.error("❌ [Logic] Crash in handleDone:", err);
     throw err;
+  } finally {
+    isTransactionInProgress = false;
   }
 };
