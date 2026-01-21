@@ -76,6 +76,7 @@ export const handleDone = async (
       change: data.change,
       transaction_time: transactionTime,
       customer_id: customerId || null,
+      cashier_name: cashierId, // Use cashierId as cashier identifier
     };
 
     const itemsPayload = cartItems.map((item) => ({
@@ -175,7 +176,7 @@ export const handleDone = async (
       change: headerPayload.change,
       transaction_no: invoiceNo, // Use invoice_no as transaction_no
       transaction_time: transactionTime || new Date().toISOString(),
-      cashier_name: cashierId,
+      cashier_name: headerPayload.cashier_name,
     } as TransactionResult;
   } catch (err) {
     console.error("❌ [Logic] Crash in handleDone:", err);

@@ -25,14 +25,12 @@ interface CustomerSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (customer: CustomerResult) => void;
-  storeId?: string;
 }
 
 export const CustomerSearchModal = ({
   isOpen,
   onClose,
   onSelect,
-  storeId,
 }: CustomerSearchModalProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<CustomerResult[]>([]);
@@ -67,7 +65,7 @@ export const CustomerSearchModal = ({
 
       setIsLoading(true);
       try {
-        let query = supabase
+        const { data, error } = await supabase
           .from("customers")
           .select(
             `
@@ -77,13 +75,8 @@ export const CustomerSearchModal = ({
             customer_groups ( name )
           `
           )
-          .ilike("full_name", `%${searchTerm}%`);
-
-        if (storeId) {
-          query = query.eq("store_id", storeId);
-        }
-
-        const { data, error } = await query.limit(10);
+          .ilike("full_name", `%${searchTerm}%`)
+          .limit(10);
 
         if (error) throw error;
 
@@ -105,7 +98,7 @@ export const CustomerSearchModal = ({
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, supabase, storeId]);
+  }, [searchTerm, supabase]);
 
   // Handle Keyboard Navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {

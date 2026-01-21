@@ -30,7 +30,6 @@ export const TerminalHeader = ({
     isBackdating,
     customTransactionDate,
     setCustomTransactionDate,
-    storeId,
   } = useTerminalHeader(setCustomerId);
 
   const statusColor = isBackdating ? "text-amber-400" : "text-cyan-400";
@@ -47,7 +46,6 @@ export const TerminalHeader = ({
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         onSelect={handleCustomerSelect}
-        storeId={storeId || undefined}
       />
 
       <div
