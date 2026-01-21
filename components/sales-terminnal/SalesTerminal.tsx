@@ -12,6 +12,8 @@ import SuccessReceiptModal from "./utils/SuccessReceiptModal";
 import ErrorMessage from "./components/ErrorMessage";
 // 1. Import the new hook
 import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts"; // Adjust path as needed
+import { PaymentPopup } from "./modals/PaymentPopup";
+import { useState, useEffect } from "react";
 
 const SalesTerminal = () => {
   const {
@@ -35,23 +37,72 @@ const SalesTerminal = () => {
   // This replaces the previous useEffect for the "Escape" key
   useTerminalShortcuts({ onClear });
 
+  const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
+
+  // Calculate cart total
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
+
+  // Shortcut for Payment Popup (Spacebar)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Trigger on Spacebar
+      if (e.code === "Space") {
+        // Prevent if user is typing in an input field (except if we want to override it, but usually bad UX)
+        const activeElement = document.activeElement as HTMLElement;
+        const isTextInput = activeElement.tagName === "INPUT" && (activeElement as HTMLInputElement).type === "text";
+        
+        // Allow if NOT a text input, OR if it IS the barcode input (since barcodes don't usually have spaces)
+        // We only want to block it for inputs where typing a space is valid (like Customer Name)
+        if (!isTextInput || activeElement.id === "barcode") {
+           e.preventDefault();
+           if (cartTotal > 0) {
+             setIsPaymentPopupOpen(true);
+           } else {
+               console.log("Cart is empty, cannot open payment popup");
+           }
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cartTotal]);
+
+  const handlePaymentComplete = (payment: number, voucher: number) => {
+    const totalPayment = payment + voucher;
+    const change = totalPayment - cartTotal;
+
+    // Set values in the form
+    methods.setValue("payment", payment);
+    methods.setValue("voucher", voucher);
+    methods.setValue("grandTotal", cartTotal);
+    methods.setValue("change", change);
+
+    // Trigger submission
+    methods.handleSubmit(onDoneSubmit)();
+    setIsPaymentPopupOpen(false);
+  };
+
   return (
     <div className="relative flex flex-col p-1 h-full">
       <FormProvider {...methods}>
-        <TerminalHeader liveTime={liveTime} setCustomerId={setCustomerId} />
+        <TerminalHeader 
+          liveTime={liveTime} 
+          setCustomerId={setCustomerId} 
+          grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
+        />
 
         <form
           id="sales-form"
           onSubmit={methods.handleSubmit(onDoneSubmit)}
-          className={`gap-4 grid w-full h-full overflow-hidden`}
+          className={`flex flex-col gap-2 w-full h-full overflow-hidden`}
         >
-          <div className="relative flex flex-col w-full h-full">
+          <div className="relative flex flex-col w-full shrink-0">
             <FormFields
               onAddToCartClick={onAddToCart}
               onDoneSubmitTrigger={triggerDoneSubmit}
             />
           </div>
-          <div className="border border-primary-light rounded-2xl w-full h-full overflow-hidden">
+          <div className="border border-primary-light rounded-2xl w-full flex-grow overflow-hidden min-h-0">
             <TerminalCart
               rows={cartItems}
               onRemoveItem={onRemoveItem}
@@ -64,6 +115,13 @@ const SalesTerminal = () => {
       {successData && (
         <SuccessReceiptModal data={successData} onClose={closeSuccessModal} />
       )}
+
+      <PaymentPopup
+        isOpen={isPaymentPopupOpen}
+        onClose={() => setIsPaymentPopupOpen(false)}
+        totalAmount={cartTotal}
+        onConfirm={handlePaymentComplete}
+      />
 
       <ErrorMessage message={errorMessage} onClose={clearErrorMessage} />
     </div>

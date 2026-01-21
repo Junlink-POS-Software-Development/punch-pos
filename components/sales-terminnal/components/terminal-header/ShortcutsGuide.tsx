@@ -30,8 +30,7 @@ export const ShortcutsGuide = () => {
   ];
 
   const terminalShortcuts = [
-    { key: "Spacebar", label: "Add Item to Cart", alt: "Enter on Discount field" },
-    { key: "Alt + Enter", label: "Finish Payment", alt: "Enter on Voucher field" },
+    { key: "Spacebar", label: "Open Payment / Finish", alt: "Alt + Enter to submit directly" },
     { key: "Alt + F1", label: "Search Customer" },
   ];
 

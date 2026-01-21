@@ -11,11 +11,13 @@ import { ProductDisplay } from "./components/ProductDisplay";
 type TerminalHeaderProps = {
   liveTime: string;
   setCustomerId: (id: string | null) => void;
+  grandTotal: number;
 };
 
 export const TerminalHeader = ({
   liveTime,
   setCustomerId,
+  grandTotal,
 }: TerminalHeaderProps) => {
   const {
     user,
@@ -47,7 +49,7 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`glass-effect flex flex-row items-stretch mb-4 rounded-xl w-full min-h-[220px] text-white shadow-xl transition-all duration-300 border ${borderColor} overflow-hidden`}
+        className={`glass-effect flex flex-row items-stretch mb-4 rounded-xl w-full min-h-[260px] text-white shadow-xl transition-all duration-300 border ${borderColor} overflow-hidden`}
       >
         {/* ================= LEFT COLUMN ================= */}
         <div className="flex flex-col justify-between bg-slate-900/40 p-5 border-slate-700/50 border-r w-[30%] min-w-[250px]">
@@ -65,17 +67,32 @@ export const TerminalHeader = ({
 
         {/* ================= RIGHT COLUMN ================= */}
         <div className="relative flex flex-col grow p-6">
-          <TimeDisplay
-            liveTime={liveTime}
-            isBackdating={isBackdating}
-            customTransactionDate={customTransactionDate}
-            setCustomTransactionDate={setCustomTransactionDate}
-          />
+          <div className="flex justify-between items-start w-full mb-2">
+            {/* Grand Total Display (Left) */}
+            <div className="flex flex-col items-start">
+              <span className="text-slate-400 text-xs uppercase tracking-widest mb-1">Grand Total</span>
+              <span className="font-bold text-4xl md:text-6xl text-emerald-400 tracking-tighter drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                ₱{grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
 
-          <ProductDisplay
-            currentProduct={currentProduct}
-            isBackdating={isBackdating}
-          />
+            {/* Time Display (Right) */}
+            <div className="flex flex-col items-end">
+              <TimeDisplay
+                liveTime={liveTime}
+                isBackdating={isBackdating}
+                customTransactionDate={customTransactionDate}
+                setCustomTransactionDate={setCustomTransactionDate}
+              />
+            </div>
+          </div>
+
+          <div className="mt-auto">
+            <ProductDisplay
+              currentProduct={currentProduct}
+              isBackdating={isBackdating}
+            />
+          </div>
         </div>
       </div>
     </>

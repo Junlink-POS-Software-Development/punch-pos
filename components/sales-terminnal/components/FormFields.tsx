@@ -34,19 +34,8 @@ export const FormFields = React.memo(
           setFocus("quantity");
           break;
         case "quantity":
-          setFocus("discount");
-          break;
-        case "discount":
           onAddToCartClick();
           setFocus("barcode");
-          break;
-        case "payment":
-          setFocus("voucher");
-          break;
-        case "voucher":
-          // FIX: Explicitly trigger the done action logic
-          e.preventDefault(); // Stop natural form submit
-          onDoneSubmitTrigger(); // Call the parent handler
           break;
         default:
           break;
@@ -71,58 +60,16 @@ export const FormFields = React.memo(
         type: "text",
         noAutoComplete: true,
       },
-      {
-        title: "Transaction No.",
-        id: "transactionNo",
-        label: "Transaction No:",
-        type: "text",
-        readOnly: true,
-      },
-      {
-        title: "Payment",
-        id: "payment",
-        label: "Payment:",
-        type: "number",
-        hideSpinners: true,
-      },
       { title: "Barcode", id: "barcode", label: "Barcode:", type: "text" },
-      {
-        title: "Voucher",
-        id: "voucher",
-        label: "Voucher:",
-        type: "number",
-        hideSpinners: true,
-      },
-      {
-        title: "Grand Total",
-        id: "grandTotal",
-        label: "Grand Total:",
-        type: "number",
-        readOnly: true,
-      },
       { title: "Quantity", id: "quantity", label: "Quantity:", type: "number" },
-      {
-        title: "Discount",
-        id: "discount",
-        label: "Discount:",
-        type: "number",
-        hideSpinners: true,
-      },
-      {
-        title: "Change",
-        id: "change",
-        label: "Change:",
-        type: "number",
-        readOnly: true,
-      },
     ];
 
     const noSpinnerClass =
       "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
     return (
-      <div className="flex flex-col justify-center p-2 w-full h-full grow">
-        <div className="gap-x-2 gap-y-4 grid grid-cols-6 grid-rows-3 w-full h-auto text-white">
+      <div className="flex flex-col justify-center p-2 w-full">
+        <div className="gap-x-2 gap-y-4 grid grid-cols-6 w-full h-auto text-white">
           {fields.map((field) => (
             <React.Fragment key={field.id}>
               <label

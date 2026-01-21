@@ -113,6 +113,8 @@ export const usePosForm = (): UsePosFormReturn => {
       }
 
       // Spacebar: Add to cart (only when on barcode/quantity/discount fields)
+      // REMOVED as per request - Spacebar now triggers Payment Popup
+      /* 
       if (e.code === "Space") {
         const activeElement = document.activeElement as HTMLInputElement;
         const fieldName = activeElement?.getAttribute("name");
@@ -133,6 +135,7 @@ export const usePosForm = (): UsePosFormReturn => {
           });
         }
       }
+      */
     };
 
     window.addEventListener("keydown", handleGlobalKeyDown);
