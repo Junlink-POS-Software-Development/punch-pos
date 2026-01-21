@@ -35,15 +35,25 @@ export const CustomerSearchModal = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<CustomerResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
-  // Focus input when opened
+  // Focus input when opened & reset state
   useEffect(() => {
     if (isOpen) {
+      setSearchTerm("");
+      setResults([]);
+      setHighlightedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
+
+  // Reset highlight when results change
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [results]);
 
   // Debounced Search
   useEffect(() => {
@@ -70,15 +80,12 @@ export const CustomerSearchModal = ({
 
         if (error) throw error;
 
-        // [FIX] Use the interface instead of 'any'
-        // We cast 'data' to unknown first to safely cast to our specific type array
-        // or just type the argument 'c' if data is loosely typed.
         const rows = (data || []) as unknown as CustomerSearchRow[];
 
         const mapped = rows.map((c) => ({
           id: c.id,
           full_name: c.full_name,
-          phone_number: c.phone_number ?? undefined, // Convert null to undefined for optional type
+          phone_number: c.phone_number ?? undefined,
           group_name: c.customer_groups?.name,
         }));
 
@@ -93,10 +100,39 @@ export const CustomerSearchModal = ({
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, supabase]);
 
-  // Handle Keyboard Navigation within modal
+  // Handle Keyboard Navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
+    if (e.key === "Escape") {
+      onClose();
+      return;
+    }
+
+    if (results.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => 
+        prev < results.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => 
+        prev > 0 ? prev - 1 : results.length - 1
+      );
+    } else if (e.key === "Enter" && results[highlightedIndex]) {
+      e.preventDefault();
+      onSelect(results[highlightedIndex]);
+      onClose();
+    }
   };
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (listRef.current && results.length > 0) {
+      const highlightedEl = listRef.current.querySelector(`[data-index="${highlightedIndex}"]`);
+      highlightedEl?.scrollIntoView({ block: "nearest" });
+    }
+  }, [highlightedIndex, results.length]);
 
   if (!isOpen) return null;
 
@@ -121,28 +157,41 @@ export const CustomerSearchModal = ({
         </div>
 
         {/* Results List */}
-        <div className="p-2 max-h-[300px] overflow-y-auto">
+        <div ref={listRef} className="p-2 max-h-[300px] overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center py-8 text-cyan-400">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           ) : results.length > 0 ? (
             <div className="flex flex-col gap-1">
-              {results.map((customer) => (
+              {results.map((customer, index) => (
                 <button
                   key={customer.id}
+                  data-index={index}
                   onClick={() => {
                     onSelect(customer);
                     onClose();
                   }}
-                  className="group flex justify-between items-center hover:bg-slate-800/80 p-3 border border-transparent hover:border-cyan-500/30 rounded-lg text-left transition-all"
+                  className={`group flex justify-between items-center p-3 border rounded-lg text-left transition-all ${
+                    index === highlightedIndex
+                      ? "bg-slate-800/80 border-cyan-500/30"
+                      : "border-transparent hover:bg-slate-800/80 hover:border-cyan-500/30"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex justify-center items-center bg-slate-800 group-hover:bg-cyan-500/10 rounded-full w-8 h-8 text-slate-400 group-hover:text-cyan-400">
+                    <div className={`flex justify-center items-center rounded-full w-8 h-8 ${
+                      index === highlightedIndex
+                        ? "bg-cyan-500/10 text-cyan-400"
+                        : "bg-slate-800 text-slate-400 group-hover:bg-cyan-500/10 group-hover:text-cyan-400"
+                    }`}>
                       <User className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-medium text-white group-hover:text-cyan-200 text-sm">
+                      <p className={`font-medium text-sm ${
+                        index === highlightedIndex
+                          ? "text-cyan-200"
+                          : "text-white group-hover:text-cyan-200"
+                      }`}>
                         {customer.full_name}
                       </p>
                       {customer.phone_number && (
@@ -174,7 +223,13 @@ export const CustomerSearchModal = ({
 
         {/* Footer */}
         <div className="flex justify-between items-center bg-slate-950/30 px-4 py-2 border-slate-800 border-t text-[10px] text-slate-500">
-          <span>Searching in specific Groups? (Coming Soon)</span>
+          <span className="flex items-center gap-2">
+            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">↑</kbd>
+            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">↓</kbd>
+            to navigate
+            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded ml-2">Enter</kbd>
+            to select
+          </span>
           <span className="flex items-center gap-1">
             <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">
               Esc
