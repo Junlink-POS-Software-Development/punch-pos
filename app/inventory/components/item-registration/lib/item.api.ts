@@ -124,6 +124,19 @@ export const updateItem = async (item: Item): Promise<Item> => {
 
 export const deleteItem = async (id: string): Promise<void> => {
   const supabase = await getSupabase();
+
+  // 1. Delete dependent stock_flow records first
+  const { error: stockError } = await supabase
+    .from("stock_flow")
+    .delete()
+    .eq("item_id", id);
+
+  if (stockError) {
+    console.error("Supabase delete stock_flow error:", stockError);
+    throw new Error(stockError.message);
+  }
+
+  // 2. Delete the item
   const { error } = await supabase.from("items").delete().eq("id", id);
 
   if (error) {
