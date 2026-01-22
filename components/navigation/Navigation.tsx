@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Archive,
   ArrowLeftRight,
-  BarChart,
   Brain,
   Inbox,
   LayoutGrid,
@@ -12,6 +11,7 @@ import {
   Users,
   ChevronRight,
   MoreHorizontal,
+  Grid,
 } from "lucide-react";
 import React from "react";
 
@@ -73,13 +73,13 @@ const Navigation = React.memo(() => {
       ],
     },
     {
-      id: "reports",
-      text: "Reports",
-      Icon: BarChart,
+      id: "google-workspace",
+      text: "Workspace",
+      Icon: Grid,
       shortcuts: [
-        { label: "Sales", href: "/reports" },
-        { label: "Growth", href: "/reports" },
-        { label: "Tax", href: "/reports" },
+        { label: "Gmail", href: "https://mail.google.com" },
+        { label: "Drive", href: "https://drive.google.com" },
+        { label: "Calendar", href: "https://calendar.google.com" },
       ],
     },
     {
@@ -135,13 +135,13 @@ const Navigation = React.memo(() => {
             href={`/${item.id}`}
             className={`
               relative flex flex-col justify-center items-center p-6 rounded-xl 
-              text-slate-400 transition-all duration-300 glass-effect border border-transparent
+              text-amber-500 transition-all duration-300 glass-effect border border-transparent
               
-              /* Hover Effects: Text White, Cyan Border, Cyan Glow */
-              group-hover:text-white 
+              /* Hover Effects: Cyan text, Cyan Border, Cyan Glow - matching PUNCH logo palette */
+              group-hover:text-cyan-400 
               group-hover:border-cyan-500/50
-              group-hover:shadow-[0_0_20px_rgba(6,189,212,0.25)]
-              group-hover:bg-slate-800/50
+              group-hover:shadow-[0_0_20px_rgba(6,189,212,0.35)]
+              group-hover:bg-slate-800/60
               
               h-36 w-full
             `}

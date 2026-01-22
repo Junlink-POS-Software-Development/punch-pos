@@ -53,9 +53,9 @@ export const useTerminalShortcuts = ({
             event.preventDefault();
             router.push("/expenses");
             break;
-          case "r":
+          case "w":
             event.preventDefault();
-            router.push("/reports");
+            router.push("/google-workspace");
             break;
           default:
             break;
