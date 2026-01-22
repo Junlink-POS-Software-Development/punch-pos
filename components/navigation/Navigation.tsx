@@ -135,12 +135,12 @@ const Navigation = React.memo(() => {
             href={`/${item.id}`}
             className={`
               relative flex flex-col justify-center items-center p-6 rounded-xl 
-              text-amber-500 transition-all duration-300 glass-effect border border-transparent
+              text-cyan-400 transition-all duration-300 glass-effect border border-transparent
               
-              /* Hover Effects: Cyan text, Cyan Border, Cyan Glow - matching PUNCH logo palette */
-              group-hover:text-cyan-400 
-              group-hover:border-cyan-500/50
-              group-hover:shadow-[0_0_20px_rgba(6,189,212,0.35)]
+              /* Hover Effects: Amber text, Amber Border, Amber Glow */
+              group-hover:text-amber-500 
+              group-hover:border-amber-500/50
+              group-hover:shadow-[0_0_20px_rgba(245,158,11,0.35)]
               group-hover:bg-slate-800/60
               
               h-36 w-full
