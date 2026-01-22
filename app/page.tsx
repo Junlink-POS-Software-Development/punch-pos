@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Navigation from "../components/navigation/Navigation";
 import { X, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -76,30 +77,58 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 1. HEADER SECTION */}
-      <header className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="font-bold text-4xl tracking-tight animate-text-shine">JUNLINK</h1>
-          <p className="mt-2 text-slate-400 text-base">
-            {user
-              ? `Welcome back, ${user.user_metadata?.first_name || "Admin"}`
-              : "Welcome, Guest"}
-          </p>
+      {/* 1. HEADER SECTION - Modern SaaS 3-Column Layout */}
+      <header className="flex items-center justify-between gap-6 mb-10">
+        {/* LEFT: Logo Lockup */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Image
+            src="/punch-logo.png"
+            alt="PUNCH POS Logo"
+            width={56}
+            height={56}
+            className="object-contain"
+          />
+          <div className="flex flex-col">
+            <h1 className="text-2xl tracking-tight animate-text-shine">
+              <span className="font-bold">PUNCH</span>
+              <span className="font-light text-slate-300"> POS</span>
+            </h1>
+            <p className="text-[10px] text-slate-500 tracking-wide">
+              by JunLink Software Services
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* CENTER: Search Bar */}
+        <div className="flex-1 flex justify-center max-w-md mx-auto">
           <SearchBar />
-          <div className="hidden md:block bg-slate-700 mx-1 w-px h-8"></div>
-          <Notifications />
-          {!isAuthReady ? (
-            <div className="bg-slate-800 rounded-full w-10 h-10 animate-pulse" />
-          ) : (
-            <UserProfile
-              currentUser={user}
-              onSignInClick={openSignInModal}
-              onSignOutClick={onSignOutClick}
-            />
-          )}
+        </div>
+
+        {/* RIGHT: User Actions */}
+        <div className="flex items-center gap-4 shrink-0">
+          {/* Welcome Text - Subtle */}
+          <p className="hidden lg:block text-xs text-slate-500 text-right">
+            {user
+              ? `Welcome, ${user.user_metadata?.first_name || "Admin"}`
+              : "Guest"}
+          </p>
+
+          {/* Divider */}
+          <div className="hidden lg:block w-px h-6 bg-slate-700" />
+
+          {/* Notification & Profile Group */}
+          <div className="flex items-center gap-3">
+            <Notifications />
+            {!isAuthReady ? (
+              <div className="bg-slate-800 rounded-full w-9 h-9 animate-pulse" />
+            ) : (
+              <UserProfile
+                currentUser={user}
+                onSignInClick={openSignInModal}
+                onSignOutClick={onSignOutClick}
+              />
+            )}
+          </div>
         </div>
       </header>
 

@@ -35,8 +35,8 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "JunLink POS",
-  description: "Next Gen Point of Sale",
+  title: "PUNCH POS by JunLink Software Services",
+  description: "Next Gen Point of Sale by JunLink Software Services",
 };
 
 export default function RootLayout({

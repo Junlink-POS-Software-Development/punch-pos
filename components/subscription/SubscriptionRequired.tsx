@@ -18,7 +18,7 @@ const SubscriptionRequired = () => {
       </h1>
       
       <p className="text-zinc-400 max-w-md text-lg mb-10 leading-relaxed">
-        To access this feature and continue using JunLink POS, you need an active subscription. 
+        To access this feature and continue using PUNCH POS, you need an active subscription. 
         Choose a plan that fits your business needs.
       </p>
 

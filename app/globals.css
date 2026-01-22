@@ -272,9 +272,11 @@ input, textarea {
     background: linear-gradient(
       to right,
       #22d3ee 0%,
-      #818cf8 25%,
-      #c084fc 50%,
-      #818cf8 75%,
+      #48cae4 15%,
+      #f4a261 35%,
+      #e76f51 50%,
+      #f4a261 65%,
+      #48cae4 85%,
       #22d3ee 100%
     );
     -webkit-background-clip: text;
