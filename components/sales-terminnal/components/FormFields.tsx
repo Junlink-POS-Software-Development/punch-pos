@@ -69,18 +69,19 @@ export const FormFields = React.memo(
 
     return (
       <div className="flex flex-col justify-center p-2 w-full">
-        <div className="gap-x-2 gap-y-4 grid grid-cols-6 w-full h-auto text-white">
+        {/* Changed from grid to flex row for single line layout */}
+        <div className="flex items-end gap-4 w-full text-white">
           {fields.map((field) => (
-            <React.Fragment key={field.id}>
+            <div key={field.id} className={`${field.id === "customerName" ? "w-[30%]" : field.id === "barcode" ? "w-[40%]" : "w-[30%]"} flex flex-col gap-1`}>
               <label
                 htmlFor={field.id}
                 title={field.title}
-                className="right-trim flex justify-end items-center font-medium text-xs sm:text-sm"
+                className="font-medium text-xs sm:text-sm text-slate-400"
               >
                 {field.label}
               </label>
 
-              <div className="flex items-center w-full">
+              <div className="w-full">
                 {field.id === "barcode" ? (
                   <Controller
                     control={control}
@@ -104,7 +105,7 @@ export const FormFields = React.memo(
                             });
                             setFocus("quantity");
                           }}
-                          className="px-2 w-full h-8 sm:h-10 text-sm sm:text-base input-dark"
+                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors"
                         />
                       </div>
                     )}
@@ -118,7 +119,7 @@ export const FormFields = React.memo(
                       ...(field.type === "number" && { valueAsNumber: true }),
                     })}
                     readOnly={field.readOnly}
-                    className={`w-full h-8 sm:h-10 text-sm sm:text-base input-dark px-2 ${
+                    className={`w-full h-10 sm:h-12 text-sm sm:text-base input-dark px-3 rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${
                       field.hideSpinners ? noSpinnerClass : ""
                     }`}
                     {...(field.type === "number" &&
@@ -137,7 +138,7 @@ export const FormFields = React.memo(
                   />
                 )}
               </div>
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>

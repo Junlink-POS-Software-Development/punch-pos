@@ -2,17 +2,18 @@
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import Navigation from "../components/navigation/Navigation";
 import { X, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useMediaQuery } from "./hooks/useMediaQuery";
+import Header from "@/components/Header";
 
 // --- Local Components ---
-import SearchBar from "./components/SearchBar";
-import Notifications from "./components/Notifications";
-import UserProfile from "./components/UserProfile";
-
-// NOTE: All Data, Charts, and Widget imports have been removed to isolate the issue.
+// Imported for Mobile View Header usage
+// import SearchBar from "./components/SearchBar"; 
+// import Notifications from "./components/Notifications";
+// import UserProfile from "./components/UserProfile";
+// Actually Header component handles these now.
 
 // Dynamic imports for modals
 const SignUp = dynamic(
@@ -31,18 +32,22 @@ const SignIn = dynamic(
   { ssr: false }
 );
 
+// Dynamic import for SalesTerminal
+const SalesTerminal = dynamic(
+  () => import("@/components/sales-terminnal/SalesTerminal"),
+  { ssr: false }
+);
+
 type AuthModalState = "hidden" | "signIn" | "signUp";
 
 export default function HomePage() {
-  // --- AUTH STATE MANAGEMENT ---
+  // --- AUTH STATE MANAGEMENT (For Mobile View) ---
   const { user, isAuthReady, signOut } = useAuthStore();
   const [authModalState, setAuthModalState] =
     useState<AuthModalState>("hidden");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // --- DATA FETCHING REMOVED ---
-  // The hook that was causing the timeout is completely commented out.
-  // const { metrics, isLoading, error } = useDashboardData();
+  const isMobile = useMediaQuery("(max-width: 1024px)");
 
   // --- HANDLERS ---
   const openSignInModal = () => setAuthModalState("signIn");
@@ -65,6 +70,14 @@ export default function HomePage() {
     }
   };
 
+  // --- DESKTOP VIEW ---
+  // Render SalesTerminal directly. MainWindow handles Sidebar and Header.
+  if (!isMobile) {
+    return <SalesTerminal />;
+  }
+
+  // --- MOBILE VIEW ---
+  // Keep the old layout: Header + Navigation Grid
   return (
     <div className="relative bg-[#0B1120] p-6 min-h-screen text-white font-lexend">
       {/* --- LOGOUT OVERLAY --- */}
@@ -77,64 +90,14 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 1. HEADER SECTION - Modern SaaS 3-Column Layout */}
-      <header className="flex items-center justify-between gap-6 mb-10">
-        {/* LEFT: Logo Lockup */}
-        <div className="flex items-center gap-3 shrink-0">
-          <Image
-            src="/punch-logo.png"
-            alt="PUNCH POS Logo"
-            width={56}
-            height={56}
-            className="object-contain"
-          />
-          <div className="flex flex-col">
-            <h1 className="text-2xl tracking-tight animate-text-shine">
-              <span className="font-bold">PUNCH</span>
-              <span className="font-light text-slate-300"> POS</span>
-            </h1>
-            <p className="text-[10px] text-slate-500 tracking-wide">
-              by JunLink Software Services
-            </p>
-          </div>
-        </div>
-
-        {/* CENTER: Search Bar */}
-        <div className="flex-1 flex justify-center max-w-md mx-auto">
-          <SearchBar />
-        </div>
-
-        {/* RIGHT: User Actions */}
-        <div className="flex items-center gap-4 shrink-0">
-          {/* Welcome Text - Subtle */}
-          <p className="hidden lg:block text-xs text-slate-500 text-right">
-            {user
-              ? `Welcome, ${user.user_metadata?.first_name || "Admin"}`
-              : "Guest"}
-          </p>
-
-          {/* Divider */}
-          <div className="hidden lg:block w-px h-6 bg-slate-700" />
-
-          {/* Notification & Profile Group */}
-          <div className="flex items-center gap-3">
-            <Notifications />
-            {!isAuthReady ? (
-              <div className="bg-slate-800 rounded-full w-9 h-9 animate-pulse" />
-            ) : (
-              <UserProfile
-                currentUser={user}
-                onSignInClick={openSignInModal}
-                onSignOutClick={onSignOutClick}
-              />
-            )}
-          </div>
-        </div>
-      </header>
+      {/* 1. HEADER SECTION - Reused Header Component */}
+      <Header 
+        onSignInClick={openSignInModal} 
+        onSignOutClick={onSignOutClick} 
+      />
 
       {/* 2. NAVIGATION GRID */}
-      {/* This should now render instantly without any spinners blocking it */}
-      <Navigation />
+      <Navigation variant="grid" />
 
       {/* --- AUTH MODALS --- */}
       {authModalState !== "hidden" && (

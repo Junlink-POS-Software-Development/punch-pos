@@ -14,6 +14,7 @@ import ErrorMessage from "./components/ErrorMessage";
 import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts"; // Adjust path as needed
 import { PaymentPopup } from "./modals/PaymentPopup";
 import { useState, useEffect } from "react";
+import ActionPanel from "./components/ActionPanel";
 
 const SalesTerminal = () => {
   const {
@@ -87,34 +88,40 @@ const SalesTerminal = () => {
   };
 
   return (
-    <div className="relative flex flex-col p-1 h-full">
-      <FormProvider {...methods}>
-        <TerminalHeader 
-          liveTime={liveTime} 
-          setCustomerId={setCustomerId} 
-          grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
-        />
+    <div className="relative flex flex-row h-full overflow-hidden">
+      {/* LEFT PANEL: Transaction Details */}
+      <div className="flex flex-col flex-1 p-4 h-full min-w-0">
+        <FormProvider {...methods}>
+          <TerminalHeader 
+            liveTime={liveTime} 
+            setCustomerId={setCustomerId} 
+            grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
+          />
 
-        <form
-          id="sales-form"
-          onSubmit={methods.handleSubmit(onDoneSubmit)}
-          className={`flex flex-col gap-2 w-full h-full overflow-hidden`}
-        >
-          <div className="relative flex flex-col w-full shrink-0">
-            <FormFields
-              onAddToCartClick={onAddToCart}
-              onDoneSubmitTrigger={triggerDoneSubmit}
-            />
-          </div>
-          <div className="border border-primary-light rounded-2xl w-full flex-grow overflow-hidden min-h-0">
-            <TerminalCart
-              rows={cartItems}
-              onRemoveItem={onRemoveItem}
-              onUpdateItem={onUpdateItem}
-            />
-          </div>
-        </form>
-      </FormProvider>
+          <form
+            id="sales-form"
+            onSubmit={methods.handleSubmit(onDoneSubmit)}
+            className={`flex flex-col gap-4 w-full h-full overflow-hidden`}
+          >
+            <div className="relative flex flex-col w-full shrink-0">
+              <FormFields
+                onAddToCartClick={onAddToCart}
+                onDoneSubmitTrigger={triggerDoneSubmit}
+              />
+            </div>
+            <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full flex-grow overflow-hidden min-h-0">
+              <TerminalCart
+                rows={cartItems}
+                onRemoveItem={onRemoveItem}
+                onUpdateItem={onUpdateItem}
+              />
+            </div>
+          </form>
+        </FormProvider>
+      </div>
+
+      {/* RIGHT PANEL: Action Panel */}
+      <ActionPanel />
 
       {successData && (
         <SuccessReceiptModal data={successData} onClose={closeSuccessModal} />
