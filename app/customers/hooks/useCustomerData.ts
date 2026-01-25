@@ -1,9 +1,9 @@
-import useSWR, { useSWRConfig, mutate } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCustomerFeatureData } from "../api/services";
 import { useCustomerStore } from "../store/useCustomerStore";
 import { useState } from "react";
 
-const SWR_KEY_PREFIX = "customer-feature-data";
+const QUERY_KEY_PREFIX = "customer-feature-data";
 
 // Helper to format date as YYYY-MM-DD
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -12,16 +12,18 @@ const formatDate = (date: Date) => date.toISOString().split("T")[0];
 const getTodayDate = () => formatDate(new Date());
 
 export const useCustomerData = () => {
+  const queryClient = useQueryClient();
   // Date filter state - default to today's date
   const [startDate, setStartDate] = useState<string>(getTodayDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
 
-  // Generate SWR key with date parameters to trigger refetch when dates change
-  const swrKey = `${SWR_KEY_PREFIX}-${startDate}-${endDate}`;
+  // Generate query key with date parameters to trigger refetch when dates change
+  const queryKey = [QUERY_KEY_PREFIX, startDate, endDate];
 
-  const { data, error, isLoading } = useSWR(swrKey, () =>
-    fetchCustomerFeatureData(startDate, endDate)
-  );
+  const { data, error, isLoading } = useQuery({
+    queryKey,
+    queryFn: () => fetchCustomerFeatureData(startDate, endDate),
+  });
 
   const { searchTerm, selectedGroupId, selectedCustomerId } = useCustomerStore();
 
@@ -90,17 +92,18 @@ export const useCustomerData = () => {
     isLoading,
     isError: error,
     selectedGroupId,
-    refreshCustomers: () => mutate(swrKey),
+    refreshCustomers: () => queryClient.invalidateQueries({ queryKey }),
   };
 };
 
 // Hook to handle mutations easily
 export const useCustomerMutations = () => {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
-  const refreshData = () => mutate((key) =>
-    typeof key === 'string' && key.startsWith(SWR_KEY_PREFIX)
-  );
+  const refreshData = () => queryClient.invalidateQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) && query.queryKey[0] === QUERY_KEY_PREFIX
+  });
 
   return { refreshData };
 };

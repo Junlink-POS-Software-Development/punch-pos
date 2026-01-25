@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   fetchStocks,
@@ -22,13 +22,16 @@ interface StockMutationOptions {
 }
 
 export const useStocks = () => {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { data: stocks = [], isLoading } = useSWR<StockData[]>("stocks", fetchStocks);
+  const { data: stocks = [], isLoading } = useQuery({
+    queryKey: ["stocks"],
+    queryFn: fetchStocks,
+  });
 
   const handleMutationSuccess = (callback?: () => void) => {
-    mutate("stocks");
+    queryClient.invalidateQueries({ queryKey: ["stocks"] });
     setIsProcessing(false);
     callback?.();
   };

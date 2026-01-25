@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   Classification,
@@ -9,20 +9,23 @@ import {
 } from "../lib/expenses.api";
 
 export function useClassifications() {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const {
     data: classifications = [],
     isLoading,
     error,
-  } = useSWR("classifications", fetchClassifications);
+  } = useQuery({
+    queryKey: ["classifications"],
+    queryFn: fetchClassifications,
+  });
 
   const addClassification = async (name: string) => {
     setIsProcessing(true);
     try {
       await createClassification(name);
-      mutate("classifications");
+      queryClient.invalidateQueries({ queryKey: ["classifications"] });
     } finally {
       setIsProcessing(false);
     }
@@ -32,7 +35,7 @@ export function useClassifications() {
     setIsProcessing(true);
     try {
       await updateClassification(id, name);
-      mutate("classifications");
+      queryClient.invalidateQueries({ queryKey: ["classifications"] });
     } finally {
       setIsProcessing(false);
     }
@@ -42,7 +45,7 @@ export function useClassifications() {
     setIsProcessing(true);
     try {
       await deleteClassification(id);
-      mutate("classifications");
+      queryClient.invalidateQueries({ queryKey: ["classifications"] });
     } finally {
       setIsProcessing(false);
     }

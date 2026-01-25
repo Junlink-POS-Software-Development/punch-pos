@@ -4,6 +4,7 @@ import "./globals.css";
 import MainWindow from "../components/window-layouts/MainWindow";
 import { AuthInit } from "@/components/AuthInit";
 import SessionMonitor from "@/components/reusables/SessionMonitor";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 
 const geistSans = Geist({
@@ -54,7 +55,9 @@ export default function RootLayout({
         <SessionMonitor />
 
         <AuthInit>
-          <MainWindow>{children}</MainWindow>
+          <QueryProvider>
+            <MainWindow>{children}</MainWindow>
+          </QueryProvider>
         </AuthInit>
       </body>
     </html>

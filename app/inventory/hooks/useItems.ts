@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Item } from "../components/item-registration/utils/itemTypes";
 import {
@@ -9,21 +9,24 @@ import {
 } from "../components/item-registration/lib/item.api";
 
 export const useItems = () => {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const {
     data: items = [],
     isLoading,
     error,
-  } = useSWR<Item[]>("items", async () => {
-    const data = await fetchItems();
-    return data;
+  } = useQuery({
+    queryKey: ["items"],
+    queryFn: async () => {
+      const data = await fetchItems();
+      return data;
+    },
   });
 
   const handleSuccess = (operation: string, callback?: () => void) => {
     console.log(`${operation} successful`);
-    mutate("items");
+    queryClient.invalidateQueries({ queryKey: ["items"] });
     setIsProcessing(false);
     if (callback) callback();
   };

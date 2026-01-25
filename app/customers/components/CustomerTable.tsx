@@ -175,7 +175,7 @@ export const CustomerTable = () => {
                   Name
                   <ArrowUpDown size={14} className={sortByLastName ? "text-blue-400" : ""} />
                   <span className="text-[10px] font-normal normal-case opacity-70">
-                    ({sortByLastName ? "Last" : "First"})
+                    ({sortByLastName ? "Last Name" : "First Name"})
                   </span>
                 </button>
               </th>

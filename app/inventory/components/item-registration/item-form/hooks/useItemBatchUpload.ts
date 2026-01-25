@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSWRConfig } from "swr";
+import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import Papa from "papaparse";
 import { Item, itemSchema } from "../../utils/itemTypes";
@@ -33,7 +33,7 @@ const csvItemSchema = itemSchema.extend({
 });
 
 export const useItemBatchUpload = () => {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [validItems, setValidItems] = useState<Item[]>([]);
@@ -99,7 +99,7 @@ export const useItemBatchUpload = () => {
     try {
       await insertManyItems(validItems);
       alert("Batch upload successful!");
-      mutate("items");
+      queryClient.invalidateQueries({ queryKey: ["items"] });
       reset();
     } catch (error) {
       console.error("Batch insert error:", error);

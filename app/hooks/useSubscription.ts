@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface Subscription {
   id: string;
@@ -20,19 +20,11 @@ export interface SubscriptionPayment {
 }
 
 export function useSubscription() {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [payments, setPayments] = useState<SubscriptionPayment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [storeId, setStoreId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      // We import the fetcher server action
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["subscription-data"],
+    queryFn: async () => {
       const { fetchSubscriptionData } = await import(
         "@/app/actions/subscription"
       );
@@ -40,19 +32,21 @@ export function useSubscription() {
       console.log("fetchSubscriptionData result:", result);
 
       if (result.success) {
-        setStoreId(result.storeId || null);
-
-        setSubscription(result.subscription || null);
-        setPayments(result.payments || []);
+        return {
+          storeId: result.storeId || null,
+          subscription: result.subscription || null,
+          payments: result.payments || [],
+        };
       } else {
         console.error("fetchSubscriptionData failed:", result.error);
+        return { storeId: null, subscription: null, payments: [] };
       }
-    } catch (error) {
-      console.error("Error in fetchSubscriptionData:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  const subscription = data?.subscription || null;
+  const payments = data?.payments || [];
+  const storeId = data?.storeId || null;
 
   const subscribeAction = async () => {
     if (!storeId) {
@@ -61,8 +55,6 @@ export function useSubscription() {
     }
 
     try {
-      setLoading(true);
-
       // Import the Xendit Server Action
       const { createXenditSubscription } = await import(
         "@/app/actions/subscription"
@@ -73,7 +65,6 @@ export function useSubscription() {
       await createXenditSubscription(storeId);
     } catch (error) {
       console.error("Subscription initiation failed:", error);
-      setLoading(false);
       alert("Failed to initialize payment. Please check console.");
     }
   };

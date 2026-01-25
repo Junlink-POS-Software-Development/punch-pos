@@ -6,7 +6,7 @@ import {
   useWatch,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSWRConfig } from "swr";
+import { useQueryClient } from "@tanstack/react-query";
 import { useItems } from "@/app/inventory/hooks/useItems";
 import { useInventory } from "@/app/dashboard/hooks/useInventory";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -42,7 +42,7 @@ interface UsePosFormReturn {
 }
 
 export const usePosForm = (): UsePosFormReturn => {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { customTransactionDate } = useTransactionStore();
   const { items: allItems } = useItems();
@@ -256,9 +256,9 @@ export const usePosForm = (): UsePosFormReturn => {
         setIsSubmitting(false);
         setSuccessData(result);
 
-        mutate((key) => Array.isArray(key) && key[0] === "payments");
-        mutate((key) => Array.isArray(key) && key[0] === "transaction-items");
-        mutate("dashboard-metrics");
+        queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "payments" });
+        queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "transaction-items" });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-financial-report"] });
       } else {
         setIsSubmitting(false);
       }

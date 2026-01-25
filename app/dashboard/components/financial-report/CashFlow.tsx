@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -26,10 +26,10 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   // --- 1. Fetch Categories ---
-  const { data: categories = [] } = useSWR(
-    "flow-categories",
-    fetchFlowCategories
-  );
+  const { data: categories = [] } = useQuery({
+    queryKey: ["flow-categories"],
+    queryFn: fetchFlowCategories,
+  });
 
   // --- Derived State ---
   // Default to "Overall" or the first available category if nothing is selected
@@ -43,12 +43,11 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
   );
 
   // --- 2. Fetch Ledger Data ---
-  const { data: ledger = [], isLoading } = useSWR(
-    activeCategory
-      ? ["cash-flow-ledger", activeCategory, dateRangeParam]
-      : null,
-    ([, category, range]) => fetchCashFlowLedger(category, range)
-  );
+  const { data: ledger = [], isLoading } = useQuery({
+    queryKey: ["cash-flow-ledger", activeCategory, dateRangeParam],
+    queryFn: () => fetchCashFlowLedger(activeCategory, dateRangeParam),
+    enabled: !!activeCategory,
+  });
 
   // --- 3. Table Column Definitions ---
   const columns = useMemo<ColumnDef<CashFlowEntry>[]>(

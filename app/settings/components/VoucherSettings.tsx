@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Category,
   fetchCategories,
@@ -8,31 +9,19 @@ import {
 } from "@/app/inventory/components/item-registration/lib/categories.api";
 
 export default function VoucherSettings() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [updating, setUpdating] = useState(false);
 
-  const loadCategories = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Failed to load categories", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
 
   const handleSetDefault = async (id: string) => {
     setUpdating(true);
     try {
       await setDefaultVoucherSource(id);
-      await loadCategories(); // Reload to reflect changes (database trigger updates others)
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
     } catch (error) {
       alert("Failed to update default source");
       console.error(error);

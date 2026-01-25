@@ -1,7 +1,7 @@
 import { useDashboardMetrics } from "../../hooks/useDashboardMetrics";
 import { DragHandleProps } from "./DashboardGrid";
 import { Loader2 } from "lucide-react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import { fetchFlowCategories } from "@/app/expenses/lib/cashflow.api";
 import { useMemo } from "react";
 
@@ -11,7 +11,10 @@ interface Props {
 
 const CashOnHand = ({ dragHandleProps }: Props) => {
   const { data: metrics, isLoading: isMetricsLoading, error: metricsError } = useDashboardMetrics();
-  const { data: categories = [], isLoading: isCategoriesLoading } = useSWR("flow-categories", fetchFlowCategories);
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
+    queryKey: ["flow-categories"],
+    queryFn: fetchFlowCategories,
+  });
 
   const isLoading = isMetricsLoading || isCategoriesLoading;
   const error = metricsError;

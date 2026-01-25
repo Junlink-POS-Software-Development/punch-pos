@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { fetchCashFlowByRange } from "../../lib/dashboard.api";
 import { DragHandleProps } from "./DashboardGrid";
@@ -15,28 +16,16 @@ const MonthlyGrossCard = ({ dragHandleProps }: MonthlyGrossProps) => {
   const { startDate, endDate, setDateRange, hasHydrated } =
     useDashboardDateStore();
 
-  const [loading, setLoading] = useState(true);
-  const [totalGross, setTotalGross] = useState(0);
+  const { data: grossAmount = 0, isLoading: loading } = useQuery({
+    queryKey: ["monthly-gross", startDate, endDate],
+    queryFn: async () => {
+      const amount = await fetchCashFlowByRange(startDate, endDate);
+      return Number(amount);
+    },
+    enabled: hasHydrated && !!startDate && !!endDate,
+  });
 
-  // Fetch data whenever dates change (but only after hydration)
-  useEffect(() => {
-    // Prevent fetching with default dates before localStorage loads
-    if (!hasHydrated) return;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const grossAmount = await fetchCashFlowByRange(startDate, endDate);
-        setTotalGross(Number(grossAmount));
-      } catch (error) {
-        console.error("Failed to fetch monthly gross", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [startDate, endDate, hasHydrated]);
+  const totalGross = grossAmount;
 
   return (
     <div className="relative flex flex-col bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full text-white">

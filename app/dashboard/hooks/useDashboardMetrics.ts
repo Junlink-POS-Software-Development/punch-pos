@@ -1,4 +1,4 @@
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchFinancialReport } from "../lib/dashboard.api";
 import { CashFlowEntry } from "../lib/types";
@@ -18,10 +18,10 @@ export function useDashboardMetrics(
     data: reportData = [],
     isLoading,
     error,
-  } = useSWR(["dashboard-financial-report", date], ([_, date]) =>
-    // Fetch the report for a single day (Start = End)
-    fetchFinancialReport(date, date)
-  );
+  } = useQuery({
+    queryKey: ["dashboard-financial-report", date],
+    queryFn: () => fetchFinancialReport(date, date),
+  });
 
   const metrics = useMemo(() => {
     // 1. Total Accumulated Cash (The "Big Number")
