@@ -67,7 +67,7 @@ export const useTerminalHeader = (setCustomerId: (id: string | null) => void) =>
   };
 
   const currentProduct = useMemo(() => {
-    if (!currentBarcode) return { name: "NO ITEM", price: "₱0.00", stock: 0 };
+    if (!currentBarcode) return { name: "ITEM NAME", price: "₱0.00", stock: 0 };
     const item = allItems.find((item) => item.sku === currentBarcode);
     if (!item) return { name: "NOT FOUND", price: "₱0.00", stock: 0 };
     const stockInfo = inventoryData?.find((inv) => inv.sku === currentBarcode);

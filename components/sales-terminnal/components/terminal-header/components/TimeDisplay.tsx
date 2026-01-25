@@ -15,7 +15,7 @@ export const TimeDisplay = ({
   setCustomTransactionDate,
 }: TimeDisplayProps) => {
   return (
-    <div className="top-4 right-6 absolute text-right">
+    <div className="text-right">
       {isBackdating ? (
         <div className="group relative flex flex-col items-end cursor-pointer">
           <div className="flex items-center gap-2 group-hover:opacity-60 font-bold text-amber-400 text-sm transition-all animate-pulse group-hover:animate-none">
@@ -37,7 +37,7 @@ export const TimeDisplay = ({
         </div>
       ) : (
         <div className="flex flex-col items-end">
-          <span className="font-(family-name:--font-lexend) font-bold text-cyan-400 text-lg tracking-wider">
+          <span className="font-lexend font-bold text-cyan-400 text-sm tracking-wider">
             {liveTime}
           </span>
           <span className="text-[10px] text-cyan-400/50 uppercase tracking-widest">
