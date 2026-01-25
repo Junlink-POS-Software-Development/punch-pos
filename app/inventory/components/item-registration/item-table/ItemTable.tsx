@@ -11,7 +11,6 @@ import { Item } from "../utils/itemTypes";
 // Imports from our new modular files
 import { useProcessedItems } from "./hooks/useProcessedItems";
 import { HeaderWithFilter } from "./HeaderWithFilter";
-import { ItemTablePagination } from "../../../../../components/reusables/ItemTablePagination";
 import { ItemActions } from "./ItemActions";
 
 interface ItemTableProps {
@@ -66,21 +65,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({
 
   // 1. Use the Hook
   const {
-    paginatedRows,
-    totalRows,
+    rows,
     activeFilters,
     sortState,
     handleSort,
     handleApplyFilter,
     handleClearAllFilters,
-    safeCurrentPage,
-    totalPages,
-    startRow,
-    endRow,
-    rowsPerPage,
-    paginationOptions,
-    setRowsPerPage,
-    setCurrentPage,
   } = useProcessedItems(data);
 
   // Handle entering edit mode
@@ -114,11 +104,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({
 
   // Merge edited row into displayed rows
   const displayRows = useMemo(() => {
-    if (!editingRowId || !editedRow) return paginatedRows;
-    return paginatedRows.map((row) => 
+    if (!editingRowId || !editedRow) return rows;
+    return rows.map((row) => 
       row.id === editingRowId ? editedRow : row
     );
-  }, [paginatedRows, editingRowId, editedRow]);
+  }, [rows, editingRowId, editedRow]);
 
   // 2. Define Columns
   const columns: Column<Item>[] = useMemo(() => {
@@ -224,28 +214,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         columns={columns}
         rows={displayRows}
         rowKeyGetter={(row) => row.id!}
-        className="border-none"
-        style={{ height: "63vh" }}
+        className="border-none flex-1"
+        style={{ height: "100%" }}
         rowClass={(row, index) =>
           `rdg-row bg-transparent text-[80%] text-gray-200 hover:bg-gray-700/40 border-b border-gray-800 ${row.id === editingRowId ? "ring-1 ring-blue-500/50 bg-blue-500/10" : ""}`
         }
         onRowsChange={handleRowsChange}
-      />
-
-      {/* Pagination Footer */}
-      <ItemTablePagination
-        startRow={startRow}
-        endRow={endRow}
-        totalRows={totalRows}
-        rowsPerPage={rowsPerPage}
-        paginationOptions={paginationOptions}
-        onRowsPerPageChange={(newSize) => {
-          setRowsPerPage(newSize);
-          setCurrentPage(1);
-        }}
-        currentPage={safeCurrentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
       />
     </div>
   );

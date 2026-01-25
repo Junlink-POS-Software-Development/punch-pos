@@ -21,10 +21,6 @@ export const useProcessedItems = (initialData: Item[]) => {
     dir: "ASC" | "DESC" | null;
   }>({ col: null, dir: null });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Default to 10 or 20
-  const paginationOptions = [10, 20, 50, 100];
-
   // 2. Filter & Sort Logic
   const processedRows = useMemo(() => {
     let rows = [...initialData];
@@ -70,22 +66,7 @@ export const useProcessedItems = (initialData: Item[]) => {
     return rows;
   }, [initialData, activeFilters, sortState]);
 
-  // 3. Pagination Calculations
-  const totalRows = processedRows.length;
-  const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
-
-  // Ensure safeCurrentPage is never out of bounds (e.g., after filtering)
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-
-  // Calculate indices
-  const startRow = (safeCurrentPage - 1) * rowsPerPage;
-  const endRow = Math.min(startRow + rowsPerPage, totalRows);
-
-  const paginatedRows = useMemo(() => {
-    return processedRows.slice(startRow, endRow);
-  }, [processedRows, startRow, endRow]);
-
-  // 4. Handlers
+  // 3. Handlers
   const handleApplyFilter = (key: string, values: string[]) => {
     setActiveFilters((prev) => {
       const next = { ...prev };
@@ -96,24 +77,22 @@ export const useProcessedItems = (initialData: Item[]) => {
       }
       return next;
     });
-    setCurrentPage(1); // Always reset to page 1 when filtering
   };
 
   const handleClearAllFilters = () => {
     setActiveFilters({});
     setSortState({ col: null, dir: null });
-    setCurrentPage(1);
   };
 
   const handleSort = (col: keyof Item, dir: "ASC" | "DESC" | null) => {
     setSortState({ col, dir });
   };
 
-  // 5. Return Interface
+  // 4. Return Interface
   return {
     // Data
-    paginatedRows,
-    totalRows,
+    rows: processedRows,
+    totalRows: processedRows.length,
 
     // Filters
     activeFilters,
@@ -123,15 +102,5 @@ export const useProcessedItems = (initialData: Item[]) => {
     // Sorting
     sortState,
     handleSort,
-
-    // Pagination
-    safeCurrentPage,
-    totalPages,
-    startRow,
-    endRow,
-    rowsPerPage,
-    paginationOptions,
-    setRowsPerPage,
-    setCurrentPage,
   };
 };
