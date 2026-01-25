@@ -113,7 +113,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   // 2. Define Columns
   const columns: Column<Item>[] = useMemo(() => {
     const headerClass =
-      "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl";
+      "bg-slate-950/80 backdrop-blur-md text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center z-50";
 
     const createColumn = (
       key: keyof Item,

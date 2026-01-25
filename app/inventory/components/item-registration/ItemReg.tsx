@@ -91,7 +91,7 @@ const ItemReg = () => {
   const itemToEdit = editingIndex !== null ? items[editingIndex] : undefined;
 
   return (
-    <div className="space-y-6 p-6 h-full flex flex-col">
+    <div className="space-y-6 p-6 h-[85vh] flex flex-col">
       {/* Header & Actions */}
       <div className="flex justify-between items-center">
         <h1 className="font-bold text-2xl text-white">Item Registration</h1>
