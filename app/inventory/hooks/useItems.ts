@@ -22,6 +22,11 @@ export const useItems = () => {
       const data = await fetchItems();
       return data;
     },
+    // Cache configuration
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    refetchOnMount: "always", // Always check for updates in background
+    refetchOnWindowFocus: true,
   });
 
   const handleSuccess = (operation: string, callback?: () => void) => {

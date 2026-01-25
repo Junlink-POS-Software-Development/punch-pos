@@ -8,7 +8,9 @@ export const useInventory = () => {
     queryFn: () => fetchInventory(),
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
-    staleTime: 30000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    refetchOnMount: "always",
   });
 
   return {

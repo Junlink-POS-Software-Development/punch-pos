@@ -9,13 +9,13 @@ import { TimeDisplay } from "./components/TimeDisplay";
 import { ProductDisplay } from "./components/ProductDisplay";
 
 type TerminalHeaderProps = {
-  liveTime: string;
+
   setCustomerId: (id: string | null) => void;
   grandTotal: number;
 };
 
 export const TerminalHeader = ({
-  liveTime,
+
   setCustomerId,
   grandTotal,
 }: TerminalHeaderProps) => {
@@ -75,7 +75,7 @@ export const TerminalHeader = ({
           <div className="absolute top-6 right-6 z-20">
             <div className="bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50 backdrop-blur-sm shadow-lg">
               <TimeDisplay
-                liveTime={liveTime}
+
                 isBackdating={isBackdating}
                 customTransactionDate={customTransactionDate}
                 setCustomTransactionDate={setCustomTransactionDate}

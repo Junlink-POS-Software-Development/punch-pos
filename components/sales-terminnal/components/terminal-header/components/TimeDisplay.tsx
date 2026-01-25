@@ -1,19 +1,42 @@
 import { CalendarClock, XCircle } from "lucide-react";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 
 interface TimeDisplayProps {
-  liveTime: string;
   isBackdating: boolean;
   customTransactionDate: string | null;
   setCustomTransactionDate: (date: string | null) => void;
 }
 
 export const TimeDisplay = ({
-  liveTime,
   isBackdating,
   customTransactionDate,
   setCustomTransactionDate,
 }: TimeDisplayProps) => {
+  const [liveTime, setLiveTime] = useState("");
+
+  useEffect(() => {
+    const getNow = () =>
+      new Date()
+        .toLocaleString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+        .replace(/,/, "");
+
+    const initialTimeout = setTimeout(() => setLiveTime(getNow()), 0);
+    const timer = setInterval(() => setLiveTime(getNow()), 1000);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(timer);
+    };
+  }, []);
+
   return (
     <div className="text-right">
       {isBackdating ? (

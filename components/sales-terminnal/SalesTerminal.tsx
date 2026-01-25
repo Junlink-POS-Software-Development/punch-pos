@@ -26,7 +26,7 @@ const SalesTerminal = () => {
     onDoneSubmit,
     triggerDoneSubmit,
     onClear,
-    liveTime,
+
     successData,
     closeSuccessModal,
     errorMessage,
@@ -93,7 +93,7 @@ const SalesTerminal = () => {
       <div className="flex flex-col flex-1 p-4 h-full min-w-0">
         <FormProvider {...methods}>
           <TerminalHeader 
-            liveTime={liveTime} 
+ 
             setCustomerId={setCustomerId} 
             grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
           />
@@ -109,7 +109,7 @@ const SalesTerminal = () => {
                 onDoneSubmitTrigger={triggerDoneSubmit}
               />
             </div>
-            <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full flex-grow overflow-hidden min-h-0">
+            <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full grow overflow-hidden min-h-0">
               <TerminalCart
                 rows={cartItems}
                 onRemoveItem={onRemoveItem}

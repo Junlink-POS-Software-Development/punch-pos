@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useForm,
   SubmitHandler,
@@ -30,7 +30,7 @@ interface UsePosFormReturn {
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
   triggerDoneSubmit: () => void;
-  liveTime: string;
+
   isSubmitting: boolean;
   successData: TransactionResult | null;
   closeSuccessModal: () => void;
@@ -53,7 +53,7 @@ export const usePosForm = (): UsePosFormReturn => {
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [liveTime, setLiveTime] = useState("");
+
   const [successData, setSuccessData] = useState<TransactionResult | null>(
     null
   );
@@ -78,28 +78,7 @@ export const usePosForm = (): UsePosFormReturn => {
     control,
   } = methods;
 
-  // --- LIVE CLOCK ---
-  useEffect(() => {
-    const getNow = () =>
-      new Date()
-        .toLocaleString("en-US", {
-          month: "2-digit",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
-        .replace(/,/, "");
 
-    const initialTimeout = setTimeout(() => setLiveTime(getNow()), 0);
-    const timer = setInterval(() => setLiveTime(getNow()), 1000);
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(timer);
-    };
-  }, []);
 
   // --- GLOBAL KEYBOARD SHORTCUTS ---
   useEffect(() => {
@@ -161,7 +140,7 @@ export const usePosForm = (): UsePosFormReturn => {
     setValue("change", roundedChange, { shouldValidate: false });
   }, [cartTotal, payment, voucher, setValue]);
 
-  const onAddToCart = () => {
+  const onAddToCart = useCallback(() => {
     handleAddToCart({
       getValues,
       setValue,
@@ -172,20 +151,20 @@ export const usePosForm = (): UsePosFormReturn => {
       onError: (message) => setErrorMessage(message),
       inventoryData,
     });
-  };
+  }, [getValues, setValue, resetField, allItems, cartItems, inventoryData]);
 
-  const onClear = () => {
+  const onClear = useCallback(() => {
     console.log("🧹 [Form] onClear triggered");
     handleClear({ setCartItems, reset });
     setCustomerId(null); // [NEW] Reset customer association
     setTimeout(() => setFocus("customerName"), 50);
-  };
+  }, [reset, setCustomerId, setFocus]);
 
-  const onRemoveItem = (sku: string) => {
+  const onRemoveItem = useCallback((sku: string) => {
     setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
-  };
+  }, []);
 
-  const onUpdateItem = (sku: string, updates: Partial<CartItem>) => {
+  const onUpdateItem = useCallback((sku: string, updates: Partial<CartItem>) => {
     setCartItems((prevCart) =>
       prevCart.map((item) => {
         if (item.sku === sku) {
@@ -203,7 +182,7 @@ export const usePosForm = (): UsePosFormReturn => {
         return item;
       })
     );
-  };
+  }, []);
 
   // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data, event) => {
@@ -299,7 +278,7 @@ export const usePosForm = (): UsePosFormReturn => {
     onClear,
     onDoneSubmit,
     triggerDoneSubmit,
-    liveTime,
+
     isSubmitting,
     successData,
     closeSuccessModal,
