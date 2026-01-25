@@ -130,6 +130,7 @@ export const TerminalCart = ({ rows, onRemoveItem, onUpdateItem }: TerminalCartP
           <span>Unit Price</span>
           {isPriceEditingEnabled && (
             <button
+              type="button"
               onClick={() => setIsEditingActive(!isEditingActive)}
               className="text-slate-400 hover:text-cyan-400 transition-colors"
             >
