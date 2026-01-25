@@ -1,16 +1,58 @@
-import React, { useState } from "react";
-import { Edit2, Trash2, CheckSquare, Square, MoreHorizontal, Lock, Unlock } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Edit2, Trash2, CheckSquare, Square, MoreHorizontal, Lock, Unlock, ArrowUpDown } from "lucide-react";
 import { useCustomerData, useCustomerMutations } from "../hooks/useCustomerData";
 import { useCustomerStore } from "../store/useCustomerStore";
 import { updateCustomerGroup, deleteCustomer, bulkUpdateCustomerGroup, toggleCustomerLock } from "../api/services";
 
+// Helper function to parse name parts from a full name
+const parseNameParts = (fullName: string) => {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], middleName: "", lastName: "" };
+  }
+  if (parts.length === 2) {
+    return { firstName: parts[0], middleName: "", lastName: parts[1] };
+  }
+  // Assume last part is last name, first part is first name, rest is middle
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  const middleName = parts.slice(1, -1).join(" ");
+  return { firstName, middleName, lastName };
+};
+
+// Format display name based on sort mode
+const formatDisplayName = (fullName: string, sortByLastName: boolean): string => {
+  if (!sortByLastName) return fullName;
+  
+  const { firstName, middleName, lastName } = parseNameParts(fullName);
+  if (!lastName) return fullName;
+  
+  const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : "";
+  return `${lastName}, ${firstName}${middleInitial}`;
+};
+
+// Get last name for sorting
+const getLastName = (fullName: string): string => {
+  const parts = fullName.trim().split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : parts[0].toLowerCase();
+};
 export const CustomerTable = () => {
   const { customers, groups, isLoading } = useCustomerData();
   const { refreshData } = useCustomerMutations();
   const { setViewMode, setSelectedCustomerId } = useCustomerStore();
   
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
+  const [sortByLastName, setSortByLastName] = useState(false);
 
+  // Sort customers based on the current mode
+  const sortedCustomers = useMemo(() => {
+    return [...customers].sort((a, b) => {
+      if (sortByLastName) {
+        return getLastName(a.full_name).localeCompare(getLastName(b.full_name));
+      }
+      return a.full_name.toLowerCase().localeCompare(b.full_name.toLowerCase());
+    });
+  }, [customers, sortByLastName]);
   const handleGroupChange = async (customerId: string, groupId: string, isLocked: boolean) => {
     if (isLocked) {
       alert("This customer is locked and cannot be moved.");
@@ -124,14 +166,26 @@ export const CustomerTable = () => {
                   )}
                 </button>
               </th>
-              <th className="p-5">Name</th>
+              <th className="p-5">
+                <button 
+                  onClick={() => setSortByLastName(!sortByLastName)}
+                  className="flex items-center gap-2 hover:text-white transition-colors"
+                  title={sortByLastName ? "Sorting by Last Name" : "Sorting by First Name"}
+                >
+                  Name
+                  <ArrowUpDown size={14} className={sortByLastName ? "text-blue-400" : ""} />
+                  <span className="text-[10px] font-normal normal-case opacity-70">
+                    ({sortByLastName ? "Last" : "First"})
+                  </span>
+                </button>
+              </th>
               <th className="p-5">Contact</th>
               <th className="p-5">Group</th>
               <th className="p-5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700/50">
-            {customers.map((c) => {
+            {sortedCustomers.map((c) => {
               const isLocked = c.document_metadata?.isLocked || false;
               return (
                 <tr 
@@ -160,7 +214,7 @@ export const CustomerTable = () => {
                           </div>
                         )}
                       </div>
-                      {c.full_name}
+                      {formatDisplayName(c.full_name, sortByLastName)}
                     </button>
                   </td>
                   <td className="p-5 text-gray-400">{c.phone_number || "-"}</td>
