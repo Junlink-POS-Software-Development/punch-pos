@@ -153,6 +153,7 @@ export interface PaymentRecord {
   grand_total: number;
   transaction_time: string;
   amount_rendered: number;
+  voucher: number;
   change: number;
   cashier_id?: string; // We read ID, not name directly from this table
 }

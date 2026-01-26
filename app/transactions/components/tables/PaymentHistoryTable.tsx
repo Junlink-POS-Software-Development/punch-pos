@@ -150,16 +150,16 @@ export const PaymentHistoryTable = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 font-bold text-right">
-                    ₱{pay.grandTotal.toFixed(2)}
+                    ₱{(pay.grandTotal ?? 0).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    ₱{pay.amountRendered.toFixed(2)}
+                    ₱{(pay.amountRendered ?? 0).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-blue-400 text-right">
-                    {pay.voucher > 0 ? `₱${pay.voucher.toFixed(2)}` : "-"}
+                    {pay.voucher > 0 ? `₱${(pay.voucher ?? 0).toFixed(2)}` : "-"}
                   </td>
                   <td className="px-6 py-4 font-bold text-green-400 text-right">
-                    ₱{pay.change.toFixed(2)}
+                    ₱{(pay.change ?? 0).toFixed(2)}
                   </td>
                 </tr>
               ))

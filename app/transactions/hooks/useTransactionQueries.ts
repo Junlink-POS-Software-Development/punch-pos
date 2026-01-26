@@ -73,10 +73,10 @@ export const usePaymentHistory = (
         transactionNo: p.invoice_no,
         transactionTime: new Date(p.transaction_time).toLocaleString(),
         customerName: p.customer_name,
-        amountRendered: p.amount_rendered,
-        voucher: p.voucher,
-        grandTotal: p.grand_total,
-        change: p.change,
+        amountRendered: p.amount_rendered ?? 0,
+        voucher: p.voucher ?? 0,
+        grandTotal: p.grand_total ?? 0,
+        change: p.change ?? 0,
       })) as PaymentRecord[];
 
       return {
