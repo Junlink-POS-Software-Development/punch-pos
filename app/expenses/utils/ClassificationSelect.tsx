@@ -249,8 +249,10 @@ export const ClassificationSelect = forwardRef<
                 e.preventDefault();
                 if (highlightIndex >= 0 && filtered[highlightIndex]) {
                   handleSelect(filtered[highlightIndex]);
+                  if (onKeyDown) onKeyDown(e);
                 } else if (!exactMatch && search.trim()) {
                     handleCreate(); // Allow Enter to create
+                    if (onKeyDown) onKeyDown(e);
                 }
                 return;
               }

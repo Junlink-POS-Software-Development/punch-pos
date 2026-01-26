@@ -3,6 +3,7 @@ import { UseFormReturn, Controller } from "react-hook-form";
 import { Loader2, Lock, CalendarClock } from "lucide-react";
 import { ExpenseInput } from "../../lib/expenses.api";
 import { ClassificationSelect } from "../../utils/ClassificationSelect";
+import { CategorySelect } from "../../utils/CategorySelect";
 
 import dayjs from "dayjs";
 import { useStaffPermissions } from "@/app/settings/backdating/stores/useStaffPermissions";
@@ -91,9 +92,7 @@ export const CashoutForm = ({
     min: 0,
     valueAsNumber: true,
   });
-  const { ref: sourceHookRef, ...sourceRest } = register("source", {
-    required: true,
-  });
+  // Removed unused source register call
   const { ref: receiptHookRef, ...receiptRest } = register("receipt_no");
   const { ref: notesHookRef, ...notesRest } = register("notes");
   const { ref: dateHookRef, ...dateRest } = register("transaction_date", {
@@ -188,27 +187,27 @@ export const CashoutForm = ({
           <label className="block mb-2 font-medium text-slate-300 text-sm">
             Source (Category)
           </label>
-          <select
-            {...sourceRest}
-            ref={(e) => {
-              sourceHookRef(e);
-              setRef("source", e);
-            }}
-            onKeyDown={(e) => handleKeyDown(e, refs.receipt)}
-            className={`w-full input-dark ${
-              errors.source ? "border-red-500" : ""
-            }`}
-            disabled={isCategoriesLoading}
-          >
-            <option value="">
-              {isCategoriesLoading ? "Loading..." : "Select Source"}
-            </option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.category}>
-                {cat.category}
-              </option>
-            ))}
-          </select>
+          <Controller
+            name="source"
+            control={control}
+            rules={{ required: "Source is required" }}
+            render={({ field }) => (
+              <CategorySelect
+                {...field}
+                value={field.value || ""}
+                options={categories}
+                ref={(e: HTMLInputElement | null) => {
+                  field.ref(e);
+                  setRef("source", e);
+                }}
+                onKeyDown={(e: React.KeyboardEvent) =>
+                  handleKeyDown(e, refs.receipt)
+                }
+                error={errors.source?.message}
+                disabled={isCategoriesLoading}
+              />
+            )}
+          />
           {errors.source && (
             <p className="bottom-0 absolute text-red-400 text-xs">
               Source is required
@@ -289,7 +288,14 @@ export const CashoutForm = ({
               notesHookRef(e);
               setRef("notes", e);
             }}
-            onKeyDown={(e) => handleKeyDown(e, refs.date)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                // Do nothing on Enter
+                return;
+              }
+              handleKeyDown(e, refs.date);
+            }}
             className="w-full h-[42px] md:h-20 resize-none input-dark"
             placeholder="Additional details..."
           />
