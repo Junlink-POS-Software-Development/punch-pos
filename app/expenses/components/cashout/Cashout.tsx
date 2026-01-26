@@ -8,12 +8,16 @@ import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { useExpenses } from "../../hooks/useExpenses";
 
 export function Cashout() {
-  const getToday = () => new Date().toISOString().split("T")[0];
+  const getLocalDate = () => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().split("T")[0];
+  };
 
   // Default to today
   const [dateRange, setDateRange] = useState({
-    start: getToday(),
-    end: getToday(),
+    start: getLocalDate(),
+    end: getLocalDate(),
   });
 
   const { form, refs, data: hookData, handlers } = useCashout();
