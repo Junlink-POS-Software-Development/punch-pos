@@ -3,22 +3,19 @@
 "use client";
 
 import { useState } from "react";
-import { StockForm } from "./StockForm";
-import StockTable from "./StockTable";
 import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
 import { StockFormSchema } from "./utils/types";
-import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { ErrorMessage } from "@/components/sales-terminnal/components/ErrorMessage";
-
+import { PackagePlus } from "lucide-react";
+import { StockAdjustmentModal } from "./StockAdjustmentModal";
+import StockTable from "./StockTable";
 
 const StockManagementContent = () => {
   const [editingItem, setEditingItem] = useState<StockData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // 2. Get Layout State
-  const { isSplit } = useViewStore();
-
   const { addStockEntry, editStockEntry, isProcessing } = useStocks();
 
   const handleStockSubmit = (data: StockFormSchema) => {
@@ -35,6 +32,7 @@ const StockManagementContent = () => {
         {
           onSuccess: () => {
             setEditingItem(null);
+            setIsModalOpen(false);
           },
           onError: (err) => {
             setErrorMessage(err.message);
@@ -43,6 +41,9 @@ const StockManagementContent = () => {
       );
     } else {
       addStockEntry(data, {
+        onSuccess: () => {
+          setIsModalOpen(false);
+        },
         onError: (err) => {
           setErrorMessage(err.message);
         }
@@ -52,42 +53,55 @@ const StockManagementContent = () => {
 
   const handleCancelEdit = () => {
     setEditingItem(null);
+    setIsModalOpen(false);
+  };
+
+  const handleOpenAdjustment = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (item: StockData) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
   };
 
   return (
-    // 3. Update Layout: Vertical stack normally; Side-by-side grid when full screen (!isSplit)
-    <div className={
-      isSplit 
-        ? "flex flex-col gap-6 p-6" 
-        : "grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6 p-6 items-start"
-    }>
+    <div className="space-y-6 p-6 h-[85vh] flex flex-col">
       <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
-      <div className="relative p-4 glass-effect">
-        {isProcessing && (
-          <div className="z-10 absolute inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm rounded-lg">
-            <span className="font-bold text-white">Processing...</span>
-          </div>
-        )}
-
-        <h2 className="mb-2 font-semibold text-gray-200 text-xl">
-          {editingItem ? "Edit Stock Entry" : "Add Stock Entry"}
-        </h2>
-        <p className="mb-6 text-slate-400 text-sm">
-          {editingItem
-            ? `Updating record for: ${editingItem.item_name}`
-            : "Fill out the form below to record a new stock movement."}
-        </p>
-
-        <StockForm
-          onSubmit={handleStockSubmit}
-          itemToEdit={editingItem}
-          onCancelEdit={handleCancelEdit}
-        />
+      
+      {/* Header & Actions */}
+      <div className="flex justify-between items-center">
+        <h1 className="font-bold text-2xl text-white">Stock Management</h1>
+        <button
+          onClick={handleOpenAdjustment}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-white transition-colors shadow-lg shadow-blue-900/20"
+        >
+          <PackagePlus className="w-5 h-5" />
+          Adjust Stock
+        </button>
       </div>
 
-      <div className="p-4 glass-effect">
-        <StockTable onEdit={(item) => setEditingItem(item)} />
+      {/* Status Section */}
+      {isProcessing && (
+        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-center animate-pulse">
+          Processing stock adjustment...
+        </div>
+      )}
+
+      {/* Table Section */}
+      <div className="flex-1 bg-slate-900/50 p-6 border border-slate-800 rounded-xl overflow-hidden glass-effect">
+        <StockTable onEdit={handleEdit} />
       </div>
+
+      {/* Stock Adjustment Modal */}
+      <StockAdjustmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleStockSubmit}
+        itemToEdit={editingItem}
+        onCancelEdit={handleCancelEdit}
+      />
     </div>
   );
 };
