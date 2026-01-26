@@ -14,6 +14,7 @@ const DEFAULT_ITEMS = [
   "daily-gross",
   "daily-expenses",
   "monthly-gross",
+  "quantity-sold",
 ];
 
 export function DashboardContent() {

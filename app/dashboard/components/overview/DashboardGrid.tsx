@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import DailyExpensesCard from "./DailyExpensesCard";
+import QuantitySoldCard from "./QuantitySoldCard";
 import DailyGrossIncomeCard from "./DailyGrossIncomeCard";
 import MonthlyGrossCard from "./MonthlyGrossCard";
 import CashOnHand from "./CashOnHand";
@@ -107,6 +108,8 @@ export const DashboardGrid = ({
         return <DailyExpensesCard />;
       case "monthly-gross":
         return <MonthlyGrossCard />;
+      case "quantity-sold":
+        return <QuantitySoldCard />;
       default:
         return null;
     }
