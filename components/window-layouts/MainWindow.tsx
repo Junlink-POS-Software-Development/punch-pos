@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "../../app/hooks/useMediaQuery";
-import { SplitScreenControls } from "./SplitScreenControls";
 import RightWindow from "./RightWindow";
 import { useViewStore } from "./store/useViewStore";
 import Navigation from "../navigation/Navigation";
@@ -56,10 +55,9 @@ export default function MainWindow({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [mobileView, setMobileView] = useState<"left" | "right">("left");
   const [isInitial, setIsInitial] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const { viewState } = useViewStore();
+  const { viewState, mobileView } = useViewStore();
 
   // Auth State
   const { user, signOut } = useAuthStore();
@@ -72,10 +70,6 @@ export default function MainWindow({
   const fullScreenRoutes = ["/maintenance", "/login"];
   const isFullScreenRoute = fullScreenRoutes.some(route => pathname?.startsWith(route));
   
-  const handleToggleClick = () => {
-    setMobileView((current) => (current === "left" ? "right" : "left"));
-  };
-
   // Auth Handlers
   const openSignInModal = () => setAuthModalState("signIn");
   const openSignUpModal = () => setAuthModalState("signUp");
@@ -189,17 +183,13 @@ export default function MainWindow({
 
   return (
     <div className="relative flex bg-background w-full min-h-screen overflow-hidden">
+      {/* Mobile Navigation Sidebar */}
+      <Navigation variant="mobile" />
+
       <LeftWindow leftWidth={leftWidth} isTransitioning={isTransitioning} />
 
       {/* STEP 2: Pass 'children' down to the RightWindow */}
       <RightWindow rightWidth={rightWidth} isTransitioning={isTransitioning}>{children}</RightWindow>
-
-      <SplitScreenControls
-        isMobile={isMobile}
-        isInitial={isInitial}
-        mobileView={mobileView}
-        onToggleClick={handleToggleClick}
-      />
 
       {/* Auth Modals for Mobile too if needed, though usually they are triggered from Header which is in children (Navigation) on Mobile? 
           Wait, on Mobile, the Header was part of app/page.tsx which is now children.

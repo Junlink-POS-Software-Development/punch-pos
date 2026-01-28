@@ -1,3 +1,4 @@
+// components/navigation/Navigation.tsx
 import Link from "next/link";
 import {
   Archive,
@@ -15,9 +16,11 @@ import {
   Terminal,
   ChevronLeft,
   Menu,
+  X,
 } from "lucide-react";
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useViewStore } from "../window-layouts/store/useViewStore";
 
 // Mock data for the specific page shortcuts/dropdowns
 const MOCK_SHORTCUTS = [
@@ -27,12 +30,14 @@ const MOCK_SHORTCUTS = [
 ];
 
 interface NavigationProps {
-  variant?: "grid" | "sidebar";
+  variant?: "grid" | "sidebar" | "mobile";
 }
 
 const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { setMobileView } = useViewStore();
 
   const nav = [
     {
@@ -159,6 +164,15 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const displayItems =
     variant === "grid" ? nav.filter((item) => !item.hiddenInGrid) : nav;
 
+  const handleMobileNavClick = (href: string) => {
+    setIsMobileMenuOpen(false);
+    if (href === "/") {
+      setMobileView("left");
+    } else {
+      setMobileView("right");
+    }
+  };
+
   if (variant === "grid") {
     return (
       <nav className="gap-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8 font-lexend">
@@ -187,35 +201,97 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                 {item.text}
               </span>
             </Link>
-
-            <div className="invisible group-hover:visible top-full left-0 z-20 absolute opacity-0 group-hover:opacity-100 mt-2 w-48 transition-all translate-y-[-10px] group-hover:translate-y-0 duration-200 transform">
-              <div className="bg-slate-900/90 shadow-xl backdrop-blur-xl p-3 border border-slate-700 rounded-xl glass-effect">
-                <div className="flex justify-between items-center mb-2 px-2 font-semibold text-slate-500 text-xs uppercase">
-                  <span>Shortcuts</span>
-                  <MoreHorizontal className="w-3 h-3" />
-                </div>
-                <ul className="space-y-1">
-                  {(item.shortcuts || MOCK_SHORTCUTS).map((shortcut, idx) => (
-                    <li key={idx}>
-                      <Link
-                        href={shortcut.href}
-                        className="flex justify-between items-center hover:bg-white/10 px-2 py-1.5 rounded-md w-full text-slate-300 hover:text-white text-sm text-left transition-colors"
-                      >
-                        {shortcut.label}
-                        <ChevronRight className="opacity-50 w-3 h-3" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
           </div>
         ))}
       </nav>
     );
   }
 
-  // --- SIDEBAR VARIANT ---
+  if (variant === "mobile") {
+    return (
+      <>
+        {/* Toggle Button - Fixed Left Edge (Mirrors MobileCartPanel) */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[80] bg-slate-800 border border-l-0 border-slate-700 rounded-r-lg p-2 text-white shadow-lg transition-transform duration-300"
+          style={{ transform: isMobileMenuOpen ? "translateX(280px)" : "translateX(0)" }}
+        >
+          {isMobileMenuOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+        </button>
+
+        {/* Backdrop */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm transition-opacity"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Sidebar Panel */}
+        <div
+          className={`
+            fixed top-0 left-0 h-full w-[280px] z-[70]
+            bg-[#0B1120] border-r border-slate-800
+            transform transition-transform duration-300 ease-in-out
+            ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+            flex flex-col shadow-2xl
+          `}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-800">
+            <span className="text-lg font-bold text-white tracking-wide">MENU</span>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Nav Items */}
+          <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar space-y-1">
+            {nav.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname?.startsWith(item.href) && item.href !== "/";
+
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => handleMobileNavClick(item.href)}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                    ${
+                      isActive
+                        ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.15)]"
+                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent"
+                    }
+                  `}
+                >
+                  <item.Icon className={`w-5 h-5 ${isActive ? "text-cyan-400" : "text-slate-500"}`} />
+                  <span className="font-medium text-sm tracking-wide">
+                    {item.text}
+                  </span>
+                  {item.hasNotification && (
+                    <span className="ml-auto bg-red-500 rounded-full w-2 h-2" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-slate-800 text-center">
+             <span className="text-xs text-slate-600">v1.0.0</span>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // --- SIDEBAR VARIANT (Desktop) ---
   return (
     <aside
       className={`
