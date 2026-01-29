@@ -90,17 +90,24 @@ export async function middleware(request: NextRequest) {
   // SUBSCRIPTION GUARD LOGIC
   // ============================================
   if (user) {
-    // Check if user belongs to a store
+    // Check if user belongs to a store and has completed profile
     const { data: userData } = await supabase
       .from("users")
-      .select("store_id")
+      .select("store_id, first_name, last_name, metadata")
       .eq("user_id", user.id)
       .single();
 
     const isOnboardingPage = request.nextUrl.pathname.startsWith("/onboarding");
 
-    if (!userData?.store_id) {
-      // If user has no store, redirect to onboarding
+    const hasStore = !!userData?.store_id;
+    const hasName = !!userData?.first_name && !!userData?.last_name;
+    const jobTitle = (userData?.metadata as { job_title?: string })?.job_title;
+    const hasJobTitle = !!jobTitle;
+
+    const isProfileComplete = hasStore && hasName && hasJobTitle;
+
+    if (!isProfileComplete) {
+      // If user has incomplete profile, redirect to onboarding
       if (!isOnboardingPage && !isApiRoute) {
         return NextResponse.redirect(new URL("/onboarding", request.url));
       }

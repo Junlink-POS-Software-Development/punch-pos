@@ -17,60 +17,9 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        // Check for registration cookie
-        const cookieStore = await cookies();
-        const registrationDataCookie = cookieStore.get("registration_data");
-
         console.log("Auth Callback: User found:", user.id);
-        console.log("Auth Callback: Cookie found:", !!registrationDataCookie);
-
-        if (registrationDataCookie) {
-          try {
-            const registrationData = JSON.parse(registrationDataCookie.value);
-            console.log("Auth Callback: Registration Data:", registrationData);
-            
-            const { firstName, lastName, jobTitle, enrollmentId } =
-              registrationData;
-
-            // Use the secure RPC to join the store
-            const { data: rpcData, error: rpcError } = await supabase.rpc("join_store", {
-              provided_enrollment_id: enrollmentId,
-            });
-
-            if (rpcError) {
-              console.error("Auth Callback: RPC failed:", rpcError);
-              return NextResponse.redirect(`${origin}/onboarding?error=invalid_code`);
-            }
-
-            const result = rpcData as { success: boolean; error?: string; store_id?: string };
-
-            if (!result.success) {
-               console.error("Auth Callback: Join store failed:", result.error);
-               return NextResponse.redirect(`${origin}/onboarding?error=invalid_code`);
-            }
-
-            console.log("Auth Callback: User successfully linked via RPC.");
-
-            // 3. Clear cookie
-            cookieStore.delete("registration_data");
-          } catch (e) {
-            console.error("Error processing registration cookie:", e);
-            return NextResponse.redirect(`${origin}/auth/auth-code-error?error=cookie_processing`);
-          }
-        } else {
-          console.log("Auth Callback: No registration cookie. Checking existing user status.");
-          // Normal login flow: Check if user has a store_id
-          const { data: userData } = await supabase
-            .from("users")
-            .select("store_id")
-            .eq("user_id", user.id)
-            .single();
-
-          if (!userData?.store_id) {
-            console.log("Auth Callback: User has no store_id. Redirecting to onboarding.");
-            return NextResponse.redirect(`${origin}/onboarding`);
-          }
-        }
+        // We don't need to check for registration cookies or profile completion here anymore.
+        // The middleware will handle redirecting to /onboarding if any required fields are missing.
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host");

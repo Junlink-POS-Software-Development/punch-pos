@@ -24,15 +24,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
   const [success, setSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
-  const [showGoogleForm, setShowGoogleForm] = useState(false);
-  const [googleFormValues, setGoogleFormValues] = useState({
-    firstName: "",
-    lastName: "",
-    jobTitle: "",
-    enrollmentId: "",
-  });
-  const [googleError, setGoogleError] = useState("");
-
   const {
     register,
     handleSubmit,
@@ -49,177 +40,6 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
       enrollmentId: "",
     },
   });
-
-  const handleGoogleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGoogleError("");
-    setIsPending(true);
-
-    if (
-      !googleFormValues.firstName ||
-      !googleFormValues.lastName ||
-      !googleFormValues.jobTitle ||
-      !googleFormValues.enrollmentId
-    ) {
-      setGoogleError("Please fill in all fields.");
-      setIsPending(false);
-      return;
-    }
-
-    try {
-      // Save data to cookie
-      const { setRegistrationCookie } = await import("@/app/actions/cookie");
-      await setRegistrationCookie(googleFormValues);
-
-      // Start OAuth
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-    } catch (err) {
-      console.error("Error starting Google Auth:", err);
-      setGoogleError("Failed to start Google Authentication.");
-      setIsPending(false);
-    }
-  };
-
-  if (showGoogleForm) {
-    return (
-      <div className="flex justify-center items-center p-6">
-        <div className="p-8 rounded-2xl w-full max-w-md glass-effect">
-          <h2 className="mb-2 font-bold text-white text-3xl text-center">
-            Almost there!
-          </h2>
-          <p className="mb-8 text-slate-300 text-center">
-            Please provide these details to complete your registration.
-          </p>
-
-          <form onSubmit={handleGoogleSubmit} className="space-y-4">
-            {/* First Name */}
-            <div>
-              <div className="relative">
-                <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={googleFormValues.firstName}
-                  onChange={(e) =>
-                    setGoogleFormValues({
-                      ...googleFormValues,
-                      firstName: e.target.value,
-                    })
-                  }
-                  className="pl-10! w-full input-dark"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <div className="relative">
-                <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  value={googleFormValues.lastName}
-                  onChange={(e) =>
-                    setGoogleFormValues({
-                      ...googleFormValues,
-                      lastName: e.target.value,
-                    })
-                  }
-                  className="pl-10! w-full input-dark"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Job Title */}
-            <div>
-              <div className="relative">
-                <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Job Title (e.g., Sales Associate)"
-                  value={googleFormValues.jobTitle}
-                  onChange={(e) =>
-                    setGoogleFormValues({
-                      ...googleFormValues,
-                      jobTitle: e.target.value,
-                    })
-                  }
-                  className="pl-10! w-full input-dark"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Enrollment ID */}
-            <div>
-              <div className="relative">
-                <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Hash className="w-5 h-5 text-slate-400" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Company Code (Enrollment ID)"
-                  value={googleFormValues.enrollmentId}
-                  onChange={(e) =>
-                    setGoogleFormValues({
-                      ...googleFormValues,
-                      enrollmentId: e.target.value,
-                    })
-                  }
-                  className="pl-10! w-full input-dark"
-                  required
-                />
-              </div>
-            </div>
-
-            {googleError && (
-              <div className="flex items-center gap-2 text-red-300 text-sm">
-                <AlertTriangle className="w-5 h-5" />
-                <span>{googleError}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="flex justify-center items-center gap-2 w-full btn-3d-glass"
-              disabled={isPending}
-            >
-              {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <LogIn className="w-5 h-5" />
-              )}
-              <span>
-                {isPending ? "Redirecting to Google..." : "Proceed to Google"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowGoogleForm(false)}
-              className="mt-4 w-full font-medium text-slate-400 hover:text-white"
-            >
-              Back
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   const onSubmit = async (values: SignUpFormValues) => {
     setFormError("root.serverError", { message: "" });
@@ -420,7 +240,19 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
 
             <button
               type="button"
-              onClick={() => setShowGoogleForm(true)}
+              onClick={async () => {
+                try {
+                  const supabase = createClient();
+                  await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: {
+                      redirectTo: `${window.location.origin}/auth/callback`,
+                    },
+                  });
+                } catch (err) {
+                  console.error("Error signing in with Google:", err);
+                }
+              }}
               className="flex justify-center items-center gap-2 mb-6 w-full btn-3d-glass"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -441,7 +273,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   fill="#EA4335"
                 />
               </svg>
-              <span>Create an account with Google</span>
+              <span>Continue with Google</span>
             </button>
 
             <p className="pt-4 text-slate-300 text-sm text-center">
