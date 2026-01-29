@@ -113,6 +113,7 @@ const SalesTerminal = () => {
                     onAddToCartClick={onAddToCart}
                     onDoneSubmitTrigger={triggerDoneSubmit}
                     setActiveField={setActiveField}
+                    activeField={activeField}
                   />
                 </div>
                 {/* Mobile Form Fields */}
@@ -120,6 +121,7 @@ const SalesTerminal = () => {
                   <MobileFormFields
                     onAddToCartClick={onAddToCart}
                     setActiveField={setActiveField}
+                    activeField={activeField}
                   />
                 </div>
               </div>
@@ -138,6 +140,7 @@ const SalesTerminal = () => {
                     onAddToCart={onAddToCart}
                     onCharge={() => setIsPaymentPopupOpen(true)}
                     activeField={activeField}
+                    setActiveField={setActiveField}
                   />
                 </div>
               </div>
@@ -152,6 +155,7 @@ const SalesTerminal = () => {
             onClearAll={onClear}
             onCharge={() => setIsPaymentPopupOpen(true)}
             activeField={activeField}
+            setActiveField={setActiveField}
           />
         </div>
 

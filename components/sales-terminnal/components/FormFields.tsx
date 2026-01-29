@@ -9,10 +9,11 @@ type FormFieldsProps = {
   onAddToCartClick: () => void; // Back to sync
   onDoneSubmitTrigger: () => void;
   setActiveField?: (field: "barcode" | "quantity" | null) => void;
+  activeField?: "barcode" | "quantity" | null;
 };
 
 export const FormFields = React.memo<FormFieldsProps>(
-  ({ onAddToCartClick, onDoneSubmitTrigger, setActiveField }) => {
+  ({ onAddToCartClick, onDoneSubmitTrigger, setActiveField, activeField }) => {
     const { register, control, setValue, setFocus } =
       useFormContext<PosFormValues>();
     
@@ -20,17 +21,26 @@ export const FormFields = React.memo<FormFieldsProps>(
     const barcodeInputRef = React.useRef<HTMLInputElement>(null);
     const quantityInputRef = React.useRef<HTMLInputElement>(null);
 
-    const focusBarcode = () => {
+    const focusBarcode = React.useCallback(() => {
       setTimeout(() => {
         barcodeInputRef.current?.focus();
-      }, 0);
-    };
+      }, 50);
+    }, []);
 
-    const focusQuantity = () => {
+    const focusQuantity = React.useCallback(() => {
       setTimeout(() => {
         quantityInputRef.current?.focus();
-      }, 0);
-    };
+      }, 50);
+    }, []);
+
+    // Listen to activeField prop changes to set focus
+    React.useEffect(() => {
+      if (activeField === "barcode") {
+        focusBarcode();
+      } else if (activeField === "quantity") {
+        focusQuantity();
+      }
+    }, [activeField, focusBarcode, focusQuantity]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== "Enter") return;
@@ -45,14 +55,14 @@ export const FormFields = React.memo<FormFieldsProps>(
 
       switch (fieldId) {
         case "customerName":
-          focusBarcode();
+          setActiveField?.("barcode");
           break;
         case "barcode":
-          focusQuantity();
+          setActiveField?.("quantity");
           break;
         case "quantity":
           onAddToCartClick();
-          focusBarcode();
+          setActiveField?.("barcode");
           break;
         default:
           break;
@@ -104,14 +114,17 @@ export const FormFields = React.memo<FormFieldsProps>(
                     control={control}
                     name="barcode"
                     render={({
-                      field: { onChange, value, onBlur },
+                      field: { onChange, value, onBlur, ref: formRef },
                       fieldState: { error },
                     }) => (
                       <div className="w-full">
                         <ItemAutocomplete
                           id="barcode"
                           onKeyDown={handleKeyDown}
-                          ref={barcodeInputRef}
+                          ref={(e) => {
+                            formRef(e);
+                            (barcodeInputRef as any).current = e;
+                          }}
                           value={value ? String(value) : ""}
                           onChange={onChange}
                           onBlur={() => {
@@ -124,7 +137,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                             setValue("barcode", item.sku, {
                               shouldValidate: true,
                             });
-                            focusQuantity();
+                            setActiveField?.("quantity");
                           }}
                           className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors"
                         />
@@ -136,10 +149,13 @@ export const FormFields = React.memo<FormFieldsProps>(
                     control={control}
                     name="quantity"
                     render={({
-                      field: { onChange, value, onBlur },
+                      field: { onChange, value, onBlur, ref: formRef },
                     }) => (
                       <input
-                        ref={quantityInputRef}
+                        ref={(e) => {
+                          formRef(e);
+                          (quantityInputRef as any).current = e;
+                        }}
                         type="number"
                         id="quantity"
                         value={value === null || value === undefined ? "" : value}

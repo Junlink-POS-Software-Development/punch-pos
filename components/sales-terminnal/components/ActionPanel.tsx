@@ -12,6 +12,7 @@ interface ActionPanelProps {
   onClearAll: () => void;
   onCharge: () => void;
   activeField: "barcode" | "quantity" | null;
+  setActiveField: (field: "barcode" | "quantity" | null) => void;
 }
 
 export default function ActionPanel({
@@ -19,6 +20,7 @@ export default function ActionPanel({
   onClearAll,
   onCharge,
   activeField,
+  setActiveField,
 }: ActionPanelProps) {
   const { setValue, getValues, setFocus, reset } = useFormContext<PosFormValues>();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -26,7 +28,7 @@ export default function ActionPanel({
   const handleQuickPickSelect = (item: any) => {
     console.log("Selected:", item);
     setValue("barcode", item.sku, { shouldValidate: true });
-    setFocus("quantity");
+    setActiveField("quantity");
   };
 
   const handleNumpadPress = (key: string) => {
@@ -65,6 +67,7 @@ export default function ActionPanel({
     <>
       {/* Mobile Toggle Button - Fixed at bottom on small screens */}
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-800 border-t border-slate-700 p-3 flex items-center justify-center gap-2 text-white font-medium"
       >
@@ -100,6 +103,8 @@ export default function ActionPanel({
             onClearInput={() => {
               setValue("barcode", "");
               setValue("quantity", null);
+              setValue("customerName", null);
+              setActiveField("barcode");
             }}
             onClearAll={onClearAll}
          />

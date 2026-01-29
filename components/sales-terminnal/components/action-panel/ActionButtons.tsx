@@ -58,6 +58,7 @@ export const ActionButtons = ({
       {/* Primary Actions Grid - 3 cols on mobile, 5 on larger */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 sm:gap-2">
         <button
+          type="button"
           onClick={onAdd}
           className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
@@ -65,6 +66,7 @@ export const ActionButtons = ({
           ADD
         </button>
         <button
+          type="button"
           onClick={onDiscount}
           className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
@@ -72,6 +74,7 @@ export const ActionButtons = ({
           DISC
         </button>
         <button
+          type="button"
           onClick={onVoucher}
           className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
@@ -79,6 +82,7 @@ export const ActionButtons = ({
           VOUCH
         </button>
         <button
+          type="button"
           onClick={onOpenDrawer}
           className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
@@ -86,6 +90,7 @@ export const ActionButtons = ({
           DRAWER
         </button>
         <button
+          type="button"
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={() => timerRef.current && clearTimeout(timerRef.current)}
@@ -102,6 +107,7 @@ export const ActionButtons = ({
       {/* Charge and Qty Control */}
       <div className="grid grid-cols-4 gap-1 sm:gap-2 h-12 sm:h-16">
         <button
+          type="button"
           onClick={onDecreaseQty}
           className="col-span-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-colors flex items-center justify-center"
         >
@@ -109,6 +115,7 @@ export const ActionButtons = ({
         </button>
         
         <button
+          type="button"
           onClick={onCharge}
           className="col-span-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xl rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
         >
@@ -117,6 +124,7 @@ export const ActionButtons = ({
         </button>
 
         <button
+          type="button"
           onClick={onIncreaseQty}
           className="col-span-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-colors flex items-center justify-center"
         >

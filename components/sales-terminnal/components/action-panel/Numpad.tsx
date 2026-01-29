@@ -32,6 +32,7 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
           {showKeyboard ? "T9 Keypad" : "Numpad"}
         </span>
         <button
+          type="button"
           onClick={() => setShowKeyboard(!showKeyboard)}
           className="p-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           title={showKeyboard ? "Show Numpad" : "Show T9 Keypad"}
@@ -44,6 +45,7 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
         <div className="grid grid-cols-3 gap-2 flex-1">
           {T9_KEYS.map((item) => (
             <button
+              type="button"
               key={item.key}
               onClick={() => item.key === "⌫" ? onClear() : onKeyPress(item.key)}
               className={`
@@ -60,6 +62,7 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
         <div className="grid grid-cols-3 gap-2 flex-1">
           {KEYPAD_NUMBERS.map((key) => (
             <button
+              type="button"
               key={key}
               onClick={() => key === "⌫" ? onClear() : onKeyPress(key)}
               className={`

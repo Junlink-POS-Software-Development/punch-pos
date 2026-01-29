@@ -11,6 +11,7 @@ interface MobileActionPanelProps {
   onAddToCart: () => void;
   onCharge: () => void;
   activeField: "barcode" | "quantity" | null;
+  setActiveField: (field: "barcode" | "quantity" | null) => void;
   onClearCart?: () => void; // Optional for now, but good to have
 }
 
@@ -18,19 +19,20 @@ export const MobileActionPanel = ({
   onAddToCart,
   onCharge,
   activeField,
+  setActiveField,
   onClearCart,
 }: MobileActionPanelProps) => {
   const { setValue, setFocus } = useFormContext<PosFormValues>();
 
   const handleQuickPickSelect = (item: any) => {
     setValue("barcode", item.sku, { shouldValidate: true });
-    setFocus("quantity");
+    setActiveField("quantity");
   };
 
   const handleClear = () => {
     setValue("barcode", "");
     setValue("quantity", null);
-    setFocus("barcode");
+    setActiveField("barcode");
   };
 
   const handleClearLongPress = (e: React.MouseEvent | React.TouchEvent) => {

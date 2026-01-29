@@ -8,14 +8,38 @@ import { Plus, Minus, ScanBarcode } from "lucide-react";
 type MobileFormFieldsProps = {
   onAddToCartClick: () => void;
   setActiveField?: (field: "barcode" | "quantity" | null) => void;
+  activeField?: "barcode" | "quantity" | null;
 };
 
 export const MobileFormFields = React.memo<MobileFormFieldsProps>(
-  ({ onAddToCartClick, setActiveField }) => {
+  ({ onAddToCartClick, setActiveField, activeField }) => {
     const { register, control, setValue, setFocus, getValues, watch } =
       useFormContext<PosFormValues>();
 
-    const quantity = watch("quantity") || 0;
+    // Direct refs for inputs to ensure reliable focus
+    const barcodeInputRef = React.useRef<HTMLInputElement>(null);
+    const quantityInputRef = React.useRef<HTMLInputElement>(null);
+
+    const focusBarcode = React.useCallback(() => {
+      setTimeout(() => {
+        barcodeInputRef.current?.focus();
+      }, 50);
+    }, []);
+
+    const focusQuantity = React.useCallback(() => {
+      setTimeout(() => {
+        quantityInputRef.current?.focus();
+      }, 50);
+    }, []);
+
+    // Listen to activeField prop changes to set focus
+    React.useEffect(() => {
+      if (activeField === "barcode") {
+        focusBarcode();
+      } else if (activeField === "quantity") {
+        focusQuantity();
+      }
+    }, [activeField, focusBarcode, focusQuantity]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== "Enter") return;
@@ -25,10 +49,10 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
       const fieldId = target.id;
 
       if (fieldId === "barcode") {
-        setFocus("quantity");
+        setActiveField?.("quantity");
       } else if (fieldId === "quantity") {
         onAddToCartClick();
-        setFocus("barcode");
+        setActiveField?.("barcode");
       }
     };
 
@@ -62,13 +86,16 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
                 control={control}
                 name="barcode"
                 render={({
-                  field: { onChange, value, onBlur, ref },
+                  field: { onChange, value, onBlur, ref: formRef },
                   fieldState: { error },
                 }) => (
                   <ItemAutocomplete
                     id="barcode"
                     onKeyDown={handleKeyDown}
-                    ref={ref}
+                    ref={(e) => {
+                      formRef(e);
+                      (barcodeInputRef as any).current = e;
+                    }}
                     value={value ? String(value) : ""}
                     onChange={onChange}
                     onBlur={onBlur}
@@ -76,7 +103,7 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
                     error={error?.message}
                     onItemSelect={(item) => {
                       setValue("barcode", item.sku, { shouldValidate: true });
-                      setFocus("quantity");
+                      setActiveField?.("quantity");
                     }}
                     className="pl-3 pr-10 w-full h-10 text-sm input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors"
                   />
@@ -111,13 +138,35 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
             </button>
 
             {/* Quantity Input */}
-            <input
-              type="number"
-              id="quantity"
-              {...register("quantity", { valueAsNumber: true })}
-              onFocus={() => setActiveField?.("quantity")}
-              onKeyDown={handleKeyDown}
-              className={`w-14 h-10 text-center text-sm input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${noSpinnerClass}`}
+            <Controller
+              control={control}
+              name="quantity"
+              render={({
+                field: { onChange, value, onBlur, ref: formRef },
+              }) => (
+                <input
+                  ref={(e) => {
+                    formRef(e);
+                    (quantityInputRef as any).current = e;
+                  }}
+                  type="number"
+                  id="quantity"
+                  value={value === null || value === undefined ? "" : value}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "") {
+                      onChange(null);
+                    } else {
+                      const num = parseInt(val, 10);
+                      onChange(isNaN(num) ? null : num);
+                    }
+                  }}
+                  onBlur={onBlur}
+                  onFocus={() => setActiveField?.("quantity")}
+                  onKeyDown={handleKeyDown}
+                  className={`w-14 h-10 text-center text-sm input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${noSpinnerClass}`}
+                />
+              )}
             />
 
             {/* Plus Button */}
