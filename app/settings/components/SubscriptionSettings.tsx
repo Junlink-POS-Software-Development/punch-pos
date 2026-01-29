@@ -14,7 +14,7 @@ export default function SubscriptionSettings() {
   const handleSubscribe = async () => {
     // Xendit handles the UI, so we just need a simple confirmation or direct call
     const confirmed = window.confirm(
-      "You will be redirected to Xendit to pay ₱450.00 via GCash/Card. Continue?"
+      "You will be redirected to Xendit to pay ₱500.00 via GCash/Card. Continue?"
     );
     if (confirmed) {
       await subscribe();
@@ -87,7 +87,7 @@ export default function SubscriptionSettings() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Plan Cost</span>
-              <span className="font-medium text-white">₱450.00 / month</span>
+              <span className="font-medium text-white">₱500.00 / month</span>
             </div>
             {isActive && (
               <div className="flex justify-between text-sm">
@@ -104,7 +104,7 @@ export default function SubscriptionSettings() {
               onClick={handleSubscribe}
               className="bg-cyan-500 hover:bg-cyan-600 mt-6 px-4 py-2 rounded-lg w-full font-medium text-white transition-colors"
             >
-              Subscribe Now (₱450.00)
+              Subscribe Now (₱500.00)
             </button>
           )}
         </div>

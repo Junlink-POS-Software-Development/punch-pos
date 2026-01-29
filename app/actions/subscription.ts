@@ -52,7 +52,7 @@ export async function fetchSubscriptionData() {
     ? [
         {
           id: subscription.id,
-          amount: subscription.amount_paid || 450,
+          amount: subscription.amount_paid || 500,
           status: subscription.status,
           created_at: subscription.updated_at,
           transaction_id: subscription.xendit_invoice_id,
