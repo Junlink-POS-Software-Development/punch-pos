@@ -72,6 +72,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   // State for the edited row data
   const [editedRow, setEditedRow] = useState<Item | null>(null);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
 
   // 1. Use the Hook
   const {
@@ -120,12 +121,19 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   }, []);
 
   // Handle saving edits
-  const handleSaveEdit = useCallback(() => {
+  const handleSaveEdit = useCallback(async () => {
     if (editedRow && onSaveEdit) {
-      onSaveEdit(editedRow);
+      setIsSavingLocal(true);
+      try {
+        await onSaveEdit(editedRow);
+        setEditingRowId(null);
+        setEditedRow(null);
+      } catch (error) {
+        console.error("Inline save failed:", error);
+      } finally {
+        setIsSavingLocal(false);
+      }
     }
-    setEditingRowId(null);
-    setEditedRow(null);
   }, [editedRow, onSaveEdit]);
 
   // Handle canceling edits
@@ -258,7 +266,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({
               data={data}
               onEdit={onEdit}
               onDelete={onDelete}
+              id={row.id!}
               isEditing={row.id === editingRowId}
+              isSaving={isSavingLocal}
               onStartEdit={() => handleStartEdit(row)}
               onSaveEdit={handleSaveEdit}
               onCancelEdit={handleCancelEdit}

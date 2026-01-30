@@ -49,7 +49,10 @@ export const useItems = () => {
 
   const handleSuccess = (operation: string, callback?: () => void) => {
     console.log(`${operation} successful`);
+    // Invalidate ALL items related queries
     queryClient.invalidateQueries({ queryKey: ["items"] });
+    queryClient.invalidateQueries({ queryKey: ["items-infinite"] });
+    
     setIsProcessing(false);
     if (callback) callback();
   };
@@ -86,10 +89,12 @@ export const useItems = () => {
     console.log("Updating item:", item);
     setIsProcessing(true);
     try {
-      await updateItem(item);
+      const result = await updateItem(item);
       handleSuccess("Update", options?.onSuccess);
+      return result;
     } catch (err) {
       handleError(err as Error, "Update", options?.onError);
+      throw err;
     }
   };
 

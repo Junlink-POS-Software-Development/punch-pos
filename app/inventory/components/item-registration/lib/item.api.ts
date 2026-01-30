@@ -126,7 +126,20 @@ export const insertItem = async (item: Item): Promise<Item> => {
   
   const dbItem = toDatabaseObject(item);
   
-  const { data, error } = await supabase
+  // Fetch current user's store_id to ensure RLS 'WITH CHECK' passes
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+
+  if (userError) {
+    console.error("Failed to fetch user store_id for insertion:", userError);
+  } else if (userData?.store_id) {
+    (dbItem as any).store_id = userData.store_id;
+  }
+  
+  const { data: insertedData, error } = await supabase
     .from("items")
     .insert(dbItem)
     .select()
@@ -137,24 +150,27 @@ export const insertItem = async (item: Item): Promise<Item> => {
     throw new Error(error.message);
   }
 
-  return fromDatabaseObject(data);
+  return fromDatabaseObject(insertedData);
 };
 
 export const updateItem = async (item: Item): Promise<Item> => {
   if (!item.id) throw new Error("Item ID is required for update");
 
-  const dbItem = toDatabaseObject(item); // Maps item.category -> dbItem.category_id
+  const dbItem = toDatabaseObject(item); 
+  // IMPORTANT: Remove 'id' from the update payload. 
+  // It's used in the .eq() filter, and some databases/RLS might object to it being in the body.
+  const { id: _, ...updateData } = dbItem;
 
   const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("items")
-    .update(dbItem)
+    .update(updateData)
     .eq("id", item.id)
     .select()
     .single();
 
   if (error) {
-    console.error("Supabase update error:", error);
+    console.error("Supabase update error detail:", JSON.stringify(error, null, 2));
     throw new Error(error.message);
   }
   

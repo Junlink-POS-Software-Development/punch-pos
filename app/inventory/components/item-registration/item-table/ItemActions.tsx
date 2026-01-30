@@ -8,7 +8,9 @@ interface ItemActionsProps {
   onEdit: (index: number) => void;
   onDelete: (index: number) => void;
   // New props for inline editing
+  id: string; // for actions
   isEditing?: boolean;
+  isSaving?: boolean;
   onStartEdit?: () => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
@@ -20,6 +22,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   onEdit,
   onDelete,
   isEditing = false,
+  isSaving = false,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -37,15 +40,30 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
       <div className="flex gap-1">
         <button
           onClick={onSaveEdit}
-          className="flex items-center gap-1 bg-green-500/20 hover:bg-green-500/30 px-2 py-1 rounded text-green-400 hover:text-green-200 transition-colors text-xs font-medium"
+          disabled={isSaving}
+          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+            isSaving 
+              ? "bg-slate-700 text-slate-400 cursor-not-allowed" 
+              : "bg-green-500/20 hover:bg-green-500/30 text-green-400 hover:text-green-200"
+          }`}
           title="Save Changes"
         >
-          <Save className="w-3 h-3" />
-          Save
+          {isSaving ? (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </div>
+          ) : (
+            <>
+              <Save className="w-3 h-3" />
+              Save
+            </>
+          )}
         </button>
         <button
           onClick={onCancelEdit}
-          className="hover:bg-gray-400/20 p-1 rounded text-gray-400 hover:text-gray-200 transition-colors"
+          disabled={isSaving}
+          className="hover:bg-gray-400/20 p-1 rounded text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
           title="Cancel Edit"
         >
           <X className="w-4 h-4" />

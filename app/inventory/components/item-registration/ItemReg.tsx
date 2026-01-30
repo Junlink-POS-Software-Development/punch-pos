@@ -93,10 +93,10 @@ const ItemReg = () => {
     setIsModalOpen(true);
   };
 
-  // Handle inline edit save from the table
-  const handleSaveInlineEdit = (updatedItem: Item) => {
+  // Handle save inline edit save from the table
+  const handleSaveInlineEdit = async (updatedItem: Item) => {
     if (updatedItem.id) {
-      editItem(updatedItem);
+      return await editItem(updatedItem);
     }
   };
 
