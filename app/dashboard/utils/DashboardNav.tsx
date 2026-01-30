@@ -16,24 +16,25 @@ export function DashboardNav({ currentView, setView }: DashboardNavProps) {
   ];
 
   return (
-    <div className="flex bg-slate-800 p-1 rounded-lg">
+    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto">
       {navItems.map((item) => (
         <button
           key={item.id}
           onClick={() => setView(item.id as DashboardView)}
           className={`
-            flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+            flex items-center gap-2 px-3 py-2 text-sm font-medium whitespace-nowrap 
+            transition-colors duration-200 ease-in-out
             ${
               currentView === item.id
-                ? "bg-emerald-600 text-white shadow"
-                : "text-slate-400 hover:text-white"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400 hover:text-gray-200 hover:border-b-2 hover:border-slate-500"
             }
           `}
         >
           <item.Icon className="w-4 h-4" />
-          {item.text}
+          <span>{item.text}</span>
         </button>
       ))}
-    </div>
+    </nav>
   );
 }

@@ -29,22 +29,22 @@ export function ExpensesNav({ currentView, setView }: ExpensesNavProps) {
   ];
 
   return (
-    <nav className="gap-4 grid grid-cols-3 mb-8">
-      {" "}
-      {/* Changed grid-cols-2 to 3 */}
+    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto mb-8">
       {navButtons.map((button) => (
         <button
           key={button.id}
-          className={`btn-3d-glass flex flex-col items-center justify-center p-4 text-center transition-all duration-200
+          className={`
+            flex items-center gap-2 px-3 py-2 text-sm font-medium whitespace-nowrap 
+            transition-colors duration-200 ease-in-out
             ${
               currentView === button.id
-                ? "bg-white/20 text-white"
-                : "text-slate-300 hover:text-white"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400 hover:text-gray-200 hover:border-b-2 hover:border-slate-500"
             }
           `}
           onClick={() => setView(button.id as View)}
         >
-          <button.Icon className="mb-2 w-8 h-8" />
+          <button.Icon className="w-4 h-4" />
           <span className="font-medium text-sm">{button.text}</span>
         </button>
       ))}

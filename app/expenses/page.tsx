@@ -37,7 +37,11 @@ function ExpensesContent() {
       <div className="mb-4 border-slate-700"></div>
 
       {/* --- Navigation --- */}
-      <ExpensesNav currentView={currentView} setView={handleViewChange} />
+      <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90 mb-6">
+        <div className="px-6">
+          <ExpensesNav currentView={currentView} setView={handleViewChange} />
+        </div>
+      </div>
 
       {/* --- Conditional Content --- */}
       <div>

@@ -12,7 +12,6 @@ import BackdateSettings from "./backdating/BackdatingSettings";
 
 export default function SettingsPage() {
   return (
-  return (
     <div className="p-8 min-h-screen pt-2">
       <div className="mb-8">
         <p className="mt-2 text-slate-400">

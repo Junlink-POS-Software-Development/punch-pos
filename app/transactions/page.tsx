@@ -60,14 +60,16 @@ function TransactionsContent() {
     <div className="bg-[#0B1120] min-h-screen text-white pt-2">
       {" "}
       {/* Dark bg match */}
-      <div className="bg-primary-light">
-      </div>
       {/* Sticky Nav Bar */}
-      <div className="top-0 z-10 sticky bg-primary-light/95 backdrop-blur-2xl border-slate-800 border-b">
-        <TransactionsNav
-          activeView={activeView}
-          setActiveView={handleViewChange}
-        />
+      <div className="top-0 z-10 sticky pt-2 pb-4">
+        <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90">
+          <div className="px-6">
+            <TransactionsNav
+              activeView={activeView}
+              setActiveView={handleViewChange}
+            />
+          </div>
+        </div>
       </div>
       {/* Main Content Area */}
       <div className="slide-in-from-bottom-2 animate-in duration-300 fade-in">
