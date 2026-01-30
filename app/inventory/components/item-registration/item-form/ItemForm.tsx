@@ -62,23 +62,25 @@ export const ItemForm: React.FC<ItemFormProps> = ({
   return (
     <div className="w-full h-full">
       {/* View Toggle Buttons */}
-      <div className={`${toggleVisibilityClass} items-center gap-4 bg-gray-900/50 mb-6 p-2 rounded-lg`}>
+      <div className={`flex bg-slate-950/50 mb-6 p-1 border border-slate-800 rounded-xl ${!isSplit ? "md:hidden" : ""}`}>
         <button
+          type="button"
           onClick={() => setView("single")}
-          className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium rounded-2xl transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
             view === "single"
-              ? "bg-blue-500/30 border-blue-500/50 text-white shadow-lg"
-              : "text-gray-400 hover:text-white"
+              ? "bg-slate-800 text-white shadow-lg"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <User className="w-4 h-4" /> Single Item
         </button>
         <button
+          type="button"
           onClick={() => setView("batch")}
-          className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium rounded-2xl transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
             view === "batch"
-              ? "bg-blue-500/30 border-blue-500/50 text-white shadow-lg"
-              : "text-gray-400 hover:text-white"
+              ? "bg-blue-600 text-white shadow-lg"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <Users className="w-4 h-4" /> Batch Upload

@@ -10,36 +10,36 @@ export const BatchItemRegistry: React.FC = () => {
   const batchUpload = useItemBatchUpload();
 
   return (
-    <div className="bg-slate-900 shadow-lg p-4 rounded-lg h-full">
-      <h3 className="mb-4 font-semibold text-lg text-slate-100">Batch Registration</h3>
+    <div className="relative p-6 h-full glass-effect">
+      <h3 className="mb-4 font-bold text-lg text-white tracking-tight uppercase font-lexend">Batch Registration</h3>
 
       {/* File Input */}
-      <div className="mb-4">
+      <div className="mb-6">
         <label className="block mb-2 font-medium text-slate-300 text-sm">
           Upload CSV File
         </label>
-        <input
-          type="file"
-          id="csv-upload"
-          accept=".csv"
-          onChange={batchUpload.handleFileChange}
-          className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500/30 file:text-blue-200 hover:file:bg-blue-500/40 file:cursor-pointer"
-        />
-        <p className="mt-2 text-slate-500 text-xs">
-          Required columns: <code className="text-slate-400">itemName</code>,{" "}
-          <code className="text-slate-400">sku</code>,{" "}
-          <code className="text-slate-400">costPrice</code>. Optional:{" "}
-          <code className="text-slate-400">category</code>,{" "}
-          <code className="text-slate-400">description</code>,{" "}
-          <code className="text-slate-400">lowStockThreshold</code>.
-        </p>
+        <div className="bg-slate-900/50 border border-slate-700/50 p-4 rounded-xl">
+          <input
+            type="file"
+            id="csv-upload"
+            accept=".csv"
+            onChange={batchUpload.handleFileChange}
+            className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600/30 file:text-blue-100 hover:file:bg-blue-600/40 file:cursor-pointer transition-all"
+          />
+          <p className="mt-3 text-slate-500 text-xs leading-relaxed">
+            Required: <code className="text-blue-400 bg-blue-400/10 px-1 rounded">itemName</code>,{" "}
+            <code className="text-blue-400 bg-blue-400/10 px-1 rounded">sku</code>,{" "}
+            <code className="text-blue-400 bg-blue-400/10 px-1 rounded">costPrice</code>.<br/>
+            Optional: <code className="text-slate-400">category</code>, <code className="text-slate-400">description</code>, <code className="text-slate-400">lowStockThreshold</code>.
+          </p>
+        </div>
       </div>
 
       {/* Parsing Status */}
       {batchUpload.isParsing && (
-        <div className="flex items-center gap-2 mb-4 text-slate-400">
+        <div className="flex items-center gap-3 mb-4 text-blue-400 bg-blue-400/5 p-4 rounded-lg border border-blue-400/20 animate-pulse">
           <div className="border-blue-400 border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
-          <span>Parsing CSV file...</span>
+          <span className="font-medium">Processing CSV file...</span>
         </div>
       )}
 
@@ -47,22 +47,22 @@ export const BatchItemRegistry: React.FC = () => {
       {batchUpload.file && !batchUpload.isParsing && (
         <div className="space-y-4">
           {/* Valid Items Summary */}
-          <div className="bg-green-500/10 p-3 border border-green-500/30 rounded-lg">
-            <p className="font-medium text-green-300 text-sm">
-              ✓ {batchUpload.validItems.length} valid item(s) ready to upload
+          <div className="bg-emerald-500/10 p-4 border border-emerald-500/20 rounded-xl flex items-center justify-between">
+            <p className="font-semibold text-emerald-400 text-sm">
+              ✓ {batchUpload.validItems.length} items validated and ready
             </p>
           </div>
 
           {/* Error Summary */}
           {batchUpload.errors.length > 0 && (
-            <div className="bg-red-500/10 p-3 border border-red-500/30 rounded-lg">
-              <p className="mb-2 font-medium text-red-300 text-sm">
-                ✗ {batchUpload.errors.length} row(s) have errors:
+            <div className="bg-red-500/10 p-4 border border-red-500/20 rounded-xl">
+              <p className="mb-3 font-bold text-red-400 text-sm flex items-center gap-2">
+                <XCircle className="w-4 h-4" /> {batchUpload.errors.length} validation errors found
               </p>
-              <ul className="space-y-1 max-h-32 overflow-y-auto text-red-200 text-xs">
+              <ul className="space-y-1.5 max-h-32 overflow-y-auto text-red-200/70 text-xs custom-scrollbar">
                 {batchUpload.errors.map((err, idx) => (
-                  <li key={idx}>
-                    <strong>Row {err.row}:</strong> {err.message}
+                  <li key={idx} className="bg-red-500/5 p-2 rounded border border-red-500/10">
+                    <span className="font-bold text-red-400 mr-2">Row {err.row}:</span> {err.message}
                   </li>
                 ))}
               </ul>
@@ -71,45 +71,45 @@ export const BatchItemRegistry: React.FC = () => {
 
           {/* Preview Table */}
           {batchUpload.validItems.length > 0 && (
-            <div className="max-h-48 overflow-auto">
-              <table className="w-full text-left text-slate-300 text-xs">
-                <thead className="top-0 sticky bg-slate-800">
-                  <tr>
-                    <th className="p-2">#</th>
-                    <th className="p-2">Item Name</th>
-                    <th className="p-2">SKU</th>
-                    <th className="p-2">Cost Price</th>
-                    <th className="p-2">Category</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {batchUpload.validItems.slice(0, 10).map((item, idx) => (
-                    <tr key={idx} className="border-slate-700 border-t">
-                      <td className="p-2">{idx + 1}</td>
-                      <td className="p-2">{item.itemName}</td>
-                      <td className="p-2">{item.sku}</td>
-                      <td className="p-2">₱{item.costPrice?.toFixed(2)}</td>
-                      <td className="p-2">{item.category || "—"}</td>
+            <div className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/20">
+              <div className="max-h-48 overflow-auto custom-scrollbar">
+                <table className="w-full text-left text-slate-300 text-xs">
+                  <thead className="top-0 sticky bg-slate-900/90 backdrop-blur-md">
+                    <tr>
+                      <th className="p-3 font-semibold text-slate-400">#</th>
+                      <th className="p-3 font-semibold text-slate-400">Item Name</th>
+                      <th className="p-3 font-semibold text-slate-400">SKU</th>
+                      <th className="p-3 font-semibold text-slate-400 text-right">Cost Price</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {batchUpload.validItems.slice(0, 10).map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="p-3 text-slate-500">{idx + 1}</td>
+                        <td className="p-3 font-medium">{item.itemName}</td>
+                        <td className="p-3 font-mono text-slate-400">{item.sku}</td>
+                        <td className="p-3 text-right font-mono text-blue-400">₱{item.costPrice?.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               {batchUpload.validItems.length > 10 && (
-                <p className="mt-2 text-slate-500 text-xs">
+                <div className="p-2 text-center bg-slate-900/50 border-t border-slate-800 text-[10px] text-slate-500 uppercase tracking-wider">
                   ...and {batchUpload.validItems.length - 10} more items
-                </p>
+                </div>
               )}
-            </div>
+          </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-4">
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={batchUpload.reset}
-              className="flex items-center gap-2 bg-gray-500/30 hover:bg-gray-500/40 border-gray-500/50 btn-3d-glass"
+              className="flex items-center gap-2 bg-gray-500/10 hover:bg-gray-500/20 border-gray-500/30 btn-3d-glass"
             >
-              <XCircle className="w-5 h-5" /> Reset
+              <XCircle className="w-4 h-4" /> Reset
             </button>
             <button
               type="button"
@@ -117,13 +117,13 @@ export const BatchItemRegistry: React.FC = () => {
               disabled={
                 batchUpload.isSubmitting || batchUpload.validItems.length === 0
               }
-              className="flex items-center gap-2 bg-green-500/30 hover:bg-green-500/40 border-green-500/50 btn-3d-glass disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-blue-600/30 hover:bg-blue-600/40 border-blue-600/50 btn-3d-glass disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px] justify-center"
             >
               {batchUpload.isSubmitting ? (
-                <div className="border-white border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
+                <div className="border-white border-t-2 border-r-2 rounded-full w-4 h-4 animate-spin"></div>
               ) : (
                 <>
-                  <Users className="w-5 h-5" /> Upload{" "}
+                  <Users className="w-4 h-4" /> Upload{" "}
                   {batchUpload.validItems.length} Items
                 </>
               )}

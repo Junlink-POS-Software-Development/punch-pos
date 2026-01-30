@@ -47,15 +47,15 @@ export const SingleItemRegistry: React.FC<SingleItemRegistryProps> = ({
   }, [globalThreshold, isEditing, itemToEdit, setValue]);
 
   return (
-    <div className="bg-slate-900 shadow-lg p-4 rounded-lg h-full">
-      <h3 className="mb-4 font-semibold text-lg text-slate-100">
-        {isEditing ? "Edit Item" : "Single Registration"}
+    <div className="relative p-6 h-full glass-effect">
+      <h3 className="mb-4 font-bold text-lg text-white tracking-tight uppercase font-lexend">
+        {isEditing ? "Edit Item" : "Register New Item"}
       </h3>
       
       <form
         onSubmit={handleRHFSubmit}
         onKeyDown={handleKeyDown}
-        className="gap-6 grid grid-cols-1 md:grid-cols-2"
+        className="gap-x-6 gap-y-2 grid grid-cols-1 md:grid-cols-2"
       >
         {/* Item Name */}
         <div className="relative pb-5">
@@ -64,11 +64,12 @@ export const SingleItemRegistry: React.FC<SingleItemRegistryProps> = ({
           </label>
           <input
             type="text"
-            className={`w-full input-dark ${errors.itemName ? "border-red-500" : ""}`}
+            className={`w-full input-dark ${errors.itemName ? "border-red-500 text-red-200" : ""}`}
+            placeholder="e.g. Organic Milk"
             {...register("itemName")}
           />
           {errors.itemName && (
-            <p className="bottom-0 absolute text-red-300 text-sm">{errors.itemName.message}</p>
+            <p className="bottom-0 absolute text-red-400 text-xs">{errors.itemName.message}</p>
           )}
         </div>
 
@@ -79,16 +80,17 @@ export const SingleItemRegistry: React.FC<SingleItemRegistryProps> = ({
           </label>
           <input
             type="text"
-            className={`w-full input-dark ${errors.sku ? "border-red-500" : ""}`}
+            className={`w-full input-dark ${errors.sku ? "border-red-500 text-red-200" : ""}`}
+            placeholder="Scan or type SKU"
             {...register("sku")}
           />
           {errors.sku && (
-            <p className="bottom-0 absolute text-red-300 text-sm">{errors.sku.message}</p>
+            <p className="bottom-0 absolute text-red-400 text-xs">{errors.sku.message}</p>
           )}
         </div>
 
         {/* Category */}
-        <div>
+        <div className="relative pb-5">
           <label htmlFor="category" className="block mb-2 font-medium text-slate-300 text-sm">
             Category
           </label>
@@ -114,11 +116,12 @@ export const SingleItemRegistry: React.FC<SingleItemRegistryProps> = ({
           <input
             type="number"
             step="0.01"
-            className={`w-full input-dark ${errors.costPrice ? "border-red-500" : ""}`}
+            className={`w-full input-dark ${errors.costPrice ? "border-red-500 text-red-200" : ""}`}
+            placeholder="0.00"
             {...register("costPrice", { valueAsNumber: true })}
           />
           {errors.costPrice && (
-            <p className="bottom-0 absolute text-red-300 text-sm">{errors.costPrice.message}</p>
+            <p className="bottom-0 absolute text-red-400 text-xs">{errors.costPrice.message}</p>
           )}
         </div>
 
@@ -130,46 +133,48 @@ export const SingleItemRegistry: React.FC<SingleItemRegistryProps> = ({
           <input
             type="number"
             min="0"
-            className={`w-full input-dark ${errors.lowStockThreshold ? "border-red-500" : ""}`}
+            className={`w-full input-dark ${errors.lowStockThreshold ? "border-red-500 text-red-200" : ""}`}
+            placeholder="Global setting used if empty"
             {...register("lowStockThreshold", { valueAsNumber: true })}
           />
           {errors.lowStockThreshold && (
-            <p className="bottom-0 absolute text-red-300 text-sm">
+            <p className="bottom-0 absolute text-red-400 text-xs">
               {errors.lowStockThreshold.message}
             </p>
           )}
         </div>
 
         {/* Description */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 relative pb-5">
           <label htmlFor="description" className="block mb-2 font-medium text-slate-300 text-sm">
             Description
           </label>
           <textarea
-            rows={3}
-            className="w-full input-dark"
+            rows={2}
+            placeholder="Additional item details..."
+            className="w-full input-dark resize-none h-20"
             {...register("description")}
           ></textarea>
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-4 md:col-span-2">
+        <div className="flex justify-end gap-3 pt-4 md:col-span-2">
           {isEditing && (
             <button
               type="button"
               onClick={onCancelEditFromHook}
-              className="flex items-center gap-2 bg-gray-500/30 hover:bg-gray-500/40 border-gray-500/50 btn-3d-glass"
+              className="flex items-center gap-2 bg-gray-500/10 hover:bg-gray-500/20 border-gray-500/30 btn-3d-glass"
             >
-              <XCircle className="w-5 h-5" /> Cancel
+              <XCircle className="w-4 h-4" /> Cancel
             </button>
           )}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 bg-green-500/30 hover:bg-green-500/40 border-green-500/50 btn-3d-glass"
+            className="flex items-center gap-2 bg-blue-600/30 hover:bg-blue-600/40 border-blue-600/50 btn-3d-glass min-w-[160px] justify-center"
           >
             {isSubmitting ? (
-              <div className="border-white border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
+              <div className="border-white border-t-2 border-r-2 rounded-full w-4 h-4 animate-spin"></div>
             ) : isEditing ? (
               "Update Item"
             ) : (
