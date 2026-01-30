@@ -213,7 +213,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         {/* Toggle Button - Fixed Left Edge (Mirrors MobileCartPanel) */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-[80] bg-slate-800 border border-l-0 border-slate-700 rounded-r-lg p-2 text-white shadow-lg transition-transform duration-300"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-80 bg-slate-800 border border-l-0 border-slate-700 rounded-r-lg p-2 text-white shadow-lg transition-transform duration-300"
           style={{ transform: isMobileMenuOpen ? "translateX(280px)" : "translateX(0)" }}
         >
           {isMobileMenuOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -222,7 +222,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         {/* Backdrop */}
         {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/60 z-60 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
@@ -230,7 +230,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         {/* Sidebar Panel */}
         <div
           className={`
-            fixed top-0 left-0 h-full w-[280px] z-[70]
+            fixed top-0 left-0 h-full w-[280px] z-70
             bg-[#0B1120] border-r border-slate-800
             transform transition-transform duration-300 ease-in-out
             ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
@@ -353,7 +353,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               </div>
 
               {!isCollapsed && (
-                <span className="font-medium text-sm tracking-wide whitespace-nowrap">
+                <span className="font-semibold text-base tracking-wide whitespace-nowrap">
                   {item.text}
                 </span>
               )}

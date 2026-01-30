@@ -7,7 +7,7 @@ import { PackagePlus } from "lucide-react";
 import { Item } from "./utils/itemTypes";
 import { StatusDisplay } from "@/utils/StatusDisplay";
 import { ItemTable } from "./item-table/ItemTable";
-import { useItems } from "../../hooks/useItems"; // Import the hook
+import { useItems, useInfiniteItems } from "../../hooks/useItems"; // Import the hook
 import { RegistrationModal } from "./RegistrationModal";
 
 const ItemReg = () => {
@@ -16,14 +16,26 @@ const ItemReg = () => {
 
   // Consume the context
   const {
-    items,
-    isLoading,
+    items: allItems,
+    isLoading: isInitialLoading,
     error,
     isProcessing,
     addItem,
     editItem,
     removeItem,
   } = useItems();
+
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isInfiniteLoading,
+  } = useInfiniteItems(50);
+
+  const items = infiniteData?.pages.flatMap((page: any) => page.data) || [];
+  const totalItems = infiniteData?.pages[0]?.count || 0;
+  const isLoading = isInitialLoading || isInfiniteLoading;
 
   // Handlers
   const handleFormSubmit = (formData: Item) => {
@@ -91,21 +103,17 @@ const ItemReg = () => {
   const itemToEdit = editingIndex !== null ? items[editingIndex] : undefined;
 
   return (
-    <div className="space-y-6 p-6 h-[85vh] flex flex-col">
-      {/* Header & Actions */}
+    <div className="flex flex-col h-[calc(100vh-160px)] px-6 pb-6 pt-2 space-y-4">
+      {/* Header & Actions - MOVED TO TABLE OR GLOBAL IF NEEDED */}
+      {/* 
       <div className="flex justify-between items-center">
         <h1 className="font-bold text-2xl text-white">Item Registration</h1>
-        <button
-          onClick={handleOpenRegistration}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-white transition-colors shadow-lg shadow-blue-900/20"
-        >
-          <PackagePlus className="w-5 h-5" />
-          Register New Item
-        </button>
-      </div>
+        ...
+      </div> 
+      */}
 
       {/* Status Section */}
-      {isLoading && <StatusDisplay type="loading" text="Loading items..." />}
+      {isLoading && items.length === 0 && <StatusDisplay type="loading" text="Loading items..." />}
       {isProcessing && <StatusDisplay type="processing" text="Processing..." />}
       {error && (
         <StatusDisplay
@@ -115,13 +123,18 @@ const ItemReg = () => {
       )}
 
       {/* Table Section */}
-      {!isLoading && items.length > 0 && (
+      {(items.length > 0) && (
         <div className="flex-1 bg-slate-900/50 p-6 border border-slate-800 rounded-xl overflow-hidden glass-effect">
           <ItemTable 
             data={items} 
             onEdit={handleEdit} 
             onDelete={handleDelete}
             onSaveEdit={handleSaveInlineEdit}
+            onAdd={handleOpenRegistration}
+            fetchNextPage={fetchNextPage}
+            hasNextPage={hasNextPage || false}
+            isFetchingNextPage={isFetchingNextPage}
+            totalItems={totalItems}
           />
         </div>
       )}

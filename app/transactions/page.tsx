@@ -57,25 +57,10 @@ function TransactionsContent() {
   };
 
   return (
-    <div className="bg-[#0B1120] min-h-screen text-white">
+    <div className="bg-[#0B1120] min-h-screen text-white pt-2">
       {" "}
       {/* Dark bg match */}
       <div className="bg-primary-light">
-        {/* --- BACK BUTTON --- */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 mb-2 pt-2 pl-2 text-slate-400 hover:text-white text-sm transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home</span>
-        </Link>
-
-        {/* --- HEADER & NAVIGATION --- */}
-        <div className="flex justify-between items-end pb-2">
-          <h1 className="pl-4 font-bold text-3xl tracking-tight">
-            Transactions
-          </h1>
-        </div>
       </div>
       {/* Sticky Nav Bar */}
       <div className="top-0 z-10 sticky bg-primary-light/95 backdrop-blur-2xl border-slate-800 border-b">

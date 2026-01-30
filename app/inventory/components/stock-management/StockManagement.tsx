@@ -67,20 +67,10 @@ const StockManagementContent = () => {
   };
 
   return (
-    <div className="space-y-6 p-6 h-[85vh] flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-160px)] px-6 pb-6 pt-2 space-y-4">
       <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
       
-      {/* Header & Actions */}
-      <div className="flex justify-between items-center">
-        <h1 className="font-bold text-2xl text-white">Stock Management</h1>
-        <button
-          onClick={handleOpenAdjustment}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-white transition-colors shadow-lg shadow-blue-900/20"
-        >
-          <PackagePlus className="w-5 h-5" />
-          Adjust Stock
-        </button>
-      </div>
+      {/* Header & Actions - REMOVED PER REFINEMENT */}
 
       {/* Status Section */}
       {isProcessing && (

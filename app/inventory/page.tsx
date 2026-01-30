@@ -44,25 +44,10 @@ function InventoryContent() {
 
   return (
     <div className="text-white">
-      <div className="bg-primary-light">
-        {/* --- BACK BUTTON --- */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 mb-2 pt-2 pl-2 text-slate-400 hover:text-white text-sm transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home</span>
-        </Link>
-
-        {/* --- HEADER & NAVIGATION --- */}
-        <div className="flex justify-between items-end">
-          <h1 className="pl-4 font-bold text-3xl">Inventory Management</h1>
-          {/* Placeholder for future global actions, currently empty */}
+      <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90">
+        <div className="px-6">
+          <InventoryNav activeView={activeView} setActiveView={handleViewChange} />
         </div>
-      </div>
-
-      <div className="top-0 z-10 sticky bg-primary-light backdrop-blur-2xl">
-        <InventoryNav activeView={activeView} setActiveView={handleViewChange} />
       </div>
 
       <div>{renderView()}</div>

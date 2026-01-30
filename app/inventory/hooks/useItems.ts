@@ -1,12 +1,30 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
 import { Item } from "../components/item-registration/utils/itemTypes";
 import {
   fetchItems,
+  fetchItemsPaginated,
   insertItem,
   updateItem,
   deleteItem,
 } from "../components/item-registration/lib/item.api";
+
+export const useInfiniteItems = (pageSize: number = 20) => {
+  return useInfiniteQuery({
+    queryKey: ["items-infinite", pageSize],
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await fetchItemsPaginated(pageParam as number, pageSize);
+      return {
+        data: result.data,
+        count: result.count,
+        nextPage: result.data.length === pageSize ? (pageParam as number) + 1 : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
+    placeholderData: keepPreviousData,
+  });
+};
 
 export const useItems = () => {
   const queryClient = useQueryClient();

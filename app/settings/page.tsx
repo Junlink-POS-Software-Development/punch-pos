@@ -12,19 +12,9 @@ import BackdateSettings from "./backdating/BackdatingSettings";
 
 export default function SettingsPage() {
   return (
-    <div className="p-8 min-h-screen">
+  return (
+    <div className="p-8 min-h-screen pt-2">
       <div className="mb-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-slate-900/50 mb-4 px-4 py-2 border border-slate-800 hover:border-cyan-500/50 rounded-lg text-slate-400 hover:text-cyan-400 text-sm transition-colors duration-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-        <h1 className="flex items-center gap-3 font-bold text-white text-3xl">
-          <Settings className="w-8 h-8 text-cyan-400" />
-          Settings
-        </h1>
         <p className="mt-2 text-slate-400">
           Manage your application preferences and configurations.
         </p>

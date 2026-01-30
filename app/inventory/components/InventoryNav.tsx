@@ -26,7 +26,7 @@ const InventoryNav: React.FC<InventoryNavProps> = ({
 
   return (
     // 1. Use flex layout instead of grid to keep tabs grouped
-    <nav className="flex items-center gap-6 pb-1 border-slate-700 border-b w-full overflow-x-auto">
+    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto">
       {navItems.map((item) => (
         <button
           key={item.id}

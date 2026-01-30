@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import SearchBar from "@/app/components/SearchBar";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
@@ -12,17 +13,26 @@ interface HeaderProps {
   onSignOutClick: () => void;
 }
 
+const ROUTE_TITLES: Record<string, string> = {
+  "/inventory": "Inventory Management",
+  "/dashboard": "Dashboard Overview",
+  "/transactions": "Transaction History",
+  "/expenses": "Expense Tracker",
+  "/customers": "Customer Relations",
+  "/settings": "System Settings",
+  "/maintenance": "Database Maintenance",
+  "/google-workspace": "Google Workspace",
+};
+
 export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const { user, isAuthReady } = useAuthStore();
+  const pathname = usePathname();
+
+  const activeTitle = ROUTE_TITLES[pathname];
 
   return (
     <header className="flex items-center justify-between gap-6 mb-6 px-6 pt-4">
-      {/* LEFT: Logo Lockup (Visible only if not in Sidebar, but here we keep it or hide it based on design. 
-          The plan says Sidebar has logo? No, Sidebar has Menu icon. 
-          Let's keep Logo here for now as per design image which shows "Current Cashier" etc, 
-          actually the design image shows "Action Panel" on right, and "Current Cashier" on left.
-          But the user said: "The header part of the @[app/page.tsx] which contains the "PUNCH POS ..." and the logo... will also persist acrross routes."
-      */}
+      {/* LEFT: Logo Lockup */}
       <div className="flex items-center gap-3 shrink-0">
         <Image
           src="/punch-logo.png"
@@ -42,9 +52,17 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
         </div>
       </div>
 
-      {/* CENTER: Search Bar */}
-      <div className="flex-1 flex justify-center max-w-md mx-auto">
-        <SearchBar />
+      {/* CENTER: Dynamic Title or Search Bar */}
+      <div className="flex-1 flex justify-center max-2-2xl mx-auto">
+        {activeTitle ? (
+          <h2 className="text-3xl font-bold text-white tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] font-lexend">
+            {activeTitle}
+          </h2>
+        ) : (
+          <div className="w-full max-w-md">
+            <SearchBar />
+          </div>
+        )}
       </div>
 
       {/* RIGHT: User Actions */}

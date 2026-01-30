@@ -56,20 +56,20 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
 
   // Normal mode: Show Edit and Delete buttons
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-4 items-center">
       <button
         onClick={onStartEdit}
-        className="hover:bg-blue-400/20 p-1 rounded text-blue-300 hover:text-blue-100 transition-colors"
+        className="hover:bg-blue-400/20 p-2 rounded-lg text-blue-300 hover:text-blue-100 transition-all active:scale-90"
         title="Edit Item"
       >
-        <Edit className="w-4 h-4" />
+        <Edit className="w-5 h-5" />
       </button>
       <button
         onClick={() => handleAction(onDelete)}
-        className="hover:bg-red-400/20 p-1 rounded text-red-400 hover:text-red-200 transition-colors"
+        className="hover:bg-red-400/20 p-2 rounded-lg text-red-400 hover:text-red-200 transition-all active:scale-90"
         title="Delete Item"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-5 h-5" />
       </button>
     </div>
   );

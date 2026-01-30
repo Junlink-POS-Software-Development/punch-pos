@@ -72,14 +72,9 @@ function HeaderSection({
   originalCount: number;
 }) {
   return (
-    <div className="flex justify-between items-end pt-6 border-slate-700 border-t">
+    <div className="flex justify-between items-end py-4 border-slate-700">
       <div>
-        <h2 className="font-bold text-2xl tracking-wide">
-          Detailed Stock Table
-        </h2>
-        <p className="text-slate-400 text-sm">
-          Real-time calculated stock levels for all items
-        </p>
+        {/* Removed redundant header */}
       </div>
       <div className="bg-slate-800/50 px-4 py-2 border border-slate-700 rounded font-mono text-xs">
         Total Items: <span className="text-retro-cyan">{totalCount}</span>

@@ -78,6 +78,46 @@ export const fetchItems = async (): Promise<Item[]> => {
   return data.map(fromDatabaseObject);
 };
 
+export const fetchItemsPaginated = async (
+  page: number,
+  pageSize: number
+): Promise<{ data: Item[]; count: number }> => {
+  const supabase = await getSupabase();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // We use standard select to support pagination easily
+  // Table name is 'product_category', column name is 'category'
+  const { data, error, count } = await supabase
+    .from("items")
+    .select("*, product_category(category)", { count: "exact" })
+    .order("item_name", { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error("Supabase fetch paginated error:", error);
+    throw new Error(error.message);
+  }
+
+  // Map the join result
+  const mappedData = data.map((item: any) => {
+    // Standardize the object for fromDatabaseObject
+    const dbItem: ItemDbRow = {
+      id: item.id,
+      item_name: item.item_name,
+      sku: item.sku,
+      category_id: item.category_id,
+      category_name: item.product_category?.category ?? null,
+      cost_price: item.cost_price,
+      description: item.description,
+      low_stock_threshold: item.low_stock_threshold,
+    };
+    return fromDatabaseObject(dbItem);
+  });
+
+  return { data: mappedData, count: count ?? 0 };
+};
+
 
 
 export const insertItem = async (item: Item): Promise<Item> => {

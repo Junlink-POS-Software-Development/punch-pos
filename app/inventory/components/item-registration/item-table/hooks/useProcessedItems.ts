@@ -15,6 +15,7 @@ export const useProcessedItems = (initialData: Item[]) => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(
     {}
   );
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [sortState, setSortState] = useState<{
     col: keyof Item | null;
@@ -25,7 +26,20 @@ export const useProcessedItems = (initialData: Item[]) => {
   const processedRows = useMemo(() => {
     let rows = [...initialData];
 
-    // A. Filter (Exact Match from List)
+    // A. Search (Case-insensitive)
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      rows = rows.filter((row) => {
+        return (
+          safeString(row.itemName).includes(lowerSearch) ||
+          safeString(row.sku).includes(lowerSearch) ||
+          safeString(row.description).includes(lowerSearch) ||
+          safeString(row.categoryName).includes(lowerSearch)
+        );
+      });
+    }
+
+    // B. Filter (Exact Match from List)
     if (Object.keys(activeFilters).length > 0) {
       rows = rows.filter((row) => {
         return Object.entries(activeFilters).every(([key, filterValues]) => {
@@ -41,7 +55,7 @@ export const useProcessedItems = (initialData: Item[]) => {
       });
     }
 
-    // B. Sort
+    // C. Sort
     if (sortState.col && sortState.dir) {
       rows.sort((a, b) => {
         const colKey = sortState.col!;
@@ -64,7 +78,7 @@ export const useProcessedItems = (initialData: Item[]) => {
     }
 
     return rows;
-  }, [initialData, activeFilters, sortState]);
+  }, [initialData, activeFilters, sortState, searchTerm]);
 
   // 3. Handlers
   const handleApplyFilter = (key: string, values: string[]) => {
@@ -82,10 +96,15 @@ export const useProcessedItems = (initialData: Item[]) => {
   const handleClearAllFilters = () => {
     setActiveFilters({});
     setSortState({ col: null, dir: null });
+    setSearchTerm("");
   };
 
   const handleSort = (col: keyof Item, dir: "ASC" | "DESC" | null) => {
     setSortState({ col, dir });
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   // 4. Return Interface
@@ -93,6 +112,10 @@ export const useProcessedItems = (initialData: Item[]) => {
     // Data
     rows: processedRows,
     totalRows: processedRows.length,
+
+    // Search
+    searchTerm,
+    handleSearch,
 
     // Filters
     activeFilters,
