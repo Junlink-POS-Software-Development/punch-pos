@@ -100,13 +100,9 @@ export const CashoutForm = ({
   });
 
   return (
-    <div className="relative p-6 h-full glass-effect">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-white text-xl">
-          Register New Expense
-        </h2>
-
-        {/* Session Indicator Badge */}
+    <div className="relative p-2 h-full">
+      {/* Session Indicator Badge (now smaller or inline if needed) */}
+      <div className="flex justify-end items-center mb-4">
         {canBackdate && customTransactionDate && (
           <div className="flex items-center gap-2 bg-amber-950/40 px-3 py-1.5 border border-amber-500/20 rounded-full text-amber-400 text-xs animate-pulse">
             <CalendarClock className="w-3 h-3" />

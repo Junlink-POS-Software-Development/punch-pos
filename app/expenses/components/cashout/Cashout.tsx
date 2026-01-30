@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CashoutForm } from "./CashoutForm";
 import { CashoutTable } from "./CashoutTable";
+import { CashoutModal } from "./CashoutModal";
 import { useCashout } from "../../hooks/useCashout";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { useExpenses } from "../../hooks/useExpenses";
@@ -29,47 +29,37 @@ export function Cashout() {
   const { viewState } = useViewStore();
   const isRightFullscreen = viewState === 2;
 
-  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleDateChange = (start: string, end: string) => {
     setDateRange({ start, end });
   };
 
-  const toggleForm = () => setIsFormVisible(!isFormVisible);
+  const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   return (
-    <div
-      className={`grid gap-8 transition-all duration-500 ${
-        isFormVisible && isRightFullscreen
-          ? "grid-cols-1 xl:grid-cols-2 items-start"
-          : "grid-cols-1"
-      }`}
-    >
-      {isFormVisible && (
-        <div className="w-full animate-in fade-in slide-in-from-top-2 duration-300">
-          <CashoutForm
-            form={form}
-            refs={refs}
-            categories={hookData.categories}
-            isSubmitting={hookData.isSubmitting}
-            isCategoriesLoading={hookData.isCategoriesLoading}
-            handlers={handlers}
-            isWide={isRightFullscreen}
-          />
-        </div>
-      )}
-
+    <div className="grid grid-cols-1 gap-8">
       <div className="flex flex-col gap-4 w-full">
-        {/* Pass state and handlers directly to the table */}
         <CashoutTable
           expenses={filteredExpenses}
           isLoading={isFilteredLoading}
           dateRange={dateRange}
           onDateChange={handleDateChange}
-          onAdd={toggleForm}
-          isAdding={isFormVisible}
+          onAdd={toggleModal}
+          isAdding={isModalOpen}
         />
       </div>
+
+      <CashoutModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        form={form}
+        refs={refs}
+        categories={hookData.categories}
+        isSubmitting={hookData.isSubmitting}
+        isCategoriesLoading={hookData.isCategoriesLoading}
+        handlers={handlers}
+      />
     </div>
   );
 }
