@@ -29,29 +29,35 @@ export function Cashout() {
   const { viewState } = useViewStore();
   const isRightFullscreen = viewState === 2;
 
+  const [isFormVisible, setIsFormVisible] = useState(false);
+
   const handleDateChange = (start: string, end: string) => {
     setDateRange({ start, end });
   };
 
+  const toggleForm = () => setIsFormVisible(!isFormVisible);
+
   return (
     <div
       className={`grid gap-8 transition-all duration-500 ${
-        isRightFullscreen
+        isFormVisible && isRightFullscreen
           ? "grid-cols-1 xl:grid-cols-2 items-start"
           : "grid-cols-1"
       }`}
     >
-      <div className="w-full">
-        <CashoutForm
-          form={form}
-          refs={refs}
-          categories={hookData.categories}
-          isSubmitting={hookData.isSubmitting}
-          isCategoriesLoading={hookData.isCategoriesLoading}
-          handlers={handlers}
-          isWide={isRightFullscreen}
-        />
-      </div>
+      {isFormVisible && (
+        <div className="w-full animate-in fade-in slide-in-from-top-2 duration-300">
+          <CashoutForm
+            form={form}
+            refs={refs}
+            categories={hookData.categories}
+            isSubmitting={hookData.isSubmitting}
+            isCategoriesLoading={hookData.isCategoriesLoading}
+            handlers={handlers}
+            isWide={isRightFullscreen}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 w-full">
         {/* Pass state and handlers directly to the table */}
@@ -60,6 +66,8 @@ export function Cashout() {
           isLoading={isFilteredLoading}
           dateRange={dateRange}
           onDateChange={handleDateChange}
+          onAdd={toggleForm}
+          isAdding={isFormVisible}
         />
       </div>
     </div>

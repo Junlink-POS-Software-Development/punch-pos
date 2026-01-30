@@ -33,9 +33,6 @@ function ExpensesContent() {
 
   return (
     <div className="p-6 text-white pt-2">
-      {/* HEADER BORDER - Redundant title removed */}
-      <div className="mb-4 border-slate-700"></div>
-
       {/* --- Navigation --- */}
       <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90 mb-6">
         <div className="px-6">

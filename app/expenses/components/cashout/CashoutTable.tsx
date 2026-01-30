@@ -7,7 +7,7 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, XCircle } from "lucide-react";
 import { ExpenseData } from "../../lib/expenses.api";
 import { DateColumnFilter } from "./components/DateColumnFilter";
 
@@ -16,6 +16,8 @@ interface CashoutTableProps {
   isLoading: boolean;
   dateRange: { start: string; end: string };
   onDateChange: (start: string, end: string) => void;
+  onAdd?: () => void;
+  isAdding?: boolean;
 }
 
 const columnHelper = createColumnHelper<ExpenseData>();
@@ -25,6 +27,8 @@ export const CashoutTable = ({
   isLoading,
   dateRange,
   onDateChange,
+  onAdd,
+  isAdding,
 }: CashoutTableProps) => {
   const columns = useMemo(
     () => [
@@ -89,7 +93,42 @@ export const CashoutTable = ({
 
   return (
     // 1. Fixed height container with flex layout
-    <div className="flex flex-col border border-slate-700/50 rounded-lg h-[80vh] overflow-hidden glass-effect">
+    <div className="flex flex-col border border-slate-700/50 rounded-xl h-[80vh] overflow-hidden glass-effect bg-slate-900/40 backdrop-blur-md">
+      {/* Table Header / Title Area */}
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 bg-slate-950/20 border-b border-slate-800/50">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <h3 className="font-bold text-gray-100 text-lg tracking-tight uppercase font-lexend">
+              Expense Records
+            </h3>
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
+                  isAdding 
+                    ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
+                    : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
+                }`}
+              >
+                {isAdding ? (
+                  <>
+                    <XCircle className="w-3.5 h-3.5" />
+                    Close Form
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    Record New Expense
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="text-sm font-medium text-gray-500 bg-slate-800/30 px-3 py-1 rounded-full border border-slate-700/30">
+          Total: <span className="text-gray-300 font-bold">{expenses.length}</span> records
+        </div>
+      </div>
       {/* 2. Scrollable area for the table */}
       <div className="relative flex-1 overflow-auto">
         <table className="relative w-full text-sm text-left border-collapse">

@@ -29,7 +29,7 @@ export function ExpensesNav({ currentView, setView }: ExpensesNavProps) {
   ];
 
   return (
-    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto mb-8">
+    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto">
       {navButtons.map((button) => (
         <button
           key={button.id}
