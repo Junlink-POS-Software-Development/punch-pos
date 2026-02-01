@@ -78,6 +78,8 @@ export function StockForm({
         quantity: 0,
         capitalPrice: 0,
       });
+      // Added: Auto-focus Item Name when opening blank form
+      setTimeout(() => setFocus("itemName"), 100);
     }
   }, [itemToEdit, reset, setFocus]);
 

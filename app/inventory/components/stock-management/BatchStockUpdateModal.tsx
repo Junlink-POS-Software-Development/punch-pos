@@ -158,10 +158,10 @@ export const BatchStockUpdateModal: React.FC<BatchStockUpdateModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-6">
-      <div className="bg-slate-900/95 shadow-2xl border border-slate-700 rounded-xl w-full max-w-6xl h-[90vh] overflow-hidden glass-effect flex flex-col">
+    <div className="z-50 fixed inset-0 flex justify-center items-center bg-slate-950 animate-in fade-in duration-200 p-6">
+      <div className="bg-slate-900 shadow-2xl border border-slate-800 rounded-xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-slate-700/50 border-b shrink-0 bg-slate-900/50">
+        <div className="flex items-center justify-between p-4 border-slate-800 border-b shrink-0 bg-slate-900">
           <div className="flex items-center gap-4">
             <h2 className="font-semibold text-white text-xl">Batch Stock Update</h2>
             <div className="relative group">
@@ -171,7 +171,7 @@ export const BatchStockUpdateModal: React.FC<BatchStockUpdateModalProps> = ({
                 placeholder="Search items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-slate-950/50 border border-slate-700/50 rounded-lg pl-9 pr-4 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all w-64"
+                className="bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all w-64"
                 autoFocus
               />
             </div>
@@ -188,7 +188,7 @@ export const BatchStockUpdateModal: React.FC<BatchStockUpdateModalProps> = ({
         {/* Table Content */}
         <div className="flex-1 overflow-auto custom-scrollbar p-0">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-950/80 backdrop-blur-md sticky top-0 z-10 text-xs uppercase font-semibold text-gray-400">
+            <thead className="bg-slate-950 sticky top-0 z-10 text-xs uppercase font-semibold text-gray-400">
               <tr>
                 <th className="p-4 border-b border-slate-800">Item Name</th>
                 <th className="p-4 border-b border-slate-800 text-right">Live Stock</th>
@@ -205,7 +205,7 @@ export const BatchStockUpdateModal: React.FC<BatchStockUpdateModalProps> = ({
                 return (
                   <tr 
                     key={item.id} 
-                    className={`group transition-colors ${isActive ? 'bg-blue-900/10' : 'hover:bg-slate-800/30'}`}
+                    className={`group transition-colors ${isActive ? 'bg-blue-900/20' : 'hover:bg-slate-800/50'}`}
                   >
                     <td className="p-3 text-slate-200 font-medium text-sm">
                       {item.itemName}
@@ -271,7 +271,7 @@ export const BatchStockUpdateModal: React.FC<BatchStockUpdateModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700/50 bg-slate-900/80 flex justify-between items-center backdrop-blur-md">
+        <div className="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center">
            <div className="text-sm text-gray-400">
              {Object.keys(batchData).filter(k => batchData[k].addQuantity > 0).length} items selected for update
            </div>
