@@ -286,4 +286,20 @@ input, textarea {
     background-size: 200% auto;
     animation: text-shine 4s linear infinite;
   }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.5); /* slate-500/50 */
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8); /* slate-400/80 */
+  }
 }
