@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef, useCallback } from "react";
-import { Loader2, AlertCircle, XCircle } from "lucide-react";
+import { Loader2, AlertCircle, XCircle, Trash2 } from "lucide-react";
 import { usePaymentData } from "../../hooks/usePaymentData";
 import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
+import { deletePayment } from "@/app/actions/transactions";
+import { useState } from "react";
 
 export const PaymentHistoryTable = () => {
   // 1. Consume Context
@@ -18,8 +20,11 @@ export const PaymentHistoryTable = () => {
     setFilters,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
+    refresh
   } = usePaymentData();
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -65,6 +70,27 @@ export const PaymentHistoryTable = () => {
   const hasActiveFilters = Object.keys(filters).some(
     (key) => key !== "startDate" && key !== "endDate" && filters[key]
   );
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this payment record? This will also delete all associated items and is irreversible.")) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const result = await deletePayment(id);
+      if (result.success) {
+        refresh();
+      } else {
+        alert(`Failed to delete payment: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("An unexpected error occurred while deleting.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // 3. UI States
   if (isLoading) {
@@ -127,16 +153,17 @@ export const PaymentHistoryTable = () => {
               <th className="px-6 py-3 text-right">Total</th>
               <th className="px-6 py-3 text-right">Payment</th>
               <th className="px-6 py-3 text-blue-400 text-right">Voucher</th>
-              <th className="px-6 py-3 rounded-tr-lg font-bold text-green-400 text-right">
+              <th className="px-6 py-3 font-bold text-green-400 text-right">
                 Change
               </th>
+              <th className="px-6 py-3 rounded-tr-lg text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {payments.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-6 py-8 text-slate-500 text-center"
                 >
                   No payments found.
@@ -170,6 +197,24 @@ export const PaymentHistoryTable = () => {
                   </td>
                   <td className="px-6 py-4 font-bold text-green-400 text-right">
                     ₱{(pay.change ?? 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => handleDelete(pay.id)}
+                      disabled={deletingId === pay.id}
+                      className={`p-2 rounded-md transition-all ${
+                        deletingId === pay.id
+                          ? "bg-slate-700 text-slate-500"
+                          : "hover:bg-red-400/20 text-red-400 hover:text-red-200"
+                      }`}
+                      title="Delete Payment"
+                    >
+                      {deletingId === pay.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))

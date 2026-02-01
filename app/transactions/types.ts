@@ -14,6 +14,7 @@ export interface TransactionItem {
 
 // Matches the 'paymentInfo' object in done.ts
 export interface PaymentRecord {
+  id: string;
   transactionNo: string;
   transactionTime: string;
   customerName: string;

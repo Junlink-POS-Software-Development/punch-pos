@@ -203,3 +203,41 @@ export async function getPaymentHistory(
 
   return { success: true, data: (data as PaymentRecord[]) || [], count: count || 0 };
 }
+
+export async function deletePayment(id: string): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  try {
+    // 1. Delete associated transactions first to avoid orphan rows 
+    // (though the DB constraint would likely block it if we didn't)
+    const { error: transError } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("payment_id", id);
+
+    if (transError) {
+      console.error("❌ Error deleting associated transactions:", transError);
+      return { success: false, error: transError.message };
+    }
+
+    // 2. Delete the payment itself
+    const { error: payError } = await supabase
+      .from("payments")
+      .delete()
+      .eq("id", id);
+
+    if (payError) {
+      console.error("❌ Error deleting payment:", payError);
+      return { success: false, error: payError.message };
+    }
+
+    // 3. Revalidate paths
+    revalidatePath("/transactions");
+    revalidatePath("/sales");
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("❌ Unexpected Error during deletion:", err);
+    return { success: false, error: err.message || "Unknown error occurred" };
+  }
+}

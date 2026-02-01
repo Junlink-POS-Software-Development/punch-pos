@@ -71,6 +71,7 @@ export const usePaymentHistory = (
       }
 
       const formattedData = (result.data as any[]).map((p) => ({
+        id: p.id,
         transactionNo: p.invoice_no,
         transactionTime: new Date(p.transaction_time).toLocaleString(),
         customerName: p.customer_name,
