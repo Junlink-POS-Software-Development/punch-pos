@@ -24,9 +24,9 @@ import { useTransactionStore } from "@/app/settings/backdating/stores/useTransac
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
   cartItems: CartItem[];
-  onAddToCart: () => void;
-  onRemoveItem: (sku: string) => void;
-  onUpdateItem: (sku: string, updates: Partial<CartItem>) => void;
+  onAddToCart: (overrideFreeMode?: boolean) => void;
+  onRemoveItem: (id: string) => void;
+  onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
   triggerDoneSubmit: () => void;
@@ -39,6 +39,9 @@ interface UsePosFormReturn {
   // [NEW] Export Customer State
   customerId: string | null;
   setCustomerId: (id: string | null) => void;
+  // [NEW] Free Mode
+  isFreeMode: boolean;
+  toggleFreeMode: () => void;
 }
 
 export const usePosForm = (): UsePosFormReturn => {
@@ -53,11 +56,32 @@ export const usePosForm = (): UsePosFormReturn => {
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCartLoaded, setIsCartLoaded] = useState(false); // [NEW] Loading state
+  const [isFreeMode, setIsFreeMode] = useState(false); // [NEW] Free Mode state
 
-  const [successData, setSuccessData] = useState<TransactionResult | null>(
-    null
-  );
+  const [successData, setSuccessData] = useState<TransactionResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // [NEW] Load Cart from LocalStorage on Mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem("pos-cart");
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCartItems(parsedCart);
+      } catch (error) {
+        console.error("Failed to parse cart from local storage:", error);
+      }
+    }
+    setIsCartLoaded(true);
+  }, []);
+
+  // [NEW] Save Cart to LocalStorage on Change (only after load)
+  useEffect(() => {
+    if (isCartLoaded) {
+      localStorage.setItem("pos-cart", JSON.stringify(cartItems));
+    }
+  }, [cartItems, isCartLoaded]);
 
   const methods = useForm<PosFormValues>({
     resolver: zodResolver(posSchema),
@@ -78,50 +102,6 @@ export const usePosForm = (): UsePosFormReturn => {
     control,
   } = methods;
 
-
-
-  // --- GLOBAL KEYBOARD SHORTCUTS ---
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Alt + Enter: Trigger payment submission
-      if (e.altKey && e.key === "Enter") {
-        e.preventDefault();
-        console.log("🎹 [Shortcut] Alt+Enter detected - triggering payment submission");
-        handleSubmit(onDoneSubmit)();
-        return;
-      }
-
-      // Spacebar: Add to cart (only when on barcode/quantity/discount fields)
-      // REMOVED as per request - Spacebar now triggers Payment Popup
-      /* 
-      if (e.code === "Space") {
-        const activeElement = document.activeElement as HTMLInputElement;
-        const fieldName = activeElement?.getAttribute("name");
-        
-        // Only trigger on specific POS form fields
-        if (fieldName === "barcode" || fieldName === "quantity" || fieldName === "discount") {
-          e.preventDefault();
-          console.log("🎹 [Shortcut] Spacebar detected - triggering add to cart");
-          handleAddToCart({
-            getValues,
-            setValue,
-            resetField,
-            allItems,
-            cartItems,
-            setCartItems,
-            onError: (message) => setErrorMessage(message),
-            inventoryData,
-          });
-        }
-      }
-      */
-    };
-
-    window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allItems, cartItems, inventoryData, handleSubmit]);
-
   // --- CALCULATIONS ---
   const cartTotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.total, 0),
@@ -135,12 +115,12 @@ export const usePosForm = (): UsePosFormReturn => {
   useEffect(() => {
     setValue("grandTotal", cartTotal - (voucher || 0), { shouldValidate: false });
     const changeAmount = (payment || 0) + (voucher || 0) - cartTotal;
-    // Round to 2 decimal places to match money format
     const roundedChange = Math.round(changeAmount * 100) / 100;
     setValue("change", roundedChange, { shouldValidate: false });
   }, [cartTotal, payment, voucher, setValue]);
 
-  const onAddToCart = useCallback(() => {
+  /* Update onAddToCart to accept override */
+  const onAddToCart = useCallback((overrideFreeMode?: boolean) => {
     handleAddToCart({
       getValues,
       setValue,
@@ -150,24 +130,26 @@ export const usePosForm = (): UsePosFormReturn => {
       setCartItems,
       onError: (message) => setErrorMessage(message),
       inventoryData,
+      isFreeMode: typeof overrideFreeMode === 'boolean' ? overrideFreeMode : isFreeMode,
     });
-  }, [getValues, setValue, resetField, allItems, cartItems, inventoryData]);
+  }, [getValues, setValue, resetField, allItems, cartItems, inventoryData, isFreeMode]);
 
   const onClear = useCallback(() => {
     console.log("🧹 [Form] onClear triggered");
     handleClear({ setCartItems, reset });
-    setCustomerId(null); // [NEW] Reset customer association
+    setCustomerId(null);
+    localStorage.removeItem("pos-cart"); // Clear localStorage on clear
     setTimeout(() => setFocus("customerName"), 50);
   }, [reset, setCustomerId, setFocus]);
 
-  const onRemoveItem = useCallback((sku: string) => {
-    setCartItems((prevCart) => prevCart.filter((item) => item.sku !== sku));
+  const onRemoveItem = useCallback((id: string) => {
+    setCartItems((prevCart) => prevCart.filter((item) => item.id !== id));
   }, []);
 
-  const onUpdateItem = useCallback((sku: string, updates: Partial<CartItem>) => {
+  const onUpdateItem = useCallback((id: string, updates: Partial<CartItem>) => {
     setCartItems((prevCart) =>
       prevCart.map((item) => {
-        if (item.sku === sku) {
+        if (item.id === id) {
           const newItem = { ...item, ...updates };
           if (
             updates.unitPrice !== undefined ||
@@ -202,12 +184,23 @@ export const usePosForm = (): UsePosFormReturn => {
     }
 
     const totalPayment = (data.payment || 0) + (data.voucher || 0);
-    if (totalPayment <= 0) {
+    // If cart total is 0 (all free), payment can be 0.
+    if (totalPayment <= 0 && cartTotal > 0) { 
+       // Only enforce payment > 0 if cartTotal > 0. 
+       // If cartTotal is 0, payment can be 0.
+       // However, the original code enforced > 0.
+       // If user gives free items, total is 0. Payment 0 + Voucher 0 = 0.
+       // Change logic:
+    }
+    
+    // [FIX] Validating payment for free items
+    if (cartTotal > 0 && totalPayment <= 0) {
       setErrorMessage(
         "Total payment (Cash + Voucher) must be greater than zero."
       );
       return;
     }
+    
     if (data.change < 0) {
       setErrorMessage("Insufficient payment amount.");
       return;
@@ -268,6 +261,8 @@ export const usePosForm = (): UsePosFormReturn => {
       setErrorMessage("Please check all fields. Some values are invalid.");
     })();
   };
+  
+  const toggleFreeMode = () => setIsFreeMode(!isFreeMode);
 
   return {
     methods,
@@ -286,5 +281,7 @@ export const usePosForm = (): UsePosFormReturn => {
     clearErrorMessage,
     customerId, // [NEW]
     setCustomerId, // [NEW]
+    isFreeMode, // [NEW]
+    toggleFreeMode, // [NEW]
   };
 };

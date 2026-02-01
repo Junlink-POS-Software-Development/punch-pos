@@ -13,6 +13,7 @@ import ErrorMessage from "./components/ErrorMessage";
 // 1. Import the new hook
 import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts"; // Adjust path as needed
 import { PaymentPopup } from "./modals/PaymentPopup";
+import { FreeItemModal } from "./modals/FreeItemModal";
 import { useState, useEffect } from "react";
 import ActionPanel from "./components/ActionPanel";
 import MobileFormFields from "./components/mobile-view/MobileFormFields";
@@ -35,13 +36,18 @@ const SalesTerminal = () => {
     errorMessage,
     clearErrorMessage,
     setCustomerId,
+    // [NEW]
+    isFreeMode,
+    toggleFreeMode,
   } = usePosForm();
 
   // 2. Call the hook and pass the onClear function
   // This replaces the previous useEffect for the "Escape" key
   useTerminalShortcuts({ onClear });
 
+  /* State */
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
+  const [isFreeModalOpen, setIsFreeModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<"barcode" | "quantity" | null>("barcode");
 
   // Calculate cart total
@@ -91,11 +97,19 @@ const SalesTerminal = () => {
     setIsPaymentPopupOpen(false);
   };
 
+  const handleFreeItemSelect = (item: any, qty: number) => {
+     methods.setValue("barcode", item.sku);
+     methods.setValue("quantity", qty);
+     // Force Free Mode for this addition
+     onAddToCart(true);
+     setIsFreeModalOpen(false);
+  };
+
   return (
     <div className="relative flex flex-col lg:flex-row h-full overflow-hidden">
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
-        <div className="flex flex-col flex-1 p-2 sm:p-4 h-full min-w-0">
+        <div className="flex flex-col flex-1 p-2 sm:p-4 h-full min-w-0 overflow-y-auto">
             <TerminalHeader 
               setCustomerId={setCustomerId} 
               grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
@@ -104,7 +118,7 @@ const SalesTerminal = () => {
             <form
               id="sales-form"
               onSubmit={methods.handleSubmit(onDoneSubmit)}
-              className={`flex flex-col gap-4 w-full h-full overflow-hidden`}
+              className={`flex flex-col gap-4 w-full min-h-full`}
             >
               <div className="relative flex flex-col w-full shrink-0">
                 {/* Desktop Form Fields */}
@@ -125,7 +139,7 @@ const SalesTerminal = () => {
                   />
                 </div>
               </div>
-              <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full grow overflow-hidden min-h-0">
+              <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full flex-1 overflow-hidden min-h-[400px]">
                 {/* Desktop Cart */}
                 <div className="hidden sm:block h-full">
                   <TerminalCart
@@ -156,6 +170,8 @@ const SalesTerminal = () => {
             onCharge={() => setIsPaymentPopupOpen(true)}
             activeField={activeField}
             setActiveField={setActiveField}
+            isFreeMode={false} // No longer toggle state, just modal action
+            onToggleFreeMode={() => setIsFreeModalOpen(true)}
           />
         </div>
 
@@ -177,6 +193,12 @@ const SalesTerminal = () => {
         onClose={() => setIsPaymentPopupOpen(false)}
         totalAmount={cartTotal}
         onConfirm={handlePaymentComplete}
+      />
+
+      <FreeItemModal
+        isOpen={isFreeModalOpen}
+        onClose={() => setIsFreeModalOpen(false)}
+        onSelect={handleFreeItemSelect}
       />
 
       <ErrorMessage message={errorMessage} onClose={clearErrorMessage} />

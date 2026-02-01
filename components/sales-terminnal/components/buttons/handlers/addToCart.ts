@@ -9,6 +9,7 @@ import { Item } from "@/app/inventory/components/item-registration/utils/itemTyp
 import { CartItem } from "../../TerminalCart";
 import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
 
+// 22: Added isFreeMode to type
 type AddToCartParams = {
   getValues: UseFormGetValues<PosFormValues>;
   setValue: UseFormSetValue<PosFormValues>;
@@ -18,6 +19,7 @@ type AddToCartParams = {
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   onError?: (message: string) => void; // Optional error callback
   inventoryData: InventoryItem[]; // Receive inventory from context
+  isFreeMode?: boolean; // [NEW] Free Mode flag
 };
 
 export const handleAddToCart = ({
@@ -28,6 +30,7 @@ export const handleAddToCart = ({
   setCartItems,
   onError,
   inventoryData, // Receive from context
+  isFreeMode = false, // [NEW] Default to false
 }: AddToCartParams) => {
   console.log("--- [addToCart.ts] Executing Add to Cart Logic ---");
 
@@ -75,8 +78,11 @@ export const handleAddToCart = ({
   }
 
   // Calculate total quantity (existing in cart + new quantity)
-  const existingItemIndex = cartItems.findIndex((item) => item.sku === barcode);
-  const quantityInCart = existingItemIndex !== -1 ? cartItems[existingItemIndex].quantity : 0;
+  // [FIX] STOCK CHECK: Sum quantity of ALL rows with this SKU (Free + Paid)
+  const quantityInCart = cartItems
+    .filter((item) => item.sku === barcode)
+    .reduce((sum, item) => sum + item.quantity, 0);
+
   const totalQuantity = quantityInCart + quantity;
 
   // Check if total quantity exceeds available stock
@@ -98,11 +104,15 @@ export const handleAddToCart = ({
 
   // 4. Calculate Costs
   // Logic: (Qty * Price) - Discount
-  const unitPrice = itemDetails.costPrice;
+  // [NEW] If Free Mode, price is 0
+  const unitPrice = isFreeMode ? 0 : itemDetails.costPrice;
   const total = quantity * unitPrice - discountValue;
 
   // 5. Update Cart State
-  // Reuse existingItemIndex from stock validation (line 78)
+  // [FIX] MERGING: Find item by SKU *AND* Unit Price to separate Free vs Paid rows
+  const existingItemIndex = cartItems.findIndex(
+    (item) => item.sku === barcode && item.unitPrice === unitPrice
+  );
 
   if (existingItemIndex !== -1) {
     // Update existing item
@@ -127,7 +137,7 @@ export const handleAddToCart = ({
   } else {
     // Add new item
     const newCartItem: CartItem = {
-      id: barcode,
+      id: `${barcode}-${unitPrice}`, // [FIX] Unique ID based on SKU + Price (to ensure Free/Paid separation)
       sku: barcode,
       itemName: itemDetails.itemName,
       unitPrice: unitPrice,

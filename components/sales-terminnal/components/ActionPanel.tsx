@@ -13,6 +13,9 @@ interface ActionPanelProps {
   onCharge: () => void;
   activeField: "barcode" | "quantity" | null;
   setActiveField: (field: "barcode" | "quantity" | null) => void;
+  // [NEW] Free Mode
+  isFreeMode?: boolean;
+  onToggleFreeMode?: () => void;
 }
 
 export default function ActionPanel({
@@ -21,6 +24,8 @@ export default function ActionPanel({
   onCharge,
   activeField,
   setActiveField,
+  isFreeMode,
+  onToggleFreeMode,
 }: ActionPanelProps) {
   const { setValue, getValues, setFocus, reset } = useFormContext<PosFormValues>();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -96,7 +101,9 @@ export default function ActionPanel({
             onAdd={onAddToCart}
             onDiscount={() => console.log("Discount")}
             onVoucher={() => console.log("Voucher")}
-            onOpenDrawer={() => console.log("Open Drawer")}
+            onOpenDrawer={() => console.log("Open Drawer")} 
+            // We kept onOpenDrawer just in case, but ActionButtons will ignore it if we switch functionality.
+            // Actually ActionButtons interface needs Update.
             onCharge={onCharge}
             onIncreaseQty={handleIncreaseQty}
             onDecreaseQty={handleDecreaseQty}
@@ -107,6 +114,8 @@ export default function ActionPanel({
               setActiveField("barcode");
             }}
             onClearAll={onClearAll}
+            isFreeMode={isFreeMode} // [NEW]
+            onToggleFreeMode={onToggleFreeMode} // [NEW]
          />
       </div>
 

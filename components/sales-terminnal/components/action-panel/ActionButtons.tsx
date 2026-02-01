@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser } from "lucide-react";
+import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift } from "lucide-react";
 
 interface ActionButtonsProps {
   onAdd: () => void;
@@ -11,6 +11,9 @@ interface ActionButtonsProps {
   onDecreaseQty: () => void;
   onClearInput: () => void;
   onClearAll: () => void;
+  // [NEW]
+  isFreeMode?: boolean;
+  onToggleFreeMode?: () => void;
 }
 
 export const ActionButtons = ({
@@ -23,6 +26,8 @@ export const ActionButtons = ({
   onDecreaseQty,
   onClearInput,
   onClearAll,
+  isFreeMode,
+  onToggleFreeMode,
 }: ActionButtonsProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
@@ -83,11 +88,15 @@ export const ActionButtons = ({
         </button>
         <button
           type="button"
-          onClick={onOpenDrawer}
-          className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
+          onClick={onToggleFreeMode}
+          className={`col-span-1 border font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1
+             ${isFreeMode 
+               ? "bg-purple-600 border-purple-500 text-white animate-pulse" 
+               : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300"}
+          `}
         >
-          <Archive className="w-4 h-4" />
-          DRAWER
+          <Gift className={`w-4 h-4 ${isFreeMode ? "text-white" : ""}`} />
+          FREE
         </button>
         <button
           type="button"

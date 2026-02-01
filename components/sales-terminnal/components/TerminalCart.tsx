@@ -19,12 +19,12 @@ export type CartItem = {
 
 type TerminalCartProps = {
   rows: CartItem[];
-  onRemoveItem: (sku: string) => void;
-  onUpdateItem: (sku: string, updates: Partial<CartItem>) => void;
+  onRemoveItem: (id: string) => void;
+  onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
 };
 
 type DeleteColumn<R> = Column<R> & {
-  onRemoveItem: (sku: string) => void;
+  onRemoveItem: (id: string) => void;
 };
 
 type CustomFormatterProps<R> = {
@@ -37,7 +37,7 @@ export const DeleteFormatter = ({ row, column }: CustomFormatterProps<CartItem>)
     <button
       type="button"
       className="flex justify-center items-center w-full h-full text-red-500 hover:text-red-300"
-      onClick={() => column.onRemoveItem(row.sku)}
+      onClick={() => column.onRemoveItem(row.id)}
       aria-label="Remove item"
     >
       <XCircle size={18} />
@@ -144,7 +144,7 @@ export const TerminalCart = ({ rows, onRemoveItem, onUpdateItem }: TerminalCartP
           return (
             <EditablePriceCell 
               initialValue={row.unitPrice} 
-              onUpdate={(newPrice) => onUpdateItem(row.sku, { unitPrice: newPrice })} 
+              onUpdate={(newPrice) => onUpdateItem(row.id, { unitPrice: newPrice })} 
             />
           );
         }

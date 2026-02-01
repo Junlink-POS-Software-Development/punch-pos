@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useInventory } from "../../hooks/useInventory";
-import { AlertTriangle, PackageCheck, ArrowRight } from "lucide-react";
+import React from "react";
+import { useLowStockInfinite, useMostStockedInfinite } from "../../hooks/useInventory";
+import { AlertTriangle, PackageCheck, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
 
 interface InventorySummaryProps {
   showNavigation?: boolean;
@@ -12,64 +13,62 @@ interface InventorySummaryProps {
 export const InventorySummary: React.FC<InventorySummaryProps> = ({
   showNavigation = true,
 }) => {
-  const { inventory, isLoading } = useInventory();
-  const [limit, setLimit] = useState<number>(5);
+  const { 
+    data: lowStockData, 
+    fetchNextPage: fetchNextLow, 
+    hasNextPage: hasNextLow,
+    isFetchingNextPage: isFetchingLow,
+    isLoading: isLoadingLow 
+  } = useLowStockInfinite();
 
-  const { lowStockItems, mostStockedItems } = useMemo(() => {
-    if (!inventory) return { lowStockItems: [], mostStockedItems: [] };
+  const { 
+    data: mostStockedData, 
+    fetchNextPage: fetchNextMost, 
+    hasNextPage: hasNextMost,
+    isFetchingNextPage: isFetchingMost,
+    isLoading: isLoadingMost
+  } = useMostStockedInfinite();
 
-    const lowStock = inventory
-      .filter((item) => {
-        const threshold = item.low_stock_threshold ?? 5;
-        return item.current_stock <= threshold;
-      })
-      .sort((a, b) => a.current_stock - b.current_stock); // Lowest stock first
+  const handleLowStockScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 20 && hasNextLow && !isFetchingLow) {
+      fetchNextLow();
+    }
+  };
 
-    const mostStocked = [...inventory]
-      .sort((a, b) => b.current_stock - a.current_stock) // Highest stock first
-      .slice(0, limit);
+  const handleMostStockedScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 20 && hasNextMost && !isFetchingMost) {
+      fetchNextMost();
+    }
+  };
 
-    return {
-      lowStockItems: lowStock.slice(0, limit),
-      mostStockedItems: mostStocked,
-    };
-  }, [inventory, limit]);
+  const lowStockItems = lowStockData?.pages.flatMap(p => p.data) || [];
+  const mostStockedItems = mostStockedData?.pages.flatMap(p => p.data) || [];
 
-  if (isLoading) {
-    return (
-      <div className="gap-6 grid grid-cols-1 md:grid-cols-2 animate-pulse">
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl h-64"></div>
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl h-64"></div>
-      </div>
-    );
+  if (isLoadingLow || isLoadingMost) {
+     return (
+       <div className="gap-6 grid grid-cols-1 md:grid-cols-2 animate-pulse">
+         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl h-64 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-slate-600 animate-spin" />
+         </div>
+         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl h-64 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-slate-600 animate-spin" />
+         </div>
+       </div>
+     );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="font-bold text-white text-xl">Inventory Highlights</h2>
-        <div className="flex items-center gap-2 bg-slate-800/50 p-1 border border-slate-700/50 rounded-lg">
-          <span className="px-2 text-slate-400 text-xs">Show:</span>
-          {[5, 10, 20].map((val) => (
-            <button
-              key={val}
-              onClick={() => setLimit(val)}
-              className={`px-3 py-1 text-xs rounded-md transition-all ${
-                limit === val
-                  ? "bg-slate-700 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-              }`}
-            >
-              {val}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
         {/* Low Stock Section */}
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-red-500/20 rounded-xl overflow-hidden">
-          <div className="flex justify-between items-center bg-red-500/5 p-4 border-red-500/20 border-b">
+        <div className="bg-slate-900/50 backdrop-blur-sm border border-red-500/20 rounded-xl overflow-hidden flex flex-col h-80">
+          <div className="flex justify-between items-center bg-red-500/5 p-4 border-red-500/20 border-b shrink-0">
             <div className="flex items-center gap-2 text-red-400">
               <AlertTriangle className="w-5 h-5" />
               <h3 className="font-semibold">Low Stock Alert</h3>
@@ -83,14 +82,17 @@ export const InventorySummary: React.FC<InventorySummaryProps> = ({
               </Link>
             )}
           </div>
-          <div className="p-2">
+          <div 
+            className="p-2 overflow-y-auto custom-scrollbar flex-1 relative"
+            onScroll={handleLowStockScroll}
+          >
             {lowStockItems.length === 0 ? (
               <div className="p-8 text-slate-500 text-sm text-center">
                 No items below threshold.
               </div>
             ) : (
               <div className="space-y-1">
-                {lowStockItems.map((item) => (
+                {lowStockItems.map((item: InventoryItem) => (
                   <div
                     key={item.item_id}
                     className="group flex justify-between items-center hover:bg-red-500/5 p-3 rounded-lg transition-colors"
@@ -113,14 +115,19 @@ export const InventorySummary: React.FC<InventorySummaryProps> = ({
                     </div>
                   </div>
                 ))}
+                {isFetchingLow && (
+                  <div className="p-2 flex justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-red-400" />
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
         {/* Most Stocked Section */}
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-emerald-500/20 rounded-xl overflow-hidden">
-          <div className="flex justify-between items-center bg-emerald-500/5 p-4 border-emerald-500/20 border-b">
+        <div className="bg-slate-900/50 backdrop-blur-sm border border-emerald-500/20 rounded-xl overflow-hidden flex flex-col h-80">
+          <div className="flex justify-between items-center bg-emerald-500/5 p-4 border-emerald-500/20 border-b shrink-0">
             <div className="flex items-center gap-2 text-emerald-400">
               <PackageCheck className="w-5 h-5" />
               <h3 className="font-semibold">Most Stocked</h3>
@@ -134,14 +141,17 @@ export const InventorySummary: React.FC<InventorySummaryProps> = ({
               </Link>
             )}
           </div>
-          <div className="p-2">
+          <div 
+             className="p-2 overflow-y-auto custom-scrollbar flex-1 relative"
+             onScroll={handleMostStockedScroll}
+          >
             {mostStockedItems.length === 0 ? (
               <div className="p-8 text-slate-500 text-sm text-center">
                 No inventory data available.
               </div>
             ) : (
               <div className="space-y-1">
-                {mostStockedItems.map((item) => (
+                {mostStockedItems.map((item: InventoryItem) => (
                   <div
                     key={item.item_id}
                     className="group flex justify-between items-center hover:bg-emerald-500/5 p-3 rounded-lg transition-colors"
@@ -161,6 +171,11 @@ export const InventorySummary: React.FC<InventorySummaryProps> = ({
                     </div>
                   </div>
                 ))}
+                {isFetchingMost && (
+                   <div className="p-2 flex justify-center">
+                     <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                   </div>
+                )}
               </div>
             )}
           </div>
