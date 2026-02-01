@@ -179,7 +179,8 @@ export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps)
               ) : (
                 <>
                   <Plus className="w-3.5 h-3.5" />
-                  Add Stock Entry
+                  <span>Add Stock Entry</span>
+                  <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] border border-white/20 opacity-60 ml-2">Tab</span>
                 </>
               )}
             </button>

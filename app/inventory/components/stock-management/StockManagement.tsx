@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
 import { StockFormSchema } from "./utils/types";
@@ -17,6 +17,26 @@ const StockManagementContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { addStockEntry, editStockEntry, isProcessing } = useStocks();
+
+  // Handle Tab shortcut to open adjustment
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Open on "Tab" if modal is closed and not typing in an input
+      if (e.key === "Tab" && !isModalOpen) {
+        // Optional: Check if the target is an input/textarea/select to avoid stealing focus
+        const target = e.target as HTMLElement;
+        const isTyping = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
+        
+        if (!isTyping) {
+          e.preventDefault();
+          handleOpenAdjustment();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
 
   const handleStockSubmit = (data: StockFormSchema) => {
     if (editingItem) {
