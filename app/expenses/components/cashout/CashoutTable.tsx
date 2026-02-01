@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
+  RowData,
 } from "@tanstack/react-table";
-import { Loader2, Plus, XCircle } from "lucide-react";
+import { Loader2, Plus, XCircle, Edit, Trash2 } from "lucide-react";
 import { ExpenseData } from "../../lib/expenses.api";
 import { DateColumnFilter } from "./components/DateColumnFilter";
 
@@ -18,6 +19,14 @@ interface CashoutTableProps {
   onDateChange: (start: string, end: string) => void;
   onAdd?: () => void;
   isAdding?: boolean;
+  onEdit?: (expense: ExpenseData) => void;
+  onDelete?: (id: string) => void;
+}
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    dateRange: { start: string; end: string };
+  }
 }
 
 const columnHelper = createColumnHelper<ExpenseData>();
@@ -29,17 +38,27 @@ export const CashoutTable = ({
   onDateChange,
   onAdd,
   isAdding,
+  onEdit,
+  onDelete,
 }: CashoutTableProps) => {
+  const handleDelete = useCallback((id: string) => {
+    if (window.confirm("Are you sure you want to delete this expense record?")) {
+      onDelete?.(id);
+    }
+  }, [onDelete]);
   const columns = useMemo(
     () => [
       columnHelper.accessor("transaction_date", {
-        header: () => (
-          <DateColumnFilter
-            startDate={dateRange.start}
-            endDate={dateRange.end}
-            onDateChange={onDateChange}
-          />
-        ),
+        header: ({ table }) => {
+          const { start, end } = table.options.meta?.dateRange || { start: "", end: "" };
+          return (
+            <DateColumnFilter
+              startDate={start}
+              endDate={end}
+              onDateChange={onDateChange}
+            />
+          );
+        },
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor("source", {
@@ -81,14 +100,39 @@ export const CashoutTable = ({
           </span>
         ),
       }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit?.(row.original)}
+              className="group hover:bg-blue-400/20 p-1.5 rounded-md text-blue-400 hover:text-blue-200 transition-all"
+              title="Edit Record"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(row.original.id)}
+              className="group hover:bg-red-400/20 p-1.5 rounded-md text-red-400 hover:text-red-200 transition-all"
+              title="Delete Record"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+      }),
     ],
-    [dateRange, onDateChange]
+    [onDateChange, onEdit, onDelete, handleDelete]
   );
 
   const table = useReactTable({
     data: expenses,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      dateRange
+    }
   });
 
   return (

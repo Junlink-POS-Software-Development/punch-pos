@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   fetchExpenses,
   createExpense,
+  deleteExpense,
   ExpenseInput,
 } from "../lib/expenses.api";
 
@@ -16,14 +17,14 @@ export function useExpenses(dateRange?: DateRange) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Query Key includes dates, so it auto-refetches when they change
-  const queryKey = ["expenses", dateRange?.start, dateRange?.end];
+  const queryKey = useMemo(() => ["expenses", dateRange?.start, dateRange?.end], [dateRange?.start, dateRange?.end]);
 
   const { data: expenses, isLoading } = useQuery({
     queryKey,
     queryFn: () => fetchExpenses(dateRange?.start, dateRange?.end),
   });
 
-  const addExpense = async (data: ExpenseInput) => {
+  const addExpense = useCallback(async (data: ExpenseInput) => {
     setIsSubmitting(true);
     try {
       await createExpense(data);
@@ -32,13 +33,25 @@ export function useExpenses(dateRange?: DateRange) {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [queryClient, queryKey]);
+
+  const removeExpense = useCallback(async (id: string) => {
+    try {
+      await deleteExpense(id);
+      // Invalidate to refresh the list
+      queryClient.invalidateQueries({ queryKey });
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+      throw error;
+    }
+  }, [queryClient, queryKey]);
 
   return {
     expenses: expenses || [],
     isLoading,
     isSubmitting,
     addExpense,
-    refresh: () => queryClient.invalidateQueries({ queryKey }),
+    removeExpense,
+    refresh: useCallback(() => queryClient.invalidateQueries({ queryKey }), [queryClient, queryKey]),
   };
 }

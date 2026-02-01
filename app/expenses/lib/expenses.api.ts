@@ -242,3 +242,14 @@ export const deleteClassification = async (id: string) => {
     throw new Error(error.message);
   }
 };
+
+// 8. Delete Expense
+export const deleteExpense = async (id: string) => {
+  const supabase = await getSupabase();
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting expense:", error);
+    throw new Error(error.message);
+  }
+};
