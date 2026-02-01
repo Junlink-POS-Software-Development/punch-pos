@@ -6,7 +6,8 @@ import { DataGrid, Column } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
-import { Edit, Trash2, LineChart, Plus, XCircle } from "lucide-react";
+import { Edit, Trash2, LineChart, Plus, XCircle, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface StockTableProps {
   onEdit?: (item: StockData) => void;
@@ -16,12 +17,23 @@ interface StockTableProps {
 
 export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps) {
   const { stocks, removeStockEntry, isLoading } = useStocks();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleDelete = (id: string) => {
     if (window.confirm("Delete this record?")) {
       removeStockEntry(id);
     }
   };
+
+  const filteredStocks = useMemo(() => {
+    if (!searchTerm.trim()) return stocks;
+    const term = searchTerm.toLowerCase();
+    return stocks.filter(
+      (s) =>
+        s.item_name?.toLowerCase().includes(term) ||
+        s.notes?.toLowerCase().includes(term)
+    );
+  }, [stocks, searchTerm]);
 
   const headerClass =
     "bg-transparent text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center backdrop-blur-2xl";
@@ -132,34 +144,51 @@ export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps)
   return (
     <div className="flex flex-col h-[85vh]">
       {/* ADDED: Title Header */}
-      <div className="flex items-center justify-between mb-4 pb-2 border-slate-700/50 border-b">
-        <div className="flex items-center gap-2">
-          <LineChart className="w-5 h-5 text-blue-400" />
-          <h3 className="font-semibold text-lg text-slate-200 uppercase tracking-tight font-lexend">Stocks Flow</h3>
+      <div className="flex flex-wrap items-center justify-between mb-4 pb-2 border-slate-700/50 border-b gap-4">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <LineChart className="w-5 h-5 text-blue-400" />
+            <h3 className="font-semibold text-lg text-slate-200 uppercase tracking-tight font-lexend">Stocks Flow</h3>
+          </div>
+          
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search stocks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-slate-950/50 border border-slate-700/50 rounded-lg pl-9 pr-4 py-1 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all w-64 shadow-inner"
+            />
+          </div>
+
+          {onAdd && (
+            <button
+              onClick={onAdd}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
+                isAdding 
+                  ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
+                  : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
+              }`}
+            >
+              {isAdding ? (
+                <>
+                  <XCircle className="w-3.5 h-3.5" />
+                  Close Form
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Stock Entry
+                </>
+              )}
+            </button>
+          )}
         </div>
-        
-        {onAdd && (
-          <button
-            onClick={onAdd}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
-              isAdding 
-                ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
-                : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
-            }`}
-          >
-            {isAdding ? (
-              <>
-                <XCircle className="w-3.5 h-3.5" />
-                Close Form
-              </>
-            ) : (
-              <>
-                <Plus className="w-3.5 h-3.5" />
-                Add Stock Entry
-              </>
-            )}
-          </button>
-        )}
+
+        <div className="text-sm font-medium text-gray-500 bg-slate-800/30 px-3 py-1 rounded-full border border-slate-700/30">
+          Showing <span className="text-gray-300 font-bold">{filteredStocks.length}</span> of {stocks.length} records
+        </div>
       </div>
 
       {isLoading ? (
@@ -171,7 +200,7 @@ export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps)
            <DataGrid
             className="border-gray-800 bg-gray-900/30 rdg-dark text-xs h-[calc(100vh-100px)]"
             columns={columns}
-            rows={stocks}
+            rows={filteredStocks}
             rowHeight={50}
             headerRowHeight={50}
             style={{ height: "80vh" }}
