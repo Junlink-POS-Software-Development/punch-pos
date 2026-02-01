@@ -86,6 +86,19 @@ export const useStocks = () => {
     }
   };
 
+  const addBatchStockEntry = async (items: StockInput[], options?: StockMutationOptions) => {
+    setIsProcessing(true);
+    try {
+      // Import this dynamically or ensuring it's imported at top
+      await import("../components/stock-management/lib/stocks.api").then(mod => 
+        mod.insertStockBatch(items)
+      );
+      handleMutationSuccess(options?.onSuccess);
+    } catch (err) {
+      handleMutationError(err as Error, options?.onError);
+    }
+  };
+
   return {
     stocks,
     isLoading,
@@ -93,5 +106,6 @@ export const useStocks = () => {
     addStockEntry,
     editStockEntry,
     removeStockEntry,
+    addBatchStockEntry,
   };
 };
