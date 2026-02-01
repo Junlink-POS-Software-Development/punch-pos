@@ -11,6 +11,8 @@ export function useStocksLogic() {
     dir: "ASC" | "DESC";
   }>({ col: "item_name", dir: "ASC" }); // Default Alphabetical
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   // --- Handlers ---
   const handleApplyFilter = (key: string, values: string[]) => {
     setFilters((prev) => ({
@@ -31,6 +33,8 @@ export function useStocksLogic() {
   return {
     filters,
     sortState,
+    searchTerm,
+    setSearchTerm,
     handleApplyFilter,
     handleSort,
   };

@@ -26,6 +26,7 @@ export interface InventoryParams {
   storeId?: string;
   filters?: Record<string, string[]>;
   sort?: { col: keyof InventoryItem; dir: "ASC" | "DESC" };
+  search?: string;
 }
 
 export const fetchInventory = async (
@@ -51,7 +52,13 @@ export const fetchInventory = async (
     });
   }
 
-  // 2. Apply Sort
+  // 2. Apply Search
+  if (params.search) {
+    const term = params.search;
+    query = query.or(`item_name.ilike.%${term}%,sku.ilike.%${term}%`);
+  }
+
+  // 3. Apply Sort
   if (sort) {
     query = query.order(sort.col, { ascending: sort.dir === "ASC" });
   } else {
@@ -59,7 +66,7 @@ export const fetchInventory = async (
     query = query.order("item_name", { ascending: true });
   }
 
-  // 3. Pagination
+  // 4. Pagination
   query = query.range(from, to);
 
   const { data, error, count } = await query;
