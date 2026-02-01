@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Menu,
   X,
+  Table,
 } from "lucide-react";
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
@@ -156,6 +157,16 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         { label: "New Note", href: "/notes" },
         { label: "To-Do", href: "/notes" },
         { label: "Shared", href: "/notes" },
+      ],
+    },
+    {
+      id: "playground",
+      text: "Playground",
+      Icon: Table,
+      href: "/playground",
+      shortcuts: [
+        { label: "New Sheet", href: "/playground" },
+        { label: "My Models", href: "/playground" },
       ],
     },
   ];
