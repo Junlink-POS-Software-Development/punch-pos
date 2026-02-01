@@ -6,16 +6,17 @@ import { DataGrid, Column } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
-import { Edit, Trash2, LineChart, Plus, XCircle, Search } from "lucide-react";
+import { Edit, Trash2, LineChart, Plus, XCircle, Search, Layers } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface StockTableProps {
   onEdit?: (item: StockData) => void;
   onAdd?: () => void;
   isAdding?: boolean;
+  onBatchAdd?: () => void;
 }
 
-export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps) {
+export default function StockTable({ onEdit, onAdd, isAdding, onBatchAdd }: StockTableProps) {
   const { stocks, removeStockEntry, isLoading } = useStocks();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -162,29 +163,41 @@ export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps)
             />
           </div>
 
-          {onAdd && (
-            <button
-              onClick={onAdd}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
-                isAdding 
-                  ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
-                  : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
-              }`}
-            >
-              {isAdding ? (
-                <>
-                  <XCircle className="w-3.5 h-3.5" />
-                  Close Form
-                </>
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Stock Entry</span>
-                  <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] border border-white/20 opacity-60 ml-2">Tab</span>
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex gap-2">
+            {onBatchAdd && (
+              <button
+                onClick={onBatchAdd}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20 active:scale-95 border border-emerald-400/20"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Batch Update</span>
+              </button>
+            )}
+
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
+                  isAdding 
+                    ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
+                    : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
+                }`}
+              >
+                {isAdding ? (
+                  <>
+                    <XCircle className="w-3.5 h-3.5" />
+                    Close Form
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Stock Entry</span>
+                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] border border-white/20 opacity-60 ml-2">Tab</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="text-sm font-medium text-gray-500 bg-slate-800/30 px-3 py-1 rounded-full border border-slate-700/30">

@@ -9,12 +9,14 @@ import { StockFormSchema } from "./utils/types";
 import { ErrorMessage } from "@/components/sales-terminnal/components/ErrorMessage";
 import { PackagePlus } from "lucide-react";
 import { StockAdjustmentModal } from "./StockAdjustmentModal";
+import { BatchStockUpdateModal } from "./BatchStockUpdateModal";
 import StockTable from "./StockTable";
 
 const StockManagementContent = () => {
   const [editingItem, setEditingItem] = useState<StockData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   
   const { addStockEntry, editStockEntry, isProcessing } = useStocks();
 
@@ -105,6 +107,7 @@ const StockManagementContent = () => {
           onEdit={handleEdit} 
           onAdd={handleOpenAdjustment}
           isAdding={isModalOpen}
+          onBatchAdd={() => setIsBatchModalOpen(true)}
         />
       </div>
 
@@ -115,6 +118,12 @@ const StockManagementContent = () => {
         onSubmit={handleStockSubmit}
         itemToEdit={editingItem}
         onCancelEdit={handleCancelEdit}
+      />
+      
+      {/* Batch Update Modal */}
+      <BatchStockUpdateModal
+        isOpen={isBatchModalOpen}
+        onClose={() => setIsBatchModalOpen(false)}
       />
     </div>
   );
