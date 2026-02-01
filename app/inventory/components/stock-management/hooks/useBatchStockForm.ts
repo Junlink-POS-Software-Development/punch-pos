@@ -117,6 +117,7 @@ export const useBatchStockForm = (items: Item[]) => {
     const payload = selectedItems.map(item => {
       const data = batchData[item.id!];
       return {
+        itemId: item.id,
         itemName: item.itemName,
         stockFlow: "stock-in",
         quantity: data.addQuantity,

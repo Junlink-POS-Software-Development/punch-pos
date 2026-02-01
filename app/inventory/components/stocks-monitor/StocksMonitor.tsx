@@ -85,7 +85,12 @@ export default function StocksMonitor() {
             rows={inventory}
             rowKeyGetter={(row) => row.item_id}
             className="border-none h-[600px] rdg-dark"
-            style={{ height: "75vh" }}
+            style={{ 
+              height: "75vh",
+              // @ts-ignore - CSS variables in style 
+              "--rdg-header-background-color": "#0a192f",
+              "--rdg-row-hover-background-color": "rgba(30, 41, 59, 0.5)"
+            }}
             rowClass={() => "hover:bg-slate-800/30 transition-colors"}
             onScroll={handleScroll} 
           />

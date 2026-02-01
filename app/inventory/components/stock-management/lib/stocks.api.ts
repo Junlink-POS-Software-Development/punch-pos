@@ -145,51 +145,47 @@ export const updateStock = async (data: {
 
 // 5. Batch Insert Stock
 export const insertStockBatch = async (items: {
+  itemId?: string;
   itemName: string;
   stockFlow: string;
   quantity: number;
   capitalPrice: number;
   notes?: string;
-  store_id?: string; // Optional, handled by DB default usually or we fetch it
 }[]) => {
   console.log("🚀 [API] Sending Batch Stock Payload:", items.length, "items");
   const supabase = await getSupabase();
 
-  // We should verify items exist first, but for batch, maybe we assume UI did it?
-  // Or we can do a check. For now, let's rely on the RPC or direct insert.
-  // Direct insert to 'stock_flow' is easiest if we don't need complex RPC logic per item.
-  // BUT the previous single insert used `insert_new_stock_item` RPC. 
-  // If we want to maintain the exact same logic (triggering potential side effects?), we might need to loop RPCs or write a batch RPC.
-  // Standard `insert` into `stock_flow` is fast. logic in `insert_new_stock_item` seems to just be an insert wrapper
-  // checking line 93 of existing file: supabase.rpc("insert_new_stock_item", ...
-  // If that RPC does extra math (like updating a separate 'stocks' table?), we MUST use it or replicate it.
-  // Wait, `insert_new_stock_item` likely updates the `items` current stock count if there is a denormalized column, 
-  // OR it's just a wrapper.
-  // Given I cannot see the SQL, I should probably stick to what works or try to replicate.
-  // Use `insert` on `stock_flow` table directly? 
-  // Let's assume `stock_flow` triggers handle everything (like in many stock systems).
-  // The RPC `insert_new_stock_item` might just be for convenience or permissions.
-  // Let's try direct insert for batch efficiency.
-  
-  // Mapping partial item names to inputs isn't safe for direct insert if we need IDs.
-  // The `stock_flow` table has `item_name` column (denormalized?) or `item_id`?
-  // Looking at fetchStocks (line 47), it selects `item_name`.
-  // The deleteStock uses `stock_flow`.
-  // The updateStock uses `stock_flow`.
-  // The insertStock uses RPC.
-  
-  // Let's look at `insertStock` again. It checks if item exists in `items` table first.
-  
-  // To be safe and efficient:
-  // We will map the payload to the DB connection format.
-  
+  // 1. Get current user session
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    throw new Error("Authentication failed. Please log in again.");
+  }
+
+  // 2. Fetch user's store_id
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (userError || !userData?.store_id) {
+    console.error("❌ [API] Failed to fetch user store_id:", userError);
+    throw new Error("Could not determine your store. Please contact support.");
+  }
+
+  const storeId = userData.store_id;
+
+  // 3. Prepare payload for batch insert
+  // We explicitly include item_id, user_id, and store_id to pass RLS and constraints.
   const payload = items.map(i => ({
-    item_name: i.itemName,
+    item_id: i.itemId,
+    item_name: i.itemName, // keep for history/convenience if column exists
     flow: i.stockFlow,
     quantity: i.quantity,
     capital_price: i.capitalPrice,
-    notes: i.notes ?? null,
-    // time_stamp: new Date().toISOString(), // DB handles default
+    notes: i.notes ?? "Batch Update",
+    user_id: user.id,
+    store_id: storeId,
   }));
   
   const { data, error } = await supabase
@@ -198,7 +194,8 @@ export const insertStockBatch = async (items: {
     .select();
 
   if (error) {
-    console.error("Batch Insert Error:", error);
+    console.error("❌ [API] Batch Insert Error:", error);
+    // If we get an RLS error here, it likely means one of the store_ids didn't match
     throw new Error(error.message);
   }
   

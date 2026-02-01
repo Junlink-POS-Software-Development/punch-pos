@@ -9,6 +9,7 @@ import {
 } from "../components/stock-management/lib/stocks.api";
 
 export interface StockInput {
+  itemId?: string;
   itemName: string;
   stockFlow: string;
   quantity: number;
