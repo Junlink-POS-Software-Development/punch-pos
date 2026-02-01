@@ -6,13 +6,15 @@ import { DataGrid, Column } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 import { useStocks } from "../../hooks/useStocks";
 import { StockData } from "./lib/stocks.api";
-import { Edit, Trash2, LineChart } from "lucide-react";
+import { Edit, Trash2, LineChart, Plus, XCircle } from "lucide-react";
 
 interface StockTableProps {
   onEdit?: (item: StockData) => void;
+  onAdd?: () => void;
+  isAdding?: boolean;
 }
 
-export default function StockTable({ onEdit }: StockTableProps) {
+export default function StockTable({ onEdit, onAdd, isAdding }: StockTableProps) {
   const { stocks, removeStockEntry, isLoading } = useStocks();
 
   const handleDelete = (id: string) => {
@@ -130,9 +132,34 @@ export default function StockTable({ onEdit }: StockTableProps) {
   return (
     <div className="flex flex-col h-[85vh]">
       {/* ADDED: Title Header */}
-      <div className="flex items-center gap-2 mb-4 pb-2 border-slate-700/50 border-b">
-        <LineChart className="w-5 h-5 text-blue-400" />
-        <h3 className="font-semibold text-lg text-slate-200">Stocks Flow</h3>
+      <div className="flex items-center justify-between mb-4 pb-2 border-slate-700/50 border-b">
+        <div className="flex items-center gap-2">
+          <LineChart className="w-5 h-5 text-blue-400" />
+          <h3 className="font-semibold text-lg text-slate-200 uppercase tracking-tight font-lexend">Stocks Flow</h3>
+        </div>
+        
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-lg active:scale-95 border border-blue-400/20 ${
+              isAdding 
+                ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/20" 
+                : "bg-blue-600 hover:bg-blue-500 shadow-blue-900/20"
+            }`}
+          >
+            {isAdding ? (
+              <>
+                <XCircle className="w-3.5 h-3.5" />
+                Close Form
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5" />
+                Add Stock Entry
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {isLoading ? (

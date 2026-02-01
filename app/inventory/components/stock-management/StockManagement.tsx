@@ -81,7 +81,11 @@ const StockManagementContent = () => {
 
       {/* Table Section */}
       <div className="flex-1 bg-slate-900/50 p-6 border border-slate-800 rounded-xl overflow-hidden glass-effect">
-        <StockTable onEdit={handleEdit} />
+        <StockTable 
+          onEdit={handleEdit} 
+          onAdd={handleOpenAdjustment}
+          isAdding={isModalOpen}
+        />
       </div>
 
       {/* Stock Adjustment Modal */}
