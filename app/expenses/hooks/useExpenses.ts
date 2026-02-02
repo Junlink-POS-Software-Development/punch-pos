@@ -21,13 +21,16 @@ type OptimisticExpenseData = ExpenseData & {
   _syncing?: boolean;
 };
 
+// Shared query key prefix for all expense-related data
+const EXPENSES_KEY = "expenses";
+
 // Original hook for backwards compatibility
 export function useExpenses(dateRange?: DateRange) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const queryKey = useMemo(
-    () => ["expenses", dateRange?.start, dateRange?.end],
+    () => [EXPENSES_KEY, "list", dateRange?.start, dateRange?.end],
     [dateRange?.start, dateRange?.end]
   );
 
@@ -41,12 +44,13 @@ export function useExpenses(dateRange?: DateRange) {
       setIsSubmitting(true);
       try {
         await createExpense(data);
-        queryClient.invalidateQueries({ queryKey });
+        // Invalidate all expense queries to ensure freshness everywhere
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } finally {
         setIsSubmitting(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient]
   );
 
   const editExpense = useCallback(
@@ -54,25 +58,25 @@ export function useExpenses(dateRange?: DateRange) {
       setIsSubmitting(true);
       try {
         await updateExpense(id, data);
-        queryClient.invalidateQueries({ queryKey });
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } finally {
         setIsSubmitting(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient]
   );
 
   const removeExpense = useCallback(
     async (id: string) => {
       try {
         await deleteExpense(id);
-        queryClient.invalidateQueries({ queryKey });
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         console.error("Failed to delete expense:", error);
         throw error;
       }
     },
-    [queryClient, queryKey]
+    [queryClient]
   );
 
   return {
@@ -83,8 +87,8 @@ export function useExpenses(dateRange?: DateRange) {
     editExpense,
     removeExpense,
     refresh: useCallback(
-      () => queryClient.invalidateQueries({ queryKey }),
-      [queryClient, queryKey]
+      () => queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] }),
+      [queryClient]
     ),
   };
 }
@@ -94,7 +98,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
   const queryClient = useQueryClient();
 
   const queryKey = useMemo(
-    () => ["expenses-infinite", pageSize, dateRange?.start, dateRange?.end],
+    () => [EXPENSES_KEY, "infinite", pageSize, dateRange?.start, dateRange?.end],
     [pageSize, dateRange?.start, dateRange?.end]
   );
 
@@ -149,7 +153,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
         _syncing: true,
       };
 
-      // Optimistically add to cache (prepend to first page)
+      // Optimistically add to cache (prepend to first page) for THIS query
       queryClient.setQueryData(queryKey, (old: any) => {
         if (!old) return old;
         const newPages = [...old.pages];
@@ -162,8 +166,8 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
 
       try {
         await createExpense(input);
-        // Refetch to get the real data
-        queryClient.invalidateQueries({ queryKey });
+        // Invalidate all expense queries to ensure freshness everywhere
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         // Rollback on error
         queryClient.setQueryData(queryKey, (old: any) => {
@@ -211,7 +215,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
 
       try {
         await updateExpense(id, input);
-        queryClient.invalidateQueries({ queryKey });
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         // Rollback on error
         queryClient.setQueryData(queryKey, previousData);
@@ -239,7 +243,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
 
       try {
         await deleteExpense(id);
-        queryClient.invalidateQueries({ queryKey });
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         // Rollback on error
         queryClient.setQueryData(queryKey, previousData);
@@ -260,8 +264,9 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
     editExpense: editExpenseOptimistic,
     removeExpense: removeExpenseOptimistic,
     refresh: useCallback(
-      () => queryClient.invalidateQueries({ queryKey }),
-      [queryClient, queryKey]
+      () => queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] }),
+      [queryClient]
     ),
   };
 }
+

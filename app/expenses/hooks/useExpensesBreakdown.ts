@@ -14,7 +14,7 @@ export type SourceData = {
 
 export const useExpensesBreakdown = (startDate: string, endDate: string) => {
   const { data = [], isLoading: loading } = useQuery({
-    queryKey: ["expenses-breakdown", startDate, endDate],
+    queryKey: ["expenses", "breakdown", startDate, endDate],
     queryFn: async () => {
       const result = await fetchExpensesBreakdown(startDate, endDate);
 

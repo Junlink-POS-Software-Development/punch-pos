@@ -13,8 +13,6 @@ export function Cashout() {
     end: "",
   });
 
-  const { form, refs, data: hookData, handlers } = useCashout();
-
   // Fetch data with infinite scroll - date range is optional filter
   const {
     expenses,
@@ -24,11 +22,14 @@ export function Cashout() {
     hasNextPage,
     totalRecords,
     removeExpense,
+    addExpense,
     editExpense,
   } = useExpensesInfinite(
     30,
     dateRange.start || dateRange.end ? dateRange : undefined
   );
+
+  const { form, refs, data: hookData, handlers } = useCashout({ addExpense, editExpense });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 

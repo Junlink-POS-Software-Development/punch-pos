@@ -12,11 +12,29 @@ const getLocalDate = () => {
   return local.toISOString().split("T")[0];
 };
 
-export function useCashout() {
-  const { expenses, addExpense, editExpense, isLoading, isSubmitting } = useExpenses();
+interface UseCashoutProps {
+  addExpense?: (data: ExpenseInput) => Promise<void>;
+  editExpense?: (id: string, data: ExpenseInput) => Promise<void>;
+}
+
+export function useCashout({ addExpense: extAdd, editExpense: extEdit }: UseCashoutProps = {}) {
+  const { 
+    expenses, 
+    addExpense: intAdd, 
+    editExpense: intEdit, 
+    isLoading, 
+    isSubmitting: isIntSubmitting 
+  } = useExpenses();
+  
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   
+  const [isProcessing, setIsProcessing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const addExpense = extAdd || intAdd;
+  const editExpense = extEdit || intEdit;
+  // Use either internal submission state or our local processing state
+  const isSubmitting = isIntSubmitting || isProcessing;
 
   // 1. Refs
   const refs = {
@@ -70,6 +88,7 @@ export function useCashout() {
   }, [reset]);
 
   const onSubmit = async (data: ExpenseInput) => {
+    setIsProcessing(true);
     try {
       if (editingId) {
         await editExpense(editingId, data);
@@ -97,6 +116,8 @@ export function useCashout() {
       } else {
         alert("An unexpected error occurred");
       }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
