@@ -7,8 +7,10 @@ import { DateColumnFilter } from "@/app/expenses/components/cashout/components/D
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 import { deletePayment } from "@/app/actions/transactions";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const PaymentHistoryTable = () => {
+  const queryClient = useQueryClient();
   // 1. Consume Context
   const {
     payments,
@@ -18,10 +20,10 @@ export const PaymentHistoryTable = () => {
     error,
     filters,
     setFilters,
+    refresh,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
-    refresh
+    isFetchingNextPage
   } = usePaymentData();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -72,21 +74,67 @@ export const PaymentHistoryTable = () => {
   );
 
   const handleDelete = async (id: string) => {
+    const paymentToDelete = payments.find(p => p.id === id);
+    if (!paymentToDelete) return;
+
+    const { transactionNo } = paymentToDelete;
+
     if (!window.confirm("Are you sure you want to delete this payment record? This will also delete all associated items and is irreversible.")) {
       return;
     }
 
     setDeletingId(id);
+    
+    // --- Optimistic Update Logic ---
+    // 1. Cancel outgoing refetches
+    await queryClient.cancelQueries({ queryKey: ["payments"] });
+    await queryClient.cancelQueries({ queryKey: ["transaction-items"] });
+
+    // 2. Snapshot current data (for cleanup if needed, but invalidation is simpler for rollback)
+    
+    // 3. Update Payments cache
+    queryClient.setQueriesData({ queryKey: ["payments"] }, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          data: page.data.filter((p: any) => p.id !== id),
+          count: Math.max(0, (page.count || 0) - 1)
+        })),
+      };
+    });
+
+    // 4. Update Transaction Items cache
+    queryClient.setQueriesData({ queryKey: ["transaction-items"] }, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          data: page.data.filter((item: any) => item.transactionNo !== transactionNo),
+        })),
+      };
+    });
+
     try {
       const result = await deletePayment(id);
       if (result.success) {
+        // On success, we don't strictly NEED to invalidade if our optimistic math is perfect,
+        // but it's safer to ensure consistency.
         refresh();
+        queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
       } else {
         alert(`Failed to delete payment: ${result.error}`);
+        // Rollback by invalidating
+        refresh();
+        queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
       }
     } catch (err) {
       console.error("Delete error:", err);
       alert("An unexpected error occurred while deleting.");
+      refresh();
+      queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
     } finally {
       setDeletingId(null);
     }
