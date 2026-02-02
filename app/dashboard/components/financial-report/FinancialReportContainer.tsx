@@ -8,7 +8,7 @@ import { FinancialReportTable } from "./FinancialReportTable";
 import { CashFlow } from "./CashFlow";
 
 export const FinancialReportContainer = () => {
-  const { startDate, endDate, setDateRange } = useDashboardDateStore();
+  const { startDate, endDate, setDateRange, hasHydrated } = useDashboardDateStore();
   const { data, isLoading } = useFinancialReport(startDate, endDate);
 
   return (
@@ -16,9 +16,21 @@ export const FinancialReportContainer = () => {
       {/* --- Section 1: Financial Summary Report --- */}
       <div className="space-y-6">
         <div className="flex flex-wrap justify-between items-center gap-4">
-          <h2 className="font-bold text-emerald-400 text-2xl">
-            Financial Report
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="font-bold text-emerald-400 text-2xl">
+              Financial Report
+            </h2>
+            <div className="flex items-center gap-2 text-slate-400 text-sm">
+              <span>Selected Range:</span>
+              <span className="text-slate-200">
+                {hasHydrated && startDate && endDate
+                  ? `${dayjs(startDate).format("MMM D")} - ${dayjs(
+                      endDate
+                    ).format("MMM D, YYYY")}`
+                  : "Loading Range..."}
+              </span>
+            </div>
+          </div>
 
           <div className="flex items-center gap-4">
             <DateColumnFilter
