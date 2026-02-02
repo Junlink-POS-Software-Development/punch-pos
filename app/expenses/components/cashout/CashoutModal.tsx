@@ -22,6 +22,7 @@ interface CashoutModalProps {
     ) => void;
     setRef: (key: keyof CashoutRefs, node: HTMLElement | null) => void;
   };
+  title?: string;
 }
 
 export const CashoutModal: React.FC<CashoutModalProps> = ({
@@ -33,6 +34,7 @@ export const CashoutModal: React.FC<CashoutModalProps> = ({
   isSubmitting,
   isCategoriesLoading,
   handlers,
+  title,
 }) => {
   if (!isOpen) return null;
 
@@ -42,7 +44,7 @@ export const CashoutModal: React.FC<CashoutModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-slate-700/50 border-b shrink-0">
           <h2 className="font-semibold text-white text-lg">
-            Register New Expense
+            {title || "Register New Expense"}
           </h2>
           <button
             onClick={onClose}

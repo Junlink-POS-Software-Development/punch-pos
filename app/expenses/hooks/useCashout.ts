@@ -1,8 +1,9 @@
-import { useRef } from "react";
+
+import { useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useExpenses } from "../hooks/useExpenses";
 import { useCategories } from "@/app/inventory/hooks/useCategories";
-import { ExpenseInput } from "../lib/expenses.api";
+import { ExpenseInput, ExpenseData } from "../lib/expenses.api";
 
 // Helper
 const getLocalDate = () => {
@@ -12,8 +13,10 @@ const getLocalDate = () => {
 };
 
 export function useCashout() {
-  const { expenses, addExpense, isLoading, isSubmitting } = useExpenses();
+  const { expenses, addExpense, editExpense, isLoading, isSubmitting } = useExpenses();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
+  
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // 1. Refs
   const refs = {
@@ -38,12 +41,45 @@ export function useCashout() {
     },
   });
 
-  const { reset, handleSubmit } = form;
+  const { reset, handleSubmit, setValue } = form;
 
   // 3. Handlers
+  const handleEdit = useCallback((expense: ExpenseData) => {
+    setEditingId(expense.id);
+    setValue("transaction_date", expense.transaction_date);
+    setValue("source", expense.source);
+    // Use the ID now available in ExpenseData!
+    setValue("classification", expense.classification_id); 
+    setValue("amount", expense.amount);
+    setValue("receipt_no", expense.receipt_no);
+    setValue("notes", expense.notes);
+    
+    // Optional: Focus logic could be added here if we had access to refs/modal
+  }, [setValue]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    reset({
+      transaction_date: getLocalDate(),
+      amount: 0,
+      classification: "",
+      source: "",
+      receipt_no: "",
+      notes: "",
+    });
+  }, [reset]);
+
   const onSubmit = async (data: ExpenseInput) => {
     try {
-      await addExpense(data);
+      if (editingId) {
+        await editExpense(editingId, data);
+        alert("Expense updated successfully!");
+        setEditingId(null);
+      } else {
+        await addExpense(data);
+        alert("Expense registered successfully!");
+      }
+
       reset({
         transaction_date: getLocalDate(),
         amount: 0,
@@ -52,7 +88,8 @@ export function useCashout() {
         receipt_no: "",
         notes: "",
       });
-      alert("Expense registered successfully!");
+      
+      // Only focus amount if adding new (keeps flow fast), or maybe for edit too
       setTimeout(() => refs.amount.current?.focus(), 100);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -93,11 +130,14 @@ export function useCashout() {
       isLoading,
       isSubmitting,
       isCategoriesLoading,
+      editingId, // Expose editing state
     },
     handlers: {
       onSubmit,
       handleKeyDown,
-      setRef, // New handler
+      setRef, 
+      handleEdit, // Expose handleEdit
+      cancelEdit, // Expose cancelEdit
     },
   };
 }

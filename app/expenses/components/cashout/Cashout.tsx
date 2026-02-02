@@ -1,33 +1,34 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CashoutTable } from "./CashoutTable";
+import { CashoutTable } from "./cashout-table";
 import { CashoutModal } from "./CashoutModal";
 import { useCashout } from "../../hooks/useCashout";
-import { useViewStore } from "@/components/window-layouts/store/useViewStore";
-import { useExpenses } from "../../hooks/useExpenses";
+import { useExpensesInfinite } from "../../hooks/useExpenses";
 
 export function Cashout() {
-  const getLocalDate = useCallback(() => {
-    const now = new Date();
-    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    return local.toISOString().split("T")[0];
-  }, []);
-
-  // Default to today
+  // Default to no filter (show all data, user can filter if needed)
   const [dateRange, setDateRange] = useState({
-    start: getLocalDate(),
-    end: getLocalDate(),
+    start: "",
+    end: "",
   });
 
   const { form, refs, data: hookData, handlers } = useCashout();
 
-  // Fetch data based on the date range
-  const { expenses: filteredExpenses, isLoading: isFilteredLoading, removeExpense } =
-    useExpenses(dateRange.start || dateRange.end ? dateRange : undefined);
-
-  const { viewState } = useViewStore();
-  const isRightFullscreen = viewState === 2;
+  // Fetch data with infinite scroll - date range is optional filter
+  const {
+    expenses,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    totalRecords,
+    removeExpense,
+    editExpense,
+  } = useExpensesInfinite(
+    30,
+    dateRange.start || dateRange.end ? dateRange : undefined
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -35,25 +36,34 @@ export function Cashout() {
     setDateRange({ start, end });
   }, []);
 
-  const toggleModal = useCallback(() => setIsModalOpen((prev) => !prev), []);
-
   return (
     <div className="grid grid-cols-1 gap-8">
       <div className="flex flex-col gap-4 w-full">
         <CashoutTable
-          expenses={filteredExpenses}
-          isLoading={isFilteredLoading}
+          expenses={expenses}
+          isLoading={isLoading}
           dateRange={dateRange}
           onDateChange={handleDateChange}
-          onAdd={toggleModal}
+          onAdd={() => {
+            setIsModalOpen(true);
+          }}
           isAdding={isModalOpen}
+          // Inline Editing Props
+          categories={hookData.categories}
+          onUpdate={editExpense}
           onDelete={removeExpense}
+          // Infinite scroll props
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          totalRecords={totalRecords}
         />
       </div>
 
       <CashoutModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        title="Register New Expense"
         form={form}
         refs={refs}
         categories={hookData.categories}

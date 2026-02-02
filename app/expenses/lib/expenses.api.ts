@@ -48,6 +48,7 @@ export interface ExpenseData {
   id: string;
   transaction_date: string;
   source: string;
+  classification_id: string; // Needed for editing
   classification: string; // Used for Display (Name)
   amount: number;
   receipt_no: string;
@@ -55,7 +56,8 @@ export interface ExpenseData {
 }
 
 // NOTE: When submitting, 'classification' will hold the UUID string
-export type ExpenseInput = Omit<ExpenseData, "id">;
+// classification_id is only for reading from DB, not for submitting
+export type ExpenseInput = Omit<ExpenseData, "id" | "classification_id">;
 
 export interface Classification {
   id: string;
@@ -159,6 +161,7 @@ export const fetchExpenses = async (
       id: row.id,
       transaction_date: row.transaction_date,
       // Map the joined name to the flat object for the UI
+      classification_id: row.classification_id,
       classification: row.classification_details?.name ?? "Unclassified",
       amount: row.amount,
       receipt_no: row.receipt_no ?? "",
@@ -166,6 +169,63 @@ export const fetchExpenses = async (
       source: row.product_category?.category || row.source || "Unknown",
     })
   );
+};
+
+// 2b. Fetch Expenses with Pagination (Infinite Scroll)
+export const fetchExpensesPaginated = async (
+  page: number,
+  pageSize: number,
+  startDate?: string,
+  endDate?: string
+): Promise<{ data: ExpenseData[]; count: number }> => {
+  const supabase = await getSupabase();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("expenses")
+    .select(
+      `
+      *,
+      product_category (
+        category
+      ),
+      classification_details:classification_id (
+        name
+      )
+    `,
+      { count: "exact" }
+    )
+    .order("transaction_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  // Apply date filters only if provided
+  if (startDate) {
+    query = query.gte("transaction_date", startDate);
+  }
+  if (endDate) {
+    query = query.lte("transaction_date", endDate);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) throw new Error(error.message);
+
+  const mappedData = (data || []).map(
+    (row: any): ExpenseData => ({
+      id: row.id,
+      transaction_date: row.transaction_date,
+      classification_id: row.classification_id,
+      classification: row.classification_details?.name ?? "Unclassified",
+      amount: row.amount,
+      receipt_no: row.receipt_no ?? "",
+      notes: row.notes ?? "",
+      source: row.product_category?.category || row.source || "Unknown",
+    })
+  );
+
+  return { data: mappedData, count: count ?? 0 };
 };
 
 // 3. Create Expense (RPC)
@@ -250,6 +310,28 @@ export const deleteExpense = async (id: string) => {
 
   if (error) {
     console.error("Error deleting expense:", error);
+    throw new Error(error.message);
+  }
+};
+
+// 9. Update Expense (Direct Update)
+export const updateExpense = async (id: string, input: ExpenseInput) => {
+  const supabase = await getSupabase();
+  
+  const { error } = await supabase
+    .from("expenses")
+    .update({
+      transaction_date: input.transaction_date,
+      source: input.source,
+      classification_id: input.classification, // classification field holds the UUID
+      amount: input.amount,
+      receipt_no: input.receipt_no,
+      notes: input.notes,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating expense:", error);
     throw new Error(error.message);
   }
 };
