@@ -36,7 +36,7 @@ interface NavigationProps {
 
 const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setMobileView } = useViewStore();
 
