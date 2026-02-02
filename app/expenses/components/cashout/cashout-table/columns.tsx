@@ -195,7 +195,7 @@ export const getColumns = () => [
     cell: (info) => <ReceiptCell info={info} />,
   }),
   columnHelper.accessor("amount", {
-    header: () => <div className="text-right">Amount</div>,
+    header: "Amount",
     cell: (info) => <AmountCell info={info} />,
   }),
   columnHelper.accessor("notes", {
