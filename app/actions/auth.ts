@@ -83,7 +83,7 @@ export async function signUp(values: SignUpFormValues) {
         last_name: values.lastName,
         contact_email: values.email,
         job_title: values.jobTitle,
-        enrollment_id: values.enrollmentId,
+        enrollment_id: values.enrollmentId || null,
       },
     },
   });

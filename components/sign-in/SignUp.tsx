@@ -193,7 +193,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                 </span>
                 <input
                   type="text"
-                  placeholder="Enrollment ID (e.g., A7B2C9)"
+                  placeholder="Enrollment ID (Optional)"
                   {...register("enrollmentId")}
                   className="pl-10! w-full input-dark"
                 />
