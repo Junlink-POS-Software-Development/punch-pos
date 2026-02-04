@@ -1,12 +1,12 @@
-import { createClient } from "@/utils/supabase/client";
+"use server";
 
-const supabase = createClient();
+import { createClient } from "@/utils/supabase/server";
 
 export const fetchCustomerFeatureData = async (
   startDate?: string,
   endDate?: string
 ) => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Build the guest transactions query with optional date filters
   let guestQuery = supabase
@@ -42,6 +42,7 @@ export const fetchCustomerFeatureData = async (
 };
 
 export const fetchDashboardData = async () => {
+  const supabase = await createClient();
   const { data: groups } = await supabase
     .from("customer_groups")
     .select("*")
@@ -56,6 +57,7 @@ export const fetchDashboardData = async () => {
 };
 
 export const createGroup = async (name: string) => {
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -73,117 +75,99 @@ export const createGroup = async (name: string) => {
 };
 
 export const deleteGroup = async (id: string) => {
+  const supabase = await createClient();
   return await supabase.from("customer_groups").delete().eq("id", id);
 };
 
-// [REVISED] Updated to accept FormData for file uploads
-export const createCustomer = async (formData: FormData) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
+export const createCustomer = async (formData: FormData) => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No user found");
 
-  // 1. Extract Fields (Same as before)
-  const full_name = formData.get("full_name") as string;
-  const phone_number = formData.get("phone_number") as string;
-  const emailRaw = formData.get("email") as string;
-  const email = emailRaw || null;
-  const addressRaw = formData.get("address") as string;
-  const address = addressRaw || null;
-  const remarksRaw = formData.get("remarks") as string;
-  const remarks = remarksRaw || null;
-  const birthdateRaw = formData.get("birthdate") as string;
-  const birthdate = birthdateRaw || null;
-  const dateRegRaw = formData.get("date_of_registration") as string;
-  const date_of_registration = dateRegRaw || new Date().toISOString().split("T")[0];
-
-  const groupIdRaw = formData.get("group_id") as string;
-  const group_id = groupIdRaw && groupIdRaw !== "" ? groupIdRaw : null;
-
-  const civil_status = (formData.get("civil_status") as string) || null;
-  const gender = (formData.get("gender") as string) || null;
-
-  // Fetch store_id from users table
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("store_id")
-    .eq("user_id", user.id)
+  // 1. Get Store ID (Essential for the scope check)
+  const { data: userData } = await supabase
+    .from('users')
+    .select('store_id')
+    .eq('user_id', user.id)
     .single();
 
-  if (userError || !userData?.store_id) {
-    console.error("Store ID fetch error:", userError);
-    throw new Error("User has no associated store_id in users table");
-  }
-  
-  const store_id = userData.store_id;
+  if (!userData?.store_id) throw new Error("Store ID missing for this user.");
 
-  // 2. Handle Image Uploads
+  // 2. Upload Logic (Unchanged)
   const files = formData.getAll("documents");
   const uploadedUrls: string[] = [];
-
-  if (files.length > 0) {
-    for (const fileEntry of files) {
-      if (fileEntry instanceof File) {
-        const file = fileEntry;
-
-        // [NEW] Validation: Ensure it's an image
-        if (!file.type.startsWith("image/")) {
-          console.warn(`Skipping non-image file: ${file.name}`);
-          continue;
-        }
-
-        // Create path: customers/{user_id}/{timestamp}_{safe_filename}
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
-
-        // [NEW] Upload to 'customer-documents' bucket
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("customer-documents") // <--- CHANGED HERE
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error(`Failed to upload ${file.name}:`, uploadError);
-          continue;
-        }
-
-        if (uploadData) {
-          const {
-            data: { publicUrl },
-          } = supabase.storage
-            .from("customer-documents") // <--- CHANGED HERE
-            .getPublicUrl(uploadData.path);
-
-          uploadedUrls.push(publicUrl);
-        }
+  for (const file of files) {
+    if (file instanceof File && file.type.startsWith("image/")) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
+      const { data: uploadData } = await supabase.storage.from("customer-documents").upload(filePath, file);
+      if (uploadData) {
+        const { data: { publicUrl } } = supabase.storage.from("customer-documents").getPublicUrl(uploadData.path);
+        uploadedUrls.push(publicUrl);
       }
     }
   }
 
-  // 3. Insert Record (No changes needed to schema, text[] is correct for URLs)
-  return await supabase.from("customers").insert({
-    full_name,
-    phone_number,
-    email,
-    address,
-    remarks,
-    birthdate,
-    date_of_registration,
-    group_id,
-    civil_status,
-    gender,
-    documents: uploadedUrls,
-    store_id,
-  });
+  // 3. Prepare Payload
+  // Clean inputs on client side too for good measure
+  const rawName = (formData.get("full_name") as string) || "";
+  const fullName = rawName.trim(); 
+  
+  const rawDate = formData.get("birthdate") as string;
+  const birthdate = rawDate ? rawDate : null;
+  const confirmDuplicate = formData.get("confirmed") === "true";
+
+  const payload = {
+    p_full_name: fullName,
+    p_birthdate: birthdate,
+    p_phone_number: (formData.get("phone_number") as string)?.trim() || null,
+    p_email: (formData.get("email") as string)?.trim() || null,
+    p_address: (formData.get("address") as string)?.trim() || null,
+    p_remarks: (formData.get("remarks") as string)?.trim() || null,
+    p_group_id: (formData.get("group_id") as string) || null,
+    p_civil_status: (formData.get("civil_status") as string) || null,
+    p_gender: (formData.get("gender") as string) || null,
+    p_documents: uploadedUrls,
+    p_store_id: userData.store_id, 
+    p_confirm_duplicate: confirmDuplicate
+  };
+
+  // 4. Call RPC
+  // Note: We use .rpc() which maps the 'payload' object keys to the SQL function arguments
+  const { data: rpcResult, error } = await supabase.rpc('manage_customer_creation', payload);
+
+  if (error) {
+    console.error("RPC Error:", error);
+    // Return a visible error to the frontend
+    return { status: 'error', error: error.message };
+  }
+
+  // 5. Handle Status
+  if (rpcResult.status === 'blocked') {
+    return { status: 'blocked', error: rpcResult.message };
+  }
+
+  if (rpcResult.status === 'warning') {
+    return { 
+      status: 'warning', 
+      error: rpcResult.message 
+      // Frontend Logic: Show Modal -> If Yes, resubmit with formData.append('confirmed', 'true')
+    };
+  }
+
+  if (rpcResult.status === 'success') {
+    return { status: 'success', data: rpcResult.data };
+  }
+
+  return { status: 'error', error: 'Unexpected response from server' };
 };
 
 export const updateCustomerGroup = async (
   customerId: string,
   groupId: string
 ) => {
+  const supabase = await createClient();
   const val = groupId === "ungrouped" ? null : groupId;
   return await supabase
     .from("customers")
@@ -195,6 +179,7 @@ export const updateCustomer = async (
   customerId: string,
   data: Partial<any>
 ) => {
+  const supabase = await createClient();
   return await supabase.from("customers").update(data).eq("id", customerId);
 };
 
@@ -202,6 +187,7 @@ export const uploadCustomerDocument = async (
   customerId: string,
   file: File
 ) => {
+  const supabase = await createClient();
   const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
   const filePath = `customers/${customerId}/${Date.now()}_${safeName}`;
 
@@ -225,6 +211,7 @@ export const updateCustomerDocumentMetadata = async (
   customerId: string,
   metadata: any
 ) => {
+  const supabase = await createClient();
   return await supabase
     .from("customers")
     .update({ document_metadata: metadata })
@@ -235,6 +222,7 @@ export const deleteCustomerDocument = async (
   customerId: string,
   fileUrl: string
 ) => {
+  const supabase = await createClient();
   // 1. Get current documents
   const { data: customer } = await supabase
     .from("customers")
@@ -266,6 +254,7 @@ export const deleteCustomerDocument = async (
 };
 
 export const renameCustomerGroup = async (groupId: string, name: string) => {
+  const supabase = await createClient();
   return await supabase
     .from("customer_groups")
     .update({ name })
@@ -273,6 +262,7 @@ export const renameCustomerGroup = async (groupId: string, name: string) => {
 };
 
 export const deleteCustomer = async (customerId: string) => {
+  const supabase = await createClient();
   return await supabase.from("customers").delete().eq("id", customerId);
 };
 
@@ -280,6 +270,7 @@ export const bulkUpdateCustomerGroup = async (
   customerIds: string[],
   groupId: string
 ) => {
+  const supabase = await createClient();
   const val = groupId === "ungrouped" ? null : groupId;
   return await supabase
     .from("customers")
@@ -292,6 +283,7 @@ export const toggleCustomerLock = async (
   isLocked: boolean,
   currentMetadata: any
 ) => {
+  const supabase = await createClient();
   const updatedMetadata = {
     ...currentMetadata,
     isLocked,

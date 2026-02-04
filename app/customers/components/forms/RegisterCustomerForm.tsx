@@ -16,6 +16,7 @@ import { ManualForm } from "./register-customer/ManualForm";
 import { AiScanView } from "./register-customer/AiScanView";
 import { DocumentUpload } from "./register-customer/DocumentUpload";
 import { FormFooter } from "./register-customer/FormFooter";
+import { ErrorMessage } from "../../../../components/sales-terminnal/components/ErrorMessage";
 
 interface RegisterCustomerFormProps {
   onSuccess: () => void;
@@ -58,6 +59,8 @@ export const RegisterCustomerForm = ({
       gender: (initialData?.gender as any) || "",
     },
   });
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -161,6 +164,7 @@ export const RegisterCustomerForm = ({
 
   const onSubmit: SubmitHandler<CustomerFormValues> = async (data) => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       if (initialData) {
         // Update existing customer
@@ -188,7 +192,15 @@ export const RegisterCustomerForm = ({
           formData.append("documents", file);
         });
 
-        await createCustomer(formData);
+        const result = await createCustomer(formData);
+        console.log("createCustomer result:", result);
+        
+        if (result && (result.status === 'exists' || result.status === 'conflict')) {
+            console.log("Setting error message:", result.error);
+            setErrorMessage(result.error);
+            setLoading(false);
+            return;
+        }
       }
 
       await refreshData();
@@ -204,6 +216,10 @@ export const RegisterCustomerForm = ({
 
   return (
     <>
+      <ErrorMessage 
+        message={errorMessage} 
+        onClose={() => setErrorMessage(null)} 
+      />
       <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
         <ViewSwitcher view={view} setView={setView} />
 

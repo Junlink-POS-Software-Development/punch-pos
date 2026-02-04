@@ -112,7 +112,11 @@ export async function middleware(request: NextRequest) {
       ) {
          // Allow access to settings to fix the issue
          if (!currentPath.startsWith("/settings") && !currentPath.startsWith("/login")) {
-            return NextResponse.redirect(new URL("/settings", request.url));
+            const redirectUrl = new URL("/settings", request.url);
+            if (status === "store_deleted") {
+              redirectUrl.searchParams.set("reason", "store_deleted");
+            }
+            return NextResponse.redirect(redirectUrl);
          }
       }
       
