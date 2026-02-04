@@ -37,6 +37,10 @@ export const RegisterCustomerForm = ({
   const [isCompressing, setIsCompressing] = useState(false);
   const [view, setView] = useState<"manual" | "ai-scan">("manual");
   const [isAiProcessing, setIsAiProcessing] = useState(false);
+  
+  // Duplicate Handling State
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const {
     register,
@@ -193,7 +197,19 @@ export const RegisterCustomerForm = ({
         });
 
         const result = await createCustomer(formData);
-        console.log("createCustomer result:", result);
+        
+        if (result && result.status === 'blocked') {
+            setErrorMessage(result.error);
+            setLoading(false);
+            return;
+        }
+
+        if (result && result.status === 'warning') {
+            setPendingFormData(formData);
+            setShowDuplicateModal(true);
+            setLoading(false);
+            return;
+        }
         
         if (result && (result.status === 'exists' || result.status === 'conflict')) {
             console.log("Setting error message:", result.error);
@@ -209,6 +225,35 @@ export const RegisterCustomerForm = ({
       onSuccess();
     } catch (error) {
       console.error(initialData ? "Update failed:" : "Registration failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDuplicate = async () => {
+    if (!pendingFormData) return;
+
+    setLoading(true);
+    try {
+      pendingFormData.append('confirmed', 'true');
+      const result = await createCustomer(pendingFormData);
+
+      if (result && result.status === 'blocked') {
+        setErrorMessage(result.error);
+        setLoading(false);
+        setShowDuplicateModal(false);
+        return;
+      }
+
+      await refreshData();
+      reset();
+      setCompressedFiles([]);
+      setPendingFormData(null);
+      setShowDuplicateModal(false);
+      onSuccess();
+    } catch (error) {
+      console.error("Duplicate confirmation failed:", error);
+      setErrorMessage("Failed to create duplicate customer.");
     } finally {
       setLoading(false);
     }
@@ -255,6 +300,39 @@ export const RegisterCustomerForm = ({
         loading={loading} 
         isCompressing={isCompressing} 
       />
+
+      {/* Duplicate Warning Modal */}
+      {showDuplicateModal && (
+        <div className="z-50 fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Customer Already Exists</h3>
+              <p className="text-slate-400 mb-6">
+                A customer with similar details was found. Do you want to create a duplicate record anyway?
+              </p>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDuplicateModal(false);
+                    setPendingFormData(null);
+                  }}
+                  className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDuplicate}
+                  disabled={loading}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg transition-all font-medium text-sm shadow-lg shadow-cyan-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creating...' : 'Confirm Duplicate'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

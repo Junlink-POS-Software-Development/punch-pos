@@ -85,82 +85,63 @@ export const createCustomer = async (formData: FormData) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No user found");
 
-  // 1. Get Store ID (Essential for the scope check)
+  // 1. Get Store ID
   const { data: userData } = await supabase
     .from('users')
     .select('store_id')
     .eq('user_id', user.id)
     .single();
 
-  if (!userData?.store_id) throw new Error("Store ID missing for this user.");
+  if (!userData?.store_id) return { status: "error", error: "No store found." };
 
-  // 2. Upload Logic (Unchanged)
+  // 2. Upload Logic (Simplified)
   const files = formData.getAll("documents");
   const uploadedUrls: string[] = [];
   for (const file of files) {
     if (file instanceof File && file.type.startsWith("image/")) {
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
       const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
-      const { data: uploadData } = await supabase.storage.from("customer-documents").upload(filePath, file);
-      if (uploadData) {
-        const { data: { publicUrl } } = supabase.storage.from("customer-documents").getPublicUrl(uploadData.path);
-        uploadedUrls.push(publicUrl);
+      const { data } = await supabase.storage.from("customer-documents").upload(filePath, file);
+      if (data) {
+        const { data: urlData } = supabase.storage.from("customer-documents").getPublicUrl(data.path);
+        uploadedUrls.push(urlData.publicUrl);
       }
     }
   }
 
-  // 3. Prepare Payload
-  // Clean inputs on client side too for good measure
+  // 3. Prepare Payload (Strict Trimming)
   const rawName = (formData.get("full_name") as string) || "";
-  const fullName = rawName.trim(); 
-  
   const rawDate = formData.get("birthdate") as string;
-  const birthdate = rawDate ? rawDate : null;
-  const confirmDuplicate = formData.get("confirmed") === "true";
-
+  const groupId = formData.get("group_id") as string;
+  
   const payload = {
-    p_full_name: fullName,
-    p_birthdate: birthdate,
+    p_full_name: rawName.trim(), // Remove leading/trailing spaces
+    p_birthdate: rawDate ? rawDate : null,
     p_phone_number: (formData.get("phone_number") as string)?.trim() || null,
     p_email: (formData.get("email") as string)?.trim() || null,
     p_address: (formData.get("address") as string)?.trim() || null,
     p_remarks: (formData.get("remarks") as string)?.trim() || null,
-    p_group_id: (formData.get("group_id") as string) || null,
+    p_group_id: (groupId && groupId !== "null" && groupId !== "") ? groupId : null,
     p_civil_status: (formData.get("civil_status") as string) || null,
     p_gender: (formData.get("gender") as string) || null,
     p_documents: uploadedUrls,
-    p_store_id: userData.store_id, 
-    p_confirm_duplicate: confirmDuplicate
+    p_store_id: userData.store_id,
+    p_confirm_duplicate: formData.get("confirmed") === "true"
   };
 
   // 4. Call RPC
-  // Note: We use .rpc() which maps the 'payload' object keys to the SQL function arguments
   const { data: rpcResult, error } = await supabase.rpc('manage_customer_creation', payload);
 
   if (error) {
     console.error("RPC Error:", error);
-    // Return a visible error to the frontend
     return { status: 'error', error: error.message };
   }
 
-  // 5. Handle Status
-  if (rpcResult.status === 'blocked') {
-    return { status: 'blocked', error: rpcResult.message };
-  }
-
-  if (rpcResult.status === 'warning') {
-    return { 
-      status: 'warning', 
-      error: rpcResult.message 
-      // Frontend Logic: Show Modal -> If Yes, resubmit with formData.append('confirmed', 'true')
-    };
-  }
-
-  if (rpcResult.status === 'success') {
-    return { status: 'success', data: rpcResult.data };
-  }
-
-  return { status: 'error', error: 'Unexpected response from server' };
+  return { 
+    status: rpcResult.status, 
+    error: rpcResult.message, 
+    data: rpcResult.data 
+  };
 };
 
 export const updateCustomerGroup = async (
