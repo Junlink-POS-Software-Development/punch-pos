@@ -152,8 +152,28 @@ export const RegisterCustomerForm = ({
       if (data.gender) setValue("gender", data.gender);
       if (data.remarks) setValue("remarks", data.remarks);
 
-      // Add the scanned document to the compressed files list
-      setCompressedFiles((prev) => [...prev, file]);
+      // Compress and add the scanned document to the files list
+      if (file.type.startsWith("image/")) {
+        const compressionOptions = {
+          maxSizeMB: 0.2,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+          initialQuality: 0.6,
+        };
+        try {
+          const compressedBlob = await imageCompression(file, compressionOptions);
+          const compressedFile = new File([compressedBlob], file.name, {
+            type: file.type,
+            lastModified: new Date().getTime(),
+          });
+          setCompressedFiles((prev) => [...prev, compressedFile]);
+        } catch (compressionError) {
+          console.error("Compression failed, using original file:", compressionError);
+          setCompressedFiles((prev) => [...prev, file]);
+        }
+      } else {
+        setCompressedFiles((prev) => [...prev, file]);
+      }
 
       // Switch back to manual view for review
       setView("manual");
