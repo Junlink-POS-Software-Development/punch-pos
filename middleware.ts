@@ -87,6 +87,43 @@ export async function middleware(request: NextRequest) {
   }
 
   // ============================================
+  // ACCOUNT STATUS GUARD
+  // ============================================
+  if (user && !isApiRoute) {
+    const { data: statusData, error: statusError } = await supabase.rpc(
+      "check_account_status"
+    );
+
+    if (!statusError && statusData) {
+      const status = (statusData as any).status;
+      const currentPath = request.nextUrl.pathname;
+
+      // 1. User Deleted/Deactivated
+      if (status === "user_deleted") {
+        if (!currentPath.startsWith("/reactivate")) {
+           // Clear session cookies to force them out of valid auth state if needed,
+           // but here we redirect to a public reactivate page or similar.
+           return NextResponse.redirect(new URL("/reactivate", request.url));
+        }
+      } 
+      // 2. Store Delayed/No Store -> Redirect to Settings
+      else if (
+        (status === "store_deleted" || status === "no_store")
+      ) {
+         // Allow access to settings to fix the issue
+         if (!currentPath.startsWith("/settings") && !currentPath.startsWith("/login")) {
+            return NextResponse.redirect(new URL("/settings", request.url));
+         }
+      }
+      
+      // If we are on reactivate page but status Is active, go home
+      if (status === "active" && currentPath.startsWith("/reactivate")) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+  }
+
+  // ============================================
   // SUBSCRIPTION GUARD LOGIC
   // ============================================
   if (user) {
