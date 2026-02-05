@@ -16,7 +16,7 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
-import { DocumentGallery } from "./DocumentGallery";
+import { DocumentGallery } from "./document-gallery";
 
 import { useViewStore } from "../../../../components/window-layouts/store/useViewStore";
 
