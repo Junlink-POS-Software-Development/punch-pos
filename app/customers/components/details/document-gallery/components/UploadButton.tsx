@@ -32,7 +32,6 @@ export const UploadButton = ({ isCompressing, compressionProgress, isUploading, 
       <input
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={onUpload}
         disabled={isUploading || isCompressing}
