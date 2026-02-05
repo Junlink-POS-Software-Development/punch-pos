@@ -57,7 +57,13 @@ export async function POST(req: NextRequest) {
 
     const response = await result.response;
     const text = response.text();
-    console.log("Gemini Response Text:", text);
+    
+    if (!text) {
+      console.error("Gemini returned empty response");
+      return NextResponse.json({ error: "AI returned an empty response. Please try again with a clearer image." }, { status: 500 });
+    }
+
+    console.log("Gemini Response Text sample:", text.substring(0, 200));
     
     // Extract JSON from the response text (in case Gemini adds markdown formatting)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -67,14 +73,25 @@ export async function POST(req: NextRequest) {
       const data = JSON.parse(jsonStr);
       return NextResponse.json(data);
     } catch (parseError) {
-      console.error("Failed to parse Gemini response:", text);
+      console.error("Failed to parse Gemini response. Raw text:", text);
       return NextResponse.json({ 
-        error: "Failed to parse AI response",
-        rawResponse: text 
+        error: "AI detected information but the response format was invalid. Please try a different document.",
+        details: parseError instanceof Error ? parseError.message : "Parse mismatch"
       }, { status: 500 });
     }
   } catch (error: any) {
-    console.error("AI Extraction Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    console.error("AI Extraction Critical Error:", error);
+    
+    // Handle specific AI error types if possible
+    let errorMessage = "AI processing failed. ";
+    if (error.message?.includes("fetch failed")) {
+      errorMessage += "Network timeout or connection issue. Please check your internet.";
+    } else if (error.message?.includes("safety")) {
+      errorMessage += "The document was flagged by safety filters. Please ensure it is a valid ID or registration document.";
+    } else {
+      errorMessage += error.message || "Internal Server Error";
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

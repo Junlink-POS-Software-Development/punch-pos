@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Folder,
@@ -11,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import Image from "next/image";
+import imageCompression from "browser-image-compression";
 import {
   uploadCustomerDocument,
   updateCustomerDocumentMetadata,
@@ -45,6 +48,7 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   const [draggedFile, setDraggedFile] = useState<string | null>(null);
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [optimisticFiles, setOptimisticFiles] = useState<Array<{ id: string; url: string; name: string }>>([]);
 
   useEffect(() => {
     // Initialize folders and files from customer data
@@ -166,10 +170,42 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const tempId = crypto.randomUUID();
+    const tempUrl = URL.createObjectURL(file);
+
+    // Optimistically add to UI
+    setOptimisticFiles(prev => [...prev, { id: tempId, url: tempUrl, name: file.name }]);
     setIsUploading(true);
+
     try {
-      const file = e.target.files[0];
-      const publicUrl = await uploadCustomerDocument(customer.id, file);
+      let fileToUpload = file;
+      
+      // Compress if it's an image
+      if (file.type.startsWith("image/")) {
+        const options = {
+          maxSizeMB: 0.8,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          initialQuality: 0.8,
+        };
+        try {
+          const compress = typeof imageCompression === 'function' 
+            ? imageCompression 
+            : (imageCompression as any).default;
+            
+          const compressedBlob = await compress(file, options);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: file.type,
+            lastModified: new Date().getTime(),
+          });
+        } catch (compressionError) {
+          console.error("Compression failed in gallery, using original:", compressionError);
+        }
+      }
+
+      const publicUrl = await uploadCustomerDocument(customer.id, fileToUpload);
       
       const currentDocs = customer.documents || [];
       const updatedDocs = [publicUrl, ...currentDocs];
@@ -187,8 +223,13 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
       refreshCustomers();
     } catch (error) {
       console.error("Upload failed:", error);
+      alert("Upload failed. If the image is very large, try a smaller one.");
     } finally {
       setIsUploading(false);
+      // Remove optimistic file and clean up URL
+      setOptimisticFiles(prev => prev.filter(f => f.id !== tempId));
+      URL.revokeObjectURL(tempUrl);
+      e.target.value = "";
     }
   };
 
@@ -437,6 +478,27 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
                     onDelete={() => handleDeleteDocument(path)}
                   />
                 ))}
+
+                {/* Optimistic Uploads */}
+                {optimisticFiles.map((optFile) => (
+                  <DraggableImage
+                    key={optFile.id}
+                    src={optFile.url}
+                    name={optFile.name}
+                    isOptimistic={true}
+                    srcIsBlob={true}
+                    // No actions allowed for optimistic items
+                    isEditing={false}
+                    editingName=""
+                    onEditNameChange={() => {}}
+                    onSaveRename={() => {}}
+                    onCancelRename={() => {}}
+                    onStartRename={() => {}}
+                    onClick={() => {}}
+                    onDragStart={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
               </div>
             ) : (
               folders.length === 0 && (
@@ -493,37 +555,60 @@ const DraggableImage = ({
   onClick: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDelete: () => void;
+  isOptimistic?: boolean;
+  srcIsBlob?: boolean;
 }) => {
   return (
-    <div className="group relative">
+    <div className={`group relative ${isOptimistic ? "pointer-events-none" : ""}`}>
       <div
-        draggable
+        draggable={!isOptimistic}
         onDragStart={onDragStart}
         onClick={onClick}
-        className="relative bg-gray-900 border border-gray-700/50 hover:border-blue-500/50 rounded-xl aspect-video overflow-hidden cursor-grab active:cursor-grabbing transition-all"
+        className={`relative bg-gray-900 border border-gray-700/50 rounded-xl aspect-video overflow-hidden transition-all ${
+            isOptimistic 
+              ? "opacity-50 cursor-wait" 
+              : "hover:border-blue-500/50 cursor-grab active:cursor-grabbing"
+        }`}
       >
-        <Image
-          src={src}
-          alt={name}
-          fill
-          sizes="(max-width: 640px) 50vw, 33vw"
-          className="opacity-80 group-hover:opacity-100 object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        <div className="absolute inset-0 flex justify-center items-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded font-medium text-white text-xs">
-            View
-          </span>
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="top-1 right-1 absolute bg-black/50 hover:bg-red-500 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
-          title="Delete"
-        >
-          <Trash2 size={12} />
-        </button>
+        {srcIsBlob ? (
+          <img
+            src={src}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 50vw, 33vw"
+            className="opacity-80 group-hover:opacity-100 object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+        
+        {isOptimistic ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 flex justify-center items-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded font-medium text-white text-xs">
+                View
+              </span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="top-1 right-1 absolute bg-black/50 hover:bg-red-500 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
+              title="Delete"
+            >
+              <Trash2 size={12} />
+            </button>
+          </>
+        )}
       </div>
       
       {/* Name / Edit Input */}

@@ -94,19 +94,47 @@ export const createCustomer = async (formData: FormData) => {
 
   if (!userData?.store_id) return { status: "error", error: "No store found." };
 
-  // 2. Upload Logic (Simplified)
+  // 2. Upload Logic (Robust Error Handling)
   const files = formData.getAll("documents");
   const uploadedUrls: string[] = [];
+  const uploadFailures: string[] = [];
+
   for (const file of files) {
     if (file instanceof File && file.type.startsWith("image/")) {
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
       const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
-      const { data } = await supabase.storage.from("customer-documents").upload(filePath, file);
-      if (data) {
-        const { data: urlData } = supabase.storage.from("customer-documents").getPublicUrl(data.path);
-        uploadedUrls.push(urlData.publicUrl);
+      
+      try {
+        const { data, error: uploadError } = await supabase.storage
+          .from("customer-documents")
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error(`Upload error for ${file.name}:`, uploadError);
+          uploadFailures.push(file.name);
+          continue;
+        }
+
+        if (data) {
+          const { data: urlData } = supabase.storage.from("customer-documents").getPublicUrl(data.path);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      } catch (e) {
+        console.error(`Exception during upload for ${file.name}:`, e);
+        uploadFailures.push(file.name);
       }
     }
+  }
+
+  // If some files failed but others succeeded, we might want to tell the user
+  if (uploadFailures.length > 0 && uploadedUrls.length === 0 && files.length > 0) {
+    return { 
+      status: "error", 
+      error: `Failed to upload any documents: ${uploadFailures.join(", ")}. Please check your connection and try again.` 
+    };
   }
 
   // 3. Prepare Payload (Strict Trimming)

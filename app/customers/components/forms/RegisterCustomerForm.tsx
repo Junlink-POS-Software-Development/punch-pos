@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useCallback } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import imageCompression from "browser-image-compression";
@@ -73,6 +75,7 @@ export const RegisterCustomerForm = ({
     if (!files || files.length === 0) return;
 
     setIsCompressing(true);
+    setErrorMessage(null);
     const newCompressedFiles: File[] = [];
 
     const options = {
@@ -86,13 +89,24 @@ export const RegisterCustomerForm = ({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
+        // Mobile browsers often crash on extremely large images during compression
+        if (file.size > 20 * 1024 * 1024) {
+          setErrorMessage(`File ${file.name} is too large (>20MB). Please use a smaller image.`);
+          continue;
+        }
+
         if (!file.type.startsWith("image/")) {
           newCompressedFiles.push(file);
           continue;
         }
 
         try {
-          const compressedBlob = await imageCompression(file, options);
+          // Robust access to the compression function
+          const compress = typeof imageCompression === 'function' 
+            ? imageCompression 
+            : (imageCompression as any).default;
+
+          const compressedBlob = await compress(file, options);
           const finalFile = new File([compressedBlob], file.name, {
             type: file.type,
             lastModified: new Date().getTime(),
@@ -103,13 +117,15 @@ export const RegisterCustomerForm = ({
             `Skipping compression for ${file.name} due to error:`,
             err
           );
+          // Still push the original file if compression fails, but warn the user locally
           newCompressedFiles.push(file);
         }
       }
 
       setCompressedFiles((prev) => [...prev, ...newCompressedFiles]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Batch upload failed:", error);
+      setErrorMessage("Failed to process images: " + (error.message || "Unknown error"));
     } finally {
       setIsCompressing(false);
       event.target.value = "";
@@ -126,10 +142,40 @@ export const RegisterCustomerForm = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check size before processing to prevent OOM on mobile
+    if (file.size > 15 * 1024 * 1024) {
+      setErrorMessage("Document image is too large (>15MB) for AI processing. Please take a clearer, smaller photo.");
+      event.target.value = "";
+      return;
+    }
+
     setIsAiProcessing(true);
+    setErrorMessage(null);
+
     try {
+      // 1. Initial Compression BEFORE sending to AI if it's very large
+      // This reduces payload size and helps avoid mobile network timeouts
+      let fileToUpload = file;
+      if (file.size > 2 * 1024 * 1024) {
+        try {
+          const aiCompressionOptions = {
+            maxSizeMB: 1.5, // Slightly higher quality for AI OCR
+            maxWidthOrHeight: 2048,
+            useWebWorker: true,
+          };
+          const compress = typeof imageCompression === 'function' 
+            ? imageCompression 
+            : (imageCompression as any).default;
+
+          const compressedBlob = await compress(file, aiCompressionOptions);
+          fileToUpload = new File([compressedBlob], file.name, { type: file.type });
+        } catch (compErr) {
+          console.warn("AI pre-scan compression failed, using original:", compErr);
+        }
+      }
+
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", fileToUpload);
 
       const response = await fetch("/api/ai/extract-customer", {
         method: "POST",
@@ -137,7 +183,8 @@ export const RegisterCustomerForm = ({
       });
 
       if (!response.ok) {
-        throw new Error("AI extraction failed");
+        const errorData = await response.json().catch(() => ({ error: "Network error" }));
+        throw new Error(errorData.error || `AI extraction failed (${response.status})`);
       }
 
       const data = await response.json();
@@ -161,7 +208,11 @@ export const RegisterCustomerForm = ({
           initialQuality: 0.6,
         };
         try {
-          const compressedBlob = await imageCompression(file, compressionOptions);
+          const compress = typeof imageCompression === 'function' 
+            ? imageCompression 
+            : (imageCompression as any).default;
+
+          const compressedBlob = await compress(file, compressionOptions);
           const compressedFile = new File([compressedBlob], file.name, {
             type: file.type,
             lastModified: new Date().getTime(),
@@ -177,9 +228,9 @@ export const RegisterCustomerForm = ({
 
       // Switch back to manual view for review
       setView("manual");
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Scan Error:", error);
-      alert("Failed to extract information from the document. Please try again or enter manually.");
+      setErrorMessage(error.message || "Failed to extract information. Please try again or enter manually.");
     } finally {
       setIsAiProcessing(false);
       event.target.value = "";
