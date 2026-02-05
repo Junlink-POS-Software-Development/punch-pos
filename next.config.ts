@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '20mb',
     },
   },
 };

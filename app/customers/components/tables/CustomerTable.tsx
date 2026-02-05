@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Edit2, Trash2, CheckSquare, Square, MoreHorizontal, Lock, Unlock, ArrowUpDown } from "lucide-react";
-import { useCustomerData, useCustomerMutations } from "../hooks/useCustomerData";
-import { useCustomerStore } from "../store/useCustomerStore";
-import { updateCustomerGroup, deleteCustomer, bulkUpdateCustomerGroup, toggleCustomerLock } from "../api/services";
+import { useCustomerData, useCustomerMutations } from "../../hooks/useCustomerData";
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { updateCustomerGroup, deleteCustomer, bulkUpdateCustomerGroup, toggleCustomerLock } from "../../api/services";
 
 // Helper function to parse name parts from a full name
 const parseNameParts = (fullName: string) => {

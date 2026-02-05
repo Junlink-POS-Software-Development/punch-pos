@@ -1,8 +1,8 @@
 // components/CreateGroupModal.tsx
 import React, { useState } from "react";
-import { useCustomerStore } from "../store/useCustomerStore";
-import { createGroup } from "../api/services"; // Assuming you have this
-import { useCustomerMutations } from "../hooks/useCustomerData"; // To refresh list
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { createGroup } from "../../api/services"; // Assuming you have this
+import { useCustomerMutations } from "../../hooks/useCustomerData"; // To refresh list
 
 export const CreateGroupModal = () => {
   // 1. Connect directly to the store here

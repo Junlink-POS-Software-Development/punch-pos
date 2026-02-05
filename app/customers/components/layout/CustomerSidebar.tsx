@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Folder, FolderPlus, Layers, Trash2, Users, Edit2, Check, X, ChevronLeft } from "lucide-react";
-import { useCustomerStore } from "../store/useCustomerStore";
+import { useCustomerStore } from "../../store/useCustomerStore";
 import {
   useCustomerData,
   useCustomerMutations,
-} from "../hooks/useCustomerData";
-import { deleteGroup, renameCustomerGroup } from "../api/services";
+} from "../../hooks/useCustomerData";
+import { deleteGroup, renameCustomerGroup } from "../../api/services";
 
 interface CustomerSidebarProps {
   isOpen?: boolean;

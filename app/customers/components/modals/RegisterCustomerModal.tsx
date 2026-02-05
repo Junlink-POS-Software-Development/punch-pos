@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 
-import { useCustomerStore } from "../store/useCustomerStore";
-import { RegisterCustomerForm } from "./forms/RegisterCustomerForm";
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { RegisterCustomerForm } from "../forms/RegisterCustomerForm";
 
 export const RegisterCustomerModal = () => {
   const { isCustomerModalOpen, closeCustomerModal } = useCustomerStore();

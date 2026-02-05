@@ -1,11 +1,11 @@
 import React from "react";
 import { ArrowLeft, Search, Edit } from "lucide-react";
-import { useCustomerStore } from "../store/useCustomerStore";
-import { useCustomerData } from "../hooks/useCustomerData";
-import { CustomerGroup } from "../lib/types";
-import { UpdateCustomerModal } from "./UpdateCustomerModal";
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { useCustomerData } from "../../hooks/useCustomerData";
+import { CustomerGroup } from "../../lib/types";
+import { UpdateCustomerModal } from "../modals/UpdateCustomerModal";
 
-import { useViewStore } from "../../../components/window-layouts/store/useViewStore";
+import { useViewStore } from "../../../../components/window-layouts/store/useViewStore";
 
 export const CustomerDetailHeader = () => {
   const { selectedCustomer } = useCustomerData();

@@ -5,14 +5,14 @@ import Link from "next/link";
 import { ArrowBigLeft, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 // Components
-import { CustomerSidebar } from "./components/CustomerSidebar";
-import { CustomerHeader } from "./components/CustomerHeader";
-import { CustomerDetailHeader } from "./components/CustomerDetailHeader";
-import { CustomerTable } from "./components/CustomerTable";
-import { CustomerDetailView } from "./components/CustomerDetailView";
-import { CreateGroupModal } from "./components/CreateGroupModal";
-import { RegisterCustomerModal } from "./components/RegisterCustomerModal";
-import { GuestTransactionsTable } from "./components/GuestTransactionsTable";
+import { CustomerSidebar } from "./components/layout/CustomerSidebar";
+import { CustomerHeader } from "./components/layout/CustomerHeader";
+import { CustomerDetailHeader } from "./components/details/CustomerDetailHeader";
+import { CustomerTable } from "./components/tables/CustomerTable";
+import { CustomerDetailView } from "./components/details/CustomerDetailView";
+import { CreateGroupModal } from "./components/modals/CreateGroupModal";
+import { RegisterCustomerModal } from "./components/modals/RegisterCustomerModal";
+import { GuestTransactionsTable } from "./components/tables/GuestTransactionsTable";
 
 // State & Types
 import { useCustomerStore } from "./store/useCustomerStore";

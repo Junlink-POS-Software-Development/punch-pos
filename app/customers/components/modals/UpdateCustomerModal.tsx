@@ -1,7 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
-import { Customer } from "../lib/types";
-import { RegisterCustomerForm } from "./forms/RegisterCustomerForm";
+import { Customer } from "../../lib/types";
+import { RegisterCustomerForm } from "../forms/RegisterCustomerForm";
 
 interface UpdateCustomerModalProps {
   customer: Customer;

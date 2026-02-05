@@ -1,6 +1,6 @@
 import { Search, UserPlus } from "lucide-react";
-import { useCustomerStore } from "../store/useCustomerStore";
-import { useCustomerData } from "../hooks/useCustomerData";
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { useCustomerData } from "../../hooks/useCustomerData";
 
 export const CustomerHeader = () => {
   const { customers, currentGroupName } = useCustomerData();

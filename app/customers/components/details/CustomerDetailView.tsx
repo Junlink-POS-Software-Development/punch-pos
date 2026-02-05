@@ -1,6 +1,6 @@
 // components/CustomerDetailView.tsx
 import React, { useState } from "react";
-import { useCustomerData } from "../hooks/useCustomerData";
+import { useCustomerData } from "../../hooks/useCustomerData";
 import {
   Mail,
   Phone,
@@ -18,7 +18,7 @@ import {
 import Image from "next/image";
 import { DocumentGallery } from "./DocumentGallery";
 
-import { useViewStore } from "../../../components/window-layouts/store/useViewStore";
+import { useViewStore } from "../../../../components/window-layouts/store/useViewStore";
 
 export const CustomerDetailView = () => {
   const { selectedCustomer, selectedCustomerGroupName } = useCustomerData();

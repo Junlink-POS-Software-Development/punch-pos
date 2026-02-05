@@ -19,9 +19,9 @@ import {
   updateCustomerDocumentMetadata,
   updateCustomer,
   deleteCustomerDocument,
-} from "../api/services";
-import { Customer } from "../lib/types";
-import { useCustomerData } from "../hooks/useCustomerData";
+} from "../../api/services";
+import { Customer } from "../../lib/types";
+import { useCustomerData } from "../../hooks/useCustomerData";
 
 interface DocumentGalleryProps {
   customer: Customer;
@@ -179,6 +179,7 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   const [editingName, setEditingName] = useState("");
   const [optimisticFiles, setOptimisticFiles] = useState<Array<{ id: string; url: string; name: string }>>([]);
   const [optimisticDeletions, setOptimisticDeletions] = useState<Set<string>>(new Set());
+  const [isCompressing, setIsCompressing] = useState(false);
 
   useEffect(() => {
     // Initialize folders and files from customer data
@@ -316,21 +317,29 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+
+    // Explicit size check to prevent browser crashes on mobile
+    if (file.size > 20 * 1024 * 1024) {
+      alert("This file is too large (>20MB). Please select a smaller file.");
+      e.target.value = "";
+      return;
+    }
+
     const tempId = crypto.randomUUID();
     const tempUrl = URL.createObjectURL(file);
 
     // Optimistically add to UI
     setOptimisticFiles(prev => [...prev, { id: tempId, url: tempUrl, name: file.name }]);
-    setIsUploading(true);
-
+    
     try {
       let fileToUpload = file;
       
       // Compress if it's an image
       if (file.type.startsWith("image/")) {
+        setIsCompressing(true);
         const options = {
-          maxSizeMB: 0.8,
-          maxWidthOrHeight: 1920,
+          maxSizeMB: 1, // Target size ~1MB
+          maxWidthOrHeight: 2048,
           useWebWorker: true,
           initialQuality: 0.8,
         };
@@ -346,9 +355,12 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
           });
         } catch (compressionError) {
           console.error("Compression failed in gallery, using original:", compressionError);
+        } finally {
+          setIsCompressing(false);
         }
       }
 
+      setIsUploading(true);
       const publicUrl = await uploadCustomerDocument(customer.id, fileToUpload);
       
       const currentDocs = customer.documents || [];
@@ -370,6 +382,7 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
       alert("Upload failed. If the image is very large, try a smaller one.");
     } finally {
       setIsUploading(false);
+      setIsCompressing(false);
       // Remove optimistic file and clean up URL
       setOptimisticFiles(prev => prev.filter(f => f.id !== tempId));
       URL.revokeObjectURL(tempUrl);
@@ -483,15 +496,29 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
             <Plus size={14} />
             Folder
           </button>
-          <label className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg font-medium text-white text-xs cursor-pointer transition-colors">
-            <Upload size={14} />
-            Upload
+          <label className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg font-medium text-white text-xs cursor-pointer transition-colors disabled:opacity-50">
+            {isCompressing ? (
+              <>
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                Compressing...
+              </>
+            ) : isUploading ? (
+              <>
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload size={14} />
+                Upload
+              </>
+            )}
             <input
               type="file"
               accept="image/*"
               className="hidden"
               onChange={handleUpload}
-              disabled={isUploading}
+              disabled={isUploading || isCompressing}
             />
           </label>
         </div>
