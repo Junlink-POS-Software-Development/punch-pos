@@ -33,6 +33,135 @@ interface FolderType {
   filePaths: string[];
 }
 
+const DraggableImage = ({
+  src,
+  name,
+  isEditing,
+  editingName,
+  onEditNameChange,
+  onSaveRename,
+  onCancelRename,
+  onStartRename,
+  onClick,
+  onDragStart,
+  onDelete,
+  isOptimistic,
+  srcIsBlob,
+}: {
+  src: string;
+  name: string;
+  isEditing: boolean;
+  editingName: string;
+  onEditNameChange: (name: string) => void;
+  onSaveRename: () => void;
+  onCancelRename: () => void;
+  onStartRename: () => void;
+  onClick: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDelete: () => void;
+  isOptimistic?: boolean;
+  srcIsBlob?: boolean;
+}) => {
+  return (
+    <div className={`group relative ${isOptimistic ? "pointer-events-none" : ""}`}>
+      <div
+        draggable={!isOptimistic}
+        onDragStart={onDragStart}
+        onClick={onClick}
+        className={`relative bg-gray-900 border border-gray-700/50 rounded-xl aspect-video overflow-hidden transition-all ${
+          isOptimistic
+            ? "opacity-50 cursor-wait"
+            : "hover:border-blue-500/50 cursor-grab active:cursor-grabbing"
+        }`}
+      >
+        {srcIsBlob ? (
+          <img src={src} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <Image
+            src={src}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 50vw, 33vw"
+            className="opacity-80 group-hover:opacity-100 object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+
+        {isOptimistic ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 flex justify-center items-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded font-medium text-white text-xs">
+                View
+              </span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="top-1 right-1 absolute bg-black/50 hover:bg-red-500 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
+              title="Delete"
+            >
+              <Trash2 size={12} />
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="mt-1 px-1">
+        {isEditing ? (
+          <div className="flex items-center gap-1">
+            <input
+              autoFocus
+              value={editingName}
+              onChange={(e) => onEditNameChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSaveRename();
+                if (e.key === "Escape") onCancelRename();
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-800 px-1 py-0.5 border border-blue-500 rounded w-full min-w-0 text-white text-xs focus:outline-none"
+            />
+            <button
+              onClick={onSaveRename}
+              className="text-green-400 hover:text-green-300"
+            >
+              <Check size={12} />
+            </button>
+            <button
+              onClick={onCancelRename}
+              className="text-red-400 hover:text-red-300"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center group/name">
+            <span
+              className="font-medium text-gray-400 text-xs truncate"
+              title={name}
+            >
+              {name}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartRename();
+              }}
+              className="opacity-0 group-hover/name:opacity-100 text-gray-500 hover:text-blue-400 transition-opacity"
+            >
+              <Edit2 size={10} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   const { refreshCustomers } = useCustomerData();
   const [folders, setFolders] = useState<FolderType[]>([]);
@@ -49,6 +178,7 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [optimisticFiles, setOptimisticFiles] = useState<Array<{ id: string; url: string; name: string }>>([]);
+  const [optimisticDeletions, setOptimisticDeletions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Initialize folders and files from customer data
@@ -125,6 +255,9 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   const handleDeleteDocument = async (filePath: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
 
+    // Optimistically remove from UI
+    setOptimisticDeletions(prev => new Set(prev).add(filePath));
+
     try {
       // 1. Delete from DB and Storage
       await deleteCustomerDocument(customer.id, filePath);
@@ -145,6 +278,17 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
       refreshCustomers();
     } catch (error) {
       console.error("Failed to delete document:", error);
+      // Rollback optimistic deletion on error
+      setOptimisticDeletions(prev => {
+        const next = new Set(prev);
+        next.delete(filePath);
+        return next;
+      });
+      alert("Failed to delete document. Please try again.");
+    } finally {
+      // Cleanup happens via refresh or manual removal if we want to be safe
+      // Actually, refreshCustomers will trigger a re-render from props,
+      // and our useEffect already cleans up based on customer data.
     }
   };
 
@@ -425,23 +569,25 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
 
             {expandedFolders.has(folder.id) && (
               <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 p-3 pt-0">
-                {folder.filePaths.length > 0 ? (
-                    folder.filePaths.map((path, idx) => (
-                      <DraggableImage
-                        key={`${folder.id}-${idx}`}
-                        src={path}
-                        name={getFileName(path)}
-                        isEditing={editingFile === path}
-                        editingName={editingName}
-                        onEditNameChange={setEditingName}
-                        onSaveRename={saveRename}
-                        onCancelRename={() => setEditingFile(null)}
-                        onStartRename={() => startRenaming(path, getFileName(path))}
-                        onClick={() => setPreviewImage(path)}
-                        onDragStart={(e) => onDragStart(e, path)}
-                        onDelete={() => handleDeleteDocument(path)}
-                      />
-                    ))
+                {folder.filePaths.filter(p => !optimisticDeletions.has(p)).length > 0 ? (
+                    folder.filePaths
+                      .filter(p => !optimisticDeletions.has(p))
+                      .map((path, idx) => (
+                        <DraggableImage
+                          key={`${folder.id}-${idx}`}
+                          src={path}
+                          name={getFileName(path)}
+                          isEditing={editingFile === path}
+                          editingName={editingName}
+                          onEditNameChange={setEditingName}
+                          onSaveRename={saveRename}
+                          onCancelRename={() => setEditingFile(null)}
+                          onStartRename={() => startRenaming(path, getFileName(path))}
+                          onClick={() => setPreviewImage(path)}
+                          onDragStart={(e) => onDragStart(e, path)}
+                          onDelete={() => handleDeleteDocument(path)}
+                        />
+                      ))
                 ) : (
                     <div className="col-span-full py-4 text-center text-gray-600 text-xs italic">
                         Empty folder
@@ -452,7 +598,7 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
           </div>
         ))}
 
-        {/* Ungrouped Files */}
+        {/* Ungrouped Files & Optimistic Uploads */}
         <div 
             onDragOver={(e) => e.preventDefault()}
             onDrop={onDropOnUngrouped}
@@ -460,26 +606,28 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
                 draggedFile ? "bg-gray-800/50 border-2 border-dashed border-gray-600" : ""
             }`}
         >
-            {ungroupedFiles.length > 0 ? (
-              <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-                {ungroupedFiles.map((path, idx) => (
-                  <DraggableImage
-                    key={`ungrouped-${idx}`}
-                    src={path}
-                    name={getFileName(path)}
-                    isEditing={editingFile === path}
-                    editingName={editingName}
-                    onEditNameChange={setEditingName}
-                    onSaveRename={saveRename}
-                    onCancelRename={() => setEditingFile(null)}
-                    onStartRename={() => startRenaming(path, getFileName(path))}
-                    onClick={() => setPreviewImage(path)}
-                    onDragStart={(e) => onDragStart(e, path)}
-                    onDelete={() => handleDeleteDocument(path)}
-                  />
-                ))}
+            <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+                {/* Existing Ungrouped Files (Filtered by optimistic deletion) */}
+                {ungroupedFiles
+                  .filter(path => !optimisticDeletions.has(path))
+                  .map((path, idx) => (
+                    <DraggableImage
+                      key={`ungrouped-${idx}`}
+                      src={path}
+                      name={getFileName(path)}
+                      isEditing={editingFile === path}
+                      editingName={editingName}
+                      onEditNameChange={setEditingName}
+                      onSaveRename={saveRename}
+                      onCancelRename={() => setEditingFile(null)}
+                      onStartRename={() => startRenaming(path, getFileName(path))}
+                      onClick={() => setPreviewImage(path)}
+                      onDragStart={(e) => onDragStart(e, path)}
+                      onDelete={() => handleDeleteDocument(path)}
+                    />
+                  ))}
 
-                {/* Optimistic Uploads */}
+                {/* Optimistic Uploads (Always show) */}
                 {optimisticFiles.map((optFile) => (
                   <DraggableImage
                     key={optFile.id}
@@ -487,7 +635,6 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
                     name={optFile.name}
                     isOptimistic={true}
                     srcIsBlob={true}
-                    // No actions allowed for optimistic items
                     isEditing={false}
                     editingName=""
                     onEditNameChange={() => {}}
@@ -499,13 +646,15 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
                     onDelete={() => {}}
                   />
                 ))}
-              </div>
-            ) : (
-              folders.length === 0 && (
-                  <div className="py-8 border-2 border-gray-700 border-dashed rounded-xl text-gray-500 text-sm text-center">
+            </div>
+
+            {/* Empty State (Only if absolutely nothing to show) */}
+            {ungroupedFiles.filter(p => !optimisticDeletions.has(p)).length === 0 && 
+             optimisticFiles.length === 0 && 
+             folders.length === 0 && (
+                <div className="py-8 border-2 border-gray-700 border-dashed rounded-xl text-gray-500 text-sm text-center">
                     No documents uploaded.
-                  </div>
-              )
+                </div>
             )}
         </div>
       </div>
@@ -531,125 +680,4 @@ export const DocumentGallery = ({ customer }: DocumentGalleryProps) => {
   );
 };
 
-const DraggableImage = ({
-  src,
-  name,
-  isEditing,
-  editingName,
-  onEditNameChange,
-  onSaveRename,
-  onCancelRename,
-  onStartRename,
-  onClick,
-  onDragStart,
-  onDelete,
-}: {
-  src: string;
-  name: string;
-  isEditing: boolean;
-  editingName: string;
-  onEditNameChange: (name: string) => void;
-  onSaveRename: () => void;
-  onCancelRename: () => void;
-  onStartRename: () => void;
-  onClick: () => void;
-  onDragStart: (e: React.DragEvent) => void;
-  onDelete: () => void;
-  isOptimistic?: boolean;
-  srcIsBlob?: boolean;
-}) => {
-  return (
-    <div className={`group relative ${isOptimistic ? "pointer-events-none" : ""}`}>
-      <div
-        draggable={!isOptimistic}
-        onDragStart={onDragStart}
-        onClick={onClick}
-        className={`relative bg-gray-900 border border-gray-700/50 rounded-xl aspect-video overflow-hidden transition-all ${
-            isOptimistic 
-              ? "opacity-50 cursor-wait" 
-              : "hover:border-blue-500/50 cursor-grab active:cursor-grabbing"
-        }`}
-      >
-        {srcIsBlob ? (
-          <img
-            src={src}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <Image
-            src={src}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 50vw, 33vw"
-            className="opacity-80 group-hover:opacity-100 object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        )}
-        
-        {isOptimistic ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : (
-          <>
-            <div className="absolute inset-0 flex justify-center items-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded font-medium text-white text-xs">
-                View
-              </span>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="top-1 right-1 absolute bg-black/50 hover:bg-red-500 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
-              title="Delete"
-            >
-              <Trash2 size={12} />
-            </button>
-          </>
-        )}
-      </div>
-      
-      {/* Name / Edit Input */}
-      <div className="mt-1 px-1">
-        {isEditing ? (
-            <div className="flex items-center gap-1">
-                <input 
-                    autoFocus
-                    value={editingName}
-                    onChange={(e) => onEditNameChange(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") onSaveRename();
-                        if (e.key === "Escape") onCancelRename();
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="bg-gray-800 px-1 py-0.5 border border-blue-500 rounded w-full min-w-0 text-white text-xs focus:outline-none"
-                />
-                <button onClick={onSaveRename} className="text-green-400 hover:text-green-300">
-                    <Check size={12} />
-                </button>
-                <button onClick={onCancelRename} className="text-red-400 hover:text-red-300">
-                    <X size={12} />
-                </button>
-            </div>
-        ) : (
-            <div className="flex justify-between items-center group/name">
-                <span className="font-medium text-gray-400 text-xs truncate" title={name}>
-                    {name}
-                </span>
-                <button 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onStartRename();
-                    }}
-                    className="opacity-0 group-hover/name:opacity-100 text-gray-500 hover:text-blue-400 transition-opacity"
-                >
-                    <Edit2 size={10} />
-                </button>
-            </div>
-        )}
-      </div>
-    </div>
-  );
-};
+
