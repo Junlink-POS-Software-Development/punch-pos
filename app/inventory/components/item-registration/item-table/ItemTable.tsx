@@ -161,7 +161,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   // 2. Define Columns
   const columns: Column<Item>[] = useMemo(() => {
     const headerClass =
-      "bg-slate-950/80 backdrop-blur-md text-gray-400 border-b border-gray-700 font-semibold uppercase text-xs flex items-center z-50";
+      "bg-muted/80 backdrop-blur-md text-muted-foreground border-b border-border font-semibold uppercase text-xs flex items-center z-50";
 
     const createColumn = (
       key: keyof Item,
@@ -177,7 +177,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     return [
       {
         ...createColumn("itemName", "Item Name"),
-        headerCellClass: `${headerClass} cursor-pointer hover:text-white transition-colors`,
+        headerCellClass: `${headerClass} cursor-pointer hover:text-foreground transition-colors`,
         renderHeaderCell: () => (
           <div 
             className="flex items-center gap-2 w-full h-full"
@@ -188,7 +188,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
           >
             <span>Item Name</span>
             {sortState.col === "itemName" ? (
-              sortState.dir === "ASC" ? <ArrowUp className="w-3 h-3 text-blue-400" /> : <ArrowDown className="w-3 h-3 text-blue-400" />
+              sortState.dir === "ASC" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
             ) : (
               <ArrowUpDown className="w-3 h-3 opacity-30" />
             )}
@@ -219,7 +219,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         editable: (row: Item) => row.id === editingRowId,
         renderEditCell: NumberEditor,
         renderCell: ({ row }: { row: Item }) => (
-          <div className="text-right pr-4 font-mono font-semibold text-blue-400">
+          <div className="text-right pr-4 font-mono font-semibold text-primary">
             {typeof row.costPrice === "number"
               ? `₱${row.costPrice.toFixed(2)}`
               : "N/A"}
@@ -238,8 +238,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({
             <div className="flex justify-end pr-4">
               <span className={`px-3 py-1 rounded-full text-xs font-bold ring-1 transition-all ${
                 isLow 
-                  ? "bg-red-500/10 text-red-400 ring-red-500/20" 
-                  : "bg-emerald-500/10 text-emerald-400 ring-emerald-500/20"
+                  ? "bg-red-500/10 text-red-500 ring-red-500/20" 
+                  : "bg-green-500/10 text-green-500 ring-green-500/20"
               }`}>
                 {val}
               </span>
@@ -281,18 +281,18 @@ export const ItemTable: React.FC<ItemTableProps> = ({
 
   // 3. Render
   return (
-    <div className="flex flex-col h-full bg-slate-900/40 rounded-xl overflow-hidden backdrop-blur-md">
+    <div className="flex flex-col h-full bg-card rounded-xl overflow-hidden shadow-sm border border-border">
       {/* Table Header / Title Area */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-slate-950/20 border-b border-slate-800/50">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-muted/20 border-b border-border">
         <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <h3 className="font-bold text-gray-100 text-lg tracking-tight uppercase font-lexend">
+              <h3 className="font-bold text-foreground text-lg tracking-tight uppercase font-lexend">
               Registered Items
               </h3>
               {onAdd && (
                  <button
                  onClick={onAdd}
-                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded-lg text-xs font-semibold text-white transition-all shadow-lg shadow-blue-900/20 active:scale-95 border border-blue-400/20"
+                 className="flex items-center gap-2 bg-primary hover:bg-primary/90 px-3 py-1 rounded-lg text-xs font-semibold text-primary-foreground transition-all shadow-sm active:scale-95"
                >
                  <Plus className="w-3.5 h-3.5" />
                  Register New Item
@@ -301,48 +301,56 @@ export const ItemTable: React.FC<ItemTableProps> = ({
             </div>
             
             <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
                     type="text"
                     placeholder="Search items..."
                     value={searchTerm}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="bg-slate-950/50 border border-slate-700/50 rounded-lg pl-9 pr-4 py-1 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all w-64 shadow-inner"
+                    className="bg-background border border-input rounded-lg pl-9 pr-4 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-input transition-all w-64 shadow-sm"
                 />
             </div>
             {Object.keys(activeFilters).length > 0 && (
                 <button
                     onClick={handleClearAllFilters}
-                    className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-400 text-xs transition-all animate-in fade-in zoom-in duration-200"
+                    className="flex items-center gap-1 bg-destructive/10 hover:bg-destructive/20 px-3 py-1.5 border border-destructive/30 rounded text-destructive text-xs transition-all animate-in fade-in zoom-in duration-200"
                 >
                     <XCircle className="w-3 h-3" /> Clear Filters
                 </button>
             )}
         </div>
-        <div className="text-sm font-medium text-gray-500 bg-slate-800/30 px-3 py-1 rounded-full border border-slate-700/30">
-            Showing <span className="text-gray-300">{rows.length}</span> {totalItems ? `of ${totalItems}` : ""} records
+        <div className="text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border">
+            Showing <span className="text-foreground">{rows.length}</span> {totalItems ? `of ${totalItems}` : ""} records
         </div>
       </div>
 
       {/* The Grid Container */}
-      <div className="flex-1 overflow-hidden relative border border-slate-800 rounded-lg shadow-2xl">
+      <div className="flex-1 overflow-hidden relative border border-border rounded-lg shadow-sm">
         <DataGrid<Item>
             columns={columns}
             rows={displayRows}
             rowKeyGetter={(row) => row.id!}
             rowHeight={52}
-            className="border-none h-full rdg-dark bg-transparent"
-            style={{ height: "100%" }}
+            className="border-none h-full rdg-custom"
+            style={{ 
+              height: "100%",
+              // @ts-ignore
+              "--rdg-header-background-color": "var(--color-muted)",
+              "--rdg-row-hover-background-color": "var(--color-muted) / 0.5",
+              "--rdg-color": "var(--color-foreground)",
+              "--rdg-background-color": "var(--color-card)",
+              "--rdg-border-color": "var(--color-border)",
+            }}
             rowClass={(row: Item) =>
-            `rdg-row bg-transparent text-[90%] text-gray-300 hover:bg-slate-800/50 border-b border-slate-800/50 transition-colors ${row.id === editingRowId ? "ring-1 ring-blue-500/30 bg-blue-500/5 shadow-inner" : ""}`
+            `rdg-row bg-transparent text-[90%] text-foreground hover:bg-muted/50 border-b border-border transition-colors ${row.id === editingRowId ? "ring-1 ring-primary/30 bg-primary/5 shadow-inner" : ""}`
             }
             onRowsChange={handleRowsChange}
         />
         
         {/* Loading Overlay for next page */}
         {isFetchingNextPage && (
-            <div className="absolute inset-x-0 bottom-0 bg-slate-900/80 backdrop-blur-sm p-4 flex justify-center items-center z-50 border-t border-slate-700">
-                <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
+            <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm p-4 flex justify-center items-center z-50 border-t border-border">
+                <div className="flex items-center gap-2 text-primary text-sm font-medium">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Loading more items...</span>
                 </div>

@@ -96,13 +96,13 @@ const StockManagementContent = () => {
 
       {/* Status Section */}
       {isProcessing && (
-        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-center animate-pulse">
+        <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg text-primary text-center animate-pulse">
           Processing stock adjustment...
         </div>
       )}
 
       {/* Table Section */}
-      <div className="flex-1 bg-slate-900/50 p-6 border border-slate-800 rounded-xl overflow-hidden glass-effect">
+      <div className="flex-1 bg-card p-6 border border-border rounded-xl overflow-hidden shadow-sm">
         <StockTable 
           onEdit={handleEdit} 
           onAdd={handleOpenAdjustment}

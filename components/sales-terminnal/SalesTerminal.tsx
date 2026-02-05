@@ -139,7 +139,7 @@ const SalesTerminal = () => {
                   />
                 </div>
               </div>
-              <div className="border border-slate-800 bg-slate-900/30 rounded-2xl w-full flex-1 overflow-hidden min-h-[400px]">
+              <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
                 {/* Desktop Cart */}
                 <div className="hidden sm:block h-full">
                   <TerminalCart

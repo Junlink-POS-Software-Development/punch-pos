@@ -56,8 +56,8 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
 
   return (
     <div className="flex justify-center items-center p-6">
-      <div className="p-8 rounded-2xl w-full max-w-md glass-effect">
-        <h2 className="mb-8 font-bold text-white text-3xl text-center">
+      <div className="p-8 rounded-2xl w-full max-w-md bg-card border border-border shadow-md">
+        <h2 className="mb-8 font-bold text-foreground text-3xl text-center">
           Sign In
         </h2>
 
@@ -66,13 +66,13 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
           <div>
             <label
               htmlFor="email"
-              className="block mb-2 font-medium text-slate-300 text-sm"
+              className="block mb-2 font-medium text-muted-foreground text-sm"
             >
               Email
             </label>
             <div className="relative">
               <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <Mail className="w-5 h-5 text-slate-400" />
+                <Mail className="w-5 h-5 text-muted-foreground" />
               </span>
               <input
                 type="email"
@@ -80,13 +80,13 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="you@example.com"
                 {...register("email")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
+                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                   errors.email ? "border-red-500" : ""
                 }`}
               />
             </div>
             {errors.email && (
-              <p className="mt-2 text-red-300 text-sm">
+              <p className="mt-2 text-red-500 text-sm">
                 {errors.email.message}
               </p>
             )}
@@ -96,13 +96,13 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
           <div>
             <label
               htmlFor="password"
-              className="block mb-2 font-medium text-slate-300 text-sm"
+              className="block mb-2 font-medium text-muted-foreground text-sm"
             >
               Password
             </label>
             <div className="relative">
               <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <Lock className="w-5 h-5 text-slate-400" />
+                <Lock className="w-5 h-5 text-muted-foreground" />
               </span>
               <input
                 type="password"
@@ -110,20 +110,20 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="••••••••"
                 {...register("password")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
+                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                   errors.password ? "border-red-500" : ""
                 }`}
               />
             </div>
             {errors.password && (
-              <p className="mt-2 text-red-300 text-sm">
+              <p className="mt-2 text-red-500 text-sm">
                 {errors.password.message}
               </p>
             )}
           </div>
 
           {errors.root?.serverError && (
-            <div className="flex items-center gap-2 text-red-300 text-sm">
+            <div className="flex items-center gap-2 text-red-500 text-sm">
               <AlertTriangle className="w-5 h-5" />
               <span>{errors.root.serverError.message}</span>
             </div>
@@ -131,7 +131,7 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
 
           <button
             type="submit"
-            className="flex justify-center items-center gap-2 w-full btn-3d-glass"
+            className="flex justify-center items-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-md transition-colors"
             disabled={isPending}
           >
             {isPending ? (
@@ -145,10 +145,10 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-600" />
+            <span className="w-full border-t border-muted" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#0B1120] px-2 text-slate-400">
+            <span className="bg-card px-2 text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -177,7 +177,7 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
               alert("An unexpected error occurred during Google Sign In.");
             }
           }}
-          className="flex justify-center items-center gap-2 mb-6 w-full btn-3d-glass"
+          className="flex justify-center items-center gap-2 mb-6 w-full bg-background hover:bg-muted border border-border text-foreground py-2 rounded-md transition-colors"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -200,11 +200,11 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
           <span>Sign in with Google</span>
         </button>
 
-        <p className="pt-6 text-slate-300 text-sm text-center">
+        <p className="pt-6 text-muted-foreground text-sm text-center">
           First time user?{" "}
           <button
             onClick={onSwitchToSignUp}
-            className="font-medium text-blue-300 hover:text-blue-200"
+            className="font-medium text-primary hover:text-primary/80"
           >
             Sign up with your company code.
           </button>
@@ -213,3 +213,4 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
     </div>
   );
 }
+

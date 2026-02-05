@@ -26,7 +26,7 @@ export function StocksDataGrid({
   if (isLoading && inventory.length === 0) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
-        <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     );
   }
@@ -41,7 +41,7 @@ export function StocksDataGrid({
 
   return (
     <div
-      className="border border-slate-700 rounded-lg overflow-hidden glass-effect relative"
+      className="border border-border rounded-lg overflow-hidden relative shadow-sm"
       onScrollCapture={onScroll}
     >
       <DataGrid
@@ -49,21 +49,24 @@ export function StocksDataGrid({
         columns={columns}
         rows={inventory}
         rowKeyGetter={(row) => row.item_id}
-        className="border-none h-[600px] rdg-dark"
+        className="border-none h-[600px] rdg-custom"
         style={{
           height: "75vh",
           // @ts-ignore - CSS variables in style
-          "--rdg-header-background-color": "#0a192f",
-          "--rdg-row-hover-background-color": "rgba(30, 41, 59, 0.5)",
+          "--rdg-header-background-color": "var(--color-muted)",
+          "--rdg-row-hover-background-color": "var(--color-muted) / 0.5",
+          "--rdg-color": "var(--color-foreground)",
+          "--rdg-background-color": "var(--color-card)",
+          "--rdg-border-color": "var(--color-border)",
         }}
-        rowClass={() => "hover:bg-slate-800/30 transition-colors"}
+        rowClass={() => "hover:bg-muted/30 transition-colors"}
         onScroll={onScroll}
       />
 
       {isFetchingNextPage && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/80 px-4 py-2 rounded-full flex items-center gap-2 border border-slate-700 shadow-xl z-10">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-          <span className="text-xs text-blue-100">Loading more...</span>
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-card/90 px-4 py-2 rounded-full flex items-center gap-2 border border-border shadow-xl z-10">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-xs text-primary">Loading more...</span>
         </div>
       )}
     </div>

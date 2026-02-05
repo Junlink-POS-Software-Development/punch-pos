@@ -97,13 +97,13 @@ export const FormFields = React.memo<FormFieldsProps>(
     return (
       <div className="flex flex-col justify-center p-2 w-full">
         {/* Changed from grid to flex row for single line layout - stacks on mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4 w-full text-white">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4 w-full text-foreground">
           {fields.map((field) => (
             <div key={field.id} className={`w-full ${field.id === "customerName" ? "sm:w-[30%]" : field.id === "barcode" ? "sm:w-[40%]" : "sm:w-[30%]"} flex flex-col gap-1`}>
               <label
                 htmlFor={field.id}
                 title={field.title}
-                className="font-medium text-xs sm:text-sm text-slate-400"
+                className="font-medium text-xs sm:text-sm text-muted-foreground"
               >
                 {field.label}
               </label>
@@ -139,7 +139,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                             });
                             setActiveField?.("quantity");
                           }}
-                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors"
+                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none"
                         />
                       </div>
                     )}
@@ -171,7 +171,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         onBlur={onBlur}
                         onFocus={() => setActiveField?.("quantity")}
                         onKeyDown={handleKeyDown}
-                        className={`w-full h-10 sm:h-12 text-sm sm:text-base input-dark px-3 rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${noSpinnerClass}`}
+                        className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none ${noSpinnerClass}`}
                       />
                     )}
                   />
@@ -186,7 +186,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         if (field.id === "barcode") setActiveField?.("barcode");
                         else setActiveField?.(null);
                     }}
-                    className={`w-full h-10 sm:h-12 text-sm sm:text-base input-dark px-3 rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${
+                    className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none ${
                       field.hideSpinners ? noSpinnerClass : ""
                     }`}
                     {...((field.id === "customerName") && {

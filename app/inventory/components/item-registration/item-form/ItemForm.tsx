@@ -62,14 +62,14 @@ export const ItemForm: React.FC<ItemFormProps> = ({
   return (
     <div className="w-full h-full">
       {/* View Toggle Buttons */}
-      <div className={`flex bg-slate-950/50 mb-6 p-1 border border-slate-800 rounded-xl ${!isSplit ? "md:hidden" : ""}`}>
+      <div className={`flex bg-muted p-1 border border-border rounded-xl ${!isSplit ? "md:hidden" : ""}`}>
         <button
           type="button"
           onClick={() => setView("single")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
             view === "single"
-              ? "bg-slate-800 text-white shadow-lg"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <User className="w-4 h-4" /> Single Item
@@ -79,8 +79,8 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           onClick={() => setView("batch")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
             view === "batch"
-              ? "bg-blue-600 text-white shadow-lg"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <Users className="w-4 h-4" /> Batch Upload

@@ -17,15 +17,15 @@ export const ProductDisplay = ({
         {/* Item Display */}
         <div className="flex flex-col justify-center items-start mt-0 text-left">
           <h1
-            className={`text-1xl md:text-4xl font-bold tracking-tight font-lexend drop-shadow-lg transition-colors line-clamp-2 max-w-full ${
-              isBackdating ? "text-amber-100" : "text-cyan-50"
+            className={`text-1xl md:text-4xl font-bold tracking-tight font-lexend drop-shadow-sm transition-colors line-clamp-2 max-w-full ${
+              isBackdating ? "text-amber-500" : "text-foreground"
             }`}
           >
             {currentProduct.name}
           </h1>
           <p
             className={`text-2xl md:text-4xl font-lexend font-black tracking-tighter transition-colors ${
-              isBackdating ? "text-amber-300" : "text-cyan-300"
+              isBackdating ? "text-amber-600" : "text-primary"
             }`}
           >
             {currentProduct.price}
@@ -37,8 +37,8 @@ export const ProductDisplay = ({
           <div
             className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide border ${
               currentProduct.stock === 0
-                ? "bg-red-500/10 text-red-400 border-red-500/20"
-                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                ? "bg-destructive/10 text-destructive border-destructive/20"
+                : "bg-green-500/10 text-green-600 border-green-500/20"
             }`}
           >
             STOCKS: {currentProduct.stock}

@@ -51,10 +51,10 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`glass-effect flex flex-col sm:flex-row items-stretch mb-2 sm:mb-4 rounded-xl w-full min-h-[180px] sm:min-h-[260px] text-white shadow-xl transition-all duration-300 border ${borderColor} overflow-hidden bg-slate-900/40`}
+        className={`flex flex-col sm:flex-row items-stretch mb-2 sm:mb-4 rounded-xl w-full min-h-[180px] sm:min-h-[260px] text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} overflow-hidden bg-white/50 border-input`} // using a slight white overlay for "paper" feel or just bg-card
       >
         {/* LEFT SECTION: Cashier, Customer, Tools - Hidden on mobile except Customer */}
-        <div className="hidden sm:flex flex-col justify-between p-5 w-[35%] border-r border-slate-700/50">
+        <div className="hidden sm:flex flex-col justify-between p-5 w-[35%] border-r border-border bg-muted/20">
           <div className="space-y-4">
              <CashierInfo user={user} statusColor={statusColor} />
              <CustomerSelector
@@ -71,7 +71,7 @@ export const TerminalHeader = ({
         </div>
 
         {/* RIGHT SECTION: Total, Time, Product Status */}
-        <div className="relative flex-1 p-3 sm:p-6 min-h-[120px] sm:min-h-0">
+        <div className="relative flex-1 p-3 sm:p-6 min-h-[120px] sm:min-h-0 bg-card">
 
           {/* Mobile layout: flex column */}
           <MobileHeader
@@ -89,7 +89,7 @@ export const TerminalHeader = ({
           <div className="hidden sm:block">
             {/* Top Right: Time */}
             <div className="absolute top-6 right-6 z-20">
-              <div className="bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50 backdrop-blur-sm shadow-lg">
+              <div className="bg-muted/50 px-4 py-2 rounded-lg border border-border backdrop-blur-sm shadow-sm">
                 <TimeDisplay
                   isBackdating={isBackdating}
                   customTransactionDate={customTransactionDate}
@@ -111,10 +111,10 @@ export const TerminalHeader = ({
             {/* Bottom Right: Grand Total */}
             <div className="absolute bottom-6 right-6 z-20">
               <div className="flex flex-col items-end">
-                <span className="text-slate-400 text-xs uppercase tracking-widest mb-1">
+                <span className="text-muted-foreground text-xs uppercase tracking-widest mb-1">
                   Grand Total
                 </span>
-                <span className="font-bold text-5xl text-emerald-400 tracking-tighter drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                <span className="font-bold text-5xl text-primary tracking-tighter">
                   ₱{grandTotal.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,

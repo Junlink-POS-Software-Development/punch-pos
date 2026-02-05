@@ -18,11 +18,11 @@ export const QuickPickGrid = ({ onSelect }: QuickPickGridProps) => {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex justify-between items-center mb-2">
-        <label className="text-xs text-slate-400 font-bold">Quick Pick</label>
+        <label className="text-xs text-muted-foreground font-bold">Quick Pick</label>
         <button
           type="button"
           onClick={() => setIsEditorOpen(true)}
-          className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+          className="text-xs text-primary hover:text-primary/80 font-medium"
         >
           Edit
         </button>
@@ -30,16 +30,16 @@ export const QuickPickGrid = ({ onSelect }: QuickPickGridProps) => {
       
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full text-slate-500 text-xs">
+          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
             Loading...
           </div>
         ) : quickPickItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-2">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
             <span className="text-xs">No items set</span>
             <button
               type="button"
               onClick={() => setIsEditorOpen(true)}
-              className="px-3 py-1 bg-slate-800 rounded text-xs hover:bg-slate-700"
+              className="px-3 py-1 bg-muted rounded text-xs hover:bg-muted/80 text-foreground"
             >
               Add Items
             </button>
@@ -55,7 +55,7 @@ export const QuickPickGrid = ({ onSelect }: QuickPickGridProps) => {
                   ${btn.color} border shadow-lg backdrop-blur-sm
                   rounded-lg p-1 text-[10px] font-bold leading-tight h-12 sm:h-16
                   hover:brightness-110 active:scale-95 transition-all
-                  flex items-center justify-center text-center break-words
+                  flex items-center justify-center text-center wrap-break-word
                   relative overflow-hidden
                 `}
               >

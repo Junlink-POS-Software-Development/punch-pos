@@ -82,15 +82,16 @@ export default function ActionPanel({
 
       {/* Action Panel Container */}
       <div className={`
-        flex flex-col bg-[#0F172A] border-l border-slate-800 p-2 sm:p-4 gap-3 sm:gap-4
+        flex flex-col bg-card border-l border-border p-2 sm:p-4 gap-3 sm:gap-4
         w-full lg:w-[450px] shrink-0
         lg:relative lg:h-full
         fixed bottom-12 left-0 right-0 z-30 lg:bottom-auto lg:z-auto
         transition-transform duration-300 ease-in-out
         ${isExpanded ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
         max-h-[70vh] lg:max-h-none overflow-y-auto lg:overflow-visible
+        shadow-sm
       `}>
-        <h2 className="text-white font-lexend font-medium text-base sm:text-lg">Action Panel</h2>
+        <h2 className="text-foreground font-lexend font-medium text-base sm:text-lg">Action Panel</h2>
 
       {/* 1. Quick Pick Grid */}
       <QuickPickGrid onSelect={handleQuickPickSelect} />

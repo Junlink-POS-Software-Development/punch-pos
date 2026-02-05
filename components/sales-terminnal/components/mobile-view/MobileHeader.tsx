@@ -52,10 +52,10 @@ export const MobileHeader = ({
         </div>
         {/* Grand Total - Mobile - Right */}
         <div className="flex flex-col items-end shrink-0">
-          <span className="text-slate-400 text-[10px] uppercase tracking-widest">
+          <span className="text-muted-foreground text-[10px] uppercase tracking-widest">
             Grand Total
           </span>
-          <span className="font-bold text-2xl text-emerald-400 tracking-tighter">
+          <span className="font-bold text-2xl text-primary tracking-tighter">
             ₱
             {grandTotal.toLocaleString("en-US", {
               minimumFractionDigits: 2,

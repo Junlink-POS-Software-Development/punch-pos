@@ -107,7 +107,7 @@ const ItemReg = () => {
       {/* Header & Actions - MOVED TO TABLE OR GLOBAL IF NEEDED */}
       {/* 
       <div className="flex justify-between items-center">
-        <h1 className="font-bold text-2xl text-white">Item Registration</h1>
+        <h1 className="font-bold text-2xl text-foreground">Item Registration</h1>
         ...
       </div> 
       */}
@@ -124,7 +124,7 @@ const ItemReg = () => {
 
       {/* Table Section */}
       {(items.length > 0) && (
-        <div className="flex-1 bg-slate-900/50 p-6 border border-slate-800 rounded-xl overflow-hidden glass-effect">
+        <div className="flex-1 bg-card p-6 border border-border rounded-xl overflow-hidden shadow-sm">
           <ItemTable 
             data={items} 
             onEdit={handleEdit} 
@@ -141,11 +141,11 @@ const ItemReg = () => {
 
       {/* Empty State */}
       {!isLoading && items.length === 0 && (
-        <div className="flex flex-col justify-center items-center gap-4 py-20 text-gray-500">
+        <div className="flex flex-col justify-center items-center gap-4 py-20 text-muted-foreground">
           <p>No items found.</p>
           <button
             onClick={handleOpenRegistration}
-            className="text-blue-400 hover:text-blue-300 underline"
+            className="text-primary hover:text-primary/80 underline"
           >
             Register your first item
           </button>

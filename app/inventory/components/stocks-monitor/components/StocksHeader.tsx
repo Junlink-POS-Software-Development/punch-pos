@@ -41,22 +41,22 @@ export function StocksHeader({
   }, [searchTerm]);
 
   return (
-    <div className="flex justify-between items-end py-4 border-slate-700">
+    <div className="flex justify-between items-end py-4 border-b border-border">
       <div>
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             placeholder="Search stocks..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="bg-slate-950/50 border border-slate-700/50 rounded-lg pl-9 pr-4 py-1 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all w-64 shadow-inner"
+            className="bg-background border border-input rounded-lg pl-9 pr-4 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-input transition-all w-64 shadow-sm"
           />
         </div>
       </div>
-      <div className="bg-slate-800/50 px-4 py-2 border border-slate-700 rounded font-mono text-xs">
-        Showing <span className="text-blue-400">{currentCount}</span> of{" "}
-        <span className="text-slate-400">{totalCount}</span> items
+      <div className="bg-muted px-4 py-2 border border-border rounded font-mono text-xs text-muted-foreground">
+        Showing <span className="text-primary font-bold">{currentCount}</span> of{" "}
+        <span className="text-foreground">{totalCount}</span> items
       </div>
     </div>
   );

@@ -189,19 +189,19 @@ export const TerminalCart = ({ rows, onRemoveItem, onUpdateItem }: TerminalCartP
     <DataGrid
       columns={columns}
       rows={rows}
-      className="w-full h-full rdg-dark"
+      className="w-full h-full rdg-custom border-none"
       headerRowHeight={35}
       rowHeight={30}
       style={
         {
-          "--rdg-background-color": "#1f2937",
-          "--rdg-color": "#d1d5db",
-          "--rdg-border-color": "#374151",
-          "--rdg-header-background-color": "#111827",
-          "--rdg-header-color": "#9ca3af",
-          "--rdg-row-background-color": "#1f2937",
-          "--rdg-row-hover-background-color": "#374151", // Fixed typo '37415L' to '374151'
-          "--rdg-cell-selected-background-color": "#4b5563",
+          "--rdg-background-color": "transparent",
+          "--rdg-color": "var(--color-foreground)",
+          "--rdg-border-color": "var(--color-border)",
+          "--rdg-header-background-color": "var(--color-muted)",
+          "--rdg-header-color": "var(--color-muted-foreground)",
+          "--rdg-row-background-color": "transparent",
+          "--rdg-row-hover-background-color": "var(--color-muted) / 0.5",
+          "--rdg-cell-selected-background-color": "var(--color-primary) / 0.1",
           border: "none",
           borderRadius: 0,
         } as React.CSSProperties

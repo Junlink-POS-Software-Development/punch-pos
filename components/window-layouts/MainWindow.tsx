@@ -116,7 +116,7 @@ export default function MainWindow({
   // --- DESKTOP LAYOUT (New) ---
   if (!isMobile) {
     return (
-      <div className="flex bg-[#0B1120] h-screen overflow-hidden text-white font-lexend">
+      <div className="flex bg-background h-screen overflow-hidden text-foreground font-lexend">
         {/* Sidebar */}
         <Navigation variant="sidebar" />
 
@@ -134,9 +134,9 @@ export default function MainWindow({
 
         {/* Auth Modals & Overlays */}
         {isLoggingOut && (
-          <div className="z-60 fixed inset-0 flex flex-col justify-center items-center bg-black/60 backdrop-blur-md transition-all duration-300">
-            <Loader2 className="mb-4 w-12 h-12 text-cyan-400 animate-spin" />
-            <span className="font-bold text-cyan-400 text-2xl tracking-widest">
+          <div className="z-60 fixed inset-0 flex flex-col justify-center items-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+            <Loader2 className="mb-4 w-12 h-12 text-primary animate-spin" />
+            <span className="font-bold text-primary text-2xl tracking-widest">
               LOGGING OUT...
             </span>
           </div>
@@ -144,13 +144,13 @@ export default function MainWindow({
 
         {authModalState !== "hidden" && (
           <div
-            className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm"
+            className="z-50 fixed inset-0 flex justify-center items-center bg-background/80 backdrop-blur-sm"
             onClick={closeModal}
           >
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={closeModal}
-                className="top-4 right-4 z-50 absolute p-2 text-slate-400 hover:text-white transition-colors"
+                className="top-4 right-4 z-50 absolute p-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -191,58 +191,11 @@ export default function MainWindow({
       {/* STEP 2: Pass 'children' down to the RightWindow */}
       <RightWindow rightWidth={rightWidth} isTransitioning={isTransitioning}>{children}</RightWindow>
 
-      {/* Auth Modals for Mobile too if needed, though usually they are triggered from Header which is in children (Navigation) on Mobile? 
-          Wait, on Mobile, the Header was part of app/page.tsx which is now children.
-          So app/page.tsx needs to handle Auth triggers if it has the Header.
-          But I removed Header from app/page.tsx.
-          
-          On Mobile, app/page.tsx will render Navigation. Navigation doesn't have Header.
-          The Header was separate in app/page.tsx.
-          
-          I should probably include the Header in app/page.tsx for Mobile view?
-          Or include Header in RightWindow?
-          
-          If I put Header in RightWindow, it will be above children.
-          Let's see. Old app/page.tsx had Header then Navigation.
-          So if I want to preserve that, I should probably render Header in app/page.tsx for Mobile.
-          
-          But I moved Auth state here.
-          If app/page.tsx needs to trigger Auth, it needs props.
-          But app/page.tsx is a Page, it doesn't receive props from Layout easily (except params).
-          
-          This is a bit tricky.
-          If I want to keep Auth state in MainWindow, I need to pass setters to children? No, can't pass to children of Layout.
-          
-          Alternative: Keep Auth state in a Store (useAuthStore or new UI store).
-          Or, since I'm already editing app/page.tsx, I can keep Auth state there for Mobile?
-          But Desktop needs it in MainWindow (Header).
-          
-          Best approach:
-          Use a global store for UI state (Auth Modal Open/Close).
-          I already have `useViewStore`. I can add `authModal` state there.
-          
-          Let's check `useViewStore`.
-      */}
-      {/* For now, I'll render the Modals here. If Mobile needs to trigger them, we need a way.
-          The Header in Desktop triggers them.
-          On Mobile, where is the trigger?
-          Old app/page.tsx had UserProfile which triggered them.
-          If I render Header in app/page.tsx (Mobile), it needs the handlers.
-          
-          Maybe I should export the Auth Modals logic to a separate component `AuthManager` or similar, 
-          or just put it in `MainWindow` and assume Mobile users can't login/logout? 
-          No, that's bad.
-          
-          The `UserProfile` component triggers `onSignInClick`.
-          If I use `UserProfile` in `app/page.tsx` (Mobile), I need to pass a handler.
-          
-          I'll check `useViewStore` to see if I can add modal state there.
-      */}
        {/* Auth Modals & Overlays (Duplicate for Mobile for now to ensure they exist if triggered) */}
         {isLoggingOut && (
-          <div className="z-60 fixed inset-0 flex flex-col justify-center items-center bg-black/60 backdrop-blur-md transition-all duration-300">
-            <Loader2 className="mb-4 w-12 h-12 text-cyan-400 animate-spin" />
-            <span className="font-bold text-cyan-400 text-2xl tracking-widest">
+          <div className="z-60 fixed inset-0 flex flex-col justify-center items-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+            <Loader2 className="mb-4 w-12 h-12 text-primary animate-spin" />
+            <span className="font-bold text-primary text-2xl tracking-widest">
               LOGGING OUT...
             </span>
           </div>

@@ -118,19 +118,19 @@ export default function OnboardingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B1120] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0B1120] p-6 text-white">
-      <div className="w-full max-w-md p-8 rounded-2xl glass-effect">
+    <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+      <div className="w-full max-w-md bg-card p-8 rounded-xl border border-border shadow-md">
         <h2 className="mb-2 font-bold text-3xl text-center">
           {hasStore ? "Complete Profile" : "Welcome! 👋"}
         </h2>
-        <p className="mb-8 text-slate-400 text-center">
+        <p className="mb-8 text-muted-foreground text-center">
           {hasStore
             ? "Please complete your profile details."
             : "To complete your setup, please enter your details and Company Code."}
@@ -139,24 +139,24 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* First Name */}
           <div>
-            <label className="block mb-2 font-medium text-slate-300 text-sm">
+            <label className="block mb-2 font-medium text-muted-foreground text-sm">
               First Name
             </label>
             <div className="relative">
               <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-slate-400" />
+                <User className="w-5 h-5 text-muted-foreground" />
               </span>
               <input
                 type="text"
                 placeholder="First Name"
                 {...register("firstName")}
-                className={`pl-10! w-full input-dark ${
+                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                   errors.firstName ? "border-red-500" : ""
                 }`}
               />
             </div>
             {errors.firstName && (
-              <p className="mt-2 text-red-300 text-sm">
+              <p className="mt-2 text-red-500 text-sm">
                 {errors.firstName.message}
               </p>
             )}
@@ -164,24 +164,24 @@ export default function OnboardingPage() {
 
           {/* Last Name */}
           <div>
-            <label className="block mb-2 font-medium text-slate-300 text-sm">
+            <label className="block mb-2 font-medium text-muted-foreground text-sm">
               Last Name
             </label>
             <div className="relative">
               <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-slate-400" />
+                <User className="w-5 h-5 text-muted-foreground" />
               </span>
               <input
                 type="text"
                 placeholder="Last Name"
                 {...register("lastName")}
-                className={`pl-10! w-full input-dark ${
+                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                   errors.lastName ? "border-red-500" : ""
                 }`}
               />
             </div>
             {errors.lastName && (
-              <p className="mt-2 text-red-300 text-sm">
+              <p className="mt-2 text-red-500 text-sm">
                 {errors.lastName.message}
               </p>
             )}
@@ -189,24 +189,24 @@ export default function OnboardingPage() {
 
           {/* Job Title */}
           <div>
-            <label className="block mb-2 font-medium text-slate-300 text-sm">
+            <label className="block mb-2 font-medium text-muted-foreground text-sm">
               Job Title
             </label>
             <div className="relative">
               <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-slate-400" />
+                <User className="w-5 h-5 text-muted-foreground" />
               </span>
               <input
                 type="text"
                 placeholder="e.g. Sales Associate"
                 {...register("jobTitle")}
-                className={`pl-10! w-full input-dark ${
+                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                   errors.jobTitle ? "border-red-500" : ""
                 }`}
               />
             </div>
             {errors.jobTitle && (
-              <p className="mt-2 text-red-300 text-sm">
+              <p className="mt-2 text-red-500 text-sm">
                 {errors.jobTitle.message}
               </p>
             )}
@@ -216,26 +216,26 @@ export default function OnboardingPage() {
             <div>
               <label
                 htmlFor="enrollmentId"
-                className="block mb-2 font-medium text-slate-300 text-sm"
+                className="block mb-2 font-medium text-muted-foreground text-sm"
               >
                 Company Code
               </label>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Hash className="w-5 h-5 text-slate-400" />
+                  <Hash className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="text"
                   id="enrollmentId"
                   placeholder="e.g. A7B2C9"
                   {...register("enrollmentId")}
-                  className={`pl-10! w-full input-dark ${
+                  className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
                     errors.enrollmentId ? "border-red-500" : ""
                   }`}
                 />
               </div>
               {errors.enrollmentId && (
-                <p className="mt-2 text-red-300 text-sm">
+                <p className="mt-2 text-red-500 text-sm">
                   {errors.enrollmentId.message}
                 </p>
               )}
@@ -243,7 +243,7 @@ export default function OnboardingPage() {
           )}
 
           {errors.root?.serverError && (
-            <div className="flex items-center gap-2 text-red-300 text-sm">
+            <div className="flex items-center gap-2 text-red-500 text-sm">
               <AlertTriangle className="w-5 h-5" />
               <span>{errors.root.serverError.message}</span>
             </div>
@@ -251,7 +251,7 @@ export default function OnboardingPage() {
 
           <button
             type="submit"
-            className="flex justify-center items-center gap-2 w-full btn-3d-glass"
+            className="flex justify-center items-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-md transition-colors"
             disabled={isPending}
           >
             {isPending ? (

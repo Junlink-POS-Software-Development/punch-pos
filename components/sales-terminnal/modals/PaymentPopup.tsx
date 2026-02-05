@@ -56,19 +56,19 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
 
   return (
     <div className="z-70 fixed inset-0 flex justify-center items-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-card border border-border shadow-2xl rounded-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-800/50 p-4 border-b border-slate-700">
-          <h2 className="font-bold text-white text-xl">Payment</h2>
-          <p className="text-slate-400 text-sm">Transaction No: <span className="font-mono text-cyan-400">{transactionNo}</span></p>
+        <div className="bg-muted/30 p-4 border-b border-border">
+          <h2 className="font-bold text-foreground text-xl">Payment</h2>
+          <p className="text-muted-foreground text-sm">Transaction No: <span className="font-mono text-primary">{transactionNo}</span></p>
         </div>
 
         {/* Body */}
         <div className="space-y-6 p-6">
           {/* Grand Total Display */}
           <div className="text-center">
-            <p className="text-slate-400 text-sm uppercase tracking-wider">Amount Due</p>
-            <p className="font-bold text-5xl text-emerald-400">
+            <p className="text-muted-foreground text-sm uppercase tracking-wider">Amount Due</p>
+            <p className="font-bold text-5xl text-primary">
               ₱{totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
@@ -76,36 +76,36 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
           {/* Inputs */}
           <div className="space-y-4">
             <div>
-              <label className="block mb-1 text-slate-300 text-sm">Cash Payment</label>
+              <label className="block mb-1 text-muted-foreground text-sm">Cash Payment</label>
               <input
                 ref={paymentInputRef}
                 type="number"
                 value={payment}
                 onChange={(e) => setPayment(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-slate-950/50 focus:ring-2 focus:ring-cyan-500/50 border border-slate-700 rounded-lg w-full px-4 py-3 font-bold text-white text-xl outline-none transition-all"
+                className="bg-muted/20 focus:ring-2 focus:ring-primary/50 border border-input rounded-lg w-full px-4 py-3 font-bold text-foreground text-xl outline-none transition-all"
                 placeholder="0.00"
               />
             </div>
 
             <div>
-              <label className="block mb-1 text-slate-300 text-sm">Voucher</label>
+              <label className="block mb-1 text-muted-foreground text-sm">Voucher</label>
               <input
                 type="number"
                 value={voucher}
                 onChange={(e) => setVoucher(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-slate-950/50 focus:ring-2 focus:ring-purple-500/50 border border-slate-700 rounded-lg w-full px-4 py-3 font-bold text-white text-xl outline-none transition-all"
+                className="bg-muted/20 focus:ring-2 focus:ring-purple-500/50 border border-input rounded-lg w-full px-4 py-3 font-bold text-foreground text-xl outline-none transition-all"
                 placeholder="0.00"
               />
             </div>
           </div>
 
           {/* Summary */}
-          <div className="bg-slate-800/50 p-4 rounded-lg">
+          <div className="bg-muted/20 p-4 rounded-lg">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-slate-300">Change</span>
-              <span className={`text-2xl font-bold ${change < 0 ? "text-red-400" : "text-cyan-400"}`}>
+              <span className="font-bold text-muted-foreground">Change</span>
+              <span className={`text-2xl font-bold ${change < 0 ? "text-destructive" : "text-primary"}`}>
                 ₱{change.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -113,10 +113,10 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 bg-slate-800/30 p-4 border-t border-slate-700">
+        <div className="flex gap-3 bg-muted/20 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="flex-1 bg-slate-800 hover:bg-slate-700 py-3 rounded-lg font-medium text-slate-300 transition-colors"
+            className="flex-1 bg-muted hover:bg-muted/80 py-3 rounded-lg font-medium text-muted-foreground transition-colors"
           >
             Cancel
           </button>
@@ -127,10 +127,10 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
               }
             }}
             disabled={totalPayment < totalAmount}
-            className={`flex-1 py-3 rounded-lg font-bold text-white transition-all ${
+            className={`flex-1 py-3 rounded-lg font-bold text-primary-foreground transition-all ${
               totalPayment >= totalAmount
-                ? "bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-900/20"
-                : "bg-slate-700 cursor-not-allowed opacity-50"
+                ? "bg-primary hover:bg-primary/90 shadow-md"
+                : "bg-muted cursor-not-allowed opacity-50"
             }`}
           >
             Complete (Enter)

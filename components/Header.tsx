@@ -42,11 +42,11 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
           className="object-contain"
         />
         <div className="flex flex-col">
-          <h1 className="text-xl tracking-tight animate-text-shine text-white">
+          <h1 className="text-xl tracking-tight animate-text-shine text-foreground">
             <span className="font-bold">PUNCH</span>
-            <span className="font-light text-slate-300"> POS</span>
+            <span className="font-light text-muted-foreground"> POS</span>
           </h1>
-          <p className="text-[10px] text-slate-500 tracking-wide">
+          <p className="text-[10px] text-muted-foreground/70 tracking-wide">
             by JunLink Software Services
           </p>
         </div>
@@ -55,7 +55,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       {/* CENTER: Dynamic Title or Search Bar */}
       <div className="flex-1 flex justify-center max-2-2xl mx-auto">
         {activeTitle ? (
-          <h2 className="text-3xl font-bold text-white tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] font-lexend">
+          <h2 className="text-3xl font-bold text-foreground tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 font-lexend">
             {activeTitle}
           </h2>
         ) : (
@@ -68,20 +68,20 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       {/* RIGHT: User Actions */}
       <div className="flex items-center gap-4 shrink-0">
         {/* Welcome Text - Subtle */}
-        <p className="hidden lg:block text-xs text-slate-500 text-right">
+        <p className="hidden lg:block text-xs text-muted-foreground text-right">
           {user
             ? `Welcome, ${user.user_metadata?.first_name || "Admin"}`
             : "Guest"}
         </p>
 
         {/* Divider */}
-        <div className="hidden lg:block w-px h-6 bg-slate-700" />
+        <div className="hidden lg:block w-px h-6 bg-border" />
 
         {/* Notification & Profile Group */}
         <div className="flex items-center gap-3">
           <Notifications />
           {!isAuthReady ? (
-            <div className="bg-slate-800 rounded-full w-9 h-9 animate-pulse" />
+            <div className="bg-muted rounded-full w-9 h-9 animate-pulse" />
           ) : (
             <UserProfile
               currentUser={user}

@@ -65,7 +65,7 @@ export const ActionButtons = ({
         <button
           type="button"
           onClick={onAdd}
-          className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
+          className="col-span-1 bg-muted hover:bg-muted/80 border border-border text-muted-foreground font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
           <Plus className="w-4 h-4" />
           ADD
@@ -73,7 +73,7 @@ export const ActionButtons = ({
         <button
           type="button"
           onClick={onDiscount}
-          className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
+          className="col-span-1 bg-muted hover:bg-muted/80 border border-border text-muted-foreground font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
           <Tag className="w-4 h-4" />
           DISC
@@ -81,7 +81,7 @@ export const ActionButtons = ({
         <button
           type="button"
           onClick={onVoucher}
-          className="col-span-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
+          className="col-span-1 bg-muted hover:bg-muted/80 border border-border text-muted-foreground font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
           <Ticket className="w-4 h-4" />
           VOUCH
@@ -92,7 +92,7 @@ export const ActionButtons = ({
           className={`col-span-1 border font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1
              ${isFreeMode 
                ? "bg-purple-600 border-purple-500 text-white animate-pulse" 
-               : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300"}
+               : "bg-muted hover:bg-muted/80 border-border text-muted-foreground"}
           `}
         >
           <Gift className={`w-4 h-4 ${isFreeMode ? "text-white" : ""}`} />
@@ -105,7 +105,7 @@ export const ActionButtons = ({
           onMouseLeave={() => timerRef.current && clearTimeout(timerRef.current)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          className="col-span-1 bg-red-900/20 hover:bg-red-900/30 border border-red-900/30 text-red-400 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 active:scale-95"
+          className="col-span-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 active:scale-95"
           title="Short press: Clear Input | Long press: Clear All"
         >
           <Eraser className="w-4 h-4" />
