@@ -80,9 +80,8 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="you@example.com"
                 {...register("email")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
-                  errors.email ? "border-red-500" : ""
-                }`}
+                className={`pl-10! w-full input-dark ${errors.email ? "border-red-500" : ""
+                  }`}
               />
             </div>
             {errors.email && (
@@ -110,9 +109,8 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="••••••••"
                 {...register("password")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
-                  errors.password ? "border-red-500" : ""
-                }`}
+                className={`pl-10! w-full input-dark ${errors.password ? "border-red-500" : ""
+                  }`}
               />
             </div>
             {errors.password && (
@@ -163,7 +161,7 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
               const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`,
+                  redirectTo: `${window.location.origin}/api/auth/callback`,
                 },
               });
               if (error) {
