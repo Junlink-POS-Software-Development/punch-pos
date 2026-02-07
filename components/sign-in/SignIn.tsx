@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, LogIn, AlertTriangle, Loader2 } from "lucide-react";
@@ -23,6 +24,9 @@ const signInUser = async (values: SignInFormValues) => {
 
 export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
   const [isPending, setIsPending] = useState(false);
+  const searchParams = useSearchParams();
+  const errorMsg = searchParams.get("error");
+
   const {
     register,
     handleSubmit,
@@ -35,6 +39,15 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
       password: "",
     },
   });
+
+  useEffect(() => {
+    if (errorMsg) {
+      setFormError("root.serverError", {
+        type: "server",
+        message: errorMsg,
+      });
+    }
+  }, [errorMsg, setFormError]);
 
   const onSubmit = async (values: SignInFormValues) => {
     setFormError("root.serverError", { message: "" });
@@ -163,7 +176,7 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
               const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`,
+                  redirectTo: `${window.location.origin}/api/auth/callback`,
                 },
               });
               if (error) {

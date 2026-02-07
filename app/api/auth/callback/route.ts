@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -17,9 +16,18 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        console.log("Auth Callback: User found:", user.id);
-        // We don't need to check for registration cookies or profile completion here anymore.
-        // The middleware will handle redirecting to /onboarding if any required fields are missing.
+        const { data: userData, error: profileError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (userData?.role === "admin") {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(
+            `${origin}/login?error=Access%20denied.%20Admins%20must%20sign%20in%20via%20the%20admin%20app.`
+          );
+        }
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host");
