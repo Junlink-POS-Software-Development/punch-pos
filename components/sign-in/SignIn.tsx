@@ -93,9 +93,8 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="you@example.com"
                 {...register("email")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
-                  errors.email ? "border-red-500" : ""
-                }`}
+                className={`pl-10! w-full input-dark ${errors.email ? "border-red-500" : ""
+                  }`}
               />
             </div>
             {errors.email && (
@@ -123,9 +122,8 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
                 placeholder="••••••••"
                 {...register("password")}
                 // FIX: Changed to pl-10!
-                className={`pl-10! w-full input-dark ${
-                  errors.password ? "border-red-500" : ""
-                }`}
+                className={`pl-10! w-full input-dark ${errors.password ? "border-red-500" : ""
+                  }`}
               />
             </div>
             {errors.password && (
