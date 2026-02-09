@@ -36,7 +36,7 @@ export default function ActionPanel({
   const handleQuickPickSelect = (item: any) => {
     console.log("Selected:", item);
     setValue("barcode", item.sku, { shouldValidate: true });
-    setActiveField("quantity");
+        setActiveField("quantity");
   };
 
   const handleNumpadPress = (key: string) => {

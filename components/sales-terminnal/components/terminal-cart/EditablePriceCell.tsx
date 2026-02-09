@@ -19,10 +19,9 @@ export const EditablePriceCell = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
-    setValue(newVal);
-    if (newVal === "" || isNaN(Number(newVal))) {
-      setError(true);
-    } else {
+    // Allow empty string or valid number/decimal
+    if (newVal === "" || /^\d*\.?\d*$/.test(newVal)) {
+      setValue(newVal);
       setError(false);
     }
   };
@@ -38,6 +37,8 @@ export const EditablePriceCell = ({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
       e.currentTarget.blur();
     }
   };
@@ -45,17 +46,16 @@ export const EditablePriceCell = ({
   return (
     <input
       type="text"
-      className={`w-full bg-slate-800 text-white px-1 py-0.5 rounded border outline-none text-right transition-colors ${
+      className={`w-full bg-white text-slate-900 px-1 py-0.5 rounded border outline-none text-right transition-colors ${
         error
           ? "border-red-500 focus:border-red-500"
-          : "border-slate-600 focus:border-cyan-500"
+          : "border-slate-300 focus:border-cyan-500"
       }`}
       value={value}
       onChange={handleChange}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onClick={(e) => e.stopPropagation()}
-      autoFocus
     />
   );
 };
