@@ -49,6 +49,7 @@ const SalesTerminal = () => {
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
   const [isFreeModalOpen, setIsFreeModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<"barcode" | "quantity" | null>("barcode");
+  const [isActionPanelOpen, setIsActionPanelOpen] = useState(false);
 
   // Calculate cart total
   const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
@@ -163,7 +164,10 @@ const SalesTerminal = () => {
 
         {/* RIGHT PANEL: Action Panel */}
         {/* RIGHT PANEL: Action Panel - Desktop Only */}
-        <div className="hidden lg:block h-full">
+        <div className={`
+          hidden lg:block h-full transition-all duration-300 ease-in-out
+          ${isActionPanelOpen ? "w-[450px]" : "w-0"}
+        `}>
           <ActionPanel 
             onAddToCart={onAddToCart}
             onClearAll={onClear}
@@ -172,6 +176,8 @@ const SalesTerminal = () => {
             setActiveField={setActiveField}
             isFreeMode={false} // No longer toggle state, just modal action
             onToggleFreeMode={() => setIsFreeModalOpen(true)}
+            isOpen={isActionPanelOpen}
+            onToggle={() => setIsActionPanelOpen(!isActionPanelOpen)}
           />
         </div>
 

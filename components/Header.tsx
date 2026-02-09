@@ -3,7 +3,6 @@
 import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import SearchBar from "@/app/components/SearchBar";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -52,16 +51,11 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
         </div>
       </div>
 
-      {/* CENTER: Dynamic Title or Search Bar */}
-      <div className="flex-1 flex justify-center max-2-2xl mx-auto">
-        {activeTitle ? (
+      <div className="flex-1 flex justify-center max-w-2xl mx-auto">
+        {activeTitle && (
           <h2 className="text-3xl font-bold text-foreground tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 font-lexend">
             {activeTitle}
           </h2>
-        ) : (
-          <div className="w-full max-w-md">
-            <SearchBar />
-          </div>
         )}
       </div>
 

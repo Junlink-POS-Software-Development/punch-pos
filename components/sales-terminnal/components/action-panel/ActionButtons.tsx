@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift } from "lucide-react";
+import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart } from "lucide-react";
 
 interface ActionButtonsProps {
   onAdd: () => void;
@@ -67,7 +67,7 @@ export const ActionButtons = ({
           onClick={onAdd}
           className="col-span-1 bg-muted hover:bg-muted/80 border border-border text-muted-foreground font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1"
         >
-          <Plus className="w-4 h-4" />
+          <ShoppingCart className="w-4 h-4" />
           ADD
         </button>
         <button
