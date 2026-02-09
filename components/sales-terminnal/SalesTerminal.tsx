@@ -111,35 +111,43 @@ const SalesTerminal = () => {
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
         <div className="flex flex-col flex-1 p-2 sm:p-4 h-full min-w-0 overflow-y-auto">
-            <TerminalHeader 
-              setCustomerId={setCustomerId} 
-              grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
-            />
-
             <form
               id="sales-form"
               onSubmit={methods.handleSubmit(onDoneSubmit)}
-              className={`flex flex-col gap-4 w-full min-h-full`}
+              className={`
+                w-full min-h-full gap-4
+                ${!isActionPanelOpen ? 'flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-[1fr]' : 'flex flex-col'}
+              `}
             >
-              <div className="relative flex flex-col w-full shrink-0">
-                {/* Desktop Form Fields */}
-                <div className="hidden sm:block">
-                  <FormFields
-                    onAddToCartClick={onAddToCart}
-                    onDoneSubmitTrigger={triggerDoneSubmit}
-                    setActiveField={setActiveField}
-                    activeField={activeField}
+              {/* Left Column Wrapper: Header + Inputs */}
+              <div className={`flex flex-col gap-4 ${!isActionPanelOpen ? 'h-full' : ''}`}>
+                  <TerminalHeader 
+                    setCustomerId={setCustomerId} 
+                    grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
                   />
-                </div>
-                {/* Mobile Form Fields */}
-                <div className="block sm:hidden">
-                  <MobileFormFields
-                    onAddToCartClick={onAddToCart}
-                    setActiveField={setActiveField}
-                    activeField={activeField}
-                  />
-                </div>
+
+                  <div className="relative flex flex-col w-full shrink-0">
+                    {/* Desktop Form Fields */}
+                    <div className="hidden sm:block">
+                      <FormFields
+                        onAddToCartClick={onAddToCart}
+                        onDoneSubmitTrigger={triggerDoneSubmit}
+                        setActiveField={setActiveField}
+                        activeField={activeField}
+                      />
+                    </div>
+                    {/* Mobile Form Fields */}
+                    <div className="block sm:hidden">
+                      <MobileFormFields
+                        onAddToCartClick={onAddToCart}
+                        setActiveField={setActiveField}
+                        activeField={activeField}
+                      />
+                    </div>
+                  </div>
               </div>
+
+              {/* Right Column: Cart */}
               <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
                 {/* Desktop Cart */}
                 <div className="hidden sm:block h-full">
