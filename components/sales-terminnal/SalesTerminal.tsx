@@ -6,7 +6,7 @@ import TerminalHeader from "./components/terminal-header/TerminalHeader";
 
 import { FormProvider } from "react-hook-form";
 import "react-data-grid/lib/styles.css";
-import TerminalCart from "./components/TerminalCart";
+import TerminalCart from "./components/terminal-cart/TerminalCart";
 import { usePosForm } from "./components/form/usePosForm";
 import SuccessReceiptModal from "./utils/SuccessReceiptModal";
 import ErrorMessage from "./components/ErrorMessage";
