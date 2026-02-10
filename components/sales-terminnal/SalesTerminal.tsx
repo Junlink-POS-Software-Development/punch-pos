@@ -103,7 +103,7 @@ const SalesTerminal = () => {
               `}
             >
               {/* Left Column Wrapper: Header + Inputs */}
-              <div className={`flex flex-col gap-2 ${!isActionPanelOpen ? 'h-full' : ''}`}>
+              <div className={`flex flex-col ${!isActionPanelOpen ? 'h-full' : ''}`}>
                   <TerminalHeader 
                     setCustomerId={setCustomerId} 
                     grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
@@ -115,7 +115,7 @@ const SalesTerminal = () => {
 
                   {/* Inline Shortcuts Guide - Appears when side panel is closed to fill space */}
                   {!isActionPanelOpen && (
-                    <div className="hidden lg:block mt-2">
+                    <div className="hidden lg:block mt-1">
                        <ShortcutsGuide isInline />
                     </div>
                   )}
