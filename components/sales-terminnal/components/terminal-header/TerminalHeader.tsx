@@ -60,7 +60,7 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`flex flex-col mb-2 sm:mb-4 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} overflow-hidden bg-card/50`}
+        className={`relative z-20 flex flex-col mb-2 sm:mb-4 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} bg-card/50`}
       >
         <div className="flex flex-col sm:flex-row items-stretch w-full min-h-[180px] sm:min-h-[280px]">
           {/* LEFT SECTION: Cashier, Customer, Tools - Hidden on mobile except Customer */}
@@ -123,7 +123,7 @@ export const TerminalHeader = ({
                   <span className="text-muted-foreground text-[10px] uppercase tracking-[0.2em] mb-1">
                     Grand Total
                   </span>
-                  <span className="font-bold text-6xl text-primary tracking-tighter leading-none">
+                  <span className="font-bold text-3xl md:text-[2.5rem] text-primary tracking-tighter leading-none">
                     ₱{grandTotal.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,

@@ -3,6 +3,7 @@
 import FormFields from "./components/FormFields";
 
 import TerminalHeader from "./components/terminal-header/TerminalHeader";
+import { ShortcutsGuide } from "./components/terminal-header/ShortcutsGuide";
 
 import { FormProvider } from "react-hook-form";
 import "react-data-grid/lib/styles.css";
@@ -102,7 +103,7 @@ const SalesTerminal = () => {
               `}
             >
               {/* Left Column Wrapper: Header + Inputs */}
-              <div className={`flex flex-col gap-4 ${!isActionPanelOpen ? 'h-full' : ''}`}>
+              <div className={`flex flex-col gap-2 ${!isActionPanelOpen ? 'h-full' : ''}`}>
                   <TerminalHeader 
                     setCustomerId={setCustomerId} 
                     grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
@@ -112,7 +113,12 @@ const SalesTerminal = () => {
                     activeField={activeField}
                   />
 
-
+                  {/* Inline Shortcuts Guide - Appears when side panel is closed to fill space */}
+                  {!isActionPanelOpen && (
+                    <div className="hidden lg:block mt-2">
+                       <ShortcutsGuide isInline />
+                    </div>
+                  )}
               </div>
 
               {/* Right Column: Cart */}

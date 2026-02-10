@@ -181,7 +181,7 @@ export const TerminalCart = ({
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary touch-none select-none z-20
+                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary touch-none select-none z-5
                            ${header.column.getIsResizing() ? "bg-primary opacity-100" : "bg-muted opacity-0 group-hover:opacity-100"}
                         `}
                       />

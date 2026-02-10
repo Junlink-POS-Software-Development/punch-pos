@@ -5,7 +5,7 @@ import { ActionButtons } from "./action-panel/ActionButtons";
 import { Numpad } from "./action-panel/Numpad";
 import { CustomerIntelligence } from "./action-panel/CustomerIntelligence";
 import { PosFormValues } from "../utils/posSchema";
-import { ChevronUp, ChevronDown, ChevronRight, ChevronLeft, Settings } from "lucide-react";
+import { ChevronUp, ChevronDown, CircleX, FanIcon } from "lucide-react";
 
 interface ActionPanelProps {
   onAddToCart: () => void;
@@ -90,13 +90,13 @@ export default function ActionPanel({
         className={`
           hidden lg:flex fixed right-6 bottom-24 z-50
           bg-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--color-primary),0.4)] 
-          p-4 rounded-full border-4 border-background transition-all duration-500 ease-in-out
+          p-2 rounded-full border-4 border-background transition-all duration-500 ease-in-out
           hover:scale-110 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.6)] active:scale-95
           ${isOpen ? "rotate-180" : "rotate-0"}
         `}
         title={isOpen ? "Collapse Action Panel" : "Expand Action Panel"}
       >
-        <Settings className="w-6 h-6 animate-[spin_8s_linear_infinite]" />
+        <FanIcon className="w-5 h-5 animate-[spin_8s_linear_infinite]" />
       </button>
 
       {/* Action Panel Container */}
@@ -116,7 +116,7 @@ export default function ActionPanel({
             onClick={onToggle}
             className="hidden lg:block p-2 hover:bg-muted rounded-full text-muted-foreground transition-all duration-300 hover:rotate-90"
           >
-            <Settings className="w-5 h-5" />
+            <CircleX className="w-5 h-5" />
           </button>
         </div>
 
