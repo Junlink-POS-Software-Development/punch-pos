@@ -51,7 +51,7 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`flex flex-col sm:flex-row items-stretch mb-2 sm:mb-4 rounded-xl w-full min-h-[180px] sm:min-h-[260px] text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} overflow-hidden bg-white/50 border-input`} // using a slight white overlay for "paper" feel or just bg-card
+        className={`flex flex-col sm:flex-row items-stretch mb-2 sm:mb-4 rounded-xl w-full min-h-[180px] sm:min-h-[260px] text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} overflow-hidden bg-card/50`}
       >
         {/* LEFT SECTION: Cashier, Customer, Tools - Hidden on mobile except Customer */}
         <div className="hidden sm:flex flex-col justify-between p-5 w-[35%] border-r border-border bg-muted/20">

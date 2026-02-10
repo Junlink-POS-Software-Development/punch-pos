@@ -46,10 +46,10 @@ export const EditablePriceCell = ({
   return (
     <input
       type="text"
-      className={`w-full bg-white text-slate-900 px-1 py-0.5 rounded border outline-none text-right transition-colors ${
+      className={`w-full bg-background text-foreground px-1 py-0.5 rounded border outline-none text-right transition-colors ${
         error
           ? "border-red-500 focus:border-red-500"
-          : "border-slate-300 focus:border-cyan-500"
+          : "border-input focus:border-ring"
       }`}
       value={value}
       onChange={handleChange}

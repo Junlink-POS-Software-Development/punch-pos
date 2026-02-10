@@ -5,6 +5,7 @@ import MainWindow from "../components/window-layouts/MainWindow";
 import { AuthInit } from "@/components/AuthInit";
 import SessionMonitor from "@/components/reusables/SessionMonitor";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 
 const geistSans = Geist({
@@ -54,11 +55,13 @@ export default function RootLayout({
         {/* ✅ ADD THE MONITOR HERE. It will run silently in the background. */}
         <SessionMonitor />
 
-        <AuthInit>
-          <QueryProvider>
-            <MainWindow>{children}</MainWindow>
-          </QueryProvider>
-        </AuthInit>
+        <ThemeProvider>
+          <AuthInit>
+            <QueryProvider>
+              <MainWindow>{children}</MainWindow>
+            </QueryProvider>
+          </AuthInit>
+        </ThemeProvider>
       </body>
     </html>
   );

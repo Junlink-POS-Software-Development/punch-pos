@@ -3,6 +3,8 @@
 import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { Sun, Moon, Monitor } from "lucide-react";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -23,11 +25,28 @@ const ROUTE_TITLES: Record<string, string> = {
   "/google-workspace": "Google Workspace",
 };
 
+const THEME_CYCLE = ["light", "dark", "system"] as const;
+
 export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const { user, isAuthReady } = useAuthStore();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => setMounted(true), []);
 
   const activeTitle = ROUTE_TITLES[pathname];
+
+  const cycleTheme = () => {
+    const currentIndex = THEME_CYCLE.indexOf(
+      (theme as (typeof THEME_CYCLE)[number]) ?? "system"
+    );
+    const nextIndex = (currentIndex + 1) % THEME_CYCLE.length;
+    setTheme(THEME_CYCLE[nextIndex]);
+  };
+
+  const ThemeIcon =
+    theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
     <header className="flex items-center justify-between gap-6 mb-6 px-6 pt-4">
@@ -71,6 +90,18 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
         {/* Divider */}
         <div className="hidden lg:block w-px h-6 bg-border" />
 
+        {/* Theme Toggle */}
+        {mounted && (
+          <button
+            type="button"
+            onClick={cycleTheme}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-muted/50 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors"
+            title={`Theme: ${theme}`}
+          >
+            <ThemeIcon className="w-4 h-4" />
+          </button>
+        )}
+
         {/* Notification & Profile Group */}
         <div className="flex items-center gap-3">
           <Notifications />
@@ -88,3 +119,4 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
     </header>
   );
 }
+
