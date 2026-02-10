@@ -87,13 +87,13 @@ export const DateColumnFilter = ({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[9998]"
+            className="fixed inset-0 z-9998"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Dropdown Popover */}
           <div
-            className="fixed z-[9999] flex flex-col gap-4 bg-card shadow-2xl backdrop-blur-md p-4 border border-border rounded-xl w-72"
+            className="fixed z-9999 flex flex-col gap-4 bg-card shadow-2xl backdrop-blur-md p-4 border border-border rounded-xl w-72"
             style={{
               top: coords.top,
               left:

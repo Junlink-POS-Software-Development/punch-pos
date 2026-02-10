@@ -106,27 +106,13 @@ const SalesTerminal = () => {
                   <TerminalHeader 
                     setCustomerId={setCustomerId} 
                     grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
+                    onAddToCartClick={onAddToCart}
+                    onDoneSubmitTrigger={triggerDoneSubmit}
+                    setActiveField={setActiveField}
+                    activeField={activeField}
                   />
 
-                  <div className="relative flex flex-col w-full shrink-0">
-                    {/* Desktop Form Fields */}
-                    <div className="hidden sm:block">
-                      <FormFields
-                        onAddToCartClick={onAddToCart}
-                        onDoneSubmitTrigger={triggerDoneSubmit}
-                        setActiveField={setActiveField}
-                        activeField={activeField}
-                      />
-                    </div>
-                    {/* Mobile Form Fields */}
-                    <div className="block sm:hidden">
-                      <MobileFormFields
-                        onAddToCartClick={onAddToCart}
-                        setActiveField={setActiveField}
-                        activeField={activeField}
-                      />
-                    </div>
-                  </div>
+
               </div>
 
               {/* Right Column: Cart */}

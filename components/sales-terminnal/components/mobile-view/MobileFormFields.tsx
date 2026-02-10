@@ -72,12 +72,12 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
       "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
     return (
-      <div className="flex items-end gap-2 w-full text-white p-2">
+      <div className="flex items-end gap-2 w-full text-foreground p-2">
         {/* Barcode Field - Takes most space */}
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           <label
             htmlFor="barcode"
-            className="font-medium text-xs text-slate-400"
+            className="font-medium text-xs text-muted-foreground"
           >
             Barcode / Item:
           </label>
@@ -105,13 +105,13 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
                       setValue("barcode", item.sku, { shouldValidate: true });
                       setActiveField?.("quantity");
                     }}
-                    className="pl-3 pr-10 w-full h-10 text-sm input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors"
+                    className="pl-3 pr-10 w-full h-10 text-sm bg-background text-foreground rounded-lg border border-border focus:border-primary transition-colors focus:outline-none"
                   />
                 )}
               />
               <button
                 type="button"
-                className="absolute right-2 p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+                className="absolute right-2 p-1 text-muted-foreground hover:text-primary transition-colors"
                 // Placeholder for future functionality
               >
                 <ScanBarcode className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
                   onBlur={onBlur}
                   onFocus={() => setActiveField?.("quantity")}
                   onKeyDown={handleKeyDown}
-                  className={`w-14 h-10 text-center text-sm input-dark rounded-lg border-slate-700 focus:border-cyan-500 transition-colors ${noSpinnerClass}`}
+                  className={`w-14 h-10 text-center text-sm bg-background text-foreground rounded-lg border border-border focus:border-primary transition-colors focus:outline-none ${noSpinnerClass}`}
                 />
               )}
             />
