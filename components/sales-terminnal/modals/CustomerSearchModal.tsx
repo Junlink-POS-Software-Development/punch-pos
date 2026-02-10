@@ -47,8 +47,19 @@ export const CustomerSearchModal = ({
       setResults([]);
       setHighlightedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
+
+      // Add global escape listener to handle cases where input is not focused
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          e.stopPropagation(); // Prevent reaching global terminal shortcuts
+          onClose();
+        }
+      };
+      
+      window.addEventListener("keydown", handleGlobalKeyDown, true); // Use capture phase to ensure it runs
+      return () => window.removeEventListener("keydown", handleGlobalKeyDown, true);
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   // Reset highlight when results change
   useEffect(() => {
@@ -151,7 +162,7 @@ export const CustomerSearchModal = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -166,6 +177,7 @@ export const CustomerSearchModal = ({
             <div className="flex flex-col gap-1">
               {results.map((customer, index) => (
                 <button
+                  type="button"
                   key={customer.id}
                   data-index={index}
                   onClick={() => {

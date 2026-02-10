@@ -1,7 +1,7 @@
 "use server";
 
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
-import { CartItem } from "../../TerminalCart";
+import { CartItem } from "../../terminal-cart/types";
 import { processTransaction } from "@/app/actions/transactions";
 
 // 1. Define the structure of the Server Action response

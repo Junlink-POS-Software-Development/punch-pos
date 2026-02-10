@@ -6,7 +6,7 @@ import {
 } from "react-hook-form";
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
-import { CartItem } from "../../TerminalCart";
+import { CartItem } from "../../terminal-cart/types";
 import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
 
 // 22: Added isFreeMode to type

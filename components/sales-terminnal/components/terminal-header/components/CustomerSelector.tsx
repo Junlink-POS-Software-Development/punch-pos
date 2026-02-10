@@ -24,9 +24,17 @@ export const CustomerSelector = ({
         </span>
       </div>
 
-      <button
+      <div
         onClick={onSearchOpen}
-        className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-dashed transition-all duration-200 text-left ${
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onSearchOpen();
+          }
+        }}
+        className={`cursor-pointer flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-dashed transition-all duration-200 text-left ${
           isCustomerSelected
             ? "bg-primary/10 border-primary/50 text-primary"
             : "bg-muted/50 border-input text-muted-foreground hover:bg-muted/80 hover:border-primary/50 hover:text-primary"
@@ -48,17 +56,20 @@ export const CustomerSelector = ({
         </div>
 
         {isCustomerSelected ? (
-          <div
-            role="button"
-            onClick={onClearCustomer}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClearCustomer(e);
+            }}
             className="hover:bg-red-500/20 p-1 rounded-full text-muted-foreground/50 hover:text-red-500 transition-colors"
           >
             <XCircle className="w-3 h-3" />
-          </div>
+          </button>
         ) : (
           <Search className="opacity-0 group-hover:opacity-50 w-3 h-3" />
         )}
-      </button>
+      </div>
     </div>
   );
 };

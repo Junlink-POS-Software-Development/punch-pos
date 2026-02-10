@@ -106,7 +106,7 @@ export default function ActionPanel({
         lg:relative lg:h-full
         fixed bottom-12 left-0 right-0 z-30 lg:bottom-auto lg:z-auto
         ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full lg:translate-x-full lg:translate-y-0 lg:opacity-0 lg:pointer-events-none'}
-        max-h-[70vh] lg:max-h-none overflow-y-auto lg:overflow-visible
+        max-h-[70vh] lg:max-h-none overflow-y-auto lg:overflow-hidden
         shadow-sm p-4
       `}>
         <div className={`flex items-center justify-between mb-2 ${!isOpen ? 'lg:hidden' : ''}`}>
@@ -120,8 +120,8 @@ export default function ActionPanel({
           </button>
         </div>
 
-      {/* 1. Quick Pick Grid */}
-      <div className={`${!isOpen ? 'lg:hidden' : ''}`}>
+      {/* 1. Quick Pick Grid - scrollable area */}
+      <div className={`flex-1 min-h-0 overflow-y-auto ${!isOpen ? 'lg:hidden' : ''}`}>
         <QuickPickGrid onSelect={handleQuickPickSelect} />
       </div>
 

@@ -41,9 +41,7 @@ const SalesTerminal = () => {
     toggleFreeMode,
   } = usePosForm();
 
-  // 2. Call the hook and pass the onClear function
-  // This replaces the previous useEffect for the "Escape" key
-  useTerminalShortcuts({ onClear });
+
 
   /* State */
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
@@ -53,31 +51,15 @@ const SalesTerminal = () => {
 
   // Calculate cart total
   const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
+  
+  // 2. Call the hook and pass the triggers
+  useTerminalShortcuts({ 
+    onClear, 
+    onCharge: () => setIsPaymentPopupOpen(true),
+    hasItems: cartItems.length > 0
+  });
 
-  // Shortcut for Payment Popup (Spacebar)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Trigger on Spacebar
-      if (e.code === "Space") {
-        // Prevent if user is typing in an input field (except if we want to override it, but usually bad UX)
-        const activeElement = document.activeElement as HTMLElement;
-        const isTextInput = activeElement.tagName === "INPUT" && (activeElement as HTMLInputElement).type === "text";
-        
-        // Allow if NOT a text input, OR if it IS the barcode input (since barcodes don't usually have spaces)
-        // We only want to block it for inputs where typing a space is valid (like Customer Name)
-        if (!isTextInput || activeElement.id === "barcode") {
-           e.preventDefault();
-           if (cartTotal > 0) {
-             setIsPaymentPopupOpen(true);
-           } else {
-               console.log("Cart is empty, cannot open payment popup");
-           }
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [cartTotal]);
+
 
   const handlePaymentComplete = (payment: number, voucher: number) => {
     const totalPayment = payment + voucher;
@@ -179,7 +161,11 @@ const SalesTerminal = () => {
           <ActionPanel 
             onAddToCart={onAddToCart}
             onClearAll={onClear}
-            onCharge={() => setIsPaymentPopupOpen(true)}
+            onCharge={() => {
+              if (cartItems.length > 0) {
+                setIsPaymentPopupOpen(true);
+              }
+            }}
             activeField={activeField}
             setActiveField={setActiveField}
             isFreeMode={false} // No longer toggle state, just modal action

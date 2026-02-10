@@ -10,12 +10,14 @@ export const HeaderToolbar = () => {
       <div className="flex items-center gap-2">
         <ShortcutsGuide />
         <button
+          type="button"
           className="flex justify-center items-center bg-muted/50 hover:bg-muted border border-border rounded-lg w-10 h-10 transition-colors"
           title="Reprint Last Receipt"
         >
           <Printer className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
+          type="button"
           className="flex justify-center items-center bg-muted/50 hover:bg-muted border border-border rounded-lg w-10 h-10 transition-colors"
           title="Help"
         >

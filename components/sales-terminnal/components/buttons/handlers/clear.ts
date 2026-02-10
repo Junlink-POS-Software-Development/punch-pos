@@ -4,7 +4,7 @@ import {
   PosFormValues,
   getDefaultFormValues,
 } from "@/components/sales-terminnal/utils/posSchema"; // Adjust path
-import { CartItem } from "../../TerminalCart";
+import { CartItem } from "../../terminal-cart/types";
 
 type ClearParams = {
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;

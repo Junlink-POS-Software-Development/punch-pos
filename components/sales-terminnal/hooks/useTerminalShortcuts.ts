@@ -3,24 +3,44 @@ import { useRouter } from "next/navigation";
 
 interface UseTerminalShortcutsProps {
   onClear: () => void;
+  onCharge: () => void;
+  hasItems: boolean;
 }
 
 export const useTerminalShortcuts = ({
   onClear,
+  onCharge,
+  hasItems,
 }: UseTerminalShortcutsProps) => {
   const router = useRouter();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // 1. Handle Existing Escape Shortcut (remains the same)
+      // 1. Handle Existing Escape Shortcut
       if (event.key === "Escape") {
         event.preventDefault();
         onClear();
         return;
       }
 
-      // 2. Check for ALT key combinations
-      // This prevents conflicts with CTRL+T, CTRL+S, etc.
+      // 2. Handle Spacebar for Payment
+      if (event.code === "Space") {
+        const activeElement = document.activeElement as HTMLElement;
+        const isTextInput = activeElement.tagName === "INPUT" && (activeElement as HTMLInputElement).type === "text";
+        const isButton = activeElement.tagName === "BUTTON";
+        const isTextArea = activeElement.tagName === "TEXTAREA";
+
+        // Allow if NOT a text input/textarea/button, OR if it IS the barcode input
+        // Barcode input override is kept for workflow speed
+        if ((!isTextInput && !isTextArea && !isButton) || activeElement.id === "barcode") {
+           if (hasItems) {
+             event.preventDefault();
+             onCharge();
+           }
+        }
+      }
+
+      // 3. Check for ALT key combinations
       if (event.altKey) {
         const key = event.key.toLowerCase();
 
@@ -67,5 +87,5 @@ export const useTerminalShortcuts = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClear, router]);
+  }, [onClear, onCharge, hasItems, router]);
 };
