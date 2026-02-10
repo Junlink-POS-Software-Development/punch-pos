@@ -68,7 +68,7 @@ export const TerminalCart = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingActive((prev) => !prev)}
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                   title="Toggle Price Edit"
                 >
                   {isEditingActive ? <Unlock size={12} /> : <Lock size={12} />}
@@ -122,7 +122,7 @@ export const TerminalCart = ({
           <div className="flex justify-center relative z-10">
             <button
               type="button"
-              className="text-red-500 hover:text-red-300 transition-colors p-1 rounded-full hover:bg-slate-100/50"
+              className="text-red-500 hover:text-red-300 transition-colors p-1 rounded-full hover:bg-muted/50"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -159,13 +159,13 @@ export const TerminalCart = ({
     <div className="w-full h-full flex flex-col overflow-hidden bg-transparent">
       <div className="flex-1 overflow-auto w-full relative">
         <table className="w-full text-sm text-left border-collapse" style={{ tableLayout: 'fixed', width: '100%' }}>
-          <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 font-semibold backdrop-blur-sm shadow-sm">
+          <thead className="sticky top-0 z-10 bg-muted text-foreground font-semibold backdrop-blur-md shadow-sm">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-slate-200">
+              <tr key={headerGroup.id} className="border-b-2 border-border">
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="relative px-2 py-2 select-none group font-medium"
+                    className="relative px-2 py-3 select-none group font-bold tracking-wider uppercase text-[10px] border-r border-border/20 last:border-r-0"
                     style={{
                       width: header.getSize(),
                     }}
@@ -181,8 +181,8 @@ export const TerminalCart = ({
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-cyan-500 touch-none select-none z-20
-                           ${header.column.getIsResizing() ? "bg-cyan-500 opacity-100" : "bg-slate-300 opacity-0 group-hover:opacity-100"}
+                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary touch-none select-none z-20
+                           ${header.column.getIsResizing() ? "bg-primary opacity-100" : "bg-muted opacity-0 group-hover:opacity-100"}
                         `}
                       />
                     )}
@@ -191,10 +191,10 @@ export const TerminalCart = ({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-700">
+          <tbody className="divide-y divide-border text-foreground">
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={row.id} className="hover:bg-muted transition-colors">
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
@@ -212,7 +212,7 @@ export const TerminalCart = ({
             ) : (
                 // Empty State Row
                 <tr>
-                    <td colSpan={columns.length} className="h-32 text-center text-slate-500 italic p-4">
+                    <td colSpan={columns.length} className="h-32 text-center text-muted-foreground italic p-4">
                         No items in cart
                     </td>
                 </tr>
