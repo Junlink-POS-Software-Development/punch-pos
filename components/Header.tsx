@@ -49,7 +49,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
     theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
-    <header className="flex items-center justify-between gap-6 mb-6 px-6 pt-4">
+    <header className="flex items-center justify-between gap-6 px-6 pt-4">
       {/* LEFT: Logo Lockup */}
       <div className="flex items-center gap-3 shrink-0">
         <Image

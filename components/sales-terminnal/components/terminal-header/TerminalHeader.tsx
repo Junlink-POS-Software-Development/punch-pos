@@ -60,7 +60,7 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`relative z-20 flex flex-col mb-2 sm:mb-4 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} bg-card/50`}
+        className={`overflow-hidden relative z-20 flex flex-col mb-2 sm:mb-4 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border" : borderColor} bg-card/50`}
       >
         <div className="flex flex-col sm:flex-row items-stretch w-full min-h-[180px] sm:min-h-[280px]">
           {/* LEFT SECTION: Cashier, Customer, Tools - Hidden on mobile except Customer */}

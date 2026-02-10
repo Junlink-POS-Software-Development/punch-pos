@@ -93,7 +93,7 @@ const SalesTerminal = () => {
     <div className="relative flex flex-col lg:flex-row h-full overflow-hidden">
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
-        <div className="flex flex-col flex-1 p-2 sm:p-4 h-full min-w-0 overflow-y-auto">
+        <div className="flex flex-col flex-1 p-1 sm:p-2 h-full min-w-0 overflow-y-auto">
             <form
               id="sales-form"
               onSubmit={methods.handleSubmit(onDoneSubmit)}

@@ -39,33 +39,50 @@ export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
   ];
 
   if (isInline) {
+    const allShortcuts = [...terminalShortcuts, ...navigationShortcuts];
+    
     return (
-      <div className="bg-card/30 rounded-xl border border-border p-4 animate-in fade-in duration-500">
-        <div className="flex items-center gap-2 mb-4 border-b border-border pb-2">
-            <Command className="w-4 h-4 text-primary" />
+      <div className="bg-card/30 rounded-xl border border-border p-3 flex flex-col max-h-[200%] animate-in fade-in duration-500 overflow-hidden">
+        <div className="flex items-center gap-2 mb-2 border-b border-border/50 pb-1.5 shrink-0">
+            <Command className="w-3.5 h-3.5 text-primary" />
             <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">
-                Quick Shortcuts Guide
+                Shortcuts
             </h3>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {[...terminalShortcuts, ...navigationShortcuts.slice(0, 5)].map((shortcut, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center bg-muted/30 px-3 py-2 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors group"
-            >
-              <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate mr-2">
-                {shortcut.label}
-              </span>
-              <kbd className="bg-background px-1.5 py-0.5 border border-border rounded font-mono text-[10px] text-primary shrink-0 shadow-sm">
-                {shortcut.key}
-              </kbd>
-            </div>
-          ))}
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1.5 pb-1">
+            {allShortcuts.map((shortcut, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center bg-muted/20 px-2 py-1.5 border border-border/40 rounded-lg hover:bg-muted/40 transition-colors group"
+              >
+                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors truncate mr-1.5">
+                  {shortcut.label}
+                </span>
+                <kbd className="bg-background px-1 py-0.5 border border-border/60 rounded font-mono text-[9px] text-primary shrink-0 shadow-sm">
+                  {shortcut.key}
+                </kbd>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="mt-4 text-[10px] text-muted-foreground italic text-center">
-            Tip: Press any of these keys to quickly perform actions or navigate the system.
-        </p>
+        
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(var(--primary), 0.2);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--primary), 0.4);
+          }
+        `}</style>
       </div>
     );
   }

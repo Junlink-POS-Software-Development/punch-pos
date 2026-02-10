@@ -127,7 +127,7 @@ export default function MainWindow({
             onSignOutClick={onSignOutClick} 
           />
           
-          <main className="flex-1 overflow-auto p-6 pt-0">
+          <main className="flex-1 overflow-auto p-2 pt-0">
              {children}
           </main>
         </div>
