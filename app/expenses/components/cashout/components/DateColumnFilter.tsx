@@ -93,7 +93,7 @@ export const DateColumnFilter = ({
 
           {/* Dropdown Popover */}
           <div
-            className="fixed z-[9999] flex flex-col gap-4 bg-slate-900/95 shadow-2xl backdrop-blur-md p-4 border border-slate-700 rounded-xl w-72"
+            className="fixed z-[9999] flex flex-col gap-4 bg-card shadow-2xl backdrop-blur-md p-4 border border-border rounded-xl w-72"
             style={{
               top: coords.top,
               left:
@@ -106,13 +106,13 @@ export const DateColumnFilter = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-center pb-2 border-slate-700 border-b">
-              <span className="font-semibold text-slate-200 text-sm">
+            <div className="flex justify-between items-center pb-2 border-border border-b">
+              <span className="font-semibold text-foreground text-sm">
                 Filter Date Range
               </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-slate-500 hover:text-slate-300"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -122,24 +122,24 @@ export const DateColumnFilter = ({
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-10 text-slate-400 text-xs">Start</span>
+                  <span className="w-10 text-muted-foreground text-xs">Start</span>
                   <div className="relative flex-1">
                     <input
                       type="date"
                       value={tempStart}
                       onChange={(e) => setTempStart(e.target.value)}
-                      className="bg-slate-800 px-2 py-1.5 border border-slate-700 focus:border-emerald-500 rounded outline-none w-full text-slate-200 text-xs"
+                      className="bg-transparent px-2 py-1.5 border border-border focus:border-emerald-500 rounded outline-none w-full text-foreground text-xs"
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-10 text-slate-400 text-xs">End</span>
+                  <span className="w-10 text-muted-foreground text-xs">End</span>
                   <div className="relative flex-1">
                     <input
                       type="date"
                       value={tempEnd}
                       onChange={(e) => setTempEnd(e.target.value)}
-                      className="bg-slate-800 px-2 py-1.5 border border-slate-700 focus:border-emerald-500 rounded outline-none w-full text-slate-200 text-xs"
+                      className="bg-transparent px-2 py-1.5 border border-border focus:border-emerald-500 rounded outline-none w-full text-foreground text-xs"
                     />
                   </div>
                 </div>
@@ -154,28 +154,28 @@ export const DateColumnFilter = ({
             </div>
 
             {/* Presets Grid */}
-            <div className="gap-2 grid grid-cols-2 pt-3 border-slate-700 border-t">
+            <div className="gap-2 grid grid-cols-2 pt-3 border-border border-t">
               <button
                 onClick={() => handlePreset(0)}
-                className="bg-slate-800 hover:bg-emerald-900/30 px-3 py-2 border border-slate-700 rounded font-medium text-slate-300 hover:text-emerald-400 text-xs transition-colors"
+                className="bg-muted hover:bg-emerald-900/30 px-3 py-2 border border-border rounded font-medium text-muted-foreground hover:text-emerald-400 text-xs transition-colors"
               >
                 Today
               </button>
               <button
                 onClick={() => handlePreset(7)}
-                className="bg-slate-800 hover:bg-emerald-900/30 px-3 py-2 border border-slate-700 rounded font-medium text-slate-300 hover:text-emerald-400 text-xs transition-colors"
+                className="bg-muted hover:bg-emerald-900/30 px-3 py-2 border border-border rounded font-medium text-muted-foreground hover:text-emerald-400 text-xs transition-colors"
               >
                 Last 7 Days
               </button>
               <button
                 onClick={handleThisMonth}
-                className="col-span-2 bg-slate-800 hover:bg-emerald-900/30 px-3 py-2 border border-slate-700 rounded font-medium text-slate-300 hover:text-emerald-400 text-xs transition-colors"
+                className="col-span-2 bg-muted hover:bg-emerald-900/30 px-3 py-2 border border-border rounded font-medium text-muted-foreground hover:text-emerald-400 text-xs transition-colors"
               >
                 This Month
               </button>
               <button
                 onClick={handleClear}
-                className="col-span-2 bg-slate-800 hover:bg-red-900/30 mt-1 px-3 py-2 border border-slate-700 rounded font-medium text-slate-400 hover:text-red-400 text-xs transition-colors"
+                className="col-span-2 bg-muted hover:bg-red-900/30 mt-1 px-3 py-2 border border-border rounded font-medium text-muted-foreground hover:text-red-400 text-xs transition-colors"
               >
                 Show All History
               </button>
@@ -193,10 +193,10 @@ export const DateColumnFilter = ({
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className={`flex items-center gap-2 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-slate-800 ${
+        className={`flex items-center gap-2 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-muted ${
           isOpen || (startDate && endDate)
             ? "text-emerald-400"
-            : "text-slate-300"
+            : "text-muted-foreground"
         }`}
       >
         <span>Date</span>

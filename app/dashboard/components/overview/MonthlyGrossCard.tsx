@@ -28,11 +28,11 @@ const MonthlyGrossCard = ({ dragHandleProps }: MonthlyGrossProps) => {
   const totalGross = grossAmount;
 
   return (
-    <div className="relative flex flex-col bg-slate-800 shadow-lg border border-slate-700/50 rounded-xl h-full text-white">
+    <div className="relative flex flex-col bg-card shadow-lg border border-border rounded-xl h-full text-foreground">
       <div
         {...dragHandleProps?.attributes}
         {...dragHandleProps?.listeners}
-        className="flex justify-between items-center hover:bg-slate-700/30 p-6 pb-2 rounded-t-xl transition-colors cursor-grab active:cursor-grabbing"
+        className="flex justify-between items-center hover:bg-muted/50 p-6 pb-2 rounded-t-xl transition-colors cursor-grab active:cursor-grabbing"
       >
         <h2 className="font-bold text-xl">Monthly Income Gross</h2>
 
@@ -52,9 +52,9 @@ const MonthlyGrossCard = ({ dragHandleProps }: MonthlyGrossProps) => {
 
       <div className="p-6 pt-2">
         <div className="mb-2">
-          <div className="flex items-center gap-2 mb-1 text-slate-400 text-sm">
+          <div className="flex items-center gap-2 mb-1 text-muted-foreground text-sm">
             <span>Selected Range:</span>
-            <span className="bg-slate-700 px-2 py-0.5 rounded text-slate-200 text-xs">
+            <span className="bg-muted px-2 py-0.5 rounded text-foreground text-xs">
               {/* Ensure we display something safe during hydration or loading */}
               {hasHydrated && startDate && endDate
                 ? `${dayjs(startDate).format("MMM D")} - ${dayjs(
@@ -66,7 +66,7 @@ const MonthlyGrossCard = ({ dragHandleProps }: MonthlyGrossProps) => {
 
           {/* Show loading state if we are fetching OR still hydrating the store */}
           {loading || !hasHydrated ? (
-            <div className="bg-slate-700 mt-2 rounded w-32 h-10 animate-pulse" />
+            <div className="bg-muted mt-2 rounded w-32 h-10 animate-pulse" />
           ) : (
             <p className="font-bold text-emerald-400 text-3xl">
               ₱
@@ -77,7 +77,7 @@ const MonthlyGrossCard = ({ dragHandleProps }: MonthlyGrossProps) => {
             </p>
           )}
         </div>
-        <p className="mt-4 text-slate-500 text-xs italic">
+        <p className="mt-4 text-muted-foreground text-xs italic">
           Sum of all cash-in categories for the specified date range.
         </p>
       </div>

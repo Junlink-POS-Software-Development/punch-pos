@@ -16,7 +16,7 @@ export function DashboardNav({ currentView, setView }: DashboardNavProps) {
   ];
 
   return (
-    <nav className="flex items-center gap-6 pb-1 border-slate-700/50 border-b w-full overflow-x-auto">
+    <nav className="flex items-center gap-6 pb-1 border-border border-b w-full overflow-x-auto">
       {navItems.map((item) => (
         <button
           key={item.id}
@@ -26,8 +26,8 @@ export function DashboardNav({ currentView, setView }: DashboardNavProps) {
             transition-colors duration-200 ease-in-out
             ${
               currentView === item.id
-                ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-gray-200 hover:border-b-2 hover:border-slate-500"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-border"
             }
           `}
         >

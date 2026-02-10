@@ -48,7 +48,7 @@ export function DashboardContent() {
     <div className="space-y-6 mx-auto p-6 max-w-7xl pt-2">
       {/* Header & View Switcher - TITLE MOVED TO GLOBAL HEADER */}
       {/* Navigation Component */}
-      <div className="bg-primary-light pt-2 pb-2 mx-auto rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90 w-full mb-6 max-w-7xl">
+      <div className="bg-card pt-2 pb-2 mx-auto rounded-2xl border border-border shadow-xl backdrop-blur-md w-full mb-6 max-w-7xl">
         <div className="px-6">
           <DashboardNav currentView={viewMode} setView={setViewMode} />
         </div>
@@ -74,7 +74,7 @@ export function DashboardContent() {
 export default function DashboardPage() {
   // FIX: Added the 'return' keyword below
   return (
-    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+    <Suspense fallback={<div className="p-6 text-foreground">Loading...</div>}>
       <DashboardContent />
     </Suspense>
   );
