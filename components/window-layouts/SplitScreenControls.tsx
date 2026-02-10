@@ -90,7 +90,7 @@ export function SplitScreenControls({
       >
         <button
           onClick={handleToggle}
-          className="flex justify-center items-center gap-2 bg-white/80 shadow-lg backdrop-blur-sm px-4 py-2 rounded-full font-semibold text-blue-600 active:scale-95 transition-transform"
+          className="flex justify-center items-center gap-2 bg-background border border-border shadow-sm px-4 py-2 rounded-full font-semibold text-primary active:scale-95 transition-transform"
           aria-label="Toggle view"
         >
           {viewState === 1 ? (

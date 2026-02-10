@@ -134,24 +134,24 @@ export function StockForm({
         transition-all duration-200
         ${
           itemToEdit
-            ? "bg-blue-900/10 border-b border-blue-500/30"
+            ? "bg-primary/5 border-b border-primary/20"
             : ""
         }
       `}
     >
       {itemToEdit && (
         <div
-          className={`flex justify-between items-center mb-2 pb-2 border-blue-500/30 border-b ${
+          className={`flex justify-between items-center mb-2 pb-2 border-primary/20 border-b ${
             !isSplit ? "" : "md:col-span-2"
           }`}
         >
-          <h3 className="font-semibold text-blue-200 text-sm">
+          <h3 className="font-semibold text-primary text-sm">
             ✏️ Editing Record
           </h3>
           <button
             type="button"
             onClick={onCancelEdit}
-            className="text-slate-400 hover:text-white text-xs"
+            className="text-muted-foreground hover:text-foreground text-xs"
           >
             Cancel
           </button>
@@ -162,7 +162,7 @@ export function StockForm({
       <div>
         <label
           htmlFor="itemName"
-          className="block mb-1 font-medium text-slate-300 text-sm"
+          className="block mb-1 font-medium text-muted-foreground text-sm"
         >
           Item Name
         </label>
@@ -174,7 +174,7 @@ export function StockForm({
               {...field}
               disabled={!!itemToEdit}
               error={error?.message}
-              className="w-full input-dark"
+              className="w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
               onItemSelect={() => {
                 stockFlowRef.current?.focus();
                 try { stockFlowRef.current?.showPicker(); } catch (e) {}
@@ -188,7 +188,7 @@ export function StockForm({
       <div>
         <label
           htmlFor="stockFlow"
-          className="block mb-1 font-medium text-slate-300 text-sm"
+          className="block mb-1 font-medium text-muted-foreground text-sm"
         >
           Stock Flow
         </label>
@@ -202,7 +202,7 @@ export function StockForm({
           onChange={(e) => {
             rhfStockFlowOnChange(e);
           }}
-          className={`w-full input-dark ${
+          className={`w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
             errors.stockFlow ? "border-red-500" : ""
           }`}
         >
@@ -211,7 +211,7 @@ export function StockForm({
           <option value="stock-out">Stock Out</option>
         </select>
         {errors.stockFlow && (
-          <p className="mt-1 text-red-300 text-sm">
+          <p className="mt-1 text-red-500 text-sm">
             {errors.stockFlow.message}
           </p>
         )}
@@ -221,7 +221,7 @@ export function StockForm({
       <div>
         <label
           htmlFor="quantity"
-          className="block mb-1 font-medium text-slate-300 text-sm"
+          className="block mb-1 font-medium text-muted-foreground text-sm"
         >
           Quantity
         </label>
@@ -233,14 +233,14 @@ export function StockForm({
             rhfQuantityRef(el);
             quantityRef.current = el;
           }}
-          className={`w-full input-dark ${
+          className={`w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
             errors.quantity ? "border-red-500" : ""
           }`}
           placeholder="0"
           onFocus={(e) => e.target.select()}
         />
         {errors.quantity && (
-          <p className="mt-1 text-red-300 text-sm">{errors.quantity.message}</p>
+          <p className="mt-1 text-red-500 text-sm">{errors.quantity.message}</p>
         )}
       </div>
 
@@ -248,7 +248,7 @@ export function StockForm({
       <div>
         <label
           htmlFor="capitalPrice"
-          className="block mb-1 font-medium text-slate-300 text-sm"
+          className="block mb-1 font-medium text-muted-foreground text-sm"
         >
           Capital Price
         </label>
@@ -261,14 +261,14 @@ export function StockForm({
             rhfCapitalPriceRef(el);
             capitalPriceRef.current = el;
           }}
-          className={`w-full input-dark ${
+          className={`w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
             errors.capitalPrice ? "border-red-500" : ""
           }`}
           placeholder="0.00"
           onFocus={(e) => e.target.select()}
         />
         {errors.capitalPrice && (
-          <p className="mt-1 text-red-300 text-sm">
+          <p className="mt-1 text-red-500 text-sm">
             {errors.capitalPrice.message}
           </p>
         )}
@@ -278,7 +278,7 @@ export function StockForm({
       <div className={!isSplit ? "" : "md:col-span-2"}>
         <label
           htmlFor="notes"
-          className="block mb-1 font-medium text-slate-300 text-sm"
+          className="block mb-1 font-medium text-muted-foreground text-sm"
         >
           Notes (Optional)
         </label>
@@ -290,7 +290,7 @@ export function StockForm({
             rhfNotesRef(el);
             notesRef.current = el;
           }}
-          className={`w-full input-dark ${
+          className={`w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
             errors.notes ? "border-red-500" : ""
           }`}
           placeholder="Description..."
@@ -305,7 +305,7 @@ export function StockForm({
           <button
             type="button"
             onClick={onCancelEdit}
-            className="px-4 py-2 text-slate-300 hover:text-white text-sm transition-colors"
+            className="px-4 py-2 text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             Cancel
           </button>
@@ -313,15 +313,15 @@ export function StockForm({
         <button
           type="submit"
           ref={submitButtonRef}
-          className={`flex items-center gap-2 px-4 py-2 border rounded-md btn-3d-glass transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 border rounded-md transition-all ${
             itemToEdit
-              ? "bg-blue-500/30 hover:bg-blue-500/40 border-blue-500/50"
-              : "bg-green-500/30 hover:bg-green-500/40 border-green-500/50"
+              ? "bg-primary hover:bg-primary/90 text-primary-foreground border-primary"
+              : "bg-primary hover:bg-primary/90 text-primary-foreground border-primary"
           }`}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <div className="border-white border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
+            <div className="border-primary-foreground border-t-2 border-r-2 rounded-full w-5 h-5 animate-spin"></div>
           ) : itemToEdit ? (
             "Update Entry"
           ) : (

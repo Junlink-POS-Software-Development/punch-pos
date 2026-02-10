@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-import { CartItem } from "../TerminalCart";
+import { CartItem } from "../terminal-cart/types";
 
 interface MobileCartPanelProps {
   cartItems: CartItem[];

@@ -24,25 +24,25 @@ export const HeaderWithFilter: React.FC<HeaderWithFilterProps> = ({
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`p-1 rounded transition-colors ${
-            currentValue ? "text-blue-400" : "text-gray-600 hover:text-gray-300"
+            currentValue ? "text-primary" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <Filter className="w-3 h-3" />
         </button>
 
         {isOpen && (
-          <div className="top-full right-0 z-50 absolute bg-gray-800 shadow-xl mt-2 p-2 border border-gray-700 rounded w-48">
+          <div className="top-full right-0 z-50 absolute bg-background shadow-xl mt-2 p-2 border border-border rounded w-48 animate-in duration-100 fade-in zoom-in-95">
             <input
               autoFocus
               type="text"
               placeholder={`Filter ${column.name}...`}
-              className="bg-gray-900 p-2 border border-gray-700 focus:border-blue-500 rounded outline-none w-full text-gray-200 text-xs"
+              className="bg-muted p-2 border border-input focus:border-ring rounded outline-none w-full text-foreground text-xs"
               value={currentValue}
               onChange={(e) => onApplyFilter(columnKey, e.target.value)}
             />
             <button
               onClick={() => setIsOpen(false)}
-              className="mt-1 w-full text-[10px] text-gray-500 hover:text-gray-300 text-right"
+              className="mt-1 w-full text-[10px] text-muted-foreground hover:text-foreground text-right"
             >
               Close
             </button>

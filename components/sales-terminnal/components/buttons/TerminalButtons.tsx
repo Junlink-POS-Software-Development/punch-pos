@@ -26,7 +26,7 @@ const TerminalButtons = React.memo(
             <div className="w-full">
               <button
                 type="button"
-                className="w-full h-[80%] text-nowrap btn-3d-glass"
+                className="w-full h-[80%] text-nowrap bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-bold shadow-sm transition-colors"
                 onClick={() => {
                   console.log(`[TerminalButtons] Clicked: ${button.id}`);
                   terminalHandlers[button.id]();

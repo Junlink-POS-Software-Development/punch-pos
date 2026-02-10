@@ -18,14 +18,14 @@ export const MobileCustomerInput = ({
   onCustomerNameChange,
 }: MobileCustomerInputProps) => {
   return (
-    <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg border border-slate-700/50 px-2 py-1.5 w-full">
-      <User className="w-4 h-4 text-slate-400 shrink-0" />
+    <div className="flex items-center gap-2 bg-muted/50 rounded-lg border border-input px-2 py-1.5 w-full">
+      <User className="w-4 h-4 text-muted-foreground shrink-0" />
       <input
         type="text"
         placeholder="Walk-in Customer"
         value={customerName || ""}
         onChange={(e) => onCustomerNameChange(e.target.value)}
-        className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none min-w-0"
+        className="flex-1 bg-transparent text-sm text-foreground placeholder-muted-foreground outline-none min-w-0"
       />
       {isCustomerSelected || (customerName && customerName !== "Walk-in Customer") ? (
         <button
@@ -34,7 +34,7 @@ export const MobileCustomerInput = ({
             e.stopPropagation();
             onClearCustomer();
           }}
-          className="p-1 hover:bg-red-500/20 rounded-full text-slate-400 hover:text-red-400 transition-colors"
+          className="p-1 hover:bg-destructive/10 rounded-full text-muted-foreground hover:text-destructive transition-colors"
         >
           <XCircle className="w-4 h-4" />
         </button>
@@ -43,7 +43,7 @@ export const MobileCustomerInput = ({
       <button
         type="button"
         onClick={onSearchOpen}
-        className="p-1 hover:bg-cyan-500/20 rounded-full text-slate-400 hover:text-cyan-400 transition-colors"
+        className="p-1 hover:bg-primary/10 rounded-full text-muted-foreground hover:text-primary transition-colors"
       >
         <Search className="w-4 h-4" />
       </button>

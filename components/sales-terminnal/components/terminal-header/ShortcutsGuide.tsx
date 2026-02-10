@@ -38,6 +38,7 @@ export const ShortcutsGuide = () => {
     <>
       {/* Trigger Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
         className="group flex justify-center items-center bg-slate-800/50 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500/50 rounded-lg w-10 h-10 transition-all duration-300"
         title="View Keyboard Shortcuts"
@@ -65,6 +66,7 @@ export const ShortcutsGuide = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="hover:bg-red-500/10 p-2 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
               >

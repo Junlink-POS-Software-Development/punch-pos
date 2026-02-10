@@ -14,7 +14,7 @@ const RightWindow = ({ rightWidth, children, isTransitioning }: RightWindowProps
       style={{ width: rightWidth }}
     >
       <div className="box-border pl-1.5 pr-3 py-3 w-full h-full">
-        <div className="border-2 border-primary-light rounded-3xl w-full h-full overflow-hidden relative">
+        <div className="border-2 border-border rounded-3xl w-full h-full overflow-hidden relative">
           {isTransitioning ? (
             <WindowLoading />
           ) : (

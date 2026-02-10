@@ -24,11 +24,11 @@ export const ErrorMessage = ({ message, onClose }: ErrorMessageProps) => {
 
   return (
     <div className="top-4 left-1/2 z-60 fixed -translate-x-1/2 animate-slide-down">
-      <div className="flex items-center gap-3 shadow-2xl bg-red-950/95 backdrop-blur-sm px-6 py-4 border border-red-500/50 rounded-lg max-w-md">
+      <div className="flex items-center gap-3 shadow-lg bg-destructive px-6 py-4 rounded-lg max-w-md">
         {/* Error Icon */}
         <div className="shrink-0">
           <svg
-            className="w-6 h-6 text-red-400"
+            className="w-6 h-6 text-destructive-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -44,7 +44,7 @@ export const ErrorMessage = ({ message, onClose }: ErrorMessageProps) => {
 
         {/* Error Message */}
         <div className="flex-1">
-          <p className="font-medium text-red-100 text-sm leading-tight">
+          <p className="font-medium text-destructive-foreground text-sm leading-tight">
             {message}
           </p>
         </div>
@@ -52,11 +52,11 @@ export const ErrorMessage = ({ message, onClose }: ErrorMessageProps) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="flex-shrink-0 hover:bg-red-900/50 p-1 rounded transition-colors"
+          className="flex-shrink-0 hover:bg-black/20 p-1 rounded transition-colors"
           aria-label="Close"
         >
           <svg
-            className="w-5 h-5 text-red-300"
+            className="w-5 h-5 text-destructive-foreground/80"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

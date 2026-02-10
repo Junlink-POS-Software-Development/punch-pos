@@ -64,13 +64,13 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
 
   return (
     <div className="flex justify-center items-center p-6">
-      <div className="p-8 rounded-2xl w-full max-w-md glass-effect">
-        <h2 className="mb-8 font-bold text-white text-3xl text-center">
+      <div className="p-8 rounded-2xl w-full max-w-md bg-card border border-border shadow-md">
+        <h2 className="mb-8 font-bold text-foreground text-3xl text-center">
           Create Member Account
         </h2>
 
         {success ? (
-          <div className="text-green-300 text-center">
+          <div className="text-green-500 text-center">
             <p className="font-semibold">Success! 🎉</p>
             <p>
               A confirmation email has been sent. You can sign in once
@@ -78,7 +78,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             </p>
             <button
               onClick={onSwitchToSignIn}
-              className="mt-4 font-medium text-blue-300 hover:text-blue-200"
+              className="mt-4 font-medium text-primary hover:text-primary/80"
             >
               Back to Sign In
             </button>
@@ -89,17 +89,17 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
+                  <User className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="text"
                   placeholder="First Name"
                   {...register("firstName")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.firstName && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.firstName.message}
                 </p>
               )}
@@ -109,17 +109,17 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
+                  <User className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="text"
                   placeholder="Last Name"
                   {...register("lastName")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.lastName && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.lastName.message}
                 </p>
               )}
@@ -129,17 +129,17 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <User className="w-5 h-5 text-slate-400" />
+                  <User className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="text"
                   placeholder="Job Title (e.g., Sales Associate)"
                   {...register("jobTitle")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.jobTitle && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.jobTitle.message}
                 </p>
               )}
@@ -149,17 +149,17 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Mail className="w-5 h-5 text-slate-400" />
+                  <Mail className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="email"
                   placeholder="you@example.com"
                   {...register("email")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.email.message}
                 </p>
               )}
@@ -169,17 +169,17 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Lock className="w-5 h-5 text-slate-400" />
+                  <Lock className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="password"
                   placeholder="••••••••"
                   {...register("password")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.password && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.password.message}
                 </p>
               )}
@@ -189,24 +189,24 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
             <div>
               <div className="relative">
                 <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Hash className="w-5 h-5 text-slate-400" />
+                  <Hash className="w-5 h-5 text-muted-foreground" />
                 </span>
                 <input
                   type="text"
                   placeholder="Enrollment ID (Optional)"
                   {...register("enrollmentId")}
-                  className="pl-10! w-full input-dark"
+                  className="pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
               {errors.enrollmentId && (
-                <p className="mt-1 text-red-300 text-sm">
+                <p className="mt-1 text-red-500 text-sm">
                   {errors.enrollmentId.message}
                 </p>
               )}
             </div>
 
             {errors.root?.serverError && (
-              <div className="flex items-center gap-2 text-red-300 text-sm">
+              <div className="flex items-center gap-2 text-red-500 text-sm">
                 <AlertTriangle className="w-5 h-5" />
                 <span>{errors.root.serverError.message}</span>
               </div>
@@ -214,7 +214,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
 
             <button
               type="submit"
-              className="flex justify-center items-center gap-2 w-full btn-3d-glass"
+              className="flex justify-center items-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-md transition-colors"
               disabled={isPending}
             >
               {isPending ? (
@@ -229,10 +229,10 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-600" />
+                <span className="w-full border-t border-muted" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0B1120] px-2 text-slate-400">
+                <span className="bg-card px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
@@ -253,7 +253,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
                   console.error("Error signing in with Google:", err);
                 }
               }}
-              className="flex justify-center items-center gap-2 mb-6 w-full btn-3d-glass"
+              className="flex justify-center items-center gap-2 mb-6 w-full bg-background hover:bg-muted border border-border text-foreground py-2 rounded-md transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -276,12 +276,12 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
               <span>Continue with Google</span>
             </button>
 
-            <p className="pt-4 text-slate-300 text-sm text-center">
+            <p className="pt-4 text-muted-foreground text-sm text-center">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={onSwitchToSignIn}
-                className="font-medium text-blue-300 hover:text-blue-200"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 Sign In
               </button>

@@ -143,15 +143,15 @@ export const PaymentHistoryTable = () => {
   // 3. UI States
   if (isLoading) {
     return (
-      <div className="flex justify-center p-10 rounded-lg glass-effect">
-        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      <div className="flex justify-center p-10 rounded-lg bg-card border border-border">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex items-center gap-2 p-10 rounded-lg text-red-400 glass-effect">
+      <div className="flex items-center gap-2 p-10 rounded-lg text-red-500 bg-card border border-border">
         <AlertCircle className="w-5 h-5" />
         <span>Error loading payments: {error?.message}</span>
       </div>
@@ -159,9 +159,9 @@ export const PaymentHistoryTable = () => {
   }
 
   return (
-    <div className="flex flex-col rounded-lg h-full overflow-hidden glass-effect">
+    <div className="flex flex-col rounded-lg h-full overflow-hidden bg-card border border-border shadow-sm">
       {/* --- Filters Toolbar --- */}
-      <div className="flex justify-between items-center bg-slate-800/30 p-4 border-slate-700 border-b">
+      <div className="flex justify-between items-center bg-muted/30 p-4 border-border border-b">
         <DateColumnFilter
           startDate={filters.startDate || ""}
           endDate={filters.endDate || ""}
@@ -172,7 +172,7 @@ export const PaymentHistoryTable = () => {
         {hasActiveFilters && (
           <button
             onClick={handleClearAllFilters}
-            className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-400 text-xs transition-all"
+            className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-500 text-xs transition-all"
           >
             <XCircle className="w-3 h-3" /> Clear Column Filters
           </button>
@@ -180,8 +180,8 @@ export const PaymentHistoryTable = () => {
       </div>
 
       <div className="overflow-x-auto flex-1 overflow-y-auto">
-        <table className="w-full text-slate-300 text-sm text-left">
-          <thead className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-sm text-slate-400 text-xs uppercase shadow-sm">
+        <table className="w-full text-muted-foreground text-sm text-left">
+          <thead className="sticky top-0 z-10 bg-muted text-muted-foreground text-xs uppercase shadow-sm">
             <tr>
               <th className="px-6 py-3 rounded-tl-lg">
                 <HeaderWithFilter
@@ -200,8 +200,8 @@ export const PaymentHistoryTable = () => {
               </th>
               <th className="px-6 py-3 text-right">Total</th>
               <th className="px-6 py-3 text-right">Payment</th>
-              <th className="px-6 py-3 text-blue-400 text-right">Voucher</th>
-              <th className="px-6 py-3 font-bold text-green-400 text-right">
+              <th className="px-6 py-3 text-primary text-right">Voucher</th>
+              <th className="px-6 py-3 font-bold text-green-500 text-right">
                 Change
               </th>
               <th className="px-6 py-3 rounded-tr-lg text-right">Actions</th>
@@ -212,7 +212,7 @@ export const PaymentHistoryTable = () => {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-6 py-8 text-slate-500 text-center"
+                  className="px-6 py-8 text-muted-foreground text-center"
                 >
                   No payments found.
                 </td>
@@ -221,15 +221,15 @@ export const PaymentHistoryTable = () => {
               payments.map((pay, index) => (
                 <tr
                   key={index}
-                  className="hover:bg-slate-800/30 border-slate-700 border-b transition-colors"
+                  className="hover:bg-muted/50 border-border border-b transition-colors"
                 >
-                  <td className="px-6 py-4 font-mono text-slate-400">
+                  <td className="px-6 py-4 font-mono text-muted-foreground">
                     {pay.transactionNo}
                   </td>
-                  <td className="px-6 py-4 text-slate-500 text-xs">
+                  <td className="px-6 py-4 text-muted-foreground text-xs">
                     {pay.transactionTime}
                   </td>
-                  <td className="px-6 py-4 font-medium text-white">
+                  <td className="px-6 py-4 font-medium text-foreground">
                     {pay.customerName || (
                       <span className="opacity-50 italic">Walk-in</span>
                     )}
@@ -240,10 +240,10 @@ export const PaymentHistoryTable = () => {
                   <td className="px-6 py-4 text-right">
                     ₱{(pay.amountRendered ?? 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-blue-400 text-right">
+                  <td className="px-6 py-4 text-primary text-right">
                     {pay.voucher > 0 ? `₱${(pay.voucher ?? 0).toFixed(2)}` : "-"}
                   </td>
-                  <td className="px-6 py-4 font-bold text-green-400 text-right">
+                  <td className="px-6 py-4 font-bold text-green-500 text-right">
                     ₱{(pay.change ?? 0).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -252,8 +252,8 @@ export const PaymentHistoryTable = () => {
                       disabled={deletingId === pay.id}
                       className={`p-2 rounded-md transition-all ${
                         deletingId === pay.id
-                          ? "bg-slate-700 text-slate-500"
-                          : "hover:bg-red-400/20 text-red-400 hover:text-red-200"
+                          ? "bg-muted text-muted-foreground"
+                          : "hover:bg-red-500/20 text-red-500 hover:text-red-600"
                       }`}
                       title="Delete Payment"
                     >
@@ -275,12 +275,12 @@ export const PaymentHistoryTable = () => {
         
         {isFetchingNextPage && (
           <div className="flex justify-center p-4">
-            <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
         )}
       </div>
 
-      <div className="p-2 text-xs text-slate-500 text-center border-t border-slate-700/50">
+      <div className="p-2 text-xs text-muted-foreground text-center border-t border-border">
         Showing {payments.length} of {totalRows} records
       </div>
     </div>

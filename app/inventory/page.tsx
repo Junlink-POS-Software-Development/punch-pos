@@ -43,8 +43,8 @@ function InventoryContent() {
   };
 
   return (
-    <div className="text-white">
-      <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90">
+    <div className="text-foreground">
+      <div className="bg-card pt-2 pb-2 mx-4 rounded-2xl border border-border shadow-sm">
         <div className="px-6">
           <InventoryNav activeView={activeView} setActiveView={handleViewChange} />
         </div>
@@ -57,7 +57,7 @@ function InventoryContent() {
 
 export default function InventoryPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
         <InventoryContent />
     </Suspense>
   );

@@ -16,7 +16,7 @@ import {
   PosFormValues,
   posSchema,
 } from "../../utils/posSchema";
-import { CartItem } from "../TerminalCart";
+import { CartItem } from "../terminal-cart/types";
 import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers";
 import { TransactionResult } from "../buttons/handlers/done";
 import { useTransactionStore } from "@/app/settings/backdating/stores/useTransactionStore";
@@ -178,22 +178,20 @@ export const usePosForm = (): UsePosFormReturn => {
       }
     }
 
+    // [VALIDATION] Check if cart is empty
+    if (cartItems.length === 0) {
+      setErrorMessage("Cannot complete transaction: cart is empty.");
+      return;
+    }
+
     if (!user || !user.id) {
       setErrorMessage("Session invalid or expired. Please reload/login.");
       return;
     }
 
     const totalPayment = (data.payment || 0) + (data.voucher || 0);
-    // If cart total is 0 (all free), payment can be 0.
-    if (totalPayment <= 0 && cartTotal > 0) { 
-       // Only enforce payment > 0 if cartTotal > 0. 
-       // If cartTotal is 0, payment can be 0.
-       // However, the original code enforced > 0.
-       // If user gives free items, total is 0. Payment 0 + Voucher 0 = 0.
-       // Change logic:
-    }
     
-    // [FIX] Validating payment for free items
+    // [FIX] Permit zero payment for gifts (cartTotal is 0 but items exist)
     if (cartTotal > 0 && totalPayment <= 0) {
       setErrorMessage(
         "Total payment (Cash + Voucher) must be greater than zero."

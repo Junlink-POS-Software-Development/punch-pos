@@ -193,18 +193,18 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               href={item.href}
               className={`
                 relative flex flex-col justify-center items-center p-6 rounded-xl 
-                text-cyan-400 transition-all duration-300 glass-effect border border-transparent
+                text-primary transition-all duration-300 border border-border
+                bg-background shadow-sm hover:shadow-md
                 
-                group-hover:text-amber-500 
-                group-hover:border-amber-500/50
-                group-hover:shadow-[0_0_20px_rgba(245,158,11,0.35)]
-                group-hover:bg-slate-800/60
+                group-hover:text-secondary 
+                group-hover:border-secondary
+                group-hover:bg-muted/50
                 
                 h-36 w-full
               `}
             >
               {item.hasNotification && (
-                <span className="top-4 right-4 absolute bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] rounded-full w-2.5 h-2.5 animate-pulse" />
+                <span className="top-4 right-4 absolute bg-red-500 rounded-full w-2.5 h-2.5 animate-pulse" />
               )}
 
               <item.Icon className="mb-3 w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
@@ -224,7 +224,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         {/* Toggle Button - Fixed Left Edge (Mirrors MobileCartPanel) */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-80 bg-slate-800 border border-l-0 border-slate-700 rounded-r-lg p-2 text-white shadow-lg transition-transform duration-300"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-80 bg-background border border-l-0 border-border rounded-r-lg p-2 text-foreground shadow-lg transition-transform duration-300 hover:bg-muted"
           style={{ transform: isMobileMenuOpen ? "translateX(280px)" : "translateX(0)" }}
         >
           {isMobileMenuOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -242,18 +242,18 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         <div
           className={`
             fixed top-0 left-0 h-full w-[280px] z-70
-            bg-[#0B1120] border-r border-slate-800
+            bg-background border-r border-border
             transform transition-transform duration-300 ease-in-out
             ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
             flex flex-col shadow-2xl
           `}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-800">
-            <span className="text-lg font-bold text-white tracking-wide">MENU</span>
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <span className="text-lg font-bold text-foreground tracking-wide">MENU</span>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="p-1 text-slate-400 hover:text-white transition-colors"
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -276,12 +276,12 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                     ${
                       isActive
-                        ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent"
+                        ? "bg-primary/10 text-primary border border-primary/20"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                     }
                   `}
                 >
-                  <item.Icon className={`w-5 h-5 ${isActive ? "text-cyan-400" : "text-slate-500"}`} />
+                  <item.Icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                   <span className="font-medium text-sm tracking-wide">
                     {item.text}
                   </span>
@@ -294,8 +294,8 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-800 text-center">
-             <span className="text-xs text-slate-600">v1.0.0</span>
+          <div className="p-4 border-t border-border text-center">
+             <span className="text-xs text-muted-foreground">v1.0.0</span>
           </div>
         </div>
       </>
@@ -306,14 +306,14 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   return (
     <aside
       className={`
-        relative flex flex-col h-full bg-[#0B1120] border-r border-slate-800 transition-all duration-300
+        relative flex flex-col h-full bg-background border-r border-border transition-all duration-300
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >
       {/* Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="top-4 -right-3 z-50 absolute bg-slate-800 border border-slate-700 shadow-md p-1 rounded-full text-slate-400 hover:text-white transition-colors"
+        className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
       >
         {isCollapsed ? (
           <ChevronRight className="w-4 h-4" />
@@ -323,9 +323,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       </button>
 
       {/* Header / Logo Area (Optional in Sidebar if Header is top) */}
-      <div className="flex items-center justify-center h-16 border-b border-slate-800/50">
+      <div className="flex items-center justify-center h-16 border-b border-border">
          <div className="p-2">
-            <Menu className="w-6 h-6 text-slate-500" />
+            <Menu className="w-6 h-6 text-muted-foreground" />
          </div>
       </div>
 
@@ -345,8 +345,8 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                 group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                 ${
                   isActive
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                 }
                 ${isCollapsed ? "justify-center" : ""}
               `}
@@ -371,7 +371,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
 
               {/* Tooltip for collapsed state */}
               {isCollapsed && (
-                <div className="left-full z-50 absolute ml-4 bg-slate-800 px-3 py-1.5 rounded-md text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+                <div className="left-full z-50 absolute ml-4 bg-popover px-3 py-1.5 border border-border rounded-md text-popover-foreground text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
                   {item.text}
                 </div>
               )}
@@ -381,7 +381,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       </div>
 
       {/* Footer / User (Optional) */}
-      <div className="p-4 border-t border-slate-800/50">
+      <div className="p-4 border-t border-border">
           {/* Could put user profile here if not in top header */}
       </div>
     </aside>

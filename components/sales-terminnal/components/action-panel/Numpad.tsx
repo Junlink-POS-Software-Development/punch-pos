@@ -49,12 +49,12 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
               key={item.key}
               onClick={() => item.key === "⌫" ? onClear() : onKeyPress(item.key)}
               className={`
-                ${item.key === "⌫" ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30" : "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"}
-                font-bold text-lg sm:text-xl rounded-lg shadow-md border active:bg-slate-600 transition-colors flex flex-col items-center justify-center min-h-[44px]
+                ${item.key === "⌫" ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30" : "bg-muted hover:bg-muted/80 text-foreground border-border"}
+                font-bold text-lg sm:text-xl rounded-lg shadow-sm border active:scale-95 transition-all flex flex-col items-center justify-center min-h-[44px]
               `}
             >
               <span>{item.key}</span>
-              {item.sub && <span className="text-[10px] text-slate-500 font-normal leading-none">{item.sub}</span>}
+              {item.sub && <span className="text-[10px] text-muted-foreground/70 font-normal leading-none">{item.sub}</span>}
             </button>
           ))}
         </div>
@@ -66,8 +66,8 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
               key={key}
               onClick={() => key === "⌫" ? onClear() : onKeyPress(key)}
               className={`
-                ${key === "⌫" ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30" : "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"}
-                font-bold text-lg sm:text-xl rounded-lg shadow-md border active:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px]
+                ${key === "⌫" ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30" : "bg-muted hover:bg-muted/80 text-foreground border-border"}
+                font-bold text-lg sm:text-xl rounded-lg shadow-sm border active:scale-95 transition-all flex items-center justify-center min-h-[44px]
               `}
             >
               {key}

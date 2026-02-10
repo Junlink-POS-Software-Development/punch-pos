@@ -8,7 +8,7 @@ interface CashierInfoProps {
 export const CashierInfo = ({ user, statusColor }: CashierInfoProps) => {
   return (
     <div className="flex flex-col">
-      <span className="mb-1 font-bold text-[10px] text-slate-500 uppercase tracking-widest">
+      <span className="mb-1 font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
         Current Cashier
       </span>
       <span

@@ -47,8 +47,19 @@ export const CustomerSearchModal = ({
       setResults([]);
       setHighlightedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
+
+      // Add global escape listener to handle cases where input is not focused
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          e.stopPropagation(); // Prevent reaching global terminal shortcuts
+          onClose();
+        }
+      };
+      
+      window.addEventListener("keydown", handleGlobalKeyDown, true); // Use capture phase to ensure it runs
+      return () => window.removeEventListener("keydown", handleGlobalKeyDown, true);
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   // Reset highlight when results change
   useEffect(() => {
@@ -136,36 +147,37 @@ export const CustomerSearchModal = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="z-60 fixed inset-0 flex justify-center items-start bg-black/60 backdrop-blur-sm pt-20 animate-in duration-200 fade-in">
-      <div className="bg-slate-900 shadow-2xl border border-slate-700 rounded-xl w-full max-w-lg overflow-hidden glass-effect">
+ 
+  return ( <div className="z-60 fixed inset-0 flex justify-center items-start bg-black/60 backdrop-blur-sm pt-20 animate-in duration-200 fade-in">
+      <div className="bg-card shadow-2xl border border-border rounded-xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-slate-700/50 border-b">
-          <Search className="w-5 h-5 text-cyan-400" />
+        <div className="flex items-center gap-3 p-4 border-border border-b bg-muted/20">
+          <Search className="w-5 h-5 text-muted-foreground" />
           <input
             ref={inputRef}
             type="text"
             placeholder="Search customer by name..."
-            className="flex-1 bg-transparent border-none outline-none font-medium text-white placeholder:text-slate-500"
+            className="flex-1 bg-transparent border-none outline-none font-medium text-foreground placeholder:text-muted-foreground"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <button onClick={onClose} className="text-slate-500 hover:text-white">
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Results List */}
-        <div ref={listRef} className="p-2 max-h-[300px] overflow-y-auto">
+        <div ref={listRef} className="p-2 max-h-[300px] overflow-y-auto bg-card">
           {isLoading ? (
-            <div className="flex justify-center py-8 text-cyan-400">
+            <div className="flex justify-center py-8 text-primary">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           ) : results.length > 0 ? (
             <div className="flex flex-col gap-1">
               {results.map((customer, index) => (
                 <button
+                  type="button"
                   key={customer.id}
                   data-index={index}
                   onClick={() => {
@@ -174,35 +186,35 @@ export const CustomerSearchModal = ({
                   }}
                   className={`group flex justify-between items-center p-3 border rounded-lg text-left transition-all ${
                     index === highlightedIndex
-                      ? "bg-slate-800/80 border-cyan-500/30"
-                      : "border-transparent hover:bg-slate-800/80 hover:border-cyan-500/30"
+                      ? "bg-muted/50 border-primary/30"
+                      : "border-transparent hover:bg-muted/50 hover:border-primary/30"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`flex justify-center items-center rounded-full w-8 h-8 ${
                       index === highlightedIndex
-                        ? "bg-cyan-500/10 text-cyan-400"
-                        : "bg-slate-800 text-slate-400 group-hover:bg-cyan-500/10 group-hover:text-cyan-400"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                     }`}>
                       <User className="w-4 h-4" />
                     </div>
                     <div>
                       <p className={`font-medium text-sm ${
                         index === highlightedIndex
-                          ? "text-cyan-200"
-                          : "text-white group-hover:text-cyan-200"
+                          ? "text-primary"
+                          : "text-foreground group-hover:text-primary"
                       }`}>
                         {customer.full_name}
                       </p>
                       {customer.phone_number && (
-                        <p className="text-slate-500 text-xs">
+                        <p className="text-muted-foreground text-xs">
                           {customer.phone_number}
                         </p>
                       )}
                     </div>
                   </div>
                   {customer.group_name && (
-                    <div className="flex items-center gap-1.5 bg-slate-800 px-2 py-1 border border-slate-700 rounded text-[10px] text-slate-400">
+                    <div className="flex items-center gap-1.5 bg-muted px-2 py-1 border border-border rounded text-[10px] text-muted-foreground">
                       <Users className="w-3 h-3" />
                       {customer.group_name}
                     </div>
@@ -211,27 +223,27 @@ export const CustomerSearchModal = ({
               ))}
             </div>
           ) : searchTerm ? (
-            <div className="py-8 text-slate-500 text-sm text-center">
+            <div className="py-8 text-muted-foreground text-sm text-center">
               No customers found.
             </div>
           ) : (
-            <div className="py-8 text-slate-500 text-sm text-center">
+            <div className="py-8 text-muted-foreground text-sm text-center">
               Type to search for registered customers...
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center bg-slate-950/30 px-4 py-2 border-slate-800 border-t text-[10px] text-slate-500">
+        <div className="flex justify-between items-center bg-muted/40 px-4 py-2 border-border border-t text-[10px] text-muted-foreground">
           <span className="flex items-center gap-2">
-            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">↑</kbd>
-            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">↓</kbd>
+            <kbd className="bg-muted px-1 border border-border rounded">↑</kbd>
+            <kbd className="bg-muted px-1 border border-border rounded">↓</kbd>
             to navigate
-            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded ml-2">Enter</kbd>
+            <kbd className="bg-muted px-1 border border-border rounded ml-2">Enter</kbd>
             to select
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="bg-slate-800 px-1 border border-slate-700 rounded">
+            <kbd className="bg-muted px-1 border border-border rounded">
               Esc
             </kbd>{" "}
             to close
