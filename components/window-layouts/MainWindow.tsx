@@ -116,7 +116,7 @@ export default function MainWindow({
   // --- DESKTOP LAYOUT (New) ---
   if (!isMobile) {
     return (
-      <div className="flex bg-background h-screen overflow-hidden text-foreground font-lexend">
+      <div className="flex bg-background h-screen overflow-hidden text-foreground font-lexend pl-20">
         {/* Sidebar */}
         <Navigation variant="sidebar" />
 

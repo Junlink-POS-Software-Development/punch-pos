@@ -50,25 +50,8 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
 
   return (
     <header className="flex items-center justify-between gap-6 px-6 pt-4">
-      {/* LEFT: Logo Lockup */}
-      <div className="flex items-center gap-3 shrink-0">
-        <Image
-          src="/punch-logo.png"
-          alt="PUNCH POS Logo"
-          width={48}
-          height={48}
-          className="object-contain"
-        />
-        <div className="flex flex-col">
-          <h1 className="text-xl tracking-tight animate-text-shine text-foreground">
-            <span className="font-bold">PUNCH</span>
-            <span className="font-light text-muted-foreground"> POS</span>
-          </h1>
-          <p className="text-[10px] text-muted-foreground/70 tracking-wide">
-            by JunLink Software Services
-          </p>
-        </div>
-      </div>
+      {/* LEFT: Spacer for where logo used to be (optional, but keep for balance if needed) */}
+      <div className="w-[180px] hidden lg:block shrink-0" />
 
       <div className="flex-1 flex justify-center max-w-2xl mx-auto">
         {activeTitle && (

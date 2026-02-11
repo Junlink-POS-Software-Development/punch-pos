@@ -1,5 +1,6 @@
 // components/navigation/Navigation.tsx
 import Link from "next/link";
+import Image from "next/image";
 import {
   Archive,
   ArrowLeftRight,
@@ -305,15 +306,17 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   // --- SIDEBAR VARIANT (Desktop) ---
   return (
     <aside
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
       className={`
-        relative flex flex-col h-full bg-background border-r border-border transition-all duration-300
+        fixed left-0 top-0 z-100 h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >
-      {/* Toggle Button */}
+      {/* Toggle Button - Optional/Hidden in hover mode */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+        className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors lg:hidden"
       >
         {isCollapsed ? (
           <ChevronRight className="w-4 h-4" />
@@ -322,11 +325,27 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         )}
       </button>
 
-      {/* Header / Logo Area (Optional in Sidebar if Header is top) */}
-      <div className="flex items-center justify-center h-16 border-b border-border">
-         <div className="p-2">
-            <Menu className="w-6 h-6 text-muted-foreground" />
-         </div>
+      {/* Header / Logo Area */}
+      <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden">
+        <div className="flex items-center gap-3 shrink-0">
+          <Image
+            src="/punch-logo.png"
+            alt="PUNCH POS Logo"
+            width={40}
+            height={40}
+            className="object-contain min-w-[40px]"
+          />
+          {!isCollapsed && (
+            <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
+              <h1 className="text-base font-bold tracking-tight text-foreground leading-none">
+                PUNCH<span className="font-light text-muted-foreground ml-1">POS</span>
+              </h1>
+              <p className="text-[8px] text-muted-foreground/70 tracking-wide whitespace-nowrap">
+                by JunLink Software
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Nav Items */}

@@ -140,7 +140,7 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
         {isOpen && suggestions.length > 0 && (
           <ul
             ref={listRef}
-            className="z-10 absolute bg-slate-800 shadow-lg mt-1 border border-slate-700 rounded-md w-full max-h-60 overflow-y-auto"
+            className="z-20 absolute top-full left-0 bg-slate-800 shadow-lg mt-1 border border-slate-700 rounded-md w-full max-h-60 overflow-y-auto"
           >
             {suggestions.map((item, index) => (
               <li
@@ -160,7 +160,13 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
             ))}
           </ul>
         )}
-        {error && <p className="mt-1 text-red-300 text-sm">{error}</p>}
+        {error && (
+          <div className="absolute top-full left-0 z-10 w-full mb-4">
+            <p className="mt-1 text-red-500 text-xs font-medium bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded border border-red-500/20 shadow-sm leading-tight">
+              {error}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
