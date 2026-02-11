@@ -33,38 +33,41 @@ export default function VoucherSettings() {
   if (loading) return <div className="p-4 text-slate-400">Loading categories...</div>;
 
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-lg font-semibold mb-2 text-white">
-        Voucher Deduction Settings
-      </h2>
-      <p className="text-slate-400 mb-6 text-sm">
-        Select the default product category where voucher deductions will be
-        recorded as expenses.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground tracking-tight">
+          Voucher Deduction Settings
+        </h2>
+        <p className="text-muted-foreground text-sm mt-1">
+          Select the default product category where voucher deductions will be
+          automatically recorded as expenses.
+        </p>
+      </div>
 
       <div className="space-y-3">
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+            className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
               cat.is_default_voucher_source
-                ? "border-cyan-500/50 bg-cyan-500/10"
-                : "border-slate-700 bg-slate-800/50 hover:bg-slate-800"
+                ? "border-primary bg-primary/10 shadow-sm"
+                : "border-border/50 bg-muted/20 hover:bg-muted/40"
             }`}
           >
-            <span className={`font-medium ${cat.is_default_voucher_source ? 'text-cyan-400' : 'text-slate-300'}`}>
+            <span className={`font-semibold tracking-tight ${cat.is_default_voucher_source ? 'text-primary' : 'text-foreground'}`}>
               {cat.category}
             </span>
             
             {cat.is_default_voucher_source ? (
-              <span className="px-3 py-1 text-xs font-semibold text-cyan-400 bg-cyan-500/20 rounded-full border border-cyan-500/20">
+              <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/20 rounded-full border border-primary/20">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
                 Default Source
-              </span>
+              </div>
             ) : (
               <button
                 onClick={() => handleSetDefault(cat.id)}
                 disabled={updating}
-                className="text-sm text-slate-500 hover:text-cyan-400 font-medium disabled:opacity-50 transition-colors"
+                className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
               >
                 Set as Default
               </button>
@@ -73,7 +76,7 @@ export default function VoucherSettings() {
         ))}
 
         {categories.length === 0 && (
-          <p className="text-slate-500 italic">No categories found.</p>
+          <p className="text-muted-foreground italic text-sm text-center py-8 text-slate-500">No categories found.</p>
         )}
       </div>
     </div>

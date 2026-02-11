@@ -1,19 +1,19 @@
 "use client";
 
-import VoucherSettings from "./components/VoucherSettings";
-import SubscriptionSettings from "./components/SubscriptionSettings";
-import CurrencySelector from "./components/CurrencySelector";
-import LowStockSettings from "./components/LowStockSettings";
-import PriceEditingSettings from "./components/PriceEditingSettings";
-import AccountSettings from "./components/AccountSettings";
-import { Settings, CreditCard, ArrowLeft, AlertTriangle, X } from "lucide-react";
-import Link from "next/link";
-import BackdateSettings from "./backdating/BackdatingSettings";
-import { useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { AlertTriangle, X } from "lucide-react";
+import { SettingsSidebar } from "./components/sidebar/SettingsSidebar";
+import { GeneralTab } from "./components/tabs/GeneralTab";
+import AccountSettings from "./components/AccountSettings";
+import { SystemConfigTab } from "./components/tabs/SystemConfigTab";
+import { AuditLogsTab } from "./components/tabs/AuditLogsTab";
+
+type TabId = "general" | "account" | "system" | "audit";
 
 function SettingsContent() {
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabId>("general");
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
@@ -22,90 +22,59 @@ function SettingsContent() {
     }
   }, [searchParams]);
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "general":
+        return <GeneralTab />;
+      case "account":
+        return <AccountSettings />;
+      case "system":
+        return <SystemConfigTab />;
+      case "audit":
+        return <AuditLogsTab />;
+      default:
+        return <GeneralTab />;
+    }
+  };
+
   return (
-    <div className="p-8 min-h-screen pt-2">
-      <div className="mb-0 flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Settings</h1>
-          <p className="mt-2 text-muted-foreground">
-            Manage your application preferences and configurations.
-          </p>
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden text-foreground font-lexend relative">
+      {/* Sidebar - Fixed height and scrollable if needed */}
+      <div className="lg:w-72 shrink-0 lg:border-r border-border p-6 lg:p-8 bg-card/30 h-full overflow-y-auto overflow-x-hidden flex flex-col">
+        <div className="mb-10">
+           <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+           <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Manage your account and system preferences</p>
         </div>
+        <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
-      {showBanner && (
-        <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4 text-red-500">
-            <div className="bg-red-500/20 p-2 rounded-xl">
-              <AlertTriangle className="w-6 h-6 flex-shrink-0" />
+      {/* Main Content Area - Independently scrollable */}
+      <div className="flex-1 p-6 lg:p-10 overflow-y-auto h-full scroll-smooth">
+        {showBanner && (
+            <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-4 text-destructive">
+                <div className="bg-destructive/20 p-2 rounded-lg">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                </div>
+                <div>
+                <h3 className="font-bold text-base">Store Access Removed</h3>
+                <p className="text-sm opacity-90">
+                    The store you were accessing has been closed. Please join a different store.
+                </p>
+                </div>
             </div>
-            <div>
-              <h3 className="font-bold text-foreground text-lg">Store Access Removed</h3>
-              <p className="text-sm text-muted-foreground">
-                The store you were previously accessing has been closed by an administrator. You have been redirected to settings to join a different store or manage your account.
-              </p>
+            <button 
+                onClick={() => setShowBanner(false)}
+                className="p-1.5 hover:bg-destructive/20 rounded-lg transition-colors text-destructive shrink-0"
+            >
+                <X className="w-5 h-5" />
+            </button>
             </div>
-          </div>
-          <button 
-            onClick={() => setShowBanner(false)}
-            className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground shrink-0"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        )}
+
+        <div className="max-w-4xl animate-in fade-in zoom-in-95 duration-300">
+           {renderContent()}
         </div>
-      )}
-
-      <div className="space-y-8 mt-10">
-        {/* Account Settings Section - Wrapped to match others */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <AccountSettings />
-        </section>
-
-        {/* General Settings Section - Simplified structure to match others */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <div className="flex items-center gap-3 mb-6 pb-6 border-border border-b">
-            <div className="flex justify-center items-center bg-primary/10 rounded-lg w-10 h-10 text-primary">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground text-lg">
-                General Preferences
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Customize your viewing experience
-              </p>
-            </div>
-          </div>
-
-          <div className="gap-8 grid md:grid-cols-2">
-            <CurrencySelector />
-          </div>
-        </section>
-
-        {/* Backdating Settings Section */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <BackdateSettings />
-        </section>
-
-        {/* Subscription Settings Section */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <SubscriptionSettings />
-        </section>
-
-        {/* Voucher Settings Section */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <VoucherSettings />
-        </section>
-
-        {/* Low Stock Settings Section */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <LowStockSettings />
-        </section>
-
-        {/* Price Editing Settings Section */}
-        <section className="bg-card p-8 border border-border rounded-xl shadow-sm">
-          <PriceEditingSettings />
-        </section>
       </div>
     </div>
   );
@@ -113,7 +82,7 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading settings...</div>}>
+    <Suspense fallback={<div className="p-8 text-muted-foreground">Loading settings...</div>}>
       <SettingsContent />
     </Suspense>
   );

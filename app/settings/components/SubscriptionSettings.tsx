@@ -42,109 +42,121 @@ export default function SubscriptionSettings() {
     : "-";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6 pb-6 border-slate-800 border-b">
-        <div className="flex justify-center items-center bg-cyan-500/10 rounded-lg w-10 h-10 text-cyan-400">
-          <CreditCard className="w-5 h-5" />
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-2">
+        <div className="flex items-center gap-4">
+            <div className="flex justify-center items-center bg-primary/10 rounded-xl w-12 h-12 text-primary border border-primary/20 shadow-inner">
+                <CreditCard className="w-6 h-6" />
+            </div>
+            <div>
+                <h2 className="text-lg font-semibold text-foreground tracking-tight">
+                    Subscription Plan
+                </h2>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                    Manage your store&apos;s billing cycle and payment records.
+                </p>
+            </div>
         </div>
-        <div>
-          <h2 className="font-semibold text-white text-lg">
-            Subscription Plan
-          </h2>
-          <p className="text-slate-400 text-sm">
-            Manage your store&apos;s billing and payments
-          </p>
-        </div>
+        {!isActive && (
+            <button
+                onClick={handleSubscribe}
+                className="bg-primary hover:bg-primary/90 px-8 py-3 rounded-xl font-bold text-primary-foreground transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+            >
+                Subscribe Now (₱500.00)
+            </button>
+        )}
       </div>
 
-      <div className="gap-6 grid md:grid-cols-2">
+      <div className="gap-8 grid md:grid-cols-2">
         {/* Status Card */}
         <div
-          className={`p-6 rounded-xl border ${
+          className={`p-6 rounded-2xl border transition-all duration-300 ${
             isActive
-              ? "bg-emerald-500/10 border-emerald-500/50"
-              : "bg-slate-800/50 border-slate-700"
+              ? "bg-emerald-500/5 border-emerald-500/30 shadow-sm"
+              : "bg-muted/20 border-border/50"
           }`}
         >
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <p className="text-slate-400 text-sm">Current Status</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1 mb-1">Current Status</p>
               <h3
-                className={`text-2xl font-bold ${
-                  isActive ? "text-emerald-400" : "text-slate-200"
+                className={`text-3xl font-bold tracking-tighter ${
+                  isActive ? "text-emerald-500" : "text-muted-foreground"
                 }`}
               >
-                {isActive ? "Active" : "Inactive"}
+                {isActive ? "ACTIVE" : "INACTIVE"}
               </h3>
             </div>
             {isActive ? (
-              <CheckCircle className="w-6 h-6 text-emerald-400" />
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/20">
+                <CheckCircle className="w-7 h-7 text-emerald-500" />
+              </div>
             ) : (
-              <AlertCircle className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center border border-border/50">
+                <AlertCircle className="w-7 h-7 text-muted-foreground" />
+              </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Plan Cost</span>
-              <span className="font-medium text-white">₱500.00 / month</span>
+          <div className="space-y-4 pt-4 border-t border-border/30">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground font-medium">Monthly Plan Cost</span>
+              <span className="font-bold text-foreground">₱500.00</span>
             </div>
             {isActive && (
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Next Billing</span>
-                <span className="font-medium text-white">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground font-medium">Next Billing Cycle</span>
+                <span className="font-bold text-foreground">
                   {formattedEndDate}
                 </span>
               </div>
             )}
           </div>
-
-          {!isActive && (
-            <button
-              onClick={handleSubscribe}
-              className="bg-cyan-500 hover:bg-cyan-600 mt-6 px-4 py-2 rounded-lg w-full font-medium text-white transition-colors"
-            >
-              Subscribe Now (₱500.00)
-            </button>
-          )}
         </div>
 
         {/* Payment History */}
-        <div className="bg-slate-800/30 p-6 border border-slate-700 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <History className="w-4 h-4 text-slate-400" />
-            <h3 className="font-medium text-white">Payment History</h3>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-4 ml-1">
+            <History className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Payment History</h3>
           </div>
 
-          <div className="space-y-3 pr-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+          <div className="space-y-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
             {payments.length > 0 ? (
               payments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex justify-between items-center bg-slate-900/50 p-3 border border-slate-800 rounded-lg"
+                  className="flex justify-between items-center bg-muted/30 p-4 border border-border/50 rounded-xl transition-all hover:border-primary/30 group"
                 >
-                  <div>
-                    <p className="font-medium text-white text-sm">
-                      Subscription Payment
-                    </p>
-                    <p className="text-slate-500 text-xs">
-                      {dayjs(payment.created_at).format("MMM D, YYYY h:mm A")}
-                    </p>
+                  <div className="flex items-center gap-4">
+                     <div className="w-10 h-10 bg-muted flex items-center justify-center rounded-lg border border-border/30 group-hover:border-primary/20 transition-colors">
+                        <CreditCard className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                     </div>
+                     <div>
+                        <p className="font-bold text-foreground text-sm tracking-tight leading-none mb-1">
+                          Subscription Order
+                        </p>
+                        <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-tighter">
+                          {dayjs(payment.created_at).format("MMM D, YYYY · h:mm A")}
+                        </p>
+                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-emerald-400 text-sm">
+                    <p className="font-bold text-emerald-500 text-sm">
                       ₱{Number(payment.amount).toFixed(2)}
                     </p>
-                    <p className="text-slate-500 text-xs uppercase">
+                    <p className={`text-[10px] font-black tracking-widest uppercase ${payment.status === 'PAID' ? 'text-emerald-500/70' : 'text-amber-500/70'}`}>
                       {payment.status}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="py-4 text-slate-500 text-sm text-center">
-                No payment history found.
-              </p>
+              <div className="flex flex-col items-center justify-center py-10 bg-muted/10 border border-dashed border-border/50 rounded-xl">
+                 <p className="text-muted-foreground text-xs font-medium italic">
+                   No transactions recorded yet.
+                 </p>
+              </div>
             )}
           </div>
         </div>

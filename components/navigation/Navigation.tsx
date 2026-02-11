@@ -309,7 +309,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
       className={`
-        fixed left-0 top-0 z-100 h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl
+        fixed left-0 top-0 z-100 h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl flex flex-col
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >

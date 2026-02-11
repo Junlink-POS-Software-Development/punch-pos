@@ -7,46 +7,48 @@ export default function PriceEditingSettings() {
   const { isPriceEditingEnabled, setPriceEditingEnabled } = useSettingsStore();
 
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-lg font-semibold mb-2 text-white">
-        Custom Price Editing
-      </h2>
-      <p className="text-slate-400 mb-6 text-sm">
-        Enable or disable the ability to edit unit prices directly in the sales terminal.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground tracking-tight">
+          Custom Price Editing
+        </h2>
+        <p className="text-muted-foreground text-sm mt-1">
+          Enable or disable the permission to edit unit prices directly during a sale in the terminal.
+        </p>
+      </div>
 
       <div
-        className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+        className={`flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
           isPriceEditingEnabled
-            ? "border-cyan-500/50 bg-cyan-500/10"
-            : "border-slate-700 bg-slate-800/50 hover:bg-slate-800"
+            ? "border-primary bg-primary/10 shadow-sm"
+            : "border-border/50 bg-muted/20 hover:bg-muted/30"
         }`}
       >
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${isPriceEditingEnabled ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-700 text-slate-400'}`}>
-            {isPriceEditingEnabled ? <Unlock size={20} /> : <Lock size={20} />}
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shadow-inner ${isPriceEditingEnabled ? 'bg-primary/20 text-primary border-primary/30' : 'bg-muted text-muted-foreground border-border/50'}`}>
+            {isPriceEditingEnabled ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
           </div>
           <div>
-            <p className={`font-medium ${isPriceEditingEnabled ? 'text-cyan-400' : 'text-slate-300'}`}>
-              {isPriceEditingEnabled ? 'Price Editing Enabled' : 'Price Editing Disabled'}
+            <p className={`text-base font-bold tracking-tight ${isPriceEditingEnabled ? 'text-primary' : 'text-foreground'}`}>
+              {isPriceEditingEnabled ? 'Price Editing Enabled' : 'Price Editing Locked'}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs font-medium text-muted-foreground/80 mt-0.5 italic">
               {isPriceEditingEnabled 
-                ? 'Unit prices can be modified in the terminal' 
-                : 'Unit prices are locked to inventory values'}
+                ? 'Authorized: Unit prices can be modified by staff' 
+                : 'Restricted: Unit prices must match inventory values'}
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setPriceEditingEnabled(!isPriceEditingEnabled)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-6 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all active:scale-[0.98] ${
             isPriceEditingEnabled
-              ? "bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30"
-              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+              ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
+              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20"
           }`}
         >
-          {isPriceEditingEnabled ? 'Disable' : 'Enable'}
+          {isPriceEditingEnabled ? 'Lock Prices' : 'Enable Edit'}
         </button>
       </div>
     </div>

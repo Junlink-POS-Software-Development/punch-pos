@@ -79,75 +79,70 @@ const AccountSettings = () => {
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Header Section - Matches SubscriptionSettings Header */}
-      <div className="flex items-center gap-3 mb-6 pb-6 border-slate-800 border-b">
-        <div className="flex justify-center items-center bg-cyan-500/10 rounded-lg w-10 h-10 text-cyan-400">
-          <User className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-white text-lg">Account</h2>
-          <p className="text-slate-400 text-sm">
-            Manage your account and session
-          </p>
-        </div>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">Account Settings</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your account security, session, and store enrollment.
+        </p>
       </div>
 
-      {/* Content Card - Matches the 'Status Card' style in SubscriptionSettings */}
-      <div className="bg-slate-800/50 p-6 border border-slate-700 rounded-xl">
-        <div className="flex md:flex-row flex-col justify-between md:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-slate-900 p-3 border border-slate-800 rounded-full text-cyan-400">
+      {/* Content Card - Profile/Email */}
+      <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-8">
+          <div className="flex items-center gap-5">
+            <div className="bg-primary/10 p-4 border border-primary/20 rounded-full text-primary shadow-inner">
               <Mail className="w-6 h-6" />
             </div>
-            <div>
-              <p className="font-medium text-slate-400 text-sm uppercase tracking-wider">
-                Email Address
+            <div className="space-y-1">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">
+                Active Email Address
               </p>
-              <p className="font-semibold text-white text-lg">{user.email}</p>
+              <p className="font-semibold text-foreground text-lg">{user.email}</p>
             </div>
           </div>
 
           <button
             onClick={() => signOut()}
-            className="flex justify-center items-center gap-2 bg-red-500/10 hover:bg-red-500/20 px-6 py-3 border border-red-500/20 rounded-lg font-medium text-red-500 active:scale-[0.98] transition-all"
+            className="flex justify-center items-center gap-2 bg-destructive/10 hover:bg-destructive/20 px-6 py-3 border border-destructive/20 rounded-xl font-bold text-destructive active:scale-[0.98] transition-all shadow-sm"
           >
             <LogOut className="w-5 h-5" />
-            Logout
+            Sign Out
           </button>
         </div>
       </div>
 
       {/* Store Enrollment Section */}
-      <div className="bg-slate-800/50 p-6 border border-slate-700 rounded-xl">
-         <div className="flex flex-col gap-4">
+      <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
+         <div className="flex flex-col gap-6">
             <div>
-               <h3 className="font-semibold text-white text-lg">Store Enrollment</h3>
-               <p className="text-slate-400 text-sm">
-                 Set an enrollment ID for your store so admins can adopt it.
+               <h3 className="text-lg font-semibold text-foreground">Store Enrollment</h3>
+               <p className="text-muted-foreground text-sm mt-1">
+                 Set an enrollment ID for your store so other administrators can adopt it.
                </p>
             </div>
 
-            <div className="flex md:flex-row flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                  <input
                     type="text"
                     value={enrollmentId}
                     onChange={(e) => setEnrollmentId(e.target.value)}
                     placeholder="Enter Enrollment ID"
-                    className="bg-slate-950 border-slate-700 p-3 border rounded-lg w-full text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/50"
                  />
               </div>
               <button
                 onClick={handleUpdateEnrollment}
                 disabled={isSavingEnrollment || isLoadingEnrollment}
-                className="bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 px-6 py-3 rounded-lg font-medium text-white transition-colors"
+                className="bg-primary hover:bg-primary/90 disabled:opacity-50 px-8 py-3 rounded-xl font-bold text-primary-foreground transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
               >
-                {isSavingEnrollment ? "Saving..." : "Save ID"}
+                {isSavingEnrollment ? "Saving..." : "Update Enrollment ID"}
               </button>
             </div>
             {enrollmentMessage && (
-              <p className={`text-sm ${enrollmentMessage.includes("success") ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-sm ml-1 font-medium ${enrollmentMessage.includes("success") ? "text-emerald-500" : "text-destructive"}`}>
                 {enrollmentMessage}
               </p>
             )}
@@ -155,42 +150,42 @@ const AccountSettings = () => {
       </div>
 
       {/* Join Existing Store Section */}
-      <div className="bg-slate-800/50 p-6 border border-slate-700 rounded-xl">
-         <div className="flex flex-col gap-4">
+      <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
+         <div className="flex flex-col gap-6">
             <div>
-               <h3 className="font-semibold text-white text-lg">Join Existing Store</h3>
-               <p className="text-slate-400 text-sm">
-                 Enter an enrollment ID to join a company or another store.
+               <h3 className="text-lg font-semibold text-foreground">Join Existing Store</h3>
+               <p className="text-muted-foreground text-sm mt-1">
+                 Enter a valid enrollment ID to join a company or another existing store.
                </p>
             </div>
 
-            <div className="flex items-start gap-3 bg-red-500/10 p-4 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="flex items-start gap-4 bg-destructive/10 p-5 border border-destructive/20 rounded-xl text-destructive text-sm leading-relaxed">
               <AlertTriangle className="mt-0.5 w-5 h-5 shrink-0" />
               <p>
-                <span className="font-bold">Warning:</span> Joining a new store will move your account. If you are the only member of your current store, <span className="font-bold underline">all existing data for that store will be permanently deleted</span>.
+                <span className="font-bold">CAUTION:</span> Joining a new store will transfer your account access. If you are the sole member of your current store, <span className="font-bold underline">all store data will be permanently purged</span> upon joining a new one.
               </p>
             </div>
 
-            <div className="flex md:flex-row flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                  <input
                     type="text"
                     value={joinId}
                     onChange={(e) => setJoinId(e.target.value)}
                     placeholder="Existing Store Enrollment ID"
-                    className="bg-slate-950 border-slate-700 p-3 border rounded-lg w-full text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/50"
                  />
               </div>
               <button
                 onClick={handleJoinStore}
                 disabled={isJoining || !joinId.trim()}
-                className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 px-6 py-3 rounded-lg font-medium text-white transition-colors"
+                className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 px-8 py-3 rounded-xl font-bold text-white transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/20"
               >
                 {isJoining ? "Joining..." : "Join Store"}
               </button>
             </div>
             {joinMessage && (
-              <p className={`text-sm ${joinMessage.includes("success") ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-sm ml-1 font-medium ${joinMessage.includes("success") ? "text-emerald-500" : "text-destructive"}`}>
                 {joinMessage}
               </p>
             )}

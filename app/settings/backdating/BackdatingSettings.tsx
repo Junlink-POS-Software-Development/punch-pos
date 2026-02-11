@@ -14,63 +14,60 @@ export default function BackdateSettings() {
     return <div className="text-slate-500">Loading permissions...</div>;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-4">
         <div
-          className={`flex justify-center items-center rounded-lg w-10 h-10 ${
+          className={`flex justify-center items-center rounded-xl w-12 h-12 shadow-inner border ${
             canBackdate
-              ? "bg-amber-500/10 text-amber-400"
-              : "bg-slate-800 text-slate-500"
+              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+              : "bg-muted text-muted-foreground border-border/50"
           }`}
         >
-          <CalendarIcon className="w-5 h-5" />
+          <CalendarIcon className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="font-semibold text-white text-lg">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">
             Transaction Date Override
           </h2>
-          <p className="text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm mt-0.5">
             {canBackdate
-              ? "You have permission to backdate sales."
-              : "You do not have permission to backdate sales."}
+              ? "Authorized to backdate sales for historical record keeping."
+              : "Unauthorized to backdate sales. Live time recording only."}
           </p>
         </div>
       </div>
 
-      <div className="bg-slate-900/50 p-6 border border-slate-800 rounded-xl">
-        {!canBackdate ? (
-          <div className="flex items-center gap-3 text-slate-500">
-            <Lock className="w-4 h-4" />
+      {!canBackdate ? (
+        <div className="flex items-center gap-3 text-muted-foreground bg-muted/30 p-4 border border-border/50 rounded-xl italic text-sm">
+          <Lock className="w-4 h-4" />
+          <span>
+            Date selection is locked. All transactions will be recorded at{" "}
+            <span className="font-bold text-foreground">Live System Time</span>.
+          </span>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 bg-amber-500/10 p-5 border border-amber-500/20 rounded-xl text-amber-600 text-sm leading-relaxed">
+            <Unlock className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
-              Date selection is locked. All transactions will be recorded at{" "}
-              <strong>Live Time</strong>.
+              <span className="font-bold uppercase tracking-tighter">Active override:</span> Any new sale performed will use the custom timestamp selected below. Ensure this is intentional.
             </span>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 bg-amber-500/10 p-3 border border-amber-500/20 rounded-lg text-amber-400 text-sm">
-              <Unlock className="w-4 h-4" />
-              <span>
-                <strong>Active:</strong> Any new sale will use the date selected
-                below.
-              </span>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-300 text-sm">
+          <div className="space-y-3">
+             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">
                 Effective Date for Next Sale
-              </label>
-              <div className="flex flex-wrap items-end gap-4">
+             </label>
+             <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
                 <input
                   type="datetime-local"
-                  className="bg-slate-950 [&::-webkit-calendar-picker-indicator]:invert px-3 py-2 border border-slate-700 rounded-md outline-none focus:ring-2 focus:ring-cyan-500 h-[42px] text-white [&::-webkit-calendar-picker-indicator]:filter"
+                  className="bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/50 h-[48px] text-foreground"
                   value={
                     customTransactionDate
                       ? dayjs(customTransactionDate).format("YYYY-MM-DDTHH:mm")
                       : ""
                   }
                   onChange={(e) => {
-                    // Store as ISO string
                     const val = e.target.value;
                     const dateStr = val ? new Date(val).toISOString() : null;
                     setCustomTransactionDate(dateStr);
@@ -80,17 +77,16 @@ export default function BackdateSettings() {
                 {customTransactionDate && (
                   <button
                     onClick={() => setCustomTransactionDate(null)}
-                    className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 border border-red-500/20 rounded-md h-[42px] text-red-400 transition-colors"
+                    className="flex items-center justify-center gap-2 bg-destructive/10 hover:bg-destructive/20 px-6 py-3 border border-destructive/20 rounded-xl h-[48px] text-destructive font-bold transition-all active:scale-[0.98]"
                   >
                     <LogOut className="w-4 h-4" />
                     End Session
                   </button>
                 )}
-              </div>
-            </div>
+             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
