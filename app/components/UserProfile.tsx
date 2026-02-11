@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { User as UserIcon, Settings, LogOut, LogIn } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import Link from "next/link";
 
 interface UserProfileProps {
   currentUser: User | null;
@@ -69,10 +70,14 @@ const UserProfile = ({
           <div className="p-1.5">
             {currentUser ? (
               <>
-                <button className="flex items-center gap-3 hover:bg-white/5 px-3 py-2 rounded-xl w-full text-slate-300 hover:text-white text-sm transition-all group">
+                <Link 
+                  href="/settings?tab=account"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 hover:bg-white/5 px-3 py-2 rounded-xl w-full text-slate-300 hover:text-white text-sm transition-all group"
+                >
                   <Settings className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" /> 
                   <span>Account Settings</span>
-                </button>
+                </Link>
                 <div className="my-1.5 border-slate-700/30 border-t mx-2"></div>
                 <button
                   onClick={() => {

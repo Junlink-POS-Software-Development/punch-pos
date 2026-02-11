@@ -17,8 +17,16 @@ function SettingsContent() {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    // Check for reason banner
     if (searchParams.get("reason") === "store_deleted") {
       setShowBanner(true);
+    }
+
+    // Check for deep link tab
+    const tab = searchParams.get("tab") as TabId;
+    const validTabs: TabId[] = ["general", "account", "system", "audit"];
+    if (tab && validTabs.includes(tab)) {
+      setActiveTab(tab);
     }
   }, [searchParams]);
 
