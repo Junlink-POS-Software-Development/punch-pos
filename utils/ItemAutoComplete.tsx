@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, forwardRef } from "react";
-import { useItems } from "@/app/inventory/hooks/useItems";
-import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
+import { useInventory } from "@/app/dashboard/hooks/useInventory";
+import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
 
 export interface ItemAutocompleteProps {
   value: string;
@@ -10,7 +10,7 @@ export interface ItemAutocompleteProps {
   onBlur: () => void;
   disabled?: boolean;
   error?: string;
-  onItemSelect?: (item: Item) => void;
+  onItemSelect?: (item: InventoryItem) => void;
   className?: string;
   id?: string;
   // 1. FIX: Add onKeyDown to the interface
@@ -34,7 +34,7 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
     },
     ref
   ) => {
-    const { items } = useItems();
+    const { inventory: items } = useInventory();
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const listRef = useRef<HTMLUListElement>(null);
@@ -43,13 +43,14 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
       if (!value) return [];
       return items
         .filter((item) =>
-          item.itemName.toLowerCase().includes(value.toLowerCase())
+          item.item_name.toLowerCase().includes(value.toLowerCase()) ||
+          item.sku.toLowerCase().includes(value.toLowerCase())
         )
         .slice(0, 10);
     }, [items, value]);
 
-    const handleSelect = (item: Item) => {
-      onChange(item.itemName);
+    const handleSelect = (item: InventoryItem) => {
+      onChange(item.item_name);
       setIsOpen(false);
       setActiveIndex(-1);
       if (onItemSelect) {
@@ -140,22 +141,34 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
         {isOpen && suggestions.length > 0 && (
           <ul
             ref={listRef}
-            className="z-20 absolute top-full left-0 bg-slate-800 shadow-lg mt-1 border border-slate-700 rounded-md w-full max-h-60 overflow-y-auto"
+            className="z-50 absolute top-full left-0 bg-card/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] mt-2 border border-border/50 rounded-xl w-full max-h-60 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-200"
           >
             {suggestions.map((item, index) => (
               <li
-                key={item.id}
-                className={`px-3 py-2 cursor-pointer ${
+                key={item.item_id}
+                className={`px-4 py-3 cursor-pointer transition-all duration-150 flex flex-col gap-0.5 ${
                   index === activeIndex
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-slate-700"
+                    ? "bg-primary text-primary-foreground shadow-md scale-[1.01] z-10 mx-1 rounded-lg"
+                    : "text-foreground hover:bg-muted/80"
                 }`}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelect(item);
                 }}
               >
-                {item.itemName}
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-bold tracking-tight text-sm sm:text-base">
+                    {item.item_name}
+                  </span>
+                  <div className={`flex flex-col items-end gap-0 ${index === activeIndex ? 'text-primary-foreground' : 'text-primary'}`}>
+                    <span className="text-[10px] font-black tracking-widest uppercase opacity-70">
+                       Stocks
+                    </span>
+                    <span className="text-sm font-bold leading-tight">
+                       {item.current_stock || 0}
+                    </span>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
