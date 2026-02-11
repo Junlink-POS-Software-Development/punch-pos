@@ -49,9 +49,23 @@ const SalesTerminal = () => {
   const [isFreeModalOpen, setIsFreeModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<"barcode" | "quantity" | null>("barcode");
   const [isActionPanelOpen, setIsActionPanelOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false); // [NEW] Animation state
 
   // Calculate cart total
   const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
+
+  // Toggle Action Panel with Loading Animation
+  const handleToggleActionPanel = () => {
+    setIsAnimating(true);
+    // Determine the next state
+    const nextState = !isActionPanelOpen;
+    setIsActionPanelOpen(nextState);
+    
+    // Wait for animation to finish before showing content
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 350); // Slightly longer than 300ms transition to be safe
+  };
   
   // 2. Call the hook and pass the triggers
   useTerminalShortcuts({ 
@@ -59,6 +73,7 @@ const SalesTerminal = () => {
     onCharge: () => setIsPaymentPopupOpen(true),
     hasItems: cartItems.length > 0
   });
+
 
 
 
@@ -94,6 +109,17 @@ const SalesTerminal = () => {
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
         <div className="flex flex-col flex-1 p-1 sm:p-2 h-full min-w-0 overflow-y-auto">
+            {isAnimating ? (
+               <div className="w-full h-full flex items-center justify-center bg-card rounded-2xl border border-border shadow-sm">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative w-12 h-12">
+                      <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
+                      <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                    </div>
+                    <p className="text-muted-foreground animate-pulse font-medium">Adjusting Layout...</p>
+                  </div>
+               </div>
+            ) : (
             <form
               id="sales-form"
               onSubmit={methods.handleSubmit(onDoneSubmit)}
@@ -142,6 +168,7 @@ const SalesTerminal = () => {
                 </div>
               </div>
             </form>
+            )}
         </div>
 
         {/* RIGHT PANEL: Action Panel */}
@@ -163,7 +190,7 @@ const SalesTerminal = () => {
             isFreeMode={false} // No longer toggle state, just modal action
             onToggleFreeMode={() => setIsFreeModalOpen(true)}
             isOpen={isActionPanelOpen}
-            onToggle={() => setIsActionPanelOpen(!isActionPanelOpen)}
+            onToggle={handleToggleActionPanel}
           />
         </div>
 
