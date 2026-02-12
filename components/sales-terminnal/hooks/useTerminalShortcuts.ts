@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 interface UseTerminalShortcutsProps {
   onClear: () => void;
   onCharge: () => void;
+  onToggleFreeMode: () => void; // [NEW]
   hasItems: boolean;
 }
 
 export const useTerminalShortcuts = ({
   onClear,
   onCharge,
+  onToggleFreeMode, // [NEW]
   hasItems,
 }: UseTerminalShortcutsProps) => {
   const router = useRouter();
@@ -76,6 +78,10 @@ export const useTerminalShortcuts = ({
           case "w":
             event.preventDefault();
             router.push("/google-workspace");
+            break;
+          case "f3": // Handle Alt + F3
+            event.preventDefault();
+            onToggleFreeMode();
             break;
           default:
             break;

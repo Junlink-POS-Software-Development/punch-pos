@@ -36,6 +36,8 @@ export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
   const terminalShortcuts = [
     { key: "Spacebar", label: "Open Payment / Finish", alt: "Enter to confirm in popup" },
     { key: "Alt + F1", label: "Search Customer" },
+    { key: "Alt + F3", label: "Free Item Modal" },
+    { key: "Enter on Qty", label: "Add to Checkout" },
   ];
 
   if (isInline) {

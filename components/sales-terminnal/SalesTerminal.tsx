@@ -71,6 +71,7 @@ const SalesTerminal = () => {
   useTerminalShortcuts({ 
     onClear, 
     onCharge: () => setIsPaymentPopupOpen(true),
+    onToggleFreeMode: () => setIsFreeModalOpen(true), // [NEW]
     hasItems: cartItems.length > 0
   });
 
@@ -102,6 +103,8 @@ const SalesTerminal = () => {
      // Force Free Mode for this addition
      onAddToCart(true);
      setIsFreeModalOpen(false);
+     // Jump focus back to barcode after submission
+     setActiveField("barcode");
   };
 
   return (
