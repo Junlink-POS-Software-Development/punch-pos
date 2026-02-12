@@ -37,7 +37,7 @@ export const CustomerSelector = ({
         className={`cursor-pointer flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-dashed transition-all duration-200 text-left ${
           isCustomerSelected
             ? "bg-primary/10 border-primary/50 text-primary"
-            : "bg-muted/50 border-input text-muted-foreground hover:bg-muted/80 hover:border-primary/50 hover:text-primary"
+            : "bg-muted/50 border-border/40 text-muted-foreground hover:bg-muted/80 hover:border-primary/50 hover:text-primary"
         }`}
       >
         <div className="flex items-center gap-2 overflow-hidden">

@@ -34,7 +34,7 @@ export const Numpad = ({ onKeyPress, onClear }: NumpadProps) => {
         <button
           type="button"
           onClick={() => setShowKeyboard(!showKeyboard)}
-          className="p-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+          className="p-1 rounded bg-muted border border-border text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           title={showKeyboard ? "Show Numpad" : "Show T9 Keypad"}
         >
           {showKeyboard ? <Calculator className="w-3 h-3" /> : <Keyboard className="w-3 h-3" />}

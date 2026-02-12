@@ -139,7 +139,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                             });
                             setActiveField?.("quantity");
                           }}
-                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none"
+                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary transition-colors focus:outline-none"
                         />
                       </div>
                     )}
@@ -171,7 +171,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         onBlur={onBlur}
                         onFocus={() => setActiveField?.("quantity")}
                         onKeyDown={handleKeyDown}
-                        className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none ${noSpinnerClass}`}
+                        className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${noSpinnerClass}`}
                       />
                     )}
                   />
@@ -186,7 +186,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         if (field.id === "barcode") setActiveField?.("barcode");
                         else setActiveField?.(null);
                     }}
-                    className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary focus:ring-1 focus:ring-primary transition-colors focus:outline-none ${
+                    className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${
                       field.hideSpinners ? noSpinnerClass : ""
                     }`}
                     {...((field.id === "customerName") && {

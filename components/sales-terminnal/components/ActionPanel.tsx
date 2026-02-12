@@ -77,7 +77,7 @@ export default function ActionPanel({
       <button
         type="button"
         onClick={onToggle}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-800 border-t border-slate-700 p-3 flex items-center justify-center gap-2 text-white font-medium"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-muted border-t border-border p-3 flex items-center justify-center gap-2 text-foreground font-medium"
       >
         {isOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
         {isOpen ? "Hide Actions" : "Show Actions"}

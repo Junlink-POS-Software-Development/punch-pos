@@ -71,8 +71,8 @@
   --color-accent: #fbbf24; /* amber-400 */
   --color-accent-foreground: #1e293b;
 
-  --color-border: #1e293b; /* slate-800 */
-  --color-input: #1e293b; /* slate-800 */
+  --color-border: #334155; /* slate-700 (was slate-800) */
+  --color-input: #334155; /* slate-700 (was slate-800) */
   --color-ring: #3b82f6; /* blue-500 */
   --color-card: #1e293b; /* slate-800 */
 }
@@ -93,12 +93,18 @@ input, textarea, select {
   padding: 0.5rem 0.75rem;
   color: var(--color-foreground);
   transition: all 0.2s ease;
+  box-shadow: 0 0 5px rgb(from var(--color-primary) r g b / 0.07);
+}
+
+input:hover, textarea:hover, select:hover {
+  border-color: rgb(from var(--color-primary) r g b / 0.4);
+  box-shadow: 0 0 8px rgb(from var(--color-primary) r g b / 0.15);
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--color-ring);
-  box-shadow: 0 0 0 2px var(--color-ring);
+  box-shadow: 0 0 0 2px rgb(from var(--color-ring) r g b / 0.25), 0 0 15px rgb(from var(--color-ring) r g b / 0.35);
 }
 
 input::placeholder, textarea::placeholder {
