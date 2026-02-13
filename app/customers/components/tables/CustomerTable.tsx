@@ -48,9 +48,9 @@ export const CustomerTable = () => {
   const sortedCustomers = useMemo(() => {
     return [...customers].sort((a, b) => {
       if (sortByLastName) {
-        return getLastName(a.full_name).localeCompare(getLastName(b.full_name));
+        return getLastName(a.full_name || "").localeCompare(getLastName(b.full_name || ""));
       }
-      return a.full_name.toLowerCase().localeCompare(b.full_name.toLowerCase());
+      return (a.full_name || "").toLowerCase().localeCompare((b.full_name || "").toLowerCase());
     });
   }, [customers, sortByLastName]);
   const handleGroupChange = async (customerId: string, groupId: string, isLocked: boolean) => {
@@ -207,14 +207,14 @@ export const CustomerTable = () => {
                       className="flex items-center gap-3 text-left w-full hover:text-blue-400 transition-colors"
                     >
                       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold shrink-0 relative">
-                        {c.full_name.charAt(0).toUpperCase()}
+                        {(c.full_name || "?").charAt(0).toUpperCase()}
                         {isLocked && (
                           <div className="absolute -top-1 -right-1 bg-gray-800 rounded-full p-0.5">
                             <Lock size={10} className="text-yellow-500" />
                           </div>
                         )}
                       </div>
-                      {formatDisplayName(c.full_name, sortByLastName)}
+                      {formatDisplayName(c.full_name || "Unknown", sortByLastName)}
                     </button>
                   </td>
                   <td className="p-5 text-gray-400">{c.phone_number || "-"}</td>

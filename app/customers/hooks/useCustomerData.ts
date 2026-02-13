@@ -34,8 +34,8 @@ export const useCustomerData = () => {
 
   const filteredCustomers = rawCustomers.filter((c) => {
     const matchesSearch =
-      c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone_number?.includes(searchTerm);
+      (c.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (c.phone_number?.includes(searchTerm) || false);
 
     if (!matchesSearch) return false;
     if (selectedGroupId === "all") return true;
