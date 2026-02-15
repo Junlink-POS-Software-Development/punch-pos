@@ -52,6 +52,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cross-env": "^7.0.3",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "^16.0.7",
     "supabase": "^2.71.3",

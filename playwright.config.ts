@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import path from "path";
+import dotenv from "dotenv";
+
+// Load .env.local so TEST_USER_EMAIL / TEST_USER_PASSWORD are available
+dotenv.config({ path: path.resolve(__dirname, ".env.local") });
 
 // Path where authenticated storage state is saved
 const authFile = path.join(__dirname, "playwright/.auth/user.json");

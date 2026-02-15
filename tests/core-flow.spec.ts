@@ -26,12 +26,13 @@ test.describe("Core Application Flow", () => {
     // Should NOT redirect to /login
     await expect(page).not.toHaveURL(/\/login/);
 
-    // Wait for the dashboard to load — the DashboardHeader contains "Punch POS"
-    await expect(page.getByText("Punch POS")).toBeVisible({ timeout: 15_000 });
+    // Wait for the dashboard to load — the DashboardHeader renders "Overview"
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible({
+      timeout: 15_000,
+    });
 
-    // Verify the VitalsGrid section renders (contains stat cards)
-    // The dashboard should have some content loaded
-    await expect(page.locator(".min-h-screen")).toBeVisible();
+    // Verify the date filter input is present (part of DashboardHeader)
+    await expect(page.locator('input[type="date"]')).toBeVisible();
   });
 
   test("authenticated user can navigate to inventory", async ({ page }) => {
@@ -51,8 +52,8 @@ test.describe("Core Application Flow", () => {
   });
 
   test("unauthenticated access redirects to login", async ({ browser }) => {
-    // Create a fresh context WITHOUT saved auth state
-    const context = await browser.newContext();
+    // Create a fresh context with explicitly EMPTY storage state
+    const context = await browser.newContext({ storageState: undefined });
     const page = await context.newPage();
 
     await page.goto("http://localhost:3000/dashboard");
@@ -61,7 +62,9 @@ test.describe("Core Application Flow", () => {
     await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
 
     // Login form should be visible
-    await expect(page.locator("h2")).toContainText("Sign In");
+    await expect(
+      page.getByRole("heading", { name: "Sign In" })
+    ).toBeVisible();
 
     await context.close();
   });
