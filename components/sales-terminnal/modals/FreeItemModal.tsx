@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, Search, Package } from "lucide-react";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 import { useItems } from "@/app/inventory/hooks/useItems";
@@ -24,18 +24,20 @@ export const FreeItemModal = ({ isOpen, onClose, onSelect }: FreeItemModalProps)
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) {
-        setHighlightedIndex(0);
         return [];
     }
     const lowerSearch = searchTerm.toLowerCase();
-    const filtered = items.filter(
+    return items.filter(
       (item) =>
         item.itemName.toLowerCase().includes(lowerSearch) ||
         item.sku.toLowerCase().includes(lowerSearch)
     );
-    setHighlightedIndex(0);
-    return filtered;
   }, [items, searchTerm]);
+
+  // Reset highlighted index when search results change
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [searchTerm, items]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (filteredItems.length === 0) return;
