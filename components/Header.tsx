@@ -65,9 +65,9 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       <div className="flex items-center gap-4 shrink-0">
         {/* Welcome Text - Subtle */}
         <p className="hidden lg:block text-xs text-muted-foreground text-right">
-          {user
-            ? `Welcome, ${user.user_metadata?.first_name || "Admin"}`
-            : "Guest"}
+          {isAuthReady 
+            ? (user ? `Welcome, ${user.user_metadata?.first_name || "Admin"}` : "Guest")
+            : ""}
         </p>
 
         {/* Divider */}

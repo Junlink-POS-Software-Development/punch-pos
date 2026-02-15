@@ -27,7 +27,9 @@ test.describe("Core Application Flow", () => {
     await expect(page).not.toHaveURL(/\/login/);
 
     // Wait for the dashboard to load — the DashboardHeader renders "Overview"
-    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: "Overview", level: 1 })
+    ).toBeVisible({
       timeout: 15_000,
     });
 
@@ -38,12 +40,16 @@ test.describe("Core Application Flow", () => {
   test("authenticated user can navigate to inventory", async ({ page }) => {
     await page.goto("/inventory");
 
-    // Should NOT redirect to /login
+    // Should NOT redirect to /login or /onboarding
+    await expect(page).toHaveURL(/\/inventory/);
     await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).not.toHaveURL(/\/onboarding/);
 
-    // The inventory page has a navigation bar with "register", "manage", "monitor" views
-    // Wait for the inventory nav to render
-    await expect(page.locator(".bg-card")).toBeVisible({ timeout: 15_000 });
+    // Wait for the inventory navigation to render
+    await expect(page.getByRole("navigation")).toBeVisible({ timeout: 15_000 });
+    
+    // Verify specific navigation items are present
+    await expect(page.getByText("Register Item")).toBeVisible();
 
     // Verify the page loaded (not stuck on loading state)
     await expect(page.getByText("Loading...")).not.toBeVisible({
