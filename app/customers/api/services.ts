@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { Metadata } from "@/lib/types";
 
 export const fetchCustomerFeatureData = async (
   startDate?: string,
@@ -186,7 +187,7 @@ export const updateCustomerGroup = async (
 
 export const updateCustomer = async (
   customerId: string,
-  data: Partial<any>
+  data: Partial<Metadata>
 ) => {
   const supabase = await createClient();
   return await supabase.from("customers").update(data).eq("id", customerId);
@@ -218,7 +219,7 @@ export const uploadCustomerDocument = async (
 
 export const updateCustomerDocumentMetadata = async (
   customerId: string,
-  metadata: any
+  metadata: Metadata
 ) => {
   const supabase = await createClient();
   return await supabase
@@ -290,7 +291,7 @@ export const bulkUpdateCustomerGroup = async (
 export const toggleCustomerLock = async (
   customerId: string,
   isLocked: boolean,
-  currentMetadata: any
+  currentMetadata: Metadata
 ) => {
   const supabase = await createClient();
   const updatedMetadata = {

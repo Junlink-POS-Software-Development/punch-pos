@@ -100,7 +100,7 @@ export const fetchItemsPaginated = async (
   }
 
   // Map the join result
-  const mappedData = data.map((item: any) => {
+  const mappedData = (data as (any)[]).map((item) => {
     // Standardize the object for fromDatabaseObject
     const dbItem: ItemDbRow = {
       id: item.id,
@@ -136,7 +136,7 @@ export const insertItem = async (item: Item): Promise<Item> => {
   if (userError) {
     console.error("Failed to fetch user store_id for insertion:", userError);
   } else if (userData?.store_id) {
-    (dbItem as any).store_id = userData.store_id;
+    (dbItem as ItemDbRow & { store_id: string }).store_id = userData.store_id;
   }
   
   const { data: insertedData, error } = await supabase

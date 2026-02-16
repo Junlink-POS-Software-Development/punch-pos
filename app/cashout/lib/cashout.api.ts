@@ -44,6 +44,16 @@ interface ExpenseRowDB {
   } | null;
 }
 
+interface RawExpenseRow extends ExpenseRowDB {
+  product_category: {
+    category: string;
+  } | null;
+  classification_details: {
+    name: string;
+  } | null;
+  cashout_type: CashoutType | null;
+}
+
 // --- TYPES ---
 
 export type CashoutType = 'COGS' | 'OPEX' | 'REMITTANCE';
@@ -225,7 +235,7 @@ export const fetchExpenses = async (
   if (error) throw new Error(error.message);
 
   return (data || []).map(
-    (row: any): CashoutRecord => ({
+    (row: RawExpenseRow): CashoutRecord => ({
       id: row.id,
       date: row.transaction_date,
       timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -238,7 +248,7 @@ export const fetchExpenses = async (
       
       // Details
       expenseCategory: row.classification_details?.name ?? (row.cashout_type === 'OPEX' ? "Unclassified" : undefined),
-      product: row.product_category?.category || row.source, // fallback handling
+      product: row.product_category?.category ?? (row.source || undefined), // fallback handling
       
       // We might need to handle other fields based on the raw data
     })
@@ -287,7 +297,7 @@ export const fetchExpensesPaginated = async (
   if (error) throw new Error(error.message);
 
   const mappedData = (data || []).map(
-    (row: any): CashoutRecord => ({
+    (row: RawExpenseRow): CashoutRecord => ({
       id: row.id,
       date: row.transaction_date,
       timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -298,7 +308,7 @@ export const fetchExpensesPaginated = async (
       notes: row.notes ?? "",
       
       expenseCategory: row.classification_details?.name,
-      product: row.product_category?.category || row.source
+      product: row.product_category?.category ?? (row.source || undefined)
     })
   );
 
