@@ -6,6 +6,8 @@ import {
   createClassification,
   updateClassification,
   deleteClassification,
+  checkClassificationUsage,
+  transferClassification,
 } from "../lib/cashout.api";
 
 export function useClassifications() {
@@ -21,20 +23,20 @@ export function useClassifications() {
     queryFn: fetchClassifications,
   });
 
-  const addClassification = async (name: string) => {
+  const addClassification = async (name: string, icon: string = 'Store') => {
     setIsProcessing(true);
     try {
-      await createClassification(name);
+      await createClassification(name, icon);
       queryClient.invalidateQueries({ queryKey: ["classifications"] });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const editClassification = async (id: string, name: string) => {
+  const editClassification = async (id: string, name: string, icon?: string) => {
     setIsProcessing(true);
     try {
-      await updateClassification(id, name);
+      await updateClassification(id, name, icon);
       queryClient.invalidateQueries({ queryKey: ["classifications"] });
     } finally {
       setIsProcessing(false);
@@ -51,6 +53,21 @@ export function useClassifications() {
     }
   };
 
+  const checkUsage = async (id: string) => {
+    return await checkClassificationUsage(id);
+  };
+
+  const transfer = async (fromId: string, toId: string) => {
+    setIsProcessing(true);
+    try {
+      await transferClassification(fromId, toId);
+      queryClient.invalidateQueries({ queryKey: ["classifications"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return {
     classifications,
     isLoading,
@@ -58,6 +75,8 @@ export function useClassifications() {
     addClassification,
     editClassification,
     removeClassification,
+    checkUsage,
+    transfer,
     isProcessing,
   };
 }

@@ -2,9 +2,12 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { CashoutRecord } from "../../lib/cashout.api"; // Import from lib/cashout.api
-import { ArrowUpDown, MoreHorizontal, Truck, Lightbulb, ArrowRight, Store, FileText } from "lucide-react";
+import { Trash2, ArrowUpDown, Truck, Lightbulb, ArrowRight, Store } from "lucide-react";
 
-export const columns: ColumnDef<CashoutRecord>[] = [
+export const getColumns = (
+  onDelete?: (id: string) => void,
+  canDelete: boolean = false
+): ColumnDef<CashoutRecord>[] => [
   {
     accessorKey: "date",
     header: ({ column }) => {
@@ -66,7 +69,6 @@ export const columns: ColumnDef<CashoutRecord>[] = [
 
       if (record.category === "OPEX") {
         mainText = record.expenseCategory || "Unclassified";
-        // We could render an icon here if we had the icon name mapping available or passed in
       } else if (record.category === "REMITTANCE") {
         mainText = record.subTypeLabel || "Transfer";
       } else {
@@ -127,6 +129,29 @@ export const columns: ColumnDef<CashoutRecord>[] = [
       return (
         <div className="text-right font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg inline-block float-right">
           -{formatted}
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }) => {
+      if (!canDelete) return null;
+      
+      return (
+        <div className="flex justify-center">
+          <button
+            onClick={() => {
+                if (window.confirm("Are you sure you want to delete this transaction?")) {
+                    onDelete?.(row.original.id);
+                }
+            }}
+            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete Transaction"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       );
     },

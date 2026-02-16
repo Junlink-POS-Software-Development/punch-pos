@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { DollarSign, Filter } from 'lucide-react';
 import CashOutTable from './components/cashout-table/CashOutTable';
-import { columns } from './components/cashout-table/columns';
-import { useExpensesInfinite, useExpensesSummary, DateRange } from './hooks/useExpenses';
+import { getColumns } from './components/cashout-table/columns';
+import { useExpensesInfinite, useExpensesSummary, useCashoutPermissions, DateRange } from './hooks/useExpenses';
 import { DateRangeFilter } from '@/components/reusables/DateRangeFilter';
 import dynamic_next from 'next/dynamic';
 
@@ -37,10 +37,17 @@ function CashoutContent() {
       isLoading, 
       fetchNextPage, 
       hasNextPage, 
-      isFetchingNextPage 
+      isFetchingNextPage,
+      removeExpense
   } = useExpensesInfinite(20, dateRange);
 
+  const { permissions } = useCashoutPermissions();
   const { summary } = useExpensesSummary(dateRange);
+
+  const tableColumns = useMemo(() => 
+    getColumns(removeExpense, permissions.can_manage_expenses), 
+    [removeExpense, permissions.can_manage_expenses]
+  );
 
   if (!isMounted) {
     return <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen flex items-center justify-center">
@@ -108,7 +115,7 @@ function CashoutContent() {
              <div className="p-12 text-center text-muted-foreground">Loading expenses...</div>
         ) : (
             <CashOutTable 
-                columns={columns} 
+                columns={tableColumns} 
                 data={expenses} 
                 onLoadMore={() => fetchNextPage()}
                 hasMore={hasNextPage}

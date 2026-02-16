@@ -5,6 +5,7 @@ CREATE TABLE public.classification (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
   store_id uuid NOT NULL,
+  icon text DEFAULT 'Store', -- Column for category icons
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT classification_pkey PRIMARY KEY (id),
   CONSTRAINT classification_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)

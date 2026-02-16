@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -31,12 +30,12 @@ export default function CashOutTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onRowSelectionChange: setRowSelection,
@@ -44,23 +43,44 @@ export default function CashOutTable<TData, TValue>({
       sorting,
       rowSelection,
     },
-    initialState: {
-        pagination: {
-            pageSize: 10,
-        }
-    }
   });
 
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasMore && !isLoadingMore && onLoadMore) {
+        onLoadMore();
+      }
+    },
+    [onLoadMore, hasMore, isLoadingMore]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: element.parentElement, // Use the scrollable container as root
+      rootMargin: "200px",
+      threshold: 0.1,
+    });
+
+    observer.observe(element);
+    return () => {
+      if (element) observer.unobserve(element);
+    };
+  }, [handleObserver]);
+
   return (
-    <div className="border border-border rounded-xl overflow-hidden shadow-sm bg-card">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+    <div className="border border-border rounded-xl shadow-sm bg-card flex flex-col overflow-hidden">
+      <div className="overflow-y-auto max-h-[calc(100vh-420px)] relative scrollbar-thin scrollbar-thumb-muted-foreground/20">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-muted/95 backdrop-blur-md text-muted-foreground font-medium border-b border-border sticky top-0 z-20">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">
+                    <th key={header.id} className="px-6 py-4 font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -79,7 +99,7 @@ export default function CashOutTable<TData, TValue>({
                 <tr
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50 transition-colors group"
+                  className="hover:bg-muted/30 transition-colors group"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-6 py-4">
@@ -106,23 +126,18 @@ export default function CashOutTable<TData, TValue>({
             )}
           </tbody>
         </table>
+        
+        {/* Sentinel for Infinite Scroll */}
+        <div ref={observerTarget} className="h-4 w-full bg-transparent" />
+        
+        {/* Loading Indicator Overlay */}
+        {isLoadingMore && (
+           <div className="p-4 flex justify-center items-center gap-2 text-primary font-medium bg-background/80 backdrop-blur-sm sticky bottom-0 border-t border-border z-10">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs">Loading more records...</span>
+           </div>
+        )}
       </div>
-       
-
-      
-      {/* Infinite Scroll / Load More Control */}
-      {hasMore && (
-        <div className="p-4 border-t border-border flex justify-center bg-muted/20">
-            <button 
-                onClick={onLoadMore}
-                disabled={isLoadingMore}
-                className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50 flex items-center gap-2"
-            >
-                {isLoadingMore ? "Loading more..." : "Load More Records"}
-            </button>
-        </div>
-      )}
-
     </div>
   );
 }

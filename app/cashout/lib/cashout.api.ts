@@ -97,9 +97,43 @@ export interface Classification {
   id: string;
   name: string;
   store_id: string;
+  icon?: string;
+}
+
+export interface CashoutPermissions {
+  can_manage_expenses: boolean;
 }
 
 // --- API METHODS ---
+
+// 0. Fetch User Permissions
+export const fetchUserPermissions = async (): Promise<CashoutPermissions> => {
+  const supabase = await getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { can_manage_expenses: false };
+
+  const { data, error } = await supabase
+    .from("staff_permissions")
+    .select("can_manage_expenses")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching permissions:", error);
+    // Fallback: If not found in staff_permissions, check if user is admin
+    const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+    
+    return { can_manage_expenses: userData?.role === 'admin' };
+  }
+
+  return {
+    can_manage_expenses: data?.can_manage_expenses || false
+  };
+};
 
 // 1. Fetch Expenses Breakdown (Integrated & Typed)
 export const fetchExpensesBreakdown = async (
@@ -305,16 +339,38 @@ export const fetchExpensesSummary = async (
 export const createExpense = async (input: CashoutInput) => {
   const supabase = await getSupabase();
   
+  // 1. Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  // 2. Resolve store_id if missing
+  let storeId = input.store_id;
+  if (!storeId) {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", user.id)
+      .single();
+    storeId = userData?.store_id;
+  }
+
+  if (!storeId) {
+    throw new Error("Store ID not found for user. Please ensure you are assigned to a store.");
+  }
+
+  // 3. Call the RPC
   const { error } = await supabase.rpc("insert_new_expense", {
     transaction_date_in: input.transaction_date,
     amount_in: input.amount,
     notes_in: input.notes,
-    store_id_in: input.store_id, // Now passed
-    classification_id_in: input.classification_id || null, // UUID or null
+    store_id_in: storeId, 
+    classification_id_in: input.classification_id || null, 
     cashout_type_in: input.cashout_type,
     metadata_in: input.metadata || {},
-    receipt_no_in: input.receipt_no, // New field
-    category_id_in: input.category_id // Passed to RPC for drawer/source
+    receipt_no_in: input.receipt_no || null, 
+    category_id_in: input.category_id || null 
   });
 
   if (error) {
@@ -337,14 +393,75 @@ export const fetchClassifications = async (): Promise<Classification[]> => {
     console.error("Error fetching classifications:", error);
     return [];
   }
+
+  // Auto-seed if empty for this store
+  if (!data || data.length === 0) {
+    await seedClassifications();
+    // Re-fetch after seeding
+    const { data: seededData } = await supabase
+      .from("classification")
+      .select("*")
+      .order("name", { ascending: true });
+    return seededData || [];
+  }
+
   return data || [];
 };
 
-// 5. Create Classification (RPC)
-export const createClassification = async (name: string) => {
+// 4b. Seed Default Classifications
+export const seedClassifications = async () => {
   const supabase = await getSupabase();
-  const { error } = await supabase.rpc("insert_new_classification", {
-    name_in: name,
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!userData?.store_id) return;
+
+  const defaults = [
+    { name: 'Utilities', icon: 'Lightbulb' },
+    { name: 'Rent & Lease', icon: 'Store' },
+    { name: 'Supplier Payment', icon: 'Truck' },
+    { name: 'Salaries', icon: 'User' },
+    { name: 'Maintenance', icon: 'Wrench' },
+    { name: 'Internet/Comm', icon: 'Wifi' },
+    { name: 'Supplies', icon: 'Coffee' },
+    { name: 'Marketing', icon: 'Briefcase' },
+    { name: 'Taxes & Permits', icon: 'ShieldCheck' }
+  ];
+
+  const insertData = defaults.map(d => ({
+    name: d.name,
+    icon: d.icon,
+    store_id: userData.store_id
+  }));
+
+  const { error } = await supabase.from("classification").insert(insertData);
+  if (error) console.error("Error seeding classifications:", error);
+};
+
+// 5. Create Classification
+export const createClassification = async (name: string, icon: string = 'Store') => {
+  const supabase = await getSupabase();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+
+  const { error } = await supabase.from("classification").insert({
+    name,
+    icon,
+    store_id: userData?.store_id
   });
 
   if (error) {
@@ -354,11 +471,14 @@ export const createClassification = async (name: string) => {
 };
 
 // 6. Update Classification
-export const updateClassification = async (id: string, name: string) => {
+export const updateClassification = async (id: string, name: string, icon?: string) => {
   const supabase = await getSupabase();
+  const updateData: any = { name };
+  if (icon) updateData.icon = icon;
+
   const { error } = await supabase
     .from("classification")
-    .update({ name })
+    .update(updateData)
     .eq("id", id);
 
   if (error) {
@@ -387,6 +507,34 @@ export const deleteExpense = async (id: string) => {
     console.error("Error deleting expense:", error);
     throw new Error(error.message);
   }
+};
+
+// --- DATA INTEGRITY / TRANSFER ---
+
+// 10. Check Classification Usage
+export const checkClassificationUsage = async (id: string): Promise<number> => {
+  const supabase = await getSupabase();
+  const { count, error } = await supabase
+    .from("expenses")
+    .select("*", { count: 'exact', head: true })
+    .eq("classification_id", id);
+
+  if (error) throw error;
+  return count || 0;
+};
+
+// 11. Transfer Classification
+export const transferClassification = async (fromId: string, toId: string) => {
+  const supabase = await getSupabase();
+  const { error } = await supabase
+    .from("expenses")
+    .update({ classification_id: toId })
+    .eq("classification_id", fromId);
+
+  if (error) throw error;
+  
+  // After transfer, delete the old one
+  await deleteClassification(fromId);
 };
 
 // 9. Update Expense (Direct Update)

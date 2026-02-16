@@ -7,8 +7,10 @@ import {
   updateExpense,
   deleteExpense,
   fetchExpensesSummary,
+  fetchUserPermissions,
   CashoutInput,
   CashoutRecord,
+  CashoutPermissions,
 } from "../lib/cashout.api";
 
 export interface DateRange {
@@ -270,6 +272,21 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
       () => queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] }),
       [queryClient]
     ),
+  };
+}
+
+
+// Hook for fetching permissions
+export function useCashoutPermissions() {
+  const { data: permissions, isLoading } = useQuery({
+    queryKey: [EXPENSES_KEY, "permissions"],
+    queryFn: fetchUserPermissions,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+  });
+
+  return {
+    permissions: permissions || { can_manage_expenses: false },
+    isLoading,
   };
 }
 
