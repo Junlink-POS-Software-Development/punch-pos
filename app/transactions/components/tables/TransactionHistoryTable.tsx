@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { Loader2, AlertCircle, XCircle } from "lucide-react";
 import { useTransactionData } from "../../hooks/useTransactionData";
-import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
+import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 
 export const TransactionHistoryTable = () => {

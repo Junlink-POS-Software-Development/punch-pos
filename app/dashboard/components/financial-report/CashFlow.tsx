@@ -13,7 +13,7 @@ import { Filter, Loader2, Download } from "lucide-react";
 import {
   fetchCashFlowLedger,
   fetchFlowCategories,
-} from "@/app/expenses/lib/cashflow.api";
+} from "@/app/cashout/lib/cashflow.api";
 import { CashFlowEntry } from "../../lib/types";
 
 interface CashFlowProps {

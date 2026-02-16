@@ -2,7 +2,7 @@ import { useDashboardMetrics } from "../../hooks/useDashboardMetrics";
 import { DragHandleProps } from "./DashboardGrid";
 import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchFlowCategories } from "@/app/expenses/lib/cashflow.api";
+import { fetchFlowCategories } from "@/app/cashout/lib/cashflow.api";
 import { useMemo } from "react";
 
 interface Props {

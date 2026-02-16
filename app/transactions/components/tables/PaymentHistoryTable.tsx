@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { Loader2, AlertCircle, XCircle, Trash2 } from "lucide-react";
 import { usePaymentData } from "../../hooks/usePaymentData";
-import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
+import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 import { deletePayment } from "@/app/actions/transactions";
 import { useState } from "react";
