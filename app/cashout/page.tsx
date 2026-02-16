@@ -45,43 +45,43 @@ function CashoutContent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4 text-white">
         
-        {/* Actions Bar */}
-        <div className="flex justify-end pt-2">
+        {/* Top Summary & Actions Area */}
+        <div className="flex flex-col lg:flex-row items-stretch gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 flex-1">
+              <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1.5 bg-red-100/50 text-red-600 rounded-lg"><DollarSign size={16}/></div>
+                      <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Cash Out</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">₱{summary.totalAmount.toFixed(2)}</p>
+              </div>
+              <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1.5 bg-blue-100/50 text-blue-600 rounded-lg"><Filter size={16}/></div>
+                      <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Transactions</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{summary.totalCount}</p>
+              </div>
+              <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-primary text-[10px] font-bold uppercase tracking-wider mb-1">Session Status</h3>
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                       <p className="text-lg font-bold text-foreground">Open & Syncing</p>
+                    </div>
+                  </div>
+              </div>
+          </div>
+          
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="w-full sm:w-auto bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95 font-bold"
+            className="lg:w-48 bg-primary text-primary-foreground px-4 py-4 rounded-xl hover:opacity-90 transition-all flex flex-col items-center justify-center gap-1 shadow-lg hover:shadow-xl active:scale-95 font-bold border border-primary-foreground/10"
           >
-            <DollarSign size={20} />
-            Record Cash Out
+            <DollarSign size={24} />
+            <span className="text-xs uppercase tracking-tighter">Record Cash Out</span>
           </button>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-red-100/50 text-red-600 rounded-lg"><DollarSign size={20}/></div>
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Total Cash Out</h3>
-                </div>
-                <p className="text-3xl font-bold text-foreground">₱{summary.totalAmount.toFixed(2)}</p>
-            </div>
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-blue-100/50 text-blue-600 rounded-lg"><Filter size={20}/></div>
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Total Transactions</h3>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{summary.totalCount}</p>
-            </div>
-            <div className="bg-primary p-6 rounded-2xl shadow-lg text-primary-foreground min-w-[200px]">
-                 <h3 className="text-primary-foreground/80 text-sm font-medium mb-1">Session Status</h3>
-                 <p className="text-2xl font-bold">Open</p>
-                 <div className="mt-4 flex items-center gap-2 text-xs text-primary-foreground/90 bg-white/10 w-fit px-2 py-1 rounded">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    Syncing Live
-                 </div>
-            </div>
         </div>
 
 

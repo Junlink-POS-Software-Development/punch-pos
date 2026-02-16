@@ -73,7 +73,7 @@ export default function CashOutTable<TData, TValue>({
 
   return (
     <div className="border border-border rounded-xl shadow-sm bg-card flex flex-col overflow-hidden">
-      <div className="overflow-y-auto max-h-[calc(100vh-420px)] relative scrollbar-thin scrollbar-thumb-muted-foreground/20">
+      <div className="overflow-y-auto max-h-[calc(100vh-220px)] relative scrollbar-thin scrollbar-thumb-muted-foreground/20">
         <table className="w-full text-sm text-left border-collapse">
           <thead className="bg-muted/95 backdrop-blur-md text-muted-foreground font-medium border-b border-border sticky top-0 z-20">
             {table.getHeaderGroups().map((headerGroup) => (
