@@ -4,8 +4,8 @@ import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { DollarSign, Filter } from 'lucide-react';
 import CashOutTable from './components/cashout-table/CashOutTable';
 import { getColumns } from './components/cashout-table/columns';
-import { useExpensesInfinite, useExpensesSummary, useCashoutPermissions, DateRange } from './hooks/useExpenses';
-import { DateRangeFilter } from '@/components/reusables/DateRangeFilter';
+import { useExpensesInfinite, useExpensesSummary, useCashoutPermissions } from './hooks/useExpenses';
+import { useFilterStore } from '@/store/useFilterStore';
 import dynamic_next from 'next/dynamic';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal'), {
@@ -15,21 +15,10 @@ const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashO
 function CashoutContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Initialize with empty strings or fixed value to avoid hydration mismatch
-  const [dateRange, setDateRange] = useState<DateRange>({
-    start: '',
-    end: ''
-  });
+  const { dateRange } = useFilterStore();
 
-  // Handle client-side mounting and date initialization
   useEffect(() => {
     setIsMounted(true);
-    const today = new Date().toISOString().split('T')[0];
-    setDateRange({
-      start: today,
-      end: today
-    });
   }, []);
 
   const { 
@@ -58,12 +47,8 @@ function CashoutContent() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white">
         
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Cash Management</h1>
-            <p className="text-muted-foreground mt-1">Track and categorize all cash outflows from the register.</p>
-          </div>
+        {/* Actions Bar */}
+        <div className="flex justify-end pt-2">
           <button 
             onClick={() => setIsModalOpen(true)}
             className="w-full sm:w-auto bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95 font-bold"
@@ -99,16 +84,6 @@ function CashoutContent() {
             </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="flex justify-end">
-            <DateRangeFilter 
-                startDate={dateRange.start}
-                endDate={dateRange.end}
-                onStartDateChange={(d) => setDateRange(prev => ({ ...prev, start: d }))}
-                onEndDateChange={(d) => setDateRange(prev => ({ ...prev, end: d }))}
-                onClear={() => setDateRange({ start: '', end: '' })}
-            />
-        </div>
 
         {/* Table Section */}
         {isLoading && dateRange.start ? (

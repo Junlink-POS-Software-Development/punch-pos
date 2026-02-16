@@ -8,6 +8,8 @@ import { Sun, Moon, Monitor } from "lucide-react";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useFilterStore } from "@/store/useFilterStore";
+import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
 
 interface HeaderProps {
   onSignInClick: () => void;
@@ -23,12 +25,14 @@ const ROUTE_TITLES: Record<string, string> = {
   "/settings": "System Settings",
   "/maintenance": "Database Maintenance",
   "/google-workspace": "Google Workspace",
+  "/cashout": "Cash Management",
 };
 
 const THEME_CYCLE = ["light", "dark", "system"] as const;
 
 export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const { user, isAuthReady } = useAuthStore();
+  const { dateRange, setDateRange, resetDateRange } = useFilterStore();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
@@ -53,11 +57,23 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       {/* LEFT: Spacer for where logo used to be (optional, but keep for balance if needed) */}
       <div className="w-[180px] hidden lg:block shrink-0" />
 
-      <div className="flex-1 flex justify-center max-w-2xl mx-auto">
+      <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto gap-8">
         {activeTitle && (
-          <h2 className="text-3xl font-bold text-foreground tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 font-lexend">
+          <h2 className="text-3xl font-bold text-foreground tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 font-lexend shrink-0">
             {activeTitle}
           </h2>
+        )}
+
+        {pathname === "/cashout" && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-700">
+            <DateRangeFilter
+              startDate={dateRange.start}
+              endDate={dateRange.end}
+              onStartDateChange={(d) => setDateRange({ ...dateRange, start: d })}
+              onEndDateChange={(d) => setDateRange({ ...dateRange, end: d })}
+              onClear={resetDateRange}
+            />
+          </div>
         )}
       </div>
 
