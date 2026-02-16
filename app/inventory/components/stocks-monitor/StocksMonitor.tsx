@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { InventorySummary } from "@/app/dashboard/components/overview/InventorySummary";
+import { InventorySummary } from "./InventorySummary";
 import { StocksMonitorContent } from "./components/StocksMonitorContent";
 
 const MemoizedInventorySummary = memo(InventorySummary);
