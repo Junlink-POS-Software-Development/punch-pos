@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+temp_ts_errors.txt
+temp_full_errors.txt
+ts_errors.txt
+task.txt
 
 # debug
 npm-debug.log*
@@ -39,3 +43,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+test_output.json
+test_output.txt
+
+# local env files
+.env*.local
+
+# OS files
+Thumbs.db
+
