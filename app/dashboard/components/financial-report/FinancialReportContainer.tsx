@@ -1,7 +1,7 @@
 "use client";
 
 import dayjs from "dayjs";
-import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
+import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 import { useFinancialReport } from "../../hooks/useFinancialReport";
 import { useDashboardDateStore } from "../../store/useDashboardDateStore";
 import { FinancialReportTable } from "./FinancialReportTable";

@@ -72,14 +72,14 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       ],
     },
     {
-      id: "expenses",
-      text: "Expenses",
+      id: "cashout",
+      text: "Cash Out",
       Icon: TrendingDown,
-      href: "/expenses",
+      href: "/cashout",
       shortcuts: [
-        { label: "Cashout", href: "/expenses?view=cashout" },
-        { label: "Expenses Monitor", href: "/expenses?view=monitor" },
-        { label: "Cash Flow", href: "/expenses?view=cashflow" },
+        { label: "Record Cashout", href: "/cashout?view=cashout" },
+        { label: "Expenses Monitor", href: "/cashout?view=monitor" },
+        { label: "Cash Flow", href: "/cashout?view=cashflow" },
       ],
     },
     {

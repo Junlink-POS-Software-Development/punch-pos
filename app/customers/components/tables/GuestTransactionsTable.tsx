@@ -1,7 +1,7 @@
 import React from "react";
 import { useCustomerData } from "../../hooks/useCustomerData";
 import { Calendar, User, FileText, Search } from "lucide-react";
-import { DateColumnFilter } from "@/app/expenses/components/cashout/components/DateColumnFilter";
+import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 
 export const GuestTransactionsTable = () => {
   const { guestTransactions, isLoading, startDate, endDate, handleDateChange } = useCustomerData();

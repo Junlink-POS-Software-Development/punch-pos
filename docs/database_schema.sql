@@ -5,6 +5,7 @@ CREATE TABLE public.classification (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
   store_id uuid NOT NULL,
+  icon text DEFAULT 'Store', -- Column for category icons
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT classification_pkey PRIMARY KEY (id),
   CONSTRAINT classification_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
@@ -47,6 +48,20 @@ CREATE TABLE public.customers (
   CONSTRAINT customers_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.customer_groups(id),
   CONSTRAINT customers_owner_fkey FOREIGN KEY (admin_id) REFERENCES public.users(user_id)
 );
+CREATE TABLE public.daily_store_stats (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL,
+  date date NOT NULL DEFAULT CURRENT_DATE,
+  total_gross_sales numeric DEFAULT 0,
+  total_net_sales numeric DEFAULT 0,
+  transaction_count integer DEFAULT 0,
+  total_cogs numeric DEFAULT 0,
+  total_expenses numeric DEFAULT 0,
+  gross_profit numeric DEFAULT 0,
+  net_profit numeric DEFAULT 0,
+  CONSTRAINT daily_store_stats_pkey PRIMARY KEY (id),
+  CONSTRAINT daily_store_stats_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
+);
 CREATE TABLE public.expenses (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -59,11 +74,23 @@ CREATE TABLE public.expenses (
   source text,
   category_id uuid,
   classification_id uuid,
+  cashout_type text CHECK (cashout_type = ANY (ARRAY['COGS'::text, 'OPEX'::text, 'REMITTANCE'::text])),
+  metadata jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT expenses_pkey PRIMARY KEY (id),
   CONSTRAINT expenses_classification_id_fkey FOREIGN KEY (classification_id) REFERENCES public.classification(id),
   CONSTRAINT expenses_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT expenses_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id),
   CONSTRAINT expenses_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.product_category(id)
+);
+CREATE TABLE public.invitations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  inviter_id uuid NOT NULL,
+  invitee_email text NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  store_ids ARRAY NOT NULL,
+  CONSTRAINT invitations_pkey PRIMARY KEY (id),
+  CONSTRAINT invitations_inviter_id_fkey FOREIGN KEY (inviter_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -86,7 +113,7 @@ CREATE TABLE public.payments (
   customer_name text,
   amount_rendered numeric,
   voucher numeric,
-  grand_total numeric,
+  amount_paid numeric,
   change numeric,
   transaction_no text,
   transaction_time timestamp with time zone NOT NULL DEFAULT now(),
@@ -100,6 +127,16 @@ CREATE TABLE public.payments (
   CONSTRAINT payments_cashier_name_fkey FOREIGN KEY (cashier_id) REFERENCES auth.users(id),
   CONSTRAINT payments_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
 );
+CREATE TABLE public.playground_states (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL,
+  name text NOT NULL,
+  content jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT playground_states_pkey PRIMARY KEY (id),
+  CONSTRAINT playground_states_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
+);
 CREATE TABLE public.product_category (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   category text NOT NULL,
@@ -108,6 +145,19 @@ CREATE TABLE public.product_category (
   is_default_voucher_source boolean DEFAULT false,
   CONSTRAINT product_category_pkey PRIMARY KEY (id),
   CONSTRAINT product_category_store_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
+);
+CREATE TABLE public.quick_pick_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  item_id uuid NOT NULL,
+  store_id uuid NOT NULL,
+  label text NOT NULL,
+  color text NOT NULL DEFAULT 'bg-blue-500'::text,
+  image_url text,
+  position integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT quick_pick_items_pkey PRIMARY KEY (id),
+  CONSTRAINT quick_pick_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id),
+  CONSTRAINT quick_pick_items_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
 );
 CREATE TABLE public.staff_permissions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -164,6 +214,8 @@ CREATE TABLE public.stores (
   store_img text,
   user_id uuid NOT NULL,
   enrollment_id text NOT NULL DEFAULT "substring"(md5((random())::text), 1, 8) UNIQUE,
+  deleted_at timestamp with time zone,
+  co_admins ARRAY DEFAULT '{}'::uuid[],
   CONSTRAINT stores_pkey PRIMARY KEY (store_id),
   CONSTRAINT store_owner_auth_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
@@ -197,6 +249,7 @@ CREATE TABLE public.users (
   store_id uuid,
   avatar text,
   metadata jsonb DEFAULT '{}'::jsonb,
+  deleted_at timestamp with time zone,
   CONSTRAINT users_pkey PRIMARY KEY (user_id),
   CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT users_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)

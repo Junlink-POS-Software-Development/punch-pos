@@ -16,23 +16,23 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   onClear,
 }) => {
   return (
-    <div className="flex items-center gap-2 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+    <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-lg border border-border">
       <div className="flex items-center gap-2">
-        <span className="text-slate-400 text-xs uppercase font-semibold">
+        <span className="text-muted-foreground text-xs uppercase font-semibold">
           Date Range:
         </span>
         <input
           type="date"
           value={startDate}
           onChange={(e) => onStartDateChange(e.target.value)}
-          className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
-        <span className="text-slate-500">-</span>
+        <span className="text-muted-foreground/50">-</span>
         <input
           type="date"
           value={endDate}
           onChange={(e) => onEndDateChange(e.target.value)}
-          className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="bg-card border border-border rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
       {(startDate || endDate) && (
