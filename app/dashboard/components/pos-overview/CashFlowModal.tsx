@@ -8,7 +8,7 @@ import {
   useReactTable,
   ColumnDef,
 } from "@tanstack/react-table";
-import { X, Filter, Loader2 } from "lucide-react";
+import { X, Filter, Loader2, RefreshCw } from "lucide-react";
 import dayjs from "dayjs";
 import {
   fetchCashFlowLedger,
@@ -31,6 +31,7 @@ export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
   const [endDate, setEndDate] = useState(
     dayjs().endOf("month").format("YYYY-MM-DD")
   );
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // --- 1. Fetch Categories ---
   const { data: categories = [] } = useQuery({
@@ -49,10 +50,16 @@ export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
   );
 
   // --- 2. Fetch Ledger Data ---
-  const { data: ledger = [], isLoading } = useQuery({
+  const { data: ledger = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["cash-flow-modal-ledger", activeCategory, dateRangeParam],
-    queryFn: () => fetchCashFlowLedger(activeCategory, dateRangeParam),
+    queryFn: async () => {
+      const data = await fetchCashFlowLedger(activeCategory, dateRangeParam);
+      setLastUpdated(new Date());
+      return data;
+    },
     enabled: isOpen && !!activeCategory,
+    staleTime: 0, // Ensure fresh data on every fetch
+    refetchOnWindowFocus: true,
   });
 
   // --- 3. Table Column Definitions ---
@@ -166,23 +173,40 @@ export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
             <h2 className="text-xl font-bold text-foreground">
               Cash Flow Ledger
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {startDate && endDate
-                ? `${dayjs(startDate).format("MMM D")} – ${dayjs(endDate).format("MMM D, YYYY")}`
-                : "All time"}
-              {" · "}
-              <span className="font-medium text-foreground/80">
-                {activeCategory}
-              </span>
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-sm text-muted-foreground">
+                {startDate && endDate
+                  ? `${dayjs(startDate).format("MMM D")} – ${dayjs(endDate).format("MMM D, YYYY")}`
+                  : "All time"}
+                {" · "}
+                <span className="font-medium text-foreground/80">
+                  {activeCategory}
+                </span>
+              </p>
+              {lastUpdated && (
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  Live: {dayjs(lastUpdated).format("HH:mm:ss")}
+                </span>
+              )}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95 disabled:opacity-50"
+              title="Refresh Data"
+            >
+              <RefreshCw size={18} className={isFetching ? "animate-spin" : ""} />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* --- Filter Bar --- */}
