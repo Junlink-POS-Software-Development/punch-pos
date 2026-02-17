@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useDashboard } from "./hooks/useDashboard";
 import { HistoricalBanner } from "./components/pos-overview/HistoricalBanner";
 import { DashboardHeader } from "./components/pos-overview/DashboardHeader";
@@ -9,6 +9,8 @@ import { PaymentMethods } from "./components/pos-overview/PaymentMethods";
 import { ActivityFeed } from "./components/pos-overview/ActivityFeed";
 import { InventoryAlerts } from "./components/pos-overview/InventoryAlerts";
 import { CashoutModal } from "./components/pos-overview/CashoutModal";
+import { CashFlowModal } from "./components/pos-overview/CashFlowModal";
+import { BookOpen } from "lucide-react";
 
 const STORE_NAME = "Punch POS"; // Or specific store name
 
@@ -36,6 +38,8 @@ function DashboardContent() {
     isHighRisk,
     isLoading,
   } = useDashboard();
+
+  const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/20 p-4 md:p-6 pb-24 font-sans text-foreground">
@@ -75,6 +79,17 @@ function DashboardContent() {
           />
         )}
 
+        {/* CASH FLOW LEDGER BUTTON */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setIsCashFlowOpen(true)}
+            className="flex items-center gap-2 bg-card hover:bg-muted px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground shadow-sm transition-all active:scale-[0.98]"
+          >
+            <BookOpen size={16} className="text-emerald-500" />
+            Cash Flow Ledger
+          </button>
+        </div>
+
         {/* SECTION 2: OPERATIONS & ACTIVITY */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
           <PaymentMethods />
@@ -95,6 +110,12 @@ function DashboardContent() {
           expenseCategory={expenseCategory}
           setExpenseCategory={setExpenseCategory}
           onSubmit={handleAddExpense}
+        />
+
+        {/* CASH FLOW LEDGER MODAL */}
+        <CashFlowModal
+          isOpen={isCashFlowOpen}
+          onClose={() => setIsCashFlowOpen(false)}
         />
       </div>
     </div>
