@@ -11,6 +11,9 @@ import {
   type ActivityItem,
 } from "../lib/dashboardMockData";
 
+import { useQuery } from "@tanstack/react-query";
+import { fetchDashboardStats } from "../lib/dashboard.api";
+
 export type FlipCardKey = "sales" | "profit" | "cash" | "cashout";
 export type ExpenseCategory = "COGS" | "OPEX" | "REMIT";
 
@@ -20,8 +23,14 @@ export function useDashboard() {
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const isHistorical = selectedDate !== todayStr;
 
-  // ─── Core Data State ───────────────────────────────────────────────────────
-  const [stats, setStats] = useState<DashboardStats>(INITIAL_STATS);
+  // ─── Core Data Fetching ────────────────────────────────────────────────────
+  const { data: serverStats, isLoading } = useQuery({
+    queryKey: ["dashboard-stats", selectedDate],
+    queryFn: () => fetchDashboardStats(selectedDate),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  const stats: DashboardStats = serverStats || INITIAL_STATS;
   const [inventoryStats] = useState<InventoryStatsData>(INITIAL_INVENTORY_STATS);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>(INITIAL_RECENT_ACTIVITY);
 
@@ -64,21 +73,9 @@ export function useDashboard() {
 
     const amount = parseFloat(expenseAmount);
 
-    setStats((prev) => {
-      const newCashout = { ...prev.cashout };
-      newCashout.total += amount;
-      if (expenseCategory === "OPEX") newCashout.opex += amount;
-      if (expenseCategory === "COGS") newCashout.cogs += amount;
-      if (expenseCategory === "REMIT") newCashout.remittance += amount;
-
-      return {
-        ...prev,
-        cashInDrawer: prev.cashInDrawer - amount,
-        cashout: newCashout,
-        netProfit: prev.netSales - newCashout.cogs - newCashout.opex,
-      };
-    });
-
+    // Note: Local state update for stats is removed because stats are now fetched from server.
+    // Recording an expense should ideally call an API and invalidate the dashboard-stats query.
+    
     const newActivity: ActivityItem = {
       id: Date.now(),
       type: expenseCategory,

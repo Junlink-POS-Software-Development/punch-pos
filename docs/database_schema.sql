@@ -5,7 +5,6 @@ CREATE TABLE public.classification (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
   store_id uuid NOT NULL,
-  icon text DEFAULT 'Store', -- Column for category icons
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT classification_pkey PRIMARY KEY (id),
   CONSTRAINT classification_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
@@ -56,9 +55,12 @@ CREATE TABLE public.daily_store_stats (
   total_net_sales numeric DEFAULT 0,
   transaction_count integer DEFAULT 0,
   total_cogs numeric DEFAULT 0,
-  total_expenses numeric DEFAULT 0,
+  total_cashout numeric DEFAULT 0,
   gross_profit numeric DEFAULT 0,
   net_profit numeric DEFAULT 0,
+  total_opex numeric DEFAULT 0,
+  total_remittance numeric DEFAULT 0,
+  cash_remaining numeric DEFAULT 0,
   CONSTRAINT daily_store_stats_pkey PRIMARY KEY (id),
   CONSTRAINT daily_store_stats_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
 );
