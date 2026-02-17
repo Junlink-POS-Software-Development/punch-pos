@@ -37,6 +37,8 @@ function DashboardContent() {
     handleAddExpense,
     isHighRisk,
     isLoading,
+    isMultiDrawer,
+    categorySales,
   } = useDashboard();
 
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
@@ -76,6 +78,8 @@ function DashboardContent() {
             toggleFlip={toggleFlip}
             isHighRisk={isHighRisk}
             isHistorical={isHistorical}
+            isMultiDrawer={isMultiDrawer}
+            categorySales={categorySales}
           />
         )}
 

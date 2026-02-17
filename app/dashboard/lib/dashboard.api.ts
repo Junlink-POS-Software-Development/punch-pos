@@ -245,3 +245,53 @@ export const fetchQuantitySoldByCategory = async (
     quantity,
   }));
 };
+
+export const fetchHasVoucherSource = async (): Promise<boolean> => {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("product_category")
+    .select("id")
+    .eq("is_default_voucher_source", true)
+    .limit(1);
+
+  if (error) {
+    console.error("Error checking voucher source:", error);
+    return false;
+  }
+
+  return (data?.length ?? 0) > 0;
+};
+
+export const fetchLatestCategorySales = async (
+  date: string = dayjs().format("YYYY-MM-DD")
+): Promise<{ category: string; cash_in: number }[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  // Get the latest row per category up to the given date
+  const { data, error } = await supabase
+    .from("categorical_cash_flow")
+    .select("category, cash_in, date")
+    .eq("store_id", storeId)
+    .eq("date", date)
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching category sales:", error);
+    return [];
+  }
+
+  if (!data || data.length === 0) return [];
+
+  // Deduplicate by category — keep the latest (first) row per category
+  const seen = new Set<string>();
+  const result: { category: string; cash_in: number }[] = [];
+  for (const row of data) {
+    if (!seen.has(row.category)) {
+      seen.add(row.category);
+      result.push({ category: row.category, cash_in: Number(row.cash_in) || 0 });
+    }
+  }
+
+  return result;
+};

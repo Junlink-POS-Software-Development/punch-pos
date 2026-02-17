@@ -8,7 +8,7 @@ import {
 } from "../lib/dashboardMockData";
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardStats } from "../lib/dashboard.api";
+import { fetchDashboardStats, fetchHasVoucherSource, fetchLatestCategorySales } from "../lib/dashboard.api";
 
 export type FlipCardKey = "sales" | "profit" | "cash" | "cashout";
 export type ExpenseCategory = "COGS" | "OPEX" | "REMIT";
@@ -24,6 +24,21 @@ export function useDashboard() {
     queryKey: ["dashboard-stats", selectedDate],
     queryFn: () => fetchDashboardStats(selectedDate),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // ─── Multi-Drawer Detection ────────────────────────────────────────────────
+  const { data: isMultiDrawer = false } = useQuery({
+    queryKey: ["has-voucher-source"],
+    queryFn: fetchHasVoucherSource,
+    staleTime: 1000 * 60 * 30, // 30 minutes — rarely changes
+  });
+
+  // ─── Categorical Cash Flow (only in multi-drawer mode) ─────────────────────
+  const { data: categorySales = [] } = useQuery({
+    queryKey: ["daily-category-sales", selectedDate],
+    queryFn: () => fetchLatestCategorySales(selectedDate),
+    enabled: isMultiDrawer,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Zeroed out stats as default instead of mock data
@@ -140,5 +155,9 @@ export function useDashboard() {
     // Derived
     isHighRisk,
     isLoading,
+
+    // Multi-drawer
+    isMultiDrawer,
+    categorySales,
   };
 }

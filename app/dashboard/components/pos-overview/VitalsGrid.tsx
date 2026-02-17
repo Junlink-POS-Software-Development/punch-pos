@@ -17,6 +17,8 @@ interface VitalsGridProps {
   toggleFlip: (card: FlipCardKey) => void;
   isHighRisk: boolean;
   isHistorical: boolean;
+  isMultiDrawer: boolean;
+  categorySales: { category: string; cash_in: number }[];
 }
 
 export function VitalsGrid({
@@ -25,6 +27,8 @@ export function VitalsGrid({
   toggleFlip,
   isHighRisk,
   isHistorical,
+  isMultiDrawer,
+  categorySales,
 }: VitalsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
@@ -68,21 +72,52 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
-            <div className="p-2 bg-slate-800 rounded-full mb-2 text-emerald-400">
-              <TrendingUp size={20} />
+          isMultiDrawer && categorySales.length > 0 ? (
+            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-emerald-500/10 rounded-md text-emerald-500">
+                  <TrendingUp size={14} />
+                </div>
+                <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+                  Sales by Category
+                </h4>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0">
+                {categorySales.map((entry) => (
+                  <div
+                    key={entry.category}
+                    className="flex items-center justify-between text-[11px] bg-muted/40 px-2.5 py-1.5 rounded-lg"
+                  >
+                    <span className="text-muted-foreground font-medium truncate mr-2">
+                      {entry.category}
+                    </span>
+                    <span className="font-mono font-semibold text-foreground whitespace-nowrap">
+                      ₱{entry.cash_in.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-2 font-medium tracking-wide uppercase text-center shrink-0">
+                Click to flip back
+              </p>
             </div>
-            <h4 className="font-bold text-slate-100 text-sm mb-2">
-              What is Net Sales?
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed px-1">
-              The true money you earned from selling items today, calculated
-              after taking away any discounts given, item returns, or allowances.
-            </p>
-            <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
-              Click to flip back
-            </p>
-          </div>
+          ) : (
+            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+              <div className="p-2 bg-slate-800 rounded-full mb-2 text-emerald-400">
+                <TrendingUp size={20} />
+              </div>
+              <h4 className="font-bold text-slate-100 text-sm mb-2">
+                What is Net Sales?
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed px-1">
+                The true money you earned from selling items today, calculated
+                after taking away any discounts given, item returns, or allowances.
+              </p>
+              <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
+                Click to flip back
+              </p>
+            </div>
+          )
         }
       />
 
