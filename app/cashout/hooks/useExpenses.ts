@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery, keepPreviousData, InfiniteData } from "@tanstack/react-query";
 import { useState, useCallback, useMemo } from "react";
 import {
   fetchExpenses,
@@ -23,6 +23,12 @@ type OptimisticCashoutRecord = CashoutRecord & {
   _optimistic?: boolean;
   _syncing?: boolean;
 };
+
+interface CashoutPage {
+  data: OptimisticCashoutRecord[];
+  count: number;
+  nextPage?: number;
+}
 
 // Shared query key prefix for all expense-related data
 const EXPENSES_KEY = "expenses";
@@ -160,7 +166,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
       };
 
       // Optimistically add to cache (prepend to first page) for THIS query
-      queryClient.setQueryData(queryKey, (old: any) => {
+      queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
         const newPages = [...old.pages];
         newPages[0] = {
@@ -176,11 +182,11 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         // Rollback on error
-        queryClient.setQueryData(queryKey, (old: any) => {
+        queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
           if (!old) return old;
-          const newPages = old.pages.map((page: any) => ({
+          const newPages = old.pages.map((page) => ({
             ...page,
-            data: page.data.filter((e: OptimisticCashoutRecord) => e.id !== tempId),
+            data: page.data.filter((e) => e.id !== tempId),
           }));
           return { ...old, pages: newPages };
         });
@@ -197,11 +203,11 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
       const previousData = queryClient.getQueryData(queryKey);
 
       // Optimistically update
-      queryClient.setQueryData(queryKey, (old: any) => {
+      queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
-        const newPages = old.pages.map((page: any) => ({
+        const newPages = old.pages.map((page) => ({
           ...page,
-          data: page.data.map((e: OptimisticCashoutRecord) =>
+          data: page.data.map((e) =>
             e.id === id
               ? {
                   ...e,
@@ -237,11 +243,11 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
       const previousData = queryClient.getQueryData(queryKey);
 
       // Optimistically remove
-      queryClient.setQueryData(queryKey, (old: any) => {
+      queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
-        const newPages = old.pages.map((page: any) => ({
+        const newPages = old.pages.map((page) => ({
           ...page,
-          data: page.data.filter((e: OptimisticCashoutRecord) => e.id !== id),
+          data: page.data.filter((e) => e.id !== id),
         }));
         return { ...old, pages: newPages };
       });

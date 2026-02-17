@@ -1,6 +1,7 @@
 import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
-import { TransactionItem, PaymentRecord } from "../types";
+import { TransactionItem, PaymentRecord as FormattedPaymentRecord } from "../types";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { TransactionRecord, PaymentRecord } from "@/app/actions/transactions";
 
 export interface TransactionFilters {
   startDate?: string;
@@ -25,7 +26,7 @@ export const useTransactionHistory = (
         throw new Error(result.error);
       }
 
-      const formattedData = (result.data as any[]).map(
+      const formattedData = (result.data as TransactionRecord[]).map(
         (item) => ({
           transactionNo: item.invoice_no || "N/A",
           transactionTime: item.transaction_time 
@@ -70,7 +71,7 @@ export const usePaymentHistory = (
         throw new Error(result.error);
       }
 
-      const formattedData = (result.data as any[]).map((p) => ({
+      const formattedData = (result.data as PaymentRecord[]).map((p) => ({
         id: p.id,
         transactionNo: p.invoice_no,
         transactionTime: new Date(p.transaction_time).toLocaleString(),
@@ -79,12 +80,12 @@ export const usePaymentHistory = (
         voucher: p.voucher ?? 0,
         grandTotal: p.grand_total ?? 0,
         change: p.change ?? 0,
-      })) as PaymentRecord[];
+      })) as FormattedPaymentRecord[];
 
       return {
         data: formattedData,
         count: result.count || 0,
-        nextPage: (result.data as any[]).length === pageSize ? (pageParam as number) + 1 : undefined
+        nextPage: (result.data as PaymentRecord[]).length === pageSize ? (pageParam as number) + 1 : undefined
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,

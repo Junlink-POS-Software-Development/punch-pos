@@ -98,6 +98,8 @@ export interface TransactionRecord {
   quantity: number;
   sku: string;
   payment_id: string; // The link to the parent payment
+  cost_price: number;
+  discount: number;
 }
 
 export async function getTransactionHistory(

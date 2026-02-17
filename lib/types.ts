@@ -25,3 +25,16 @@ export const signUpSchema = z.object({
 });
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
+
+// --- Shared Types ---
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export interface Metadata {
+  [key: string]: Json | undefined;
+}

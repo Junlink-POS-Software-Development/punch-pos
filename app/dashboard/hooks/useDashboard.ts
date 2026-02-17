@@ -2,14 +2,13 @@
 
 import { useState, FormEvent } from "react";
 import {
-  INITIAL_STATS,
-  INITIAL_INVENTORY_STATS,
-  INITIAL_RECENT_ACTIVITY,
-  CASH_LIMIT,
   type DashboardStats,
   type InventoryStatsData,
   type ActivityItem,
 } from "../lib/dashboardMockData";
+
+import { useQuery } from "@tanstack/react-query";
+import { fetchDashboardStats } from "../lib/dashboard.api";
 
 export type FlipCardKey = "sales" | "profit" | "cash" | "cashout";
 export type ExpenseCategory = "COGS" | "OPEX" | "REMIT";
@@ -20,10 +19,37 @@ export function useDashboard() {
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const isHistorical = selectedDate !== todayStr;
 
-  // ─── Core Data State ───────────────────────────────────────────────────────
-  const [stats, setStats] = useState<DashboardStats>(INITIAL_STATS);
-  const [inventoryStats] = useState<InventoryStatsData>(INITIAL_INVENTORY_STATS);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>(INITIAL_RECENT_ACTIVITY);
+  // ─── Core Data Fetching ────────────────────────────────────────────────────
+  const { data: serverStats, isLoading } = useQuery({
+    queryKey: ["dashboard-stats", selectedDate],
+    queryFn: () => fetchDashboardStats(selectedDate),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Zeroed out stats as default instead of mock data
+  const emptyStats: DashboardStats = {
+    grossSales: 0,
+    salesDiscount: 0,
+    salesReturn: 0,
+    salesAllowance: 0,
+    netSales: 0,
+    cashInDrawer: 0,
+    cashout: {
+      total: 0,
+      cogs: 0,
+      opex: 0,
+      remittance: 0,
+    },
+    netProfit: 0,
+  };
+
+  const stats: DashboardStats = serverStats || emptyStats;
+  const [inventoryStats] = useState<InventoryStatsData>({
+    lowStock: [],
+    mostStocked: { name: "N/A", qty: 0 },
+    expiringSoon: [],
+  });
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
 
   // ─── Flip Card State ───────────────────────────────────────────────────────
   const [flipped, setFlipped] = useState<Record<FlipCardKey, boolean>>({
@@ -44,6 +70,8 @@ export function useDashboard() {
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>("OPEX");
 
   // ─── Derived Values ────────────────────────────────────────────────────────
+  // ─── Derived Values ────────────────────────────────────────────────────────
+  const CASH_LIMIT = 10000.0; // Hardcoded for now or fetch from settings
   const isHighRisk = !isHistorical && stats.cashInDrawer > CASH_LIMIT;
 
   // ─── Time State ────────────────────────────────────────────────────────────
@@ -64,21 +92,9 @@ export function useDashboard() {
 
     const amount = parseFloat(expenseAmount);
 
-    setStats((prev) => {
-      const newCashout = { ...prev.cashout };
-      newCashout.total += amount;
-      if (expenseCategory === "OPEX") newCashout.opex += amount;
-      if (expenseCategory === "COGS") newCashout.cogs += amount;
-      if (expenseCategory === "REMIT") newCashout.remittance += amount;
-
-      return {
-        ...prev,
-        cashInDrawer: prev.cashInDrawer - amount,
-        cashout: newCashout,
-        netProfit: prev.netSales - newCashout.cogs - newCashout.opex,
-      };
-    });
-
+    // Note: Local state update for stats is removed because stats are now fetched from server.
+    // Recording an expense should ideally call an API and invalidate the dashboard-stats query.
+    
     const newActivity: ActivityItem = {
       id: Date.now(),
       type: expenseCategory,
@@ -123,5 +139,6 @@ export function useDashboard() {
 
     // Derived
     isHighRisk,
+    isLoading,
   };
 }

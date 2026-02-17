@@ -12,12 +12,12 @@ interface VitalCardProps {
 export function VitalCard({ flipped, onFlip, frontContent, backContent }: VitalCardProps) {
   return (
     <div
-      className="relative [perspective:1000px] cursor-pointer group h-full"
+      className="relative perspective-[1000px] cursor-pointer group h-full"
       onClick={onFlip}
     >
       <div
-        className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
-          flipped ? "[transform:rotateY(180deg)]" : ""
+        className={`relative w-full h-full transition-transform duration-500 transform-3d ${
+          flipped ? "transform-[rotateY(180deg)]" : ""
         }`}
       >
         {/* FRONT */}

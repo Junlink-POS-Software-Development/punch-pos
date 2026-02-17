@@ -33,7 +33,7 @@ export function VitalsGrid({
         flipped={flipped.sales}
         onFlip={() => toggleFlip("sales")}
         frontContent={
-          <div className="w-full h-full [backface-visibility:hidden] bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
+          <div className="w-full h-full backface-hidden bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
             <div className="flex justify-between items-start mb-2">
               <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                 {isHistorical ? "Net Sales" : "Daily Net Sales"}
@@ -68,7 +68,7 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
             <div className="p-2 bg-slate-800 rounded-full mb-2 text-emerald-400">
               <TrendingUp size={20} />
             </div>
@@ -91,7 +91,7 @@ export function VitalsGrid({
         flipped={flipped.profit}
         onFlip={() => toggleFlip("profit")}
         frontContent={
-          <div className="w-full h-full [backface-visibility:hidden] bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
+          <div className="w-full h-full backface-hidden bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
             <div className="flex justify-between items-start mb-2">
               <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                 {isHistorical ? "Net Profit" : "Today's Net Profit"}
@@ -122,7 +122,7 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
             <div className="p-2 bg-slate-800 rounded-full mb-2 text-blue-400">
               <TrendingUp size={20} />
             </div>
@@ -146,7 +146,7 @@ export function VitalsGrid({
         onFlip={() => toggleFlip("cash")}
         frontContent={
           <div
-            className={`w-full h-full [backface-visibility:hidden] p-4 rounded-xl border shadow-sm transition-all duration-300 flex flex-col justify-between hover:shadow-md ${
+            className={`w-full h-full backface-hidden p-4 rounded-xl border shadow-sm transition-all duration-300 flex flex-col justify-between hover:shadow-md ${
               isHighRisk
                 ? "bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/20"
                 : "bg-card border-border hover:border-blue-500/50"
@@ -198,7 +198,7 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
             <div
               className={`p-2 bg-slate-800 rounded-full mb-2 ${
                 isHighRisk ? "text-amber-400" : "text-slate-300"
@@ -229,7 +229,7 @@ export function VitalsGrid({
         flipped={flipped.cashout}
         onFlip={() => toggleFlip("cashout")}
         frontContent={
-          <div className="w-full h-full [backface-visibility:hidden] bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
+          <div className="w-full h-full backface-hidden bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
             <div className="flex justify-between items-start mb-2">
               <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                 Total Cashout
@@ -273,7 +273,7 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
             <div className="p-2 bg-slate-800 rounded-full mb-2 text-red-400">
               <ArrowDownLeft size={20} />
             </div>
