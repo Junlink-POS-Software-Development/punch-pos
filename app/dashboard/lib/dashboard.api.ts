@@ -8,16 +8,37 @@ const getSupabase = async () => {
   return await createClient();
 };
 
+const getStoreId = async () => {
+  const supabase = await getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !profile?.store_id) {
+    console.error("Error fetching user store_id:", error);
+    throw new Error("Store ID not found");
+  }
+
+  return profile.store_id;
+};
+
 
 export const fetchDailyCashFlow = async (
   date: string = dayjs().format("YYYY-MM-DD"),
   signal?: AbortSignal 
 ): Promise<CashFlowEntry[]> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
   const { data, error } = await supabase
     .from("categorical_cash_flow")
     .select("*")
     .eq("date", date)
+    .eq("store_id", storeId)
     .abortSignal(signal as AbortSignal);
 
   if (error) {
@@ -34,11 +55,13 @@ export const fetchCashFlowByRange = async (
   endDate: string
 ): Promise<number> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
   
   const { data, error } = await supabase
     .rpc('get_range_gross', { 
       start_date: startDate, 
-      end_date: endDate 
+      end_date: endDate,
+      p_store_id: storeId
     });
 
   if (error) {
@@ -56,11 +79,13 @@ export const fetchFinancialReport = async (
   endDate: string
 ): Promise<FinancialReportItem[]> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
   
   // Sum up stats from daily_store_stats for the range
   const { data, error } = await supabase
     .from("daily_store_stats")
     .select("total_gross_sales, total_cashout, cash_remaining")
+    .eq("store_id", storeId)
     .gte("date", startDate)
     .lte("date", endDate);
 
@@ -88,6 +113,7 @@ export const fetchFinancialReport = async (
   const { data: previousData } = await supabase
     .from("overall_cash_flow")
     .select("balance")
+    .eq("store_id", storeId)
     .lt("date", startDate)
     .order("date", { ascending: false })
     .limit(1)
@@ -99,6 +125,7 @@ export const fetchFinancialReport = async (
   const { data: latestData } = await supabase
     .from("overall_cash_flow")
     .select("balance")
+    .eq("store_id", storeId)
     .gte("date", startDate)
     .lte("date", endDate)
     .order("date", { ascending: false })
@@ -122,12 +149,14 @@ export const fetchDashboardStats = async (
   date: string
 ): Promise<any> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
   
   // 1. Fetch pre-calculated stats from daily_store_stats
   const { data: statsData, error: statsError } = await supabase
     .from("daily_store_stats")
     .select("*")
     .eq("date", date)
+    .eq("store_id", storeId)
     .maybeSingle();
 
   if (statsError) {
@@ -139,8 +168,9 @@ export const fetchDashboardStats = async (
   const { data: cashData, error: cashError } = await supabase
     .from("overall_cash_flow")
     .select("balance")
-    .eq("date", date)
-    .order("date", { ascending: false }) // Get the latest if there's any ambiguity
+    .eq("store_id", storeId)
+    .lte("date", date)
+    .order("date", { ascending: false }) // Get the latest balance up to the selected date
     .limit(1)
     .maybeSingle();
 
@@ -176,6 +206,7 @@ export const fetchQuantitySoldByCategory = async (
   date: string = dayjs().format("YYYY-MM-DD")
 ): Promise<{ category: string; quantity: number }[]> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
   
   // We need to join transactions with product_category to get the category name
   // and sum the quantity for the given date.
@@ -187,6 +218,7 @@ export const fetchQuantitySoldByCategory = async (
         category
       )
     `)
+    .eq("store_id", storeId)
     .gte("transaction_time", `${date} 00:00:00`)
     .lte("transaction_time", `${date} 23:59:59`);
 

@@ -2,10 +2,6 @@
 
 import { useState, FormEvent } from "react";
 import {
-  INITIAL_STATS,
-  INITIAL_INVENTORY_STATS,
-  INITIAL_RECENT_ACTIVITY,
-  CASH_LIMIT,
   type DashboardStats,
   type InventoryStatsData,
   type ActivityItem,
@@ -30,9 +26,30 @@ export function useDashboard() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const stats: DashboardStats = serverStats || INITIAL_STATS;
-  const [inventoryStats] = useState<InventoryStatsData>(INITIAL_INVENTORY_STATS);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>(INITIAL_RECENT_ACTIVITY);
+  // Zeroed out stats as default instead of mock data
+  const emptyStats: DashboardStats = {
+    grossSales: 0,
+    salesDiscount: 0,
+    salesReturn: 0,
+    salesAllowance: 0,
+    netSales: 0,
+    cashInDrawer: 0,
+    cashout: {
+      total: 0,
+      cogs: 0,
+      opex: 0,
+      remittance: 0,
+    },
+    netProfit: 0,
+  };
+
+  const stats: DashboardStats = serverStats || emptyStats;
+  const [inventoryStats] = useState<InventoryStatsData>({
+    lowStock: [],
+    mostStocked: { name: "N/A", qty: 0 },
+    expiringSoon: [],
+  });
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
 
   // ─── Flip Card State ───────────────────────────────────────────────────────
   const [flipped, setFlipped] = useState<Record<FlipCardKey, boolean>>({
@@ -53,6 +70,8 @@ export function useDashboard() {
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>("OPEX");
 
   // ─── Derived Values ────────────────────────────────────────────────────────
+  // ─── Derived Values ────────────────────────────────────────────────────────
+  const CASH_LIMIT = 10000.0; // Hardcoded for now or fetch from settings
   const isHighRisk = !isHistorical && stats.cashInDrawer > CASH_LIMIT;
 
   // ─── Time State ────────────────────────────────────────────────────────────
@@ -120,5 +139,6 @@ export function useDashboard() {
 
     // Derived
     isHighRisk,
+    isLoading,
   };
 }

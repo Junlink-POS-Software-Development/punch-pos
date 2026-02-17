@@ -34,6 +34,7 @@ function DashboardContent() {
     setExpenseCategory,
     handleAddExpense,
     isHighRisk,
+    isLoading,
   } = useDashboard();
 
   return (
@@ -58,13 +59,21 @@ function DashboardContent() {
         />
 
         {/* SECTION 1: THE VITALS */}
-        <VitalsGrid
-          stats={stats}
-          flipped={flipped}
-          toggleFlip={toggleFlip}
-          isHighRisk={isHighRisk}
-          isHistorical={isHistorical}
-        />
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-40 bg-card/50 rounded-xl border border-border" />
+            ))}
+          </div>
+        ) : (
+          <VitalsGrid
+            stats={stats}
+            flipped={flipped}
+            toggleFlip={toggleFlip}
+            isHighRisk={isHighRisk}
+            isHistorical={isHistorical}
+          />
+        )}
 
         {/* SECTION 2: OPERATIONS & ACTIVITY */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
