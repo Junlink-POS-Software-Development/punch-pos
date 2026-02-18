@@ -19,6 +19,8 @@ interface VitalsGridProps {
   isHistorical: boolean;
   isMultiDrawer: boolean;
   categorySales: { category: string; cash_in: number }[];
+  isFetching?: boolean;
+  lastUpdatedAt?: number;
 }
 
 export function VitalsGrid({
@@ -29,9 +31,26 @@ export function VitalsGrid({
   isHistorical,
   isMultiDrawer,
   categorySales,
+  isFetching,
+  lastUpdatedAt,
 }: VitalsGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+    <div className="space-y-3 mb-5">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+           <div className={`w-2 h-2 rounded-full ${isFetching ? 'bg-primary animate-pulse' : 'bg-emerald-500'}`}></div>
+           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">
+             Vitals & Cash Position
+           </p>
+        </div>
+        {lastUpdatedAt && lastUpdatedAt > 0 && (
+          <p className="text-[10px] text-muted-foreground italic">
+            Last updated: {new Date(lastUpdatedAt).toLocaleTimeString()}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
       {/* Card 1: Daily Total Net Sales */}
       <VitalCard
         flipped={flipped.sales}
@@ -325,6 +344,7 @@ export function VitalsGrid({
           </div>
         }
       />
+      </div>
     </div>
   );
 }

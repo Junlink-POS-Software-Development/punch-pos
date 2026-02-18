@@ -20,10 +20,11 @@ export function useDashboard() {
   const isHistorical = selectedDate !== todayStr;
 
   // ─── Core Data Fetching ────────────────────────────────────────────────────
-  const { data: serverStats, isLoading } = useQuery({
+  const { data: serverStats, isLoading, isFetching: isFetchingStats, refetch: refetchStats, dataUpdatedAt: statsUpdatedAt } = useQuery({
     queryKey: ["dashboard-stats", selectedDate],
     queryFn: () => fetchDashboardStats(selectedDate),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // 30 seconds
+    refetchInterval: isHistorical ? false : 1000 * 30, // Auto-refresh every 30s when not in history mode
   });
 
   // ─── Multi-Drawer Detection ────────────────────────────────────────────────
@@ -34,11 +35,12 @@ export function useDashboard() {
   });
 
   // ─── Categorical Cash Flow (only in multi-drawer mode) ─────────────────────
-  const { data: categorySales = [] } = useQuery({
+  const { data: categorySales = [], isFetching: isFetchingCategorySales, refetch: refetchCategorySales, dataUpdatedAt: categoryUpdatedAt } = useQuery({
     queryKey: ["daily-category-sales", selectedDate],
     queryFn: () => fetchLatestCategorySales(selectedDate),
     enabled: isMultiDrawer,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
+    refetchInterval: isHistorical ? false : 1000 * 30,
   });
 
   // Zeroed out stats as default instead of mock data
@@ -123,6 +125,16 @@ export function useDashboard() {
     setExpenseAmount("");
     setExpenseReason("");
   };
+  
+  const handleManualRefresh = () => {
+    refetchStats();
+    if (isMultiDrawer) {
+      refetchCategorySales();
+    }
+  };
+
+  const isFetching = isFetchingStats || (isMultiDrawer && isFetchingCategorySales);
+  const lastUpdatedAt = Math.max(statsUpdatedAt, isMultiDrawer ? categoryUpdatedAt : 0);
 
   return {
     // Date
@@ -155,9 +167,12 @@ export function useDashboard() {
     // Derived
     isHighRisk,
     isLoading,
+    isFetching,
+    lastUpdatedAt,
 
     // Multi-drawer
     isMultiDrawer,
     categorySales,
+    handleManualRefresh,
   };
 }

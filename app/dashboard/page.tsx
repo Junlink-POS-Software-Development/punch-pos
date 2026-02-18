@@ -37,8 +37,11 @@ function DashboardContent() {
     handleAddExpense,
     isHighRisk,
     isLoading,
+    isFetching,
+    lastUpdatedAt,
     isMultiDrawer,
     categorySales,
+    handleManualRefresh,
   } = useDashboard();
 
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
@@ -62,6 +65,8 @@ function DashboardContent() {
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           isHistoricalView={isHistorical}
+          onRefresh={handleManualRefresh}
+          isRefreshing={isFetching}
         />
 
         {/* SECTION 1: THE VITALS */}
@@ -80,6 +85,8 @@ function DashboardContent() {
             isHistorical={isHistorical}
             isMultiDrawer={isMultiDrawer}
             categorySales={categorySales}
+            isFetching={isFetching}
+            lastUpdatedAt={lastUpdatedAt}
           />
         )}
 

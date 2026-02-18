@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Filter, Download, Clock } from "lucide-react";
+import { Calendar, Filter, Download, Clock, RefreshCcw } from "lucide-react";
 
 interface DashboardHeaderProps {
   storeName: string;
@@ -9,6 +9,8 @@ interface DashboardHeaderProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
   isHistoricalView: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export function DashboardHeader({
@@ -18,6 +20,8 @@ export function DashboardHeader({
   selectedDate,
   onDateChange,
   isHistoricalView,
+  onRefresh,
+  isRefreshing,
 }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
@@ -49,6 +53,16 @@ export function DashboardHeader({
             className="pl-3 pr-3 py-2 bg-card border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-sm transition-all hover:border-muted-foreground/50"
           />
         </div>
+
+        {/* Refresh Button */}
+        <button 
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className={`p-2 bg-card border border-input rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all shadow-sm ${isRefreshing ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          title="Refresh Dashboard"
+        >
+          <RefreshCcw size={18} className={isRefreshing ? "animate-spin text-primary" : ""} />
+        </button>
 
         <button className="p-2 bg-card border border-input rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shadow-sm">
           <Filter size={18} />

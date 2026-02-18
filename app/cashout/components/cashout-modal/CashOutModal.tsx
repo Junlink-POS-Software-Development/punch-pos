@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Truck, Lightbulb, ArrowRight, X, DollarSign, Save, FileText } from 'lucide-react';
+import { Truck, Lightbulb, ArrowRight, X, DollarSign, Save, FileText, Unlock } from 'lucide-react';
 import { CashoutInput, CashoutType } from '../../lib/cashout.api';
 import DrawerSelect from "../shared/DrawerSelect";
 import { CogsForm } from './CogsForm';
 import { OpexForm } from './OpexForm';
 import { RemittanceForm } from './RemittanceForm';
 import { useExpenses } from '../../hooks/useExpenses'; // Reuse the hook logic
+import { useTransactionStore } from '@/app/settings/backdating/stores/useTransactionStore';
+import dayjs from 'dayjs';
 
 interface CashOutModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface CashOutModalProps {
 
 const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
   const { addExpense, isSubmitting } = useExpenses();
+  const { customTransactionDate } = useTransactionStore();
   const [activeTab, setActiveTab] = useState<CashoutType>('COGS'); 
   const [selectedDrawerId, setSelectedDrawerId] = useState<string>("");
   
@@ -29,12 +32,16 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
   // Client-side initialization of date
   useEffect(() => {
     if (isOpen && !baseData.date) {
+      const initialDate = customTransactionDate 
+        ? dayjs(customTransactionDate).format("YYYY-MM-DD")
+        : new Date().toISOString().split('T')[0];
+
       setBaseData(prev => ({
         ...prev,
-        date: new Date().toISOString().split('T')[0]
+        date: initialDate
       }));
     }
-  }, [isOpen, baseData.date]);
+  }, [isOpen, baseData.date, customTransactionDate]);
 
   const [specificData, setSpecificData] = useState<Partial<CashoutInput>>({});
 
@@ -66,7 +73,7 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
   };
 
   const handleClose = () => {
-    setBaseData({ amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+    setBaseData({ amount: '', date: '', notes: '' });
     setSpecificData({});
     setActiveTab('COGS');
     onClose();
@@ -140,12 +147,22 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Date</label>
               <input 
                 type="date"
-                className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring py-4 px-3 border bg-muted/20 text-foreground text-sm"
+                className={`w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring py-4 px-3 border bg-muted/20 text-foreground text-sm ${customTransactionDate ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
                 value={baseData.date}
                 onChange={(e) => setBaseData({...baseData, date: e.target.value})}
+                disabled={!!customTransactionDate}
               />
             </div>
           </div>
+
+          {customTransactionDate && (
+            <div className="mb-6 flex items-start gap-3 bg-amber-500/10 p-4 border border-amber-500/20 rounded-xl text-amber-600 text-[11px] leading-tight">
+               <Unlock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+               <span>
+                  <span className="font-bold uppercase tracking-tighter">Backdating Active:</span> This transaction will be recorded on {dayjs(customTransactionDate).format("MMMM D, YYYY")}. Ensure this is correct.
+               </span>
+            </div>
+          )}
 
           <div className="h-px bg-border w-full mb-6"></div>
 
