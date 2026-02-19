@@ -1,13 +1,14 @@
 // app/inventory/components/item-registration/hooks/useBarcode.ts
 
-import { useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { useItemRegStore } from "../store/useItemRegStore";
 
 export const useBarcode = () => {
-  const [barcodeModalData, setBarcodeModalData] = useState<InventoryItem[] | null>(null);
+  const { barcodeModalData, setBarcodeModalData, selectedItems } = useItemRegStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const handleBatchBarcodeGeneration = (filteredItems: InventoryItem[], selectedItems: string[]) => {
+  const handleBatchBarcodeGeneration = (filteredItems: InventoryItem[]) => {
     const selected = filteredItems.filter((i) =>
       selectedItems.includes(i.item_id)
     );
@@ -57,3 +58,4 @@ export const useBarcode = () => {
     handleCanvasReady,
   };
 };
+

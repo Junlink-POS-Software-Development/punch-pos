@@ -1,7 +1,7 @@
 // app/inventory/components/item-registration/item-table/ItemTableRow.tsx
 
 import React from "react";
-import { Check, X, Edit, Trash2, ScanBarcode } from "lucide-react";
+import { Trash2, Edit2, Check, X, Barcode, Package } from "lucide-react";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
 
 interface ItemTableRowProps {
@@ -52,68 +52,32 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
         />
       </td>
       <td className="px-4 py-3 border-b border-border">
-        {isEditing ? (
-          <input
-            autoFocus
-            type="text"
-            value={editingData.item_name}
-            onChange={(e) => onUpdateField("item_name", e.target.value)}
-            className="w-full px-2 py-1 bg-background border border-orange-500/50 rounded outline-none text-sm"
-          />
-        ) : (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 shrink-0 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden">
+            {item.image_url ? (
+              <img src={item.image_url} alt={item.item_name} className="h-full w-full object-cover" />
+            ) : (
+              <Package size={16} className="text-muted-foreground/40" />
+            )}
+          </div>
           <div className="font-medium text-foreground">
             {item.item_name}
           </div>
-        )}
+        </div>
       </td>
       <td className="px-4 py-3 border-b border-border font-mono text-xs">
-        {isEditing ? (
-          <input
-            type="text"
-            value={editingData.sku}
-            onChange={(e) => onUpdateField("sku", e.target.value)}
-            className="w-full px-2 py-1 bg-background border border-orange-500/50 rounded outline-none text-xs"
-          />
-        ) : (
-          item.sku
-        )}
+        {item.sku}
       </td>
       <td className="px-4 py-3 border-b border-border">
         <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
           {item.category || "General"}
         </span>
       </td>
-      <td className="px-4 py-3 border-b border-border text-right font-medium">
-        {isEditing ? (
-          <div className="flex items-center justify-end gap-1">
-            <span className="text-muted-foreground text-xs">₱</span>
-            <input
-              type="number"
-              step="0.01"
-              value={editingData.sales_price}
-              onChange={(e) => onUpdateField("sales_price", e.target.value)}
-              className="w-20 px-2 py-1 bg-background border border-orange-500/50 rounded outline-none text-sm text-right"
-            />
-          </div>
-        ) : (
-          `₱${(item.sales_price || 0).toLocaleString()}`
-        )}
+      <td className="px-4 py-3 border-b border-border text-right font-medium text-sm">
+        ₱{(item.sales_price || 0).toLocaleString()}
       </td>
-      <td className="px-4 py-3 border-b border-border text-right text-muted-foreground">
-        {isEditing ? (
-          <div className="flex items-center justify-end gap-1">
-            <span className="text-muted-foreground text-xs">₱</span>
-            <input
-              type="number"
-              step="0.01"
-              value={editingData.unit_cost}
-              onChange={(e) => onUpdateField("unit_cost", e.target.value)}
-              className="w-20 px-2 py-1 bg-background border border-orange-500/50 rounded outline-none text-sm text-right"
-            />
-          </div>
-        ) : (
-          `₱${(item.unit_cost || 0).toLocaleString()}`
-        )}
+      <td className="px-4 py-3 border-b border-border text-right text-muted-foreground text-xs">
+        ₱{(item.unit_cost || 0).toLocaleString()}
       </td>
       <td className="px-4 py-3 border-b border-border">
         {isEditing ? (
@@ -150,17 +114,17 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
           <div className="flex justify-end gap-1 transition-all">
             <button
               onClick={onEdit}
-              className="p-1.5 text-blue-500 hover:bg-blue-500/10 bg-blue-500/5 rounded-lg transition-colors border border-blue-500/10"
-              title="Quick Edit"
+              className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors"
+              title="Edit Item"
             >
-              <Edit size={16} />
+              <Edit2 size={16} />
             </button>
             <button
               onClick={onGenerateBarcode}
-              className="p-1.5 text-primary hover:bg-primary/10 bg-primary/5 rounded-lg transition-colors border border-primary/10"
-              title="Generate Barcode"
+              className="p-1.5 text-purple-500 hover:bg-purple-500/10 rounded-md transition-colors"
+              title="Print Barcode"
             >
-              <ScanBarcode size={16} />
+              <Barcode size={16} />
             </button>
             <button
               onClick={onDelete}

@@ -6,23 +6,19 @@ import {
   BarcodeLabelCanvas,
   BarcodeSheetCanvas,
 } from "../BarcodeComponents";
-import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { useBarcode } from "../hooks/useBarcode";
+import { useItemRegStore } from "../store/useItemRegStore";
 
-interface BarcodeModalProps {
-  barcodeModalData: InventoryItem[] | null;
-  onClose: () => void;
-  onDownload: () => void;
-  onPrint: () => void;
-  onCanvasReady: (node: HTMLCanvasElement) => void;
-}
+const BarcodeModal: React.FC = () => {
+  const {
+    barcodeModalData,
+    handleDownloadBarcode,
+    handlePrintLabel,
+    handleCanvasReady,
+  } = useBarcode();
+  
+  const setBarcodeModalData = useItemRegStore((state) => state.setBarcodeModalData);
 
-const BarcodeModal: React.FC<BarcodeModalProps> = ({
-  barcodeModalData,
-  onClose,
-  onDownload,
-  onPrint,
-  onCanvasReady,
-}) => {
   if (!barcodeModalData) return null;
   const isBatch = barcodeModalData.length > 1;
 
@@ -54,7 +50,7 @@ const BarcodeModal: React.FC<BarcodeModalProps> = ({
               : "Label Preview"}
           </h3>
           <button
-            onClick={onClose}
+            onClick={() => setBarcodeModalData(null)}
             className="text-muted-foreground hover:text-foreground"
           >
             <X size={20} />
@@ -75,7 +71,7 @@ const BarcodeModal: React.FC<BarcodeModalProps> = ({
                   sku: i.sku,
                   price: i.sales_price ?? i.unit_cost,
                 }))}
-                onCanvasReady={onCanvasReady}
+                onCanvasReady={handleCanvasReady}
               />
             ) : (
               <BarcodeLabelCanvas
@@ -85,7 +81,7 @@ const BarcodeModal: React.FC<BarcodeModalProps> = ({
                   sku: barcodeModalData[0].sku,
                   price: barcodeModalData[0].sales_price ?? barcodeModalData[0].unit_cost,
                 }}
-                onCanvasReady={onCanvasReady}
+                onCanvasReady={handleCanvasReady}
               />
             )}
           </div>
@@ -102,13 +98,13 @@ const BarcodeModal: React.FC<BarcodeModalProps> = ({
         {/* Actions */}
         <div className="p-4 bg-card flex gap-3 no-print rounded-b-xl">
           <button
-            onClick={onDownload}
+            onClick={handleDownloadBarcode}
             className="flex-1 py-2.5 bg-card border border-border text-foreground font-medium hover:bg-muted rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors"
           >
             <Download size={18} /> {isBatch ? "Download Sheet" : "Save Image"}
           </button>
           <button
-            onClick={onPrint}
+            onClick={handlePrintLabel}
             className="flex-1 py-2.5 bg-primary text-primary-foreground font-medium hover:bg-primary/90 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors"
           >
             <Printer size={18} /> Print

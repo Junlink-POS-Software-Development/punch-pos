@@ -63,10 +63,14 @@ export const fetchInventory = async (
 
   // 3. Apply Sort
   if (sort) {
-    query = query.order(sort.col, { ascending: sort.dir === "ASC" });
+    query = query
+      .order(sort.col, { ascending: sort.dir === "ASC" })
+      .order("item_id", { ascending: true });
   } else {
-    // Default alphabetical
-    query = query.order("item_name", { ascending: true });
+    // Default alphabetical with stable secondary ID sort
+    query = query
+      .order("item_name", { ascending: true })
+      .order("item_id", { ascending: true });
   }
 
   // 4. Pagination

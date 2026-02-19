@@ -2,32 +2,30 @@
 
 import React from "react";
 import { Search, Plus, Trash2, Edit, ScanBarcode, X } from "lucide-react";
+import { useItemTable } from "../hooks/useItemTable";
 
 interface TableToolbarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  selectedCount: number;
   onAddClick: () => void;
-  onDeleteSelected: () => void;
-  onEditSelected: () => void;
   onGenerateBarcodes: () => void;
-  onClearSelection: () => void;
-  batchEditMode: boolean;
-  editingCount: number;
 }
 
 const TableToolbar: React.FC<TableToolbarProps> = ({
-  searchQuery,
-  setSearchQuery,
-  selectedCount,
   onAddClick,
-  onDeleteSelected,
-  onEditSelected,
   onGenerateBarcodes,
-  onClearSelection,
-  batchEditMode,
-  editingCount,
 }) => {
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedItems,
+    handleDeleteSelected,
+    handleEditSelected,
+    clearSelection,
+    batchEditMode,
+    editingCount,
+  } = useItemTable();
+
+  const selectedCount = selectedItems.length;
+
   return (
     <div className="flex flex-col md:flex-row gap-3 justify-between items-center px-4 py-3 border-b border-border shrink-0">
       {/* Search + Add */}
@@ -64,7 +62,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                 {selectedCount} selected
               </span>
               <button
-                onClick={onClearSelection}
+                onClick={clearSelection}
                 className="p-1 px-1.5 hover:bg-primary/20 text-primary border-l border-primary/20 transition-colors"
                 title="Clear Selection"
               >
@@ -72,7 +70,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
               </button>
             </div>
             <button
-              onClick={onEditSelected}
+              onClick={handleEditSelected}
               className="p-2 text-primary hover:bg-primary/20 bg-primary/10 rounded-lg transition-all border border-primary/20 shadow-sm"
               title="Batch Edit"
             >
@@ -86,7 +84,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
               <ScanBarcode size={18} />
             </button>
             <button
-              onClick={onDeleteSelected}
+              onClick={handleDeleteSelected}
               className="p-2 text-destructive hover:bg-destructive bg-destructive/10 hover:text-destructive-foreground rounded-lg transition-all border border-destructive/20 shadow-sm"
               title="Delete Selected"
             >

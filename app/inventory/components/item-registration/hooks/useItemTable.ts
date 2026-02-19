@@ -1,16 +1,12 @@
 // app/inventory/components/item-registration/hooks/useItemTable.ts
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useItems } from "../../../hooks/useItems";
 import { useInventoryInfinite } from "../../../../dashboard/hooks/useInventory";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { useItemRegStore } from "../store/useItemRegStore";
 
-export type SortKey = "item_name" | "sales_price" | "unit_cost" | "current_stock";
-
-export interface SortConfig {
-  key: SortKey;
-  direction: "asc" | "desc";
-}
+export type { SortKey, SortConfig } from "../store/useItemRegStore";
 
 export const useItemTable = () => {
   const { removeItem, editItem } = useItems();
@@ -24,23 +20,29 @@ export const useItemTable = () => {
     isFetchingNextPage,
   } = useInventoryInfinite();
 
-  const [editingRows, setEditingRows] = useState<Record<string, {
-    item_name: string;
-    sku: string;
-    sales_price: string;
-    unit_cost: string;
-    description: string;
-  }>>({}); 
-  const [batchEditMode, setBatchEditMode] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "item_name",
-    direction: "asc",
-  });
+  // Use Zustand store for table state
+  const {
+    editingRows,
+    setEditingRows,
+    batchEditMode,
+    setBatchEditMode,
+    selectedItems,
+    setSelectedItems,
+    searchQuery,
+    setSearchQuery,
+    sortConfig,
+    setSortConfig,
+    toggleSelectItem,
+  } = useItemRegStore();
 
   const filteredItems = useMemo(() => {
-    let result = [...(inventory || [])];
+    // Deduplicate to prevent key collision errors if data shifts during fetch
+    const uniqueMap = new Map();
+    (inventory || []).forEach((item) => {
+      uniqueMap.set(item.item_id, item);
+    });
+    let result = Array.from(uniqueMap.values());
+
     if (searchQuery) {
       const lowerQ = searchQuery.toLowerCase();
       result = result.filter(
@@ -76,7 +78,7 @@ export const useItemTable = () => {
 
   const editingCount = Object.keys(editingRows).length;
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = (key: any) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -92,14 +94,12 @@ export const useItemTable = () => {
     }
   };
 
-  const toggleSelectItem = (id: string) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter((i) => i !== id));
-      if (batchEditMode && editingRows[id]) {
-        handleCancelInlineEdit(id);
-      }
-    } else {
-      setSelectedItems([...selectedItems, id]);
+  const handleSelectItem = (id: string) => {
+    const isSelected = selectedItems.includes(id);
+    toggleSelectItem(id);
+    
+    if (isSelected && batchEditMode && editingRows[id]) {
+      handleCancelInlineEdit(id);
     }
   };
 
@@ -159,7 +159,7 @@ export const useItemTable = () => {
   };
 
   const handleEditSelected = () => {
-    const newEditing: typeof editingRows = {};
+    const newEditing: any = {};
     filteredItems
       .filter((i) => selectedItems.includes(i.item_id))
       .forEach((item) => {
@@ -177,7 +177,7 @@ export const useItemTable = () => {
 
   const handleUpdateEditingField = (
     itemId: string,
-    field: keyof typeof editingRows[string],
+    field: string,
     value: string
   ) => {
     setEditingRows((prev) => ({
@@ -205,21 +205,17 @@ export const useItemTable = () => {
 
   return {
     editingRows,
-    setEditingRows,
     batchEditMode,
-    setBatchEditMode,
     selectedItems,
-    setSelectedItems,
     searchQuery,
     setSearchQuery,
     sortConfig,
-    setSortConfig,
     filteredItems,
     displayItems,
     editingCount,
     handleSort,
     toggleSelectAll,
-    toggleSelectItem,
+    toggleSelectItem: handleSelectItem,
     handleDeleteSelected,
     clearSelection,
     handleEdit,
@@ -236,3 +232,4 @@ export const useItemTable = () => {
     isFetchingNextPage,
   };
 };
+
