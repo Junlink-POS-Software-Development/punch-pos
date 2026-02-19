@@ -13,6 +13,7 @@ interface SingleItemFormProps {
     stock: string;
     minStock: string;
     imageUrl: string | null;
+    imageSize: string | null;
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     name: string;
@@ -24,6 +25,7 @@ interface SingleItemFormProps {
     stock: string;
     minStock: string;
     imageUrl: string | null;
+    imageSize: string | null;
   }>>;
   categories: Category[];
   isProcessing: boolean;
@@ -53,7 +55,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   const stockRef = useRef<HTMLInputElement>(null);
   const minStockRef = useRef<HTMLInputElement>(null);
 
-  const handleKeyDown = (e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLElement | null>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter -> Submit form
@@ -233,8 +235,15 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
                 <ImageIcon size={20} />
               )}
             </div>
-            <label className="flex-1 h-full px-4 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-dashed border-white/20 rounded-xl text-xs font-semibold text-primary/80 hover:text-primary transition-all cursor-pointer">
-              {isUploading ? "..." : "UPLOAD"}
+            <label className="flex-1 h-full px-4 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border border-dashed border-white/20 rounded-xl transition-all cursor-pointer">
+              <span className="text-[10px] font-bold text-primary/80 uppercase tracking-widest leading-none">
+                {isUploading ? "Uploading..." : "UPLOAD"}
+              </span>
+              {formData.imageSize && !isUploading && (
+                <span className="text-[9px] text-muted-foreground/60 font-mono mt-1 leading-none">
+                  {formData.imageSize}
+                </span>
+              )}
               <input
                 type="file"
                 accept="image/*"

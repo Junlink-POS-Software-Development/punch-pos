@@ -32,6 +32,7 @@ export const useItemReg = () => {
     stock: "",
     minStock: "",
     imageUrl: null as string | null,
+    imageSize: null as string | null,
   });
 
   const [batchRawText, setBatchRawText] = useState("");
@@ -56,6 +57,7 @@ export const useItemReg = () => {
       sellingPrice: parseFloat(formData.sellingPrice) || 0,
       lowStockThreshold: parseInt(formData.minStock) || null,
       imageUrl: formData.imageUrl,
+      categoryName: selectedCat?.category,
     };
 
     addItem(newItem, {
@@ -87,6 +89,7 @@ export const useItemReg = () => {
           stock: "",
           minStock: "",
           imageUrl: null,
+          imageSize: null,
         });
         setViewMode("list");
       },
@@ -150,7 +153,11 @@ export const useItemReg = () => {
       
       fd.append("file", finalFile);
       const publicUrl = await uploadItemImage(fd);
-      setFormData((prev) => ({ ...prev, imageUrl: publicUrl }));
+      setFormData((prev) => ({ 
+        ...prev, 
+        imageUrl: publicUrl,
+        imageSize: `${(compressedFile.size / 1024).toFixed(2)} KB`
+      }));
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Image upload failed. Please try again.");
