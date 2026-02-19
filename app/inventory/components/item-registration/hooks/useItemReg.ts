@@ -79,20 +79,24 @@ export const useItemReg = () => {
           }
         }
 
-        setFormData({
-          name: "",
-          description: "",
-          category: "",
-          sku: "",
-          sellingPrice: "",
-          salesPrice: "",
-          stock: "",
-          minStock: "",
-          imageUrl: null,
-          imageSize: null,
-        });
+        resetForm();
         setViewMode("list");
       },
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      category: "",
+      sku: "",
+      sellingPrice: "",
+      salesPrice: "",
+      stock: "",
+      minStock: "",
+      imageUrl: null,
+      imageSize: null,
     });
   };
 
@@ -180,6 +184,7 @@ export const useItemReg = () => {
     handleSingleSubmit,
     handleBatchProcess,
     handleImageUpload,
+    resetForm,
     categories,
   };
 };

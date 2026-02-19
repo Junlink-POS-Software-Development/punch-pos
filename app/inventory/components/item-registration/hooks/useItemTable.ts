@@ -141,6 +141,7 @@ export const useItemTable = () => {
   const handleSaveInlineEdit = (item: InventoryItem) => {
     const edits = editingRows[item.item_id];
     if (!edits) return;
+    handleCancelInlineEdit(item.item_id);
     editItem(
       {
         id: item.item_id,
@@ -149,11 +150,6 @@ export const useItemTable = () => {
         salesPrice: parseFloat(edits.unit_cost) || 0,
         sellingPrice: parseFloat(edits.sales_price) || 0,
         description: edits.description,
-      },
-      {
-        onSuccess: () => {
-          handleCancelInlineEdit(item.item_id);
-        },
       }
     );
   };

@@ -32,6 +32,7 @@ interface SingleItemFormProps {
   isUploading: boolean;
   handleSingleSubmit: (e: React.FormEvent) => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onReset: () => void;
   onCancel: () => void;
 }
 
@@ -43,6 +44,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   isUploading,
   handleSingleSubmit,
   handleImageUpload,
+  onReset,
   onCancel,
 }) => {
   // Refs for focus management
@@ -85,7 +87,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   };
 
   const handleDiscard = () => {
-    onCancel();
+    onReset();
     // Small delay to ensure state reset doesn't interfere with focus
     setTimeout(() => {
       nameRef.current?.focus();

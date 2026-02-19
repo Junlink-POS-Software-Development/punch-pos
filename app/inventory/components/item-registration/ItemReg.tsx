@@ -28,6 +28,7 @@ const ItemReg = () => {
     handleSingleSubmit,
     handleBatchProcess,
     handleImageUpload,
+    resetForm,
     categories,
   } = useItemReg();
 
@@ -85,6 +86,7 @@ const ItemReg = () => {
               isUploading={isUploading}
               handleSingleSubmit={handleSingleSubmit}
               handleImageUpload={handleImageUpload}
+              onReset={resetForm}
               onCancel={() => setViewMode("list")}
             />
           ) : (
