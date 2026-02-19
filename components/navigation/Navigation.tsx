@@ -98,9 +98,10 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       Icon: Settings,
       href: "/settings",
       shortcuts: [
-        { label: "General", href: "/settings" },
-        { label: "Security", href: "/settings" },
-        { label: "Billing", href: "/settings" },
+        { label: "General", href: "/settings?tab=general" },
+        { label: "Account", href: "/settings?tab=account" },
+        { label: "System", href: "/settings?tab=system" },
+        { label: "Audit Logs", href: "/settings?tab=audit" },
       ],
     },
     {
@@ -356,45 +357,83 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               ? pathname === "/"
               : pathname?.startsWith(item.href) && item.href !== "/";
 
+          const hasShortcuts = item.shortcuts && item.shortcuts.length > 0;
+          const isExpandable = ["inventory", "transactions", "settings"].includes(item.id);
+
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`
-                group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
-                ${
-                  isActive
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                }
-                ${isCollapsed ? "justify-center" : ""}
-              `}
-            >
-              <div className="relative">
-                <item.Icon
-                  className={`
-                    w-6 h-6 transition-transform duration-300
-                    ${isActive ? "scale-110" : "group-hover:scale-110"}
-                  `}
-                />
-                {item.hasNotification && (
-                  <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+            <div key={item.id} className="group/nav-item flex flex-col gap-1">
+              <Link
+                href={item.href}
+                className={`
+                  flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                  }
+                  ${isCollapsed ? "justify-center" : ""}
+                  /* Use blue accent (primary) when expanded and hovered for specific items */
+                  ${!isCollapsed && isExpandable ? "group-hover/nav-item:bg-primary group-hover/nav-item:text-white" : ""}
+                `}
+              >
+                <div className="relative">
+                  <item.Icon
+                    className={`
+                      w-6 h-6 transition-transform duration-300
+                      ${isActive ? "scale-110" : "group-hover/nav-item:scale-110"}
+                    `}
+                  />
+                  {item.hasNotification && (
+                    <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+                  )}
+                </div>
+
+                {!isCollapsed && (
+                  <span className="font-semibold text-base tracking-wide whitespace-nowrap">
+                    {item.text}
+                  </span>
                 )}
-              </div>
 
-              {!isCollapsed && (
-                <span className="font-semibold text-base tracking-wide whitespace-nowrap">
-                  {item.text}
-                </span>
-              )}
+                {/* Tooltip for collapsed state */}
+                {isCollapsed && (
+                  <div className="left-full z-50 absolute ml-4 bg-popover px-3 py-1.5 border border-border rounded-md text-popover-foreground text-xs whitespace-nowrap opacity-0 group-hover/nav-item:opacity-100 pointer-events-none transition-opacity">
+                    {item.text}
+                  </div>
+                )}
+              </Link>
 
-              {/* Tooltip for collapsed state */}
-              {isCollapsed && (
-                <div className="left-full z-50 absolute ml-4 bg-popover px-3 py-1.5 border border-border rounded-md text-popover-foreground text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                  {item.text}
+              {/* Sub-items list - smoother slide-down reveal using CSS grid row transition */}
+              {!isCollapsed && isExpandable && hasShortcuts && (
+                <div className="grid grid-rows-[0fr] group-hover/nav-item:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                  <div className="overflow-hidden">
+                    <div className="flex flex-col ml-6 pl-4 border-l border-border/50 py-1 space-y-0.5">
+                      {item.shortcuts.map((shortcut, idx) => {
+                        const isShortcutActive = pathname === shortcut.href;
+                        return (
+                          <Link
+                            key={idx}
+                            href={shortcut.href}
+                            className={`
+                              py-2 px-3 rounded-lg text-sm transition-all duration-200
+                              ${isShortcutActive 
+                                ? "text-primary font-semibold bg-primary/10" 
+                                : "text-muted-foreground hover:text-primary hover:bg-primary/5"}
+                              /* Staggered-like entry effect */
+                              opacity-0 group-hover/nav-item:opacity-100
+                              translate-x-[-10px] group-hover/nav-item:translate-x-0
+                              transition-all duration-300
+                            `}
+                            style={{ transitionDelay: `${idx * 50}ms` }}
+                          >
+                            {shortcut.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
-            </Link>
+            </div>
           );
         })}
       </div>

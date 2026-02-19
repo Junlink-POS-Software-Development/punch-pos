@@ -2,12 +2,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
-import TransactionsNav, {
-  TransactionsView,
-} from "./components/TransactionsNav";
 
 import { PaymentHistoryTable } from "./components/tables/PaymentHistoryTable";
 import { TransactionHistoryTable } from "./components/tables/TransactionHistoryTable";
@@ -15,9 +10,9 @@ import { TransactionHistoryTable } from "./components/tables/TransactionHistoryT
 function TransactionsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const viewParam = searchParams.get("view") as TransactionsView | null;
+  const viewParam = searchParams.get("view") as any;
 
-  const [activeView, setActiveView] = useState<TransactionsView>("history");
+  const [activeView, setActiveView] = useState("history");
 
   // Sync state with URL param
   useEffect(() => {
@@ -26,7 +21,7 @@ function TransactionsContent() {
     }
   }, [viewParam]);
 
-  const handleViewChange = (view: TransactionsView) => {
+  const handleViewChange = (view: string) => {
     setActiveView(view);
     router.push(`/transactions?view=${view}`);
   };
@@ -57,20 +52,7 @@ function TransactionsContent() {
   };
 
   return (
-    <div className="bg-[#0B1120] min-h-screen text-white pt-2">
-      {" "}
-      {/* Dark bg match */}
-      {/* Sticky Nav Bar */}
-      <div className="top-0 z-10 sticky pt-2 pb-4">
-        <div className="bg-primary-light pt-2 pb-2 mx-4 rounded-2xl border border-slate-800/50 shadow-xl backdrop-blur-md bg-opacity-90">
-          <div className="px-6">
-            <TransactionsNav
-              activeView={activeView}
-              setActiveView={handleViewChange}
-            />
-          </div>
-        </div>
-      </div>
+    <div className="bg-[#0B1120] min-h-screen text-white">
       {/* Main Content Area */}
       <div className="slide-in-from-bottom-2 animate-in duration-300 fade-in">
         {renderView()}
