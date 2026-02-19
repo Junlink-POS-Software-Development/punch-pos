@@ -89,7 +89,7 @@ export const TerminalCart = ({
                     />
                    </div>
                 ) : (
-                    <span>{getValue().toFixed(2)}</span>
+                    <span>{(getValue() ?? 0).toFixed(2)}</span>
                 )}
              </div>
           );
@@ -111,7 +111,7 @@ export const TerminalCart = ({
       }),
       columnHelper.accessor("total", {
         header: () => <div className="text-right">Total</div>,
-        cell: ({ getValue }) => <div className="text-right">{getValue().toFixed(2)}</div>,
+        cell: ({ getValue }) => <div className="text-right">{(getValue() ?? 0).toFixed(2)}</div>,
         size: 80,
         minSize: 60,
       }),

@@ -46,25 +46,25 @@ const SuccessReceiptModal: React.FC<SuccessReceiptModalProps> = ({
           <div className="flex justify-between mb-1">
             <span className="opacity-70">Amount Rendered:</span>
             <span className="text-white">
-              ₱{data.amount_rendered.toFixed(2)}
+              ₱{(data.amount_rendered ?? 0).toFixed(2)}
             </span>
           </div>
 
           {data.voucher > 0 && (
             <div className="flex justify-between mb-1 text-yellow-400">
               <span>Voucher:</span>
-              <span>- ₱{data.voucher.toFixed(2)}</span>
+              <span>- ₱{(data.voucher ?? 0).toFixed(2)}</span>
             </div>
           )}
 
           <div className="flex justify-between mt-4 font-bold text-retro-cyan text-lg">
             <span>GRAND TOTAL:</span>
-            <span>₱{data.grand_total.toFixed(2)}</span>
+            <span>₱{(data.grand_total ?? 0).toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between mt-2 text-green-400">
             <span>CHANGE:</span>
-            <span>₱{data.change.toFixed(2)}</span>
+            <span>₱{(data.change ?? 0).toFixed(2)}</span>
           </div>
         </div>
 

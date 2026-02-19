@@ -105,7 +105,7 @@ export const handleAddToCart = ({
   // 4. Calculate Costs
   // Logic: (Qty * Price) - Discount
   // [NEW] If Free Mode, price is 0
-  const unitPrice = isFreeMode ? 0 : itemDetails.costPrice;
+  const unitPrice = isFreeMode ? 0 : (itemDetails.sellingPrice ?? itemDetails.salesPrice ?? 0);
   const total = quantity * unitPrice - discountValue;
 
   // 5. Update Cart State

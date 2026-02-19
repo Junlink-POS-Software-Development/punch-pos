@@ -74,7 +74,7 @@ export const BatchReviewStep: React.FC<BatchReviewStepProps> = ({
                       +{data.addQuantity}
                     </td>
                     <td className="p-4 text-right font-mono text-emerald-300">
-                      ₱{data.capitalPrice.toFixed(2)}
+                      ₱{(data.capitalPrice ?? 0).toFixed(2)}
                     </td>
                     <td className="p-4 text-slate-500 italic">
                       {data.notes || "—"}

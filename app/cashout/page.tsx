@@ -55,7 +55,7 @@ function CashoutContent() {
                       <div className="p-1.5 bg-red-100/50 text-red-600 rounded-lg"><DollarSign size={16}/></div>
                       <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Cash Out</h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">₱{summary.totalAmount.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-foreground">₱{(summary.totalAmount ?? 0).toFixed(2)}</p>
               </div>
               <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-1">

@@ -89,7 +89,7 @@ export default function StockTable({ onEdit, onAdd, isAdding, onBatchAdd }: Stoc
       cellClass: cellClass,
       renderCell: ({ row }) => (
         <span className="font-mono text-primary">
-          ₱{row.capital_price.toFixed(2)}
+          ₱{(row.capital_price ?? 0).toFixed(2)}
         </span>
       ),
     },

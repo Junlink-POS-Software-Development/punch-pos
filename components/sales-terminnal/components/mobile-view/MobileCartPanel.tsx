@@ -82,7 +82,7 @@ export const MobileCartPanel = ({
                         {item.itemName}
                       </p>
                       <p className="text-slate-400 text-xs">
-                        ₱{item.unitPrice.toFixed(2)} × {item.quantity}
+                        ₱{(item.unitPrice ?? 0).toFixed(2)} × {item.quantity}
                       </p>
                     </div>
                     <button
@@ -95,7 +95,7 @@ export const MobileCartPanel = ({
                   </div>
                   <div className="flex justify-end mt-1">
                     <span className="text-emerald-400 font-bold text-sm">
-                      ₱{item.total.toFixed(2)}
+                      ₱{(item.total ?? 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import { Column } from "react-data-grid";
 import { AlertTriangle, PackageCheck } from "lucide-react";
 import { InventoryItem } from "../lib/inventory.api";
-import { HeaderWithFilter } from "../../item-registration/item-table/HeaderWithFilter";
+import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 
 
 interface GetColumnsProps {

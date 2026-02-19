@@ -135,7 +135,7 @@ const SalesTerminal = () => {
               <div className={`flex flex-col ${!isActionPanelOpen ? 'h-full' : ''}`}>
                   <TerminalHeader 
                     setCustomerId={setCustomerId} 
-                    grandTotal={cartItems.reduce((sum, item) => sum + item.total, 0)}
+                    grandTotal={cartItems.reduce((sum, item) => sum + (item.total || 0), 0)}
                     onAddToCartClick={onAddToCart}
                     onDoneSubmitTrigger={triggerDoneSubmit}
                     setActiveField={setActiveField}

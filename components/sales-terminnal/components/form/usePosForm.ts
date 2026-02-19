@@ -157,7 +157,7 @@ export const usePosForm = (): UsePosFormReturn => {
             updates.discount !== undefined
           ) {
             newItem.total =
-              newItem.unitPrice * newItem.quantity - (newItem.discount || 0);
+              (newItem.unitPrice ?? 0) * (newItem.quantity ?? 0) - (newItem.discount || 0);
           }
           return newItem;
         }

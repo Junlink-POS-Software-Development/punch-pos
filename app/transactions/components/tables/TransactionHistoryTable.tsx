@@ -149,9 +149,9 @@ export const TransactionHistoryTable = () => {
                   <td className="px-6 py-4 text-muted-foreground text-xs">{item.transactionNo}</td>
                   <td className="px-6 py-4 text-muted-foreground text-xs">{item.barcode}</td>
                   <td className="px-6 py-4 font-medium text-foreground">{item.ItemName}</td>
-                  <td className="px-6 py-4 text-right">₱{item.unitPrice.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-right">₱{(item.unitPrice ?? 0).toFixed(2)}</td>
                   <td className="px-6 py-4 text-right">{item.quantity}</td>
-                  <td className="px-6 py-4 font-bold text-primary text-right">₱{item.totalPrice.toFixed(2)}</td>
+                  <td className="px-6 py-4 font-bold text-primary text-right">₱{(item.totalPrice ?? 0).toFixed(2)}</td>
                 </tr>
               ))
             )}

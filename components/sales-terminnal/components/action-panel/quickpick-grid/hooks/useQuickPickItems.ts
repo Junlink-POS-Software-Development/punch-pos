@@ -22,7 +22,7 @@ const fetchQuickPickItems = async () => {
         id,
         item_name,
         sku,
-        cost_price,
+        sales_price,
         description,
         category_id
       )
@@ -37,7 +37,7 @@ const fetchQuickPickItems = async () => {
        id: qpi.item.id,
        itemName: qpi.item.item_name,
        sku: qpi.item.sku,
-       costPrice: qpi.item.cost_price,
+       salesPrice: qpi.item.sales_price,
        description: qpi.item.description,
        category: qpi.item.category_id
     } : undefined

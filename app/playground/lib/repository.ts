@@ -16,7 +16,7 @@ export async function fetchSummaryStats(storeId: string): Promise<SummaryStats> 
   ] = await Promise.all([
     supabase.from('transactions').select('total_price, id').eq('store_id', storeId),
     supabase.from('expenses').select('amount').eq('store_id', storeId),
-    supabase.from('items').select('id, cost_price, low_stock_threshold').eq('store_id', storeId),
+    supabase.from('items').select('id, sales_price, low_stock_threshold').eq('store_id', storeId),
     supabase.from('customers').select('id, created_at').eq('store_id', storeId),
     supabase.from('stock_flow').select('id').eq('store_id', storeId).limit(100) // Just checking recent activity count or existence
   ]);
@@ -34,7 +34,7 @@ export async function fetchSummaryStats(storeId: string): Promise<SummaryStats> 
 
   // Items Props
   const itemsCount = itemsRes.count || itemsRes.data?.length || 0;
-  // Note: True valuation requires summing stock_flow for each item * cost_price. 
+  // Note: True valuation requires summing stock_flow for each item * sales_price. 
   // We'll skip complex valuation for this summary to ensure speed, or approximate if needed.
   const totalValuation = 0; 
   const lowStockCount = 0; // Requires complex calculation

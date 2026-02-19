@@ -20,7 +20,7 @@ export interface TransactionHeader {
 export interface TransactionItem {
   sku: string;
   item_name: string;
-  cost_price?: number; // Optional input, DB looks it up
+  sales_price?: number; // Optional input, DB looks it up
   total_price: number;
   discount: number;
   quantity: number;
@@ -98,7 +98,7 @@ export interface TransactionRecord {
   quantity: number;
   sku: string;
   payment_id: string; // The link to the parent payment
-  cost_price: number;
+  sales_price: number;
   discount: number;
 }
 

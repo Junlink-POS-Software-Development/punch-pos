@@ -79,8 +79,8 @@ export const useTerminalHeader = (setCustomerId: (id: string | null) => void) =>
     if (!item) return { name: "NOT FOUND", price: "₱0.00", stock: 0 };
     const stockInfo = inventoryData?.find((inv) => inv.sku === currentBarcode);
     return {
-      name: item.itemName.toUpperCase(),
-      price: `₱${item.costPrice.toFixed(2)}`,
+      name: (item.itemName || "UNKNOWN").toUpperCase(),
+      price: `₱${(item.sellingPrice ?? item.salesPrice ?? 0).toFixed(2)}`,
       stock: stockInfo?.current_stock ?? 0,
     };
   }, [currentBarcode, allItems, inventoryData]);

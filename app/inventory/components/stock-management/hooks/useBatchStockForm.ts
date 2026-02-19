@@ -22,7 +22,7 @@ export const useBatchStockForm = (items: Item[]) => {
       batchData[item.id!] || {
         selected: false,
         addQuantity: 0,
-        capitalPrice: item.costPrice || 0,
+        capitalPrice: item.salesPrice || 0,
         notes: "",
       }
     );
@@ -35,7 +35,7 @@ export const useBatchStockForm = (items: Item[]) => {
       const current = prev[item.id!] || {
         selected: false,
         addQuantity: 0,
-        capitalPrice: item.costPrice || 0,
+        capitalPrice: item.salesPrice || 0,
         notes: "",
       };
       
@@ -52,7 +52,7 @@ export const useBatchStockForm = (items: Item[]) => {
       const current = prev[item.id!] || {
         selected: false,
         addQuantity: 0,
-        capitalPrice: item.costPrice || 0,
+        capitalPrice: item.salesPrice || 0,
         notes: "",
       };
       

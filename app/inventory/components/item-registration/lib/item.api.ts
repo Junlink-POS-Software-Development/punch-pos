@@ -13,9 +13,11 @@ interface ItemDbRow {
   item_name: string;
   sku: string;
   category_id: string | null;
-  category_name: string | null; // New field from RPC
-  cost_price: number;
+  category_name: string | null;
+  unit_cost: number;
+  sales_price: number | null;
   description: string | null;
+  image_url: string | null;
   low_stock_threshold: number | null;
 }
 
@@ -27,10 +29,12 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
   if (item.id !== undefined) dbItem.id = item.id;
   if (item.sku !== undefined) dbItem.sku = item.sku;
   if (item.itemName !== undefined) dbItem.item_name = item.itemName;
-  if (item.costPrice !== undefined) dbItem.cost_price = item.costPrice;
+  if (item.salesPrice !== undefined) dbItem.unit_cost = item.salesPrice;
+  if (item.sellingPrice !== undefined) dbItem.sales_price = item.sellingPrice ?? null;
   // Map JS 'category' (UUID) -> DB 'category_id'
   if (item.category !== undefined) dbItem.category_id = item.category ?? null;
   if (item.description !== undefined) dbItem.description = item.description ?? null;
+  if (item.imageUrl !== undefined) dbItem.image_url = item.imageUrl ?? null;
   if (item.lowStockThreshold !== undefined) dbItem.low_stock_threshold = item.lowStockThreshold ?? null;
   return dbItem;
 };
@@ -39,24 +43,27 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
 const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
   const { 
     item_name, 
-    cost_price, 
+    unit_cost,
+    sales_price,
     category_id, 
-    category_name, // Destructure the new field
-    description, 
-    low_stock_threshold, 
-    ...rest 
+    category_name,
+    description,
+    image_url,
+    low_stock_threshold,
+    id, 
+    sku 
   } = dbItem;
-  
+
   return {
-    ...rest,
+    id,
     itemName: item_name,
-    costPrice: cost_price,
-    // Keep 'category' as ID so your "Select" inputs in forms still work
+    sku,
     category: category_id ?? undefined,
-    // NEW: Map 'categoryName' for your UI Table
-    // (Ensure you add 'categoryName?: string' to your Item type definition)
-    categoryName: category_name ?? undefined, 
+    categoryName: category_name ?? undefined,
+    salesPrice: unit_cost,
+    sellingPrice: sales_price ?? null,
     description: description ?? undefined,
+    imageUrl: image_url ?? null,
     lowStockThreshold: low_stock_threshold ?? null,
   };
 };
@@ -90,7 +97,12 @@ export const fetchItemsPaginated = async (
   // Table name is 'product_category', column name is 'category'
   const { data, error, count } = await supabase
     .from("items")
-    .select("*, product_category(category)", { count: "exact" })
+    .select(`
+      *,
+      product_category (
+        category
+      )
+    `, { count: "exact" })
     .order("item_name", { ascending: true })
     .range(from, to);
 
@@ -108,8 +120,10 @@ export const fetchItemsPaginated = async (
       sku: item.sku,
       category_id: item.category_id,
       category_name: item.product_category?.category ?? null,
-      cost_price: item.cost_price,
+      unit_cost: item.unit_cost,
+      sales_price: item.sales_price ?? null,
       description: item.description,
+      image_url: item.image_url ?? null,
       low_stock_threshold: item.low_stock_threshold,
     };
     return fromDatabaseObject(dbItem);

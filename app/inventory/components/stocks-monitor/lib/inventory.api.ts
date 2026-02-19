@@ -11,12 +11,15 @@ export interface InventoryItem {
   item_name: string;
   sku: string;
   category: string | null;
-  cost_price: number;
+  unit_cost: number;
+  sales_price: number | null;
+  image_url: string | null;
   quantity_in: number;
   quantity_out: number;
   quantity_sold: number;
   current_stock: number;
   low_stock_threshold: number | null;
+  description: string | null;
 }
 
 // Pagination Params
@@ -76,7 +79,15 @@ export const fetchInventory = async (
     throw new Error(error.message);
   }
 
-  return { data: data || [], count: count || 0 };
+  // 5. Map data to handle potential field name discrepancies in the view
+  const mappedData = (data as any[] || []).map((item) => ({
+    ...item,
+    // Fallback to cost_price if sales_price is missing (old view definition habit)
+    sales_price: item.sales_price ?? item.cost_price ?? 0,
+    unit_cost: item.unit_cost ?? 0,
+  }));
+
+  return { data: mappedData, count: count || 0 };
 };
 
 // Pagination helper
@@ -98,7 +109,14 @@ export const fetchLowStockItems = async (page = 1, limit = 20) => {
     .range(from, to);
 
   if (error) throw new Error(error.message);
-  return { data: data || [], count: count || 0 };
+
+  const mappedData = (data as any[] || []).map((item) => ({
+    ...item,
+    sales_price: item.sales_price ?? item.cost_price ?? 0,
+    unit_cost: item.unit_cost ?? 0,
+  }));
+
+  return { data: mappedData, count: count || 0 };
 };
 
 export const fetchMostStockedItems = async (page = 1, limit = 20) => {
@@ -113,7 +131,14 @@ export const fetchMostStockedItems = async (page = 1, limit = 20) => {
     .range(from, to);
 
   if (error) throw new Error(error.message);
-  return { data: data || [], count: count || 0 };
+
+  const mappedData = (data as any[] || []).map((item) => ({
+    ...item,
+    sales_price: item.sales_price ?? item.cost_price ?? 0,
+    unit_cost: item.unit_cost ?? 0,
+  }));
+
+  return { data: mappedData, count: count || 0 };
 };
 
 // Deprecated: kept to avoid breaking immediate imports before refactor completion

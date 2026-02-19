@@ -8,6 +8,8 @@ import {
   deleteCategory as apiDelete,
 } from "../components/item-registration/lib/categories.api";
 
+export type { Category };
+
 export function useCategories() {
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);

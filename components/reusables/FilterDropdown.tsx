@@ -1,11 +1,9 @@
 // components/inventory/FilterDropdown.tsx
 import React, { useState, useMemo } from "react";
 import { Search, ArrowUpAZ, ArrowDownZA, Trash } from "lucide-react"; // Added Trash icon
-import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
-
 interface FilterDropdownProps {
-  columnKey: keyof Item;
-  allData: Item[];
+  columnKey: any;
+  allData: any[];
   // Updated: Accepts null to signal "remove filter"
   onApply: (
     selectedValues: string[] | null,

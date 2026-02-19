@@ -166,7 +166,7 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
                             <td className="p-2 text-muted-foreground text-sm">{item.sku}</td>
                             <td className="p-2 text-muted-foreground text-sm">{item.categoryName || '-'}</td>
                             <td className="p-2 text-right font-mono text-foreground">
-                              {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(item.costPrice)}
+                              {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(item.salesPrice)}
                             </td>
                           </tr>
                         );

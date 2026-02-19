@@ -1,365 +1,183 @@
-// app/inventory/components/item-registration/ItemTable.tsx
+// app/inventory/components/item-registration/item-table/ItemTable.tsx
 
-"use client";
-
-import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
-import { DataGrid, Column, RenderEditCellProps } from "react-data-grid";
-import "react-data-grid/lib/styles.css";
-import { XCircle, Search, ArrowUpDown, ArrowUp, ArrowDown, Loader2, Plus } from "lucide-react";
-import { Item } from "../utils/itemTypes";
-
-// Imports from our new modular files
-import { useProcessedItems } from "./hooks/useProcessedItems";
-import { HeaderWithFilter } from "./HeaderWithFilter";
-import { ItemActions } from "./ItemActions";
+import React from "react";
+import { ArrowUpDown } from "lucide-react";
+import TableToolbar from "./TableToolbar";
+import ItemTableRow from "./ItemTableRow";
+import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { SortKey, SortConfig } from "../hooks/useItemTable";
 
 interface ItemTableProps {
-  data: Item[];
-  onEdit: (index: number) => void;
-  onDelete: (index: number) => void;
-  onSaveEdit?: (item: Item) => void;
-  fetchNextPage?: () => void;
-  hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
-  totalItems?: number;
-  onAdd?: () => void;
+  displayItems: InventoryItem[];
+  filteredItems: InventoryItem[];
+  selectedItems: string[];
+  toggleSelectAll: () => void;
+  toggleSelectItem: (id: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  sortConfig: SortConfig;
+  handleSort: (key: SortKey) => void;
+  onAddClick: () => void;
+  onDeleteSelected: () => void;
+  onEditSelected: () => void;
+  onGenerateBarcodes: () => void;
+  onClearSelection: () => void;
+  batchEditMode: boolean;
+  editingRows: Record<string, {
+    item_name: string;
+    sku: string;
+    sales_price: string;
+    unit_cost: string;
+    description: string;
+  }>;
+  editingCount: number;
+  handleUpdateEditingField: (id: string, field: "item_name" | "sku" | "sales_price" | "unit_cost" | "description", value: string) => void;
+  handleSaveInlineEdit: (item: InventoryItem) => void;
+  handleCancelInlineEdit: (id: string) => void;
+  handleEdit: (item: InventoryItem) => void;
+  handleDeleteSingle: (item: InventoryItem) => void;
+  handleSingleBarcodeGeneration: (item: InventoryItem) => void;
+  handleTableScroll: (e: React.UIEvent<HTMLDivElement>) => void;
+  isLoading: boolean;
+  isError: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 }
 
-// Text editor for editable cells
-function TextEditor<T>({ row, column, onRowChange, onClose }: RenderEditCellProps<T>) {
-  const value = row[column.key as keyof T];
-  return (
-    <input
-      className="w-full h-full bg-gray-800 text-white border border-blue-500 rounded px-2 outline-none"
-      autoFocus
-      value={value as string ?? ""}
-      onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
-      onBlur={() => onClose(true)}
-    />
-  );
-}
-
-// Number editor for costPrice and lowStockThreshold
-function NumberEditor<T>({ row, column, onRowChange, onClose }: RenderEditCellProps<T>) {
-  const value = row[column.key as keyof T];
-  return (
-    <input
-      type="number"
-      className="w-full h-full bg-gray-800 text-white border border-blue-500 rounded px-2 outline-none"
-      autoFocus
-      value={value as number ?? ""}
-      onChange={(e) => {
-        const val = e.target.value === "" ? null : parseFloat(e.target.value);
-        onRowChange({ ...row, [column.key]: val });
-      }}
-      onBlur={() => onClose(true)}
-    />
-  );
-}
-
-export const ItemTable: React.FC<ItemTableProps> = ({
-  data,
-  onEdit,
-  onDelete,
-  onSaveEdit,
-  fetchNextPage,
+const ItemTable: React.FC<ItemTableProps> = ({
+  displayItems,
+  filteredItems,
+  selectedItems,
+  toggleSelectAll,
+  toggleSelectItem,
+  searchQuery,
+  setSearchQuery,
+  sortConfig,
+  handleSort,
+  onAddClick,
+  onDeleteSelected,
+  onEditSelected,
+  onGenerateBarcodes,
+  onClearSelection,
+  batchEditMode,
+  editingRows,
+  editingCount,
+  handleUpdateEditingField,
+  handleSaveInlineEdit,
+  handleCancelInlineEdit,
+  handleEdit,
+  handleDeleteSingle,
+  handleSingleBarcodeGeneration,
+  handleTableScroll,
+  isLoading,
+  isError,
   hasNextPage,
   isFetchingNextPage,
-  totalItems,
-  onAdd,
 }) => {
-  // State for tracking which row is being edited
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  // State for the edited row data
-  const [editedRow, setEditedRow] = useState<Item | null>(null);
-  const [isSavingLocal, setIsSavingLocal] = useState(false);
-
-  // 1. Use the Hook
-  const {
-    rows,
-    searchTerm,
-    handleSearch,
-    activeFilters,
-    sortState,
-    handleSort,
-    handleApplyFilter,
-    handleClearAllFilters,
-  } = useProcessedItems(data);
-
-  // --- Infinite Scroll Setup ---
-  const observerTarget = useRef<HTMLDivElement>(null);
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [target] = entries;
-      if (target.isIntersecting && hasNextPage && !isFetchingNextPage && fetchNextPage) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage]
-  );
-
-  useEffect(() => {
-    const element = observerTarget.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: "100px",
-      threshold: 0.1,
-    });
-
-    observer.observe(element);
-    return () => {
-      if (element) observer.unobserve(element);
-    };
-  }, [handleObserver]);
-
-  // Handle entering edit mode
-  const handleStartEdit = useCallback((row: Item) => {
-    setEditingRowId(row.id!);
-    setEditedRow({ ...row });
-  }, []);
-
-  // Handle saving edits
-  const handleSaveEdit = useCallback(async () => {
-    if (editedRow && onSaveEdit) {
-      setIsSavingLocal(true);
-      try {
-        await onSaveEdit(editedRow);
-        setEditingRowId(null);
-        setEditedRow(null);
-      } catch (error) {
-        console.error("Inline save failed:", error);
-      } finally {
-        setIsSavingLocal(false);
-      }
-    }
-  }, [editedRow, onSaveEdit]);
-
-  // Handle canceling edits
-  const handleCancelEdit = useCallback(() => {
-    setEditingRowId(null);
-    setEditedRow(null);
-  }, []);
-
-  // Handle row changes during inline editing
-  const handleRowsChange = useCallback((rows: Item[]) => {
-    const changedRow = rows.find((r) => r.id === editingRowId);
-    if (changedRow) {
-      setEditedRow(changedRow);
-    }
-  }, [editingRowId]);
-
-  // Merge edited row into displayed rows
-  const displayRows = useMemo(() => {
-    if (!editingRowId || !editedRow) return rows;
-    return rows.map((row) => 
-      row.id === editingRowId ? editedRow : row
-    );
-  }, [rows, editingRowId, editedRow]);
-
-  // 2. Define Columns
-  const columns: Column<Item>[] = useMemo(() => {
-    const headerClass =
-      "bg-muted/80 backdrop-blur-md text-muted-foreground border-b border-border font-semibold uppercase text-xs flex items-center z-50";
-
-    const createColumn = (
-      key: keyof Item,
-      name: string,
-      width?: number
-    ): Column<Item> => ({
-      key,
-      name,
-      width,
-      headerCellClass: headerClass,
-    });
-
-    return [
-      {
-        ...createColumn("itemName", "Item Name"),
-        headerCellClass: `${headerClass} cursor-pointer hover:text-foreground transition-colors`,
-        renderHeaderCell: () => (
-          <div 
-            className="flex items-center gap-2 w-full h-full"
-            onClick={() => {
-              const nextDir = sortState.col === "itemName" && sortState.dir === "ASC" ? "DESC" : "ASC";
-              handleSort("itemName", nextDir);
-            }}
-          >
-            <span>Item Name</span>
-            {sortState.col === "itemName" ? (
-              sortState.dir === "ASC" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
-            ) : (
-              <ArrowUpDown className="w-3 h-3 opacity-30" />
-            )}
-          </div>
-        ),
-        editable: (row: Item) => row.id === editingRowId,
-        renderEditCell: TextEditor,
-      },
-      {
-        ...createColumn("sku", "SKU / Barcode"),
-        editable: (row: Item) => row.id === editingRowId,
-        renderEditCell: TextEditor,
-      },
-      {
-        ...createColumn("categoryName", "Category"),
-        renderHeaderCell: (props) => (
-          <HeaderWithFilter
-            {...props}
-            allData={data}
-            filters={activeFilters}
-            onApplyFilter={handleApplyFilter}
-          />
-        ),
-      },
-      {
-        ...createColumn("costPrice", "Cost Price", 120),
-        headerCellClass: `${headerClass} flex justify-end pr-8`,
-        editable: (row: Item) => row.id === editingRowId,
-        renderEditCell: NumberEditor,
-        renderCell: ({ row }: { row: Item }) => (
-          <div className="text-right pr-4 font-mono font-semibold text-primary">
-            {typeof row.costPrice === "number"
-              ? `₱${row.costPrice.toFixed(2)}`
-              : "N/A"}
-          </div>
-        ),
-      },
-      {
-        ...createColumn("lowStockThreshold", "Low Stock", 130),
-        headerCellClass: `${headerClass} flex justify-end pr-8`,
-        editable: (row: Item) => row.id === editingRowId,
-        renderEditCell: NumberEditor,
-        renderCell: ({ row }: { row: Item }) => {
-          const val = row.lowStockThreshold ?? 0;
-          const isLow = val < 100;
-          return (
-            <div className="flex justify-end pr-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ring-1 transition-all ${
-                isLow 
-                  ? "bg-red-500/10 text-red-500 ring-red-500/20" 
-                  : "bg-green-500/10 text-green-500 ring-green-500/20"
-              }`}>
-                {val}
-              </span>
-            </div>
-          );
-        }
-      },
-      ...((data.some(item => item.description && item.description.trim() !== "")) ? [
-        {
-          ...createColumn("description", "Description"),
-          editable: (row: Item) => row.id === editingRowId,
-          renderEditCell: TextEditor,
-        }
-      ] : []),
-      {
-        key: "actions",
-        name: "Actions",
-        width: 140,
-        headerCellClass: `${headerClass} flex justify-center`,
-        renderCell: ({ row }: { row: Item }) => (
-          <div className="flex justify-center w-full">
-            <ItemActions
-              row={row}
-              data={data}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              id={row.id!}
-              isEditing={row.id === editingRowId}
-              isSaving={isSavingLocal}
-              onStartEdit={() => handleStartEdit(row)}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-            />
-          </div>
-        ),
-      },
-    ];
-  }, [data, activeFilters, handleApplyFilter, onEdit, onDelete, sortState, handleSort, editingRowId, handleStartEdit, handleSaveEdit, handleCancelEdit]);
-
-  // 3. Render
   return (
-    <div className="flex flex-col h-full bg-card rounded-xl overflow-hidden shadow-sm border border-border">
-      {/* Table Header / Title Area */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-muted/20 border-b border-border">
-        <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <h3 className="font-bold text-foreground text-lg tracking-tight uppercase font-lexend">
-              Registered Items
-              </h3>
-              {onAdd && (
-                 <button
-                 onClick={onAdd}
-                 className="flex items-center gap-2 bg-primary hover:bg-primary/90 px-3 py-1 rounded-lg text-xs font-semibold text-primary-foreground transition-all shadow-sm active:scale-95"
-               >
-                 <Plus className="w-3.5 h-3.5" />
-                 Register New Item
-               </button>
-              )}
-            </div>
-            
-            <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+      <TableToolbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCount={selectedItems.length}
+        onAddClick={onAddClick}
+        onDeleteSelected={onDeleteSelected}
+        onEditSelected={onEditSelected}
+        onGenerateBarcodes={onGenerateBarcodes}
+        onClearSelection={onClearSelection}
+        batchEditMode={batchEditMode}
+        editingCount={editingCount}
+      />
+
+      {/* Table Header (Fixed) */}
+      <div className="overflow-x-auto grow" onScroll={handleTableScroll}>
+        <table className="w-full text-left border-collapse min-w-[1000px]">
+          <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10 shadow-sm">
+            <tr>
+              <th className="px-4 py-3 border-b border-border w-10">
                 <input
-                    type="text"
-                    placeholder="Search items..."
-                    value={searchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="bg-background border border-input rounded-lg pl-9 pr-4 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-input transition-all w-64 shadow-sm"
+                  type="checkbox"
+                  checked={
+                    selectedItems.length === filteredItems.length &&
+                    filteredItems.length > 0
+                  }
+                  onChange={toggleSelectAll}
+                  className="rounded border-input text-primary focus:ring-primary size-4"
                 />
-            </div>
-            {Object.keys(activeFilters).length > 0 && (
-                <button
-                    onClick={handleClearAllFilters}
-                    className="flex items-center gap-1 bg-destructive/10 hover:bg-destructive/20 px-3 py-1.5 border border-destructive/30 rounded text-destructive text-xs transition-all animate-in fade-in zoom-in duration-200"
+              </th>
+              {[
+                { label: "Item Name", key: "item_name", width: "w-[25%]" },
+                { label: "SKU", key: "sku", width: "w-[12%]" },
+                { label: "Category", key: null, width: "w-[12%]" },
+                { label: "Sales Price", key: "sales_price", width: "w-[12%]" },
+                { label: "Unit Cost", key: "unit_cost", width: "w-[12%]" },
+                { label: "Description", key: "description", width: "grow" },
+              ].map((col) => (
+                <th
+                  key={col.label}
+                  className={`px-4 py-3 border-b border-border text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
+                    col.key ? "cursor-pointer hover:text-primary transition-colors" : ""
+                  } ${col.key === "sales_price" || col.key === "unit_cost" ? "text-right" : ""} ${
+                    col.width || ""
+                  }`}
+                  onClick={() => col.key && col.key !== "description" && handleSort(col.key as SortKey)}
                 >
-                    <XCircle className="w-3 h-3" /> Clear Filters
-                </button>
+                  <div
+                    className={`flex items-center gap-1 ${
+                      col.key === "sales_price" || col.key === "unit_cost" ? "justify-end" : ""
+                    }`}
+                  >
+                    {col.label}
+                    {col.key && col.key !== "description" && (
+                      <ArrowUpDown
+                        size={12}
+                        className={sortConfig.key === col.key ? "text-primary" : "text-muted-foreground/50"}
+                      />
+                    )}
+                  </div>
+                </th>
+              ))}
+              <th className="px-4 py-3 border-b border-border text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/50">
+            {displayItems.length > 0 ? (
+              displayItems.map((item) => (
+                <ItemTableRow
+                  key={item.item_id}
+                  item={item}
+                  isSelected={selectedItems.includes(item.item_id)}
+                  onToggleSelect={toggleSelectItem}
+                  editingData={editingRows[item.item_id] || null}
+                  onUpdateField={(field, value) => handleUpdateEditingField(item.item_id, field as any, value)}
+                  onSave={() => handleSaveInlineEdit(item)}
+                  onCancel={() => handleCancelInlineEdit(item.item_id)}
+                  onEdit={() => handleEdit(item)}
+                  onDelete={() => handleDeleteSingle(item)}
+                  onGenerateBarcode={() => handleSingleBarcodeGeneration(item)}
+                />
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                  {isLoading ? "Loading items..." : "No items found matching your search."}
+                </td>
+              </tr>
             )}
-        </div>
-        <div className="text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border">
-            Showing <span className="text-foreground">{rows.length}</span> {totalItems ? `of ${totalItems}` : ""} records
-        </div>
-      </div>
-
-      {/* The Grid Container */}
-      <div className="flex-1 overflow-hidden relative border border-border rounded-lg shadow-sm">
-        <DataGrid<Item>
-            columns={columns}
-            rows={displayRows}
-            rowKeyGetter={(row) => row.id!}
-            rowHeight={52}
-            className="border-none h-full rdg-custom"
-            style={{ 
-              height: "100%",
-              // @ts-ignore
-              "--rdg-header-background-color": "var(--color-muted)",
-              "--rdg-row-hover-background-color": "var(--color-muted) / 0.5",
-              "--rdg-color": "var(--color-foreground)",
-              "--rdg-background-color": "var(--color-card)",
-              "--rdg-border-color": "var(--color-border)",
-            }}
-            rowClass={(row: Item) =>
-            `rdg-row bg-transparent text-[90%] text-foreground hover:bg-muted/50 border-b border-border transition-colors ${row.id === editingRowId ? "ring-1 ring-primary/30 bg-primary/5 shadow-inner" : ""}`
-            }
-            onRowsChange={handleRowsChange}
-        />
-        
-        {/* Loading Overlay for next page */}
-        {isFetchingNextPage && (
-            <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm p-4 flex justify-center items-center z-50 border-t border-border">
-                <div className="flex items-center gap-2 text-primary text-sm font-medium">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Loading more items...</span>
-                </div>
-            </div>
-        )}
-
-        {/* Sentinel - positioned slightly above the bottom to trigger earlier */}
-        <div ref={observerTarget} className="h-20 w-full bg-transparent absolute bottom-0 pointer-events-none" />
+            {isFetchingNextPage && (
+              <tr>
+                <td colSpan={8} className="px-4 py-4 text-center text-sm text-muted-foreground italic">
+                  Loading more items...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
+
+export default ItemTable;

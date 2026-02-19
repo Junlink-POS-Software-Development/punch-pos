@@ -27,7 +27,7 @@ export interface SummaryStats {
   };
   items: {
     total_items: number;
-    total_valuation: number; // cost_price * quantity (if available) or similar
+    total_valuation: number; // sales_price * quantity (if available) or similar
     low_stock_count: number;
   };
   customers: {

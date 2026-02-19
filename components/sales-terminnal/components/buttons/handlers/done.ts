@@ -77,7 +77,7 @@ export const handleDone = async (
     const itemsPayload = cartItems.map((item) => ({
       sku: item.sku,
       item_name: item.itemName,
-      cost_price: item.unitPrice,
+      sales_price: item.unitPrice,
       total_price: item.total,
       discount: item.discount || 0,
       quantity: item.quantity,

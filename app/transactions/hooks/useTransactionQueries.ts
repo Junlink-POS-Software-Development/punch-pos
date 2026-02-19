@@ -34,7 +34,7 @@ export const useTransactionHistory = (
             : "N/A", 
           barcode: item.sku,
           ItemName: item.item_name,
-          unitPrice: item.cost_price,
+          unitPrice: item.sales_price,
           discount: item.discount,
           quantity: item.quantity,
           totalPrice: item.total_price,
