@@ -1,6 +1,4 @@
-// app/inventory/components/item-registration/add-item/SingleItemForm.tsx
-
-import React from "react";
+import React, { useRef } from "react";
 import { ImageIcon } from "lucide-react";
 import { Category } from "../../../hooks/useCategories";
 
@@ -45,6 +43,53 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   handleImageUpload,
   onCancel,
 }) => {
+  // Refs for focus management
+  const nameRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const sellingPriceRef = useRef<HTMLInputElement>(null);
+  const salesPriceRef = useRef<HTMLInputElement>(null);
+  const skuRef = useRef<HTMLInputElement>(null);
+  const stockRef = useRef<HTMLInputElement>(null);
+  const minStockRef = useRef<HTMLInputElement>(null);
+
+  const handleKeyDown = (e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLElement>) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Shift + Enter -> Submit form
+        e.preventDefault();
+        e.currentTarget.closest("form")?.requestSubmit();
+        return;
+      }
+      
+      // Regular Enter -> Move to next field
+      e.preventDefault();
+      
+      // Special handling for Select elements to open them on Enter
+      if (e.currentTarget instanceof HTMLSelectElement) {
+        try {
+          (e.currentTarget as any).showPicker();
+          return; // Don't move to next field yet
+        } catch (err) {
+          // Fallback if showPicker is not supported
+          console.warn("showPicker not supported", err);
+        }
+      }
+
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
+
+  const handleDiscard = () => {
+    onCancel();
+    // Small delay to ensure state reset doesn't interfere with focus
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 50);
+  };
+
   return (
     <form onSubmit={handleSingleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Top Row: Basic Info */}
@@ -54,12 +99,14 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Item Name <span className="text-primary">*</span>
           </label>
           <input
+            ref={nameRef}
             required
             type="text"
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e, categoryRef)}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all text-foreground placeholder:text-muted-foreground/40 shadow-inner"
             placeholder="e.g., Croissant"
           />
@@ -69,10 +116,16 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Category
           </label>
           <select
+            ref={categoryRef}
             value={formData.category}
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
+            onChange={(e) => {
+              setFormData({ ...formData, category: e.target.value });
+              // After selection, proceed to description
+              if (e.target.value) {
+                descriptionRef.current?.focus();
+              }
+            }}
+            onKeyDown={(e) => handleKeyDown(e, descriptionRef)}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer text-foreground shadow-inner"
           >
             <option value="" className="bg-slate-900">Select Category</option>
@@ -91,11 +144,13 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
           Description
         </label>
         <textarea
+          ref={descriptionRef}
           rows={2}
           value={formData.description}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
           }
+          onKeyDown={(e) => handleKeyDown(e, sellingPriceRef)}
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none resize-none text-foreground placeholder:text-muted-foreground/40 shadow-inner transition-all"
           placeholder="Enter a brief description of the item..."
         ></textarea>
@@ -108,6 +163,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Unit Price (₱) <span className="text-primary">*</span>
           </label>
           <input
+            ref={sellingPriceRef}
             required
             type="number"
             min="0"
@@ -116,6 +172,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             onChange={(e) =>
               setFormData({ ...formData, sellingPrice: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e, salesPriceRef)}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-white/20"
             placeholder="0.00"
           />
@@ -129,6 +186,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             </span>
           </label>
           <input
+            ref={salesPriceRef}
             type="number"
             min="0"
             step="0.01"
@@ -136,6 +194,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             onChange={(e) =>
               setFormData({ ...formData, salesPrice: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e, skuRef)}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-white/20"
             placeholder="0.00"
           />
@@ -146,11 +205,13 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             SKU
           </label>
           <input
+            ref={skuRef}
             type="text"
             value={formData.sku}
             onChange={(e) =>
               setFormData({ ...formData, sku: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e)} // Prevents Enter from submitting
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="Auto-generate"
           />
@@ -193,12 +254,14 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Initial Stock balance
           </label>
           <input
+            ref={stockRef}
             type="number"
             min="0"
             value={formData.stock}
             onChange={(e) =>
               setFormData({ ...formData, stock: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e, minStockRef)}
             className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="0"
           />
@@ -208,12 +271,14 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Low Stock threshold
           </label>
           <input
+            ref={minStockRef}
             type="number"
             min="0"
             value={formData.minStock}
             onChange={(e) =>
               setFormData({ ...formData, minStock: e.target.value })
             }
+            onKeyDown={(e) => handleKeyDown(e)}
             className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="e.g. 10"
           />
@@ -223,7 +288,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
       <div className="pt-6 flex justify-end gap-4 border-t border-white/5">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleDiscard}
           className="px-8 py-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
         >
           Discard
@@ -237,7 +302,6 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
         </button>
       </div>
     </form>
-
   );
 };
 
