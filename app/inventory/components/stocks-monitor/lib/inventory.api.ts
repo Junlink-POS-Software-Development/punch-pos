@@ -15,7 +15,7 @@ export interface InventoryItem {
   sales_price: number | null;
   image_url: string | null;
   quantity_in: number;
-  quantity_out: number;
+  quantity_manual_out: number;
   quantity_sold: number;
   current_stock: number;
   low_stock_threshold: number | null;

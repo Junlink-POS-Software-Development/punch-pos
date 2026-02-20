@@ -89,7 +89,7 @@ const StockManagementContent = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-160px)] px-6 pb-6 pt-2 space-y-4">
+    <div className="flex flex-col h-[calc(100vh-100px)] px-6 pb-6 pt-2 space-y-4">
       <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
       
       {/* Header & Actions - REMOVED PER REFINEMENT */}
@@ -102,7 +102,7 @@ const StockManagementContent = () => {
       )}
 
       {/* Table Section */}
-      <div className="flex-1 bg-card p-6 border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="flex-1 overflow-hidden min-h-0">
         <StockTable 
           onEdit={handleEdit} 
           onAdd={handleOpenAdjustment}

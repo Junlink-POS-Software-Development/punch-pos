@@ -70,11 +70,11 @@ export const getStocksColumns = ({
     ),
   },
   {
-    key: "quantity_out",
+    key: "quantity_manual_out",
     name: "Pulled Out",
     width: "1fr",
     renderCell: ({ row }) => (
-      <span className="text-red-400/80">-{row.quantity_out}</span>
+      <span className="text-red-400/80">-{row.quantity_manual_out}</span>
     ),
   },
   {

@@ -68,7 +68,7 @@ export const useItems = () => {
           sales_price: itemVar.sellingPrice ?? null,
           image_url: itemVar.imageUrl ?? null,
           quantity_in: 0,
-          quantity_out: 0,
+          quantity_manual_out: 0,
           quantity_sold: 0,
           current_stock: 0,
           low_stock_threshold: itemVar.lowStockThreshold ?? null,
