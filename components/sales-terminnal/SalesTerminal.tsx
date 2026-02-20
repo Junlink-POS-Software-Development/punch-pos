@@ -17,9 +17,6 @@ import { PaymentPopup } from "./modals/PaymentPopup";
 import { FreeItemModal } from "./modals/FreeItemModal";
 import { useState, useEffect } from "react";
 import ActionPanel from "./components/ActionPanel";
-import MobileFormFields from "./components/mobile-view/MobileFormFields";
-import MobileActionPanel from "./components/mobile-view/MobileActionPanel";
-import MobileCartPanel from "./components/mobile-view/MobileCartPanel";
 
 const SalesTerminal = () => {
   const {
@@ -111,7 +108,7 @@ const SalesTerminal = () => {
     <div className="relative flex flex-col lg:flex-row h-full overflow-hidden">
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
-        <div className="flex flex-col flex-1 p-1 sm:p-2 h-full min-w-0 overflow-y-auto">
+        <div className="flex flex-col flex-1 p-2 h-full min-w-0 overflow-y-auto">
             {isAnimating ? (
                <div className="w-full h-full flex items-center justify-center bg-card rounded-2xl border border-border shadow-sm">
                   <div className="flex flex-col items-center gap-4">
@@ -153,20 +150,11 @@ const SalesTerminal = () => {
               {/* Right Column: Cart */}
               <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
                 {/* Desktop Cart */}
-                <div className="hidden sm:block h-full">
+                <div className="h-full">
                   <TerminalCart
                     rows={cartItems}
                     onRemoveItem={onRemoveItem}
                     onUpdateItem={onUpdateItem}
-                  />
-                </div>
-                {/* Mobile Action Panel (QuickPick + Charge + Numpad) */}
-                <div className="block sm:hidden h-full">
-                  <MobileActionPanel
-                    onAddToCart={onAddToCart}
-                    onCharge={() => setIsPaymentPopupOpen(true)}
-                    activeField={activeField}
-                    setActiveField={setActiveField}
                   />
                 </div>
               </div>
@@ -174,7 +162,6 @@ const SalesTerminal = () => {
             )}
         </div>
 
-        {/* RIGHT PANEL: Action Panel */}
         {/* RIGHT PANEL: Action Panel - Desktop Only */}
         <div className={`
           hidden lg:block h-full transition-all duration-300 ease-in-out
@@ -196,14 +183,6 @@ const SalesTerminal = () => {
             onToggle={handleToggleActionPanel}
           />
         </div>
-
-        {/* Mobile Cart Panel Overlay */}
-        <MobileCartPanel
-          cartItems={cartItems}
-          grandTotal={cartTotal}
-          onRemoveItem={onRemoveItem}
-          onCharge={() => setIsPaymentPopupOpen(true)}
-        />
       </FormProvider>
 
       {successData && (

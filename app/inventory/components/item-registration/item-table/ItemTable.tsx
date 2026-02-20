@@ -50,10 +50,10 @@ const ItemTable: React.FC<ItemTableProps> = ({
 
       {/* Table Header (Fixed) */}
       <div className="overflow-x-auto grow" onScroll={handleTableScroll}>
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10 shadow-sm">
             <tr>
-              <th className="px-4 py-3 border-b border-border w-10">
+              <th className="px-4 py-2 border-b border-border w-10">
                 <input
                   type="checkbox"
                   checked={
@@ -65,16 +65,16 @@ const ItemTable: React.FC<ItemTableProps> = ({
                 />
               </th>
               {[
-                { label: "Item Group", key: "item_name", width: "w-[25%]" },
-                { label: "SKU", key: "sku", width: "w-[15%]" },
-                { label: "Category", key: null, width: "w-[15%]" },
-                { label: "Unit Price", key: "sales_price", width: "w-[12%]" },
-                { label: "Unit Cost", key: "unit_cost", width: "w-[12%]" },
-                { label: "Description", key: "description", width: "grow" },
+                { label: "Item Group", key: "item_name", width: "w-[30%] min-w-[180px]" },
+                { label: "SKU", key: "sku", width: "w-[12%] min-w-[90px]" },
+                { label: "Category", key: null, width: "w-[12%] min-w-[100px]" },
+                { label: "Unit Price", key: "sales_price", width: "w-[10%] min-w-[80px]" },
+                { label: "Unit Cost", key: "unit_cost", width: "w-[10%] min-w-[80px]" },
+                { label: "Description", key: "description", width: "grow min-w-[150px]" },
               ].map((col) => (
                 <th
                   key={col.label}
-                  className={`px-4 py-3 border-b border-border text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
+                  className={`px-4 py-2 border-b border-border text-[10px] font-bold uppercase tracking-wider text-muted-foreground ${
                     col.key ? "cursor-pointer hover:text-primary transition-colors" : ""
                   } ${col.key === "sales_price" || col.key === "unit_cost" ? "text-right" : ""} ${
                     col.width || ""
@@ -96,7 +96,7 @@ const ItemTable: React.FC<ItemTableProps> = ({
                   </div>
                 </th>
               ))}
-              <th className="px-4 py-3 border-b border-border text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <th className="px-4 py-2 border-b border-border text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Actions
               </th>
             </tr>

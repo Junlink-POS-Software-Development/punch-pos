@@ -43,7 +43,7 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
         isSelected ? "bg-primary/5" : "hover:bg-muted/30"
       } ${isEditing ? "bg-orange-500/5 ring-1 ring-orange-500/20" : ""}`}
     >
-      <td className="px-4 py-3 border-b border-border">
+      <td className="px-4 py-1.5 border-b border-border">
         <input
           type="checkbox"
           checked={isSelected}
@@ -51,35 +51,35 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
           className="rounded border-input text-primary focus:ring-primary size-4"
         />
       </td>
-      <td className="px-4 py-3 border-b border-border">
+      <td className="px-4 py-1.5 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 shrink-0 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden">
+          <div className="h-8 w-8 shrink-0 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden">
             {item.image_url ? (
               <img src={item.image_url} alt={item.item_name} className="h-full w-full object-cover" />
             ) : (
               <Package size={16} className="text-muted-foreground/40" />
             )}
           </div>
-          <div className="font-medium text-foreground">
+          <div className="font-medium text-foreground text-sm">
             {item.item_name}
           </div>
         </div>
       </td>
-      <td className="px-4 py-3 border-b border-border font-mono text-xs">
+      <td className="px-4 py-1.5 border-b border-border font-mono text-xs">
         {item.sku}
       </td>
-      <td className="px-4 py-3 border-b border-border">
+      <td className="px-4 py-1.5 border-b border-border">
         <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
           {item.category || "General"}
         </span>
       </td>
-      <td className="px-4 py-3 border-b border-border text-right font-medium text-sm">
+      <td className="px-4 py-1.5 border-b border-border text-right font-medium text-sm">
         ₱{(item.sales_price || 0).toLocaleString()}
       </td>
-      <td className="px-4 py-3 border-b border-border text-right text-muted-foreground text-xs">
+      <td className="px-4 py-1.5 border-b border-border text-right text-muted-foreground text-xs">
         ₱{(item.unit_cost || 0).toLocaleString()}
       </td>
-      <td className="px-4 py-3 border-b border-border">
+      <td className="px-4 py-1.5 border-b border-border">
         {isEditing ? (
           <input
             type="text"
@@ -94,7 +94,7 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
           </span>
         )}
       </td>
-      <td className="px-4 py-3 border-b border-border text-right">
+      <td className="px-4 py-1.5 border-b border-border text-right">
         {isEditing ? (
           <div className="flex justify-end gap-1">
             <button

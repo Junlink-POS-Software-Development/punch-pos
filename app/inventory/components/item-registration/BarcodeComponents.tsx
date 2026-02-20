@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import JsBarcode from "jsbarcode";
 
 interface BarcodeItem {
   name: string;
@@ -40,38 +41,44 @@ export const drawBarcodeToContext = (
   // Category
   ctx.fillStyle = "#64748b";
   ctx.font = "11px sans-serif";
-  ctx.fillText((item.category || "General").toUpperCase(), x + width / 2, y + 48);
+  ctx.fillText(
+    (item.category || "General").toUpperCase(),
+    x + width / 2,
+    y + 48
+  );
 
-  // Barcode Lines (Mock Generation)
-  const barcodeY = y + 60;
-  const barcodeH = 65;
-  const barcodeW = 220;
-  const startX = x + (width - barcodeW) / 2;
+  // Barcode Generation using JsBarcode
+  try {
+    const tempCanvas = document.createElement("canvas");
+    JsBarcode(tempCanvas, item.sku, {
+      format: "CODE128",
+      width: 2,
+      height: 50,
+      displayValue: false,
+      margin: 0,
+    });
 
-  ctx.fillStyle = "#000000";
+    const barcodeY = y + 60;
+    const barcodeW = 200; // Fixed width for display
+    const barcodeH = 60;
+    const startX = x + (width - barcodeW) / 2;
 
-  // Deterministic random generator based on SKU string
-  let hash = 0;
-  for (let i = 0; i < item.sku.length; i++) {
-    hash = (hash << 5) - hash + item.sku.charCodeAt(i);
-    hash |= 0;
-  }
-
-  const bars = 55;
-  for (let i = 0; i < bars; i++) {
-    const val = Math.sin(hash * (i + 1) * 0.1);
-    if (val > -0.2) {
-      const isThick = Math.abs(val) > 0.6;
-      const barWidth = isThick ? 3 : 1;
-      const xPos = startX + i * (barcodeW / bars);
-      ctx.fillRect(xPos, barcodeY, barWidth, barcodeH);
-    }
+    ctx.drawImage(tempCanvas, startX, barcodeY, barcodeW, barcodeH);
+  } catch (e) {
+    console.error("Barcode generation failed", e);
+    // Fallback error text
+    ctx.fillStyle = "#ef4444";
+    ctx.font = "12px sans-serif";
+    ctx.fillText("Invalid SKU", x + width / 2, y + 90);
   }
 
   // SKU Text
   ctx.fillStyle = "#0f172a";
   ctx.font = "bold 14px monospace";
-  ctx.fillText(item.sku, x + width / 2, barcodeY + barcodeH + 18);
+  ctx.textAlign = "center";
+  // Determine barcode bottom position
+  const barcodeBottom = y + 60 + 60; 
+  ctx.fillText(item.sku, x + width / 2, barcodeBottom + 18);
 
   // Price
   const price = item.price ?? 0;
