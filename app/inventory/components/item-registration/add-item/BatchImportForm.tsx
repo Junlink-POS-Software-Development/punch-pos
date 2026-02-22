@@ -2,20 +2,43 @@
 
 import React from "react";
 import { FileText, Upload } from "lucide-react";
+import BatchImportReviewTable, { BatchItem } from "./BatchImportReviewTable";
 
 interface BatchImportFormProps {
   batchRawText: string;
   setBatchRawText: (text: string) => void;
-  handleBatchProcess: () => void;
+  handleBatchParse: () => void;
   onCancel: () => void;
+  // New props
+  batchStep: "input" | "review";
+  parsedBatchItems: BatchItem[];
+  handleBatchSubmit: (items: any[]) => void;
+  isProcessing?: boolean;
+  setBatchStep: (step: "input" | "review") => void;
 }
 
 const BatchImportForm: React.FC<BatchImportFormProps> = ({
   batchRawText,
   setBatchRawText,
-  handleBatchProcess,
+  handleBatchParse,
   onCancel,
+  batchStep,
+  parsedBatchItems,
+  handleBatchSubmit,
+  isProcessing,
+  setBatchStep
 }) => {
+  if (batchStep === "review") {
+      return (
+          <BatchImportReviewTable 
+            initialItems={parsedBatchItems}
+            onBack={() => setBatchStep("input")}
+            onSubmit={handleBatchSubmit}
+            isProcessing={isProcessing || false}
+          />
+      );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-primary/10 border border-primary/20 p-6 rounded-2xl flex items-start gap-4 backdrop-blur-sm shadow-inner">
@@ -32,14 +55,14 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
           <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-2">
             <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Header Structure</p>
             <p className="text-xs font-mono text-muted-foreground break-all">
-              Name, Category, Unit Price, Cost Price, Stock, MinStock, Description
+              Name, Category, Selling Price (Price), Cost Price (Unit Cost), Stock, MinStock, Description
             </p>
             <div className="h-px bg-white/5 my-2" />
             <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Example Data</p>
             <code className="block text-xs font-mono text-foreground/80 break-all leading-relaxed">
-              Latte, Beverage, 4.50, 1.20, 100, 20, "Smooth espresso with steamed milk"
+              Latte, Beverage, 120, 45, 100, 10, "Smooth espresso with steamed milk"
               <br />
-              Blueberry Muffin, Food, 3.00, , 24, 5, "Freshly baked daily"
+              Blueberry Muffin, Food, 85, 40, 24, 5, "Freshly baked daily"
             </code>
           </div>
         </div>
@@ -69,11 +92,11 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
             Cancel
           </button>
           <button
-            onClick={handleBatchProcess}
+            onClick={handleBatchParse}
             disabled={!batchRawText}
             className="px-10 py-3 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5"
           >
-            Run Import
+            Review & Import
           </button>
         </div>
       </div>

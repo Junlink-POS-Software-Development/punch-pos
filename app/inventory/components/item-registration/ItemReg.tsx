@@ -26,7 +26,11 @@ const ItemReg = () => {
     isProcessing,
     isUploading,
     handleSingleSubmit,
-    handleBatchProcess,
+    handleBatchParse,
+    handleBatchSubmit,
+    batchStep,
+    parsedBatchItems,
+    setBatchStep,
     handleImageUpload,
     resetForm,
     categories,
@@ -93,8 +97,13 @@ const ItemReg = () => {
             <BatchImportForm
               batchRawText={batchRawText}
               setBatchRawText={setBatchRawText}
-              handleBatchProcess={handleBatchProcess}
+              handleBatchParse={handleBatchParse}
               onCancel={() => setViewMode("list")}
+              batchStep={batchStep}
+              parsedBatchItems={parsedBatchItems}
+              handleBatchSubmit={handleBatchSubmit}
+              isProcessing={isProcessing}
+              setBatchStep={setBatchStep}
             />
           )}
         </div>
