@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { AlertCircle, CheckCircle2, ChevronLeft, Save, Loader2, AlertTriangle, Trash2, X, Pencil } from "lucide-react";
+import { Category } from "../lib/categories.api";
 import { Item } from "../utils/itemTypes";
 
 // Define strict types for the batch import items
@@ -14,8 +15,10 @@ export interface BatchItem extends Omit<Item, "id"> {
 interface BatchImportReviewTableProps {
   initialItems: BatchItem[];
   onBack: () => void;
-  onSubmit: (items: BatchItem[]) => void;
+  onSubmit: (items: BatchItem[], autoCreateCategories: boolean) => void;
   isProcessing: boolean;
+  categories: Category[];
+  autoCreateCategories: boolean;
 }
 
 export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
@@ -23,6 +26,8 @@ export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
   onBack,
   onSubmit,
   isProcessing,
+  categories,
+  autoCreateCategories,
 }) => {
   const [items, setItems] = useState<BatchItem[]>(initialItems);
   const [filterErrorOnly, setFilterErrorOnly] = useState(false);
@@ -34,7 +39,15 @@ export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
     const errors: { [key: string]: string } = {};
 
     if (!item.itemName?.trim()) errors.itemName = "Name required";
-    if (!item.category?.trim()) errors.category = "Category required";
+    
+    if (!item.category?.trim()) {
+        errors.category = "Category required";
+    } else {
+        const exists = categories.some(c => c.category.toLowerCase() === item.category!.trim().toLowerCase());
+        if (!exists && !autoCreateCategories) {
+            errors.category = "Category not found";
+        }
+    }
     
     // Numeric checks
     const sellPrice = Number(item.sellingPrice);
@@ -219,21 +232,32 @@ export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
 
                      {/* Category */}
                      <td className="p-2">
-                        {isEditing ? (
-                            <input
-                                type="text"
-                                value={item.category || ""}
-                                onChange={(e) => handleUpdateItem(item.tempId, "category", e.target.value)}
-                                className={`w-full bg-transparent border-b border-transparent focus:border-primary px-1 py-1 outline-none transition-colors ${
-                                    item.errors.category ? "border-destructive text-destructive" : ""
-                                }`}
-                                placeholder="Category"
-                            />
-                        ) : (
-                            <div className={`px-1 py-1 ${item.errors.category ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                                {item.category || <span className="text-destructive/50 italic text-xs">Required</span>}
-                            </div>
-                        )}
+                        {(() => {
+                            const trimmedCat = item.category?.trim() || "";
+                            const exists = trimmedCat ? categories.some(c => c.category.toLowerCase() === trimmedCat.toLowerCase()) : true; // true if empty to let error logic handle it
+                            const isNewCat = !exists && autoCreateCategories;
+
+                            return isEditing ? (
+                                <input
+                                    type="text"
+                                    value={item.category || ""}
+                                    onChange={(e) => handleUpdateItem(item.tempId, "category", e.target.value)}
+                                    className={`w-full bg-transparent border-b border-transparent focus:border-primary px-1 py-1 outline-none transition-colors ${
+                                        item.errors.category ? "border-destructive text-destructive" : ""
+                                    }`}
+                                    placeholder="Category"
+                                />
+                            ) : (
+                                <div className={`flex items-center gap-2 px-1 py-1 ${item.errors.category ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                                    <span>{item.category || <span className="text-destructive/50 italic text-xs">Required</span>}</span>
+                                    {isNewCat && (
+                                        <span className="text-[9px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30 whitespace-nowrap">
+                                            New
+                                        </span>
+                                    )}
+                                </div>
+                            );
+                        })()}
                          {item.errors.category && <div className="text-[10px] text-destructive mt-0.5">{item.errors.category}</div>}
                     </td>
 
@@ -406,7 +430,7 @@ export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
            )}
 
            <button
-            onClick={() => onSubmit(items)}
+            onClick={() => onSubmit(items, autoCreateCategories)}
             disabled={!isValid || isProcessing}
             className="flex items-center gap-2 px-10 py-3 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all"
           >

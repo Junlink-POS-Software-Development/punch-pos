@@ -104,6 +104,7 @@ const ItemReg = () => {
               handleBatchSubmit={handleBatchSubmit}
               isProcessing={isProcessing}
               setBatchStep={setBatchStep}
+              categories={categories}
             />
           )}
         </div>

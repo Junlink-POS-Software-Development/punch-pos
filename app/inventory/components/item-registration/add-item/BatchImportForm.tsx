@@ -1,20 +1,21 @@
 // app/inventory/components/item-registration/add-item/BatchImportForm.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import { FileText, Upload } from "lucide-react";
-import BatchImportReviewTable, { BatchItem } from "./BatchImportReviewTable";
+import { BatchImportReviewTable, BatchItem } from "./BatchImportReviewTable";
+import { Category } from "../lib/categories.api";
 
 interface BatchImportFormProps {
   batchRawText: string;
   setBatchRawText: (text: string) => void;
   handleBatchParse: () => void;
   onCancel: () => void;
-  // New props
   batchStep: "input" | "review";
   parsedBatchItems: BatchItem[];
-  handleBatchSubmit: (items: any[]) => void;
+  handleBatchSubmit: (items: any[], autoCreateCategories: boolean) => void;
   isProcessing?: boolean;
   setBatchStep: (step: "input" | "review") => void;
+  categories: Category[];
 }
 
 const BatchImportForm: React.FC<BatchImportFormProps> = ({
@@ -26,8 +27,11 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
   parsedBatchItems,
   handleBatchSubmit,
   isProcessing,
-  setBatchStep
+  setBatchStep,
+  categories
 }) => {
+  const [autoCreateCategories, setAutoCreateCategories] = useState(true);
+
   if (batchStep === "review") {
       return (
           <BatchImportReviewTable 
@@ -35,6 +39,8 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
             onBack={() => setBatchStep("input")}
             onSubmit={handleBatchSubmit}
             isProcessing={isProcessing || false}
+            categories={categories}
+            autoCreateCategories={autoCreateCategories}
           />
       );
   }
@@ -78,6 +84,19 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
           className="w-full h-56 px-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none font-mono text-sm text-foreground placeholder:text-muted-foreground/20 shadow-inner transition-all resize-none"
           placeholder="LATTE, BEVERAGE, 120, 45, 100, 10, 'Morning bestseller'..."
         ></textarea>
+      </div>
+
+      <div className="flex items-center gap-2 px-2">
+          <input
+            type="checkbox"
+            id="autoCreateCategories"
+            checked={autoCreateCategories}
+            onChange={(e) => setAutoCreateCategories(e.target.checked)}
+            className="rounded border-input text-primary focus:ring-primary size-4"
+          />
+          <label htmlFor="autoCreateCategories" className="text-sm text-muted-foreground cursor-pointer select-none">
+             Automatically create missing categories
+          </label>
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-white/5">

@@ -38,7 +38,7 @@ export const useItemReg = () => {
   const [batchRawText, setBatchRawText] = useState("");
 
   const { addItem, isProcessing } = useItems();
-  const { categories } = useCategories();
+  const { categories, addCategory } = useCategories();
 
   const handleSingleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +100,8 @@ export const useItemReg = () => {
     });
   };
 
+  // ... (previous code) ...
+
   const [batchStep, setBatchStep] = useState<"input" | "review">("input");
   const [parsedBatchItems, setParsedBatchItems] = useState<any[]>([]);
 
@@ -108,7 +110,6 @@ export const useItemReg = () => {
     const rows = batchRawText.split("\n").filter((r) => r.trim() !== "");
     
     const newItems = rows.map((row, index) => {
-        // Simple CSV parse. TODO: Use a proper CSV parser for quoting support if needed
         const cols = row.split(",").map((s) => s.trim());
         const [name, cat, sellPrice, costPrice, stock, minStock, ...desc] = cols;
 
@@ -131,19 +132,41 @@ export const useItemReg = () => {
     setBatchStep("review");
   };
 
-  const handleBatchSubmit = async (finalItems: any[]) => {
+  const handleBatchSubmit = async (finalItems: any[], autoCreateCategories: boolean = true) => {
     try {
+        let currentCategories = [...categories];
+
+        if (autoCreateCategories) {
+            // Find unique categories that need to be created
+            const uniqueIncomingCategories = Array.from(new Set(finalItems.map(i => (i.category || "").trim()).filter(Boolean)));
+            
+            for (const catName of uniqueIncomingCategories) {
+                const existing = currentCategories.find(c => c.category.toLowerCase() === catName.toLowerCase());
+                if (!existing) {
+                    console.log(`Auto-creating category: ${catName}`);
+                    const newCat = await addCategory(catName);
+                    if (newCat) {
+                        currentCategories.push(newCat);
+                    }
+                }
+            }
+        }
+
         const itemsToInsert = finalItems.map(item => {
-             // Resolve Category ID
-             const selectedCat = categories.find(
-                (c) => c.category.toLowerCase() === (item.category || "").toLowerCase()
+             const catNameTrimmed = (item.category || "").trim();
+             const selectedCat = currentCategories.find(
+                 (c) => c.category.toLowerCase() === catNameTrimmed.toLowerCase()
              );
              
+             if (!selectedCat && !autoCreateCategories) {
+                 throw new Error(`Category '${item.category}' not found and auto-create is disabled.`);
+             }
+
              return {
                  itemName: item.itemName,
                  description: item.description,
-                 category: selectedCat?.id, // If missing, database might error if FK constraint exists
-                 sku: item.sku || generateAutoSKU(item.category),
+                 category: selectedCat?.id, // Use resolved ID
+                 sku: item.sku || generateAutoSKU(selectedCat?.category),
                  salesPrice: item.salesPrice,
                  sellingPrice: item.sellingPrice,
                  lowStockThreshold: item.lowStockThreshold,
@@ -153,18 +176,7 @@ export const useItemReg = () => {
         });
 
         // 1. Insert Items
-        // We need to know the IDs to insert stock. 
-        // insertManyItems usually returns data if configured. Let's check item.api.ts if needed, but for now assume void or standard.
-        // If it returns null, we might have trouble with stock. 
-        // Let's modify insertManyItems to return data if it doesn't already.
-        
         await insertManyItems(itemsToInsert); 
-        
-        // WARN: If insertManyItems doesn't return the IDs, we can't easily insert stock for *these specific* items 
-        // without requerying. For this MVP step, we might just insert items.
-        // However, the user wants stock. 
-        // Let's assume for now we just insert items. 
-        // If we need stock, we should update insertManyItems to return `select()`.
         
         // For now, clear and reset
         setBatchRawText("");
@@ -174,7 +186,7 @@ export const useItemReg = () => {
 
     } catch (err) {
       console.error(err);
-      alert("Batch import failed.");
+      alert("Batch import failed. See console for details.");
     }
   };
 
