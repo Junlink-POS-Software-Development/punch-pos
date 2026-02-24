@@ -5,6 +5,7 @@ import { useItems } from "@/app/inventory/hooks/useItems";
 import { useInventory } from "@/app/dashboard/hooks/useInventory";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTransactionStore } from "@/app/settings/backdating/stores/useTransactionStore";
+import { usePermissions } from "@/app/hooks/usePermissions";
 import { CustomerResult } from "../../../modals/CustomerSearchModal";
 
 export const useTerminalHeader = (setCustomerId: (id: string | null) => void) => {
@@ -85,7 +86,8 @@ export const useTerminalHeader = (setCustomerId: (id: string | null) => void) =>
     };
   }, [currentBarcode, allItems, inventoryData]);
 
-  const isBackdating = !!customTransactionDate;
+  const { can_backdate } = usePermissions();
+  const isBackdating = can_backdate && !!customTransactionDate;
 
   return {
     user,

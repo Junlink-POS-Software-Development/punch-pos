@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Search, Plus, Trash2, Edit, ScanBarcode, X, ListTree } from "lucide-react";
 import { useItemTable } from "../hooks/useItemTable";
+import { usePermissions } from "@/app/hooks/usePermissions";
 import { CategoryManagerModal } from "../utils/CategoryManagerModal";
 
 interface TableToolbarProps {
@@ -26,6 +27,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
   } = useItemTable();
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const { can_manage_items, can_manage_categories } = usePermissions();
 
   const selectedCount = selectedItems.length;
 
@@ -49,18 +51,22 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
           </div>
           {!batchEditMode && (
             <div className="flex gap-2">
-                <button
-                onClick={() => setIsCategoryModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border border-input rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors shadow-sm whitespace-nowrap"
-                >
-                <ListTree size={18} /> Manage Categories
-                </button>
-                <button
-                onClick={onAddClick}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap"
-                >
-                <Plus size={18} /> Add Item
-                </button>
+                {can_manage_categories && (
+                  <button
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border border-input rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors shadow-sm whitespace-nowrap"
+                  >
+                  <ListTree size={18} /> Manage Categories
+                  </button>
+                )}
+                {can_manage_items && (
+                  <button
+                  onClick={onAddClick}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap"
+                  >
+                  <Plus size={18} /> Add Item
+                  </button>
+                )}
             </div>
           )}
         </div>
@@ -81,13 +87,15 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                   <X size={14} />
                 </button>
               </div>
-              <button
-                onClick={handleEditSelected}
-                className="p-2 text-primary hover:bg-primary/20 bg-primary/10 rounded-lg transition-all border border-primary/20 shadow-sm"
-                title="Batch Edit"
-              >
-                <Edit size={18} />
-              </button>
+              {can_manage_items && (
+                <button
+                  onClick={handleEditSelected}
+                  className="p-2 text-primary hover:bg-primary/20 bg-primary/10 rounded-lg transition-all border border-primary/20 shadow-sm"
+                  title="Batch Edit"
+                >
+                  <Edit size={18} />
+                </button>
+              )}
               <button
                 onClick={onGenerateBarcodes}
                 className="p-2 text-primary hover:bg-primary/20 bg-primary/10 rounded-lg transition-all border border-primary/20 shadow-sm"
@@ -95,13 +103,15 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
               >
                 <ScanBarcode size={18} />
               </button>
-              <button
-                onClick={handleDeleteSelected}
-                className="p-2 text-destructive hover:bg-destructive bg-destructive/10 hover:text-destructive-foreground rounded-lg transition-all border border-destructive/20 shadow-sm"
-                title="Delete Selected"
-              >
-                <Trash2 size={18} />
-              </button>
+              {can_manage_items && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className="p-2 text-destructive hover:bg-destructive bg-destructive/10 hover:text-destructive-foreground rounded-lg transition-all border border-destructive/20 shadow-sm"
+                  title="Delete Selected"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
             </div>
           )}
 

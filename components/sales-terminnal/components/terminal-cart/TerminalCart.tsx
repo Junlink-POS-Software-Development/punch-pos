@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { XCircle, Lock, Unlock } from "lucide-react";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { usePermissions } from "@/app/hooks/usePermissions";
 import { CartItem, TerminalCartProps } from "./types";
 import { EditablePriceCell } from "./EditablePriceCell";
 
@@ -20,6 +21,8 @@ export const TerminalCart = ({
   onUpdateItem,
 }: TerminalCartProps) => {
   const { isPriceEditingEnabled } = useSettingsStore();
+  const { can_edit_price } = usePermissions();
+  const canEditPrice = isPriceEditingEnabled && can_edit_price;
   const [isEditingActive, setIsEditingActive] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
 
@@ -64,7 +67,7 @@ export const TerminalCart = ({
         header: () => (
             <div className="flex items-center justify-end gap-1">
               <span>Price</span>
-              {isPriceEditingEnabled && (
+              {canEditPrice && (
                 <button
                   type="button"
                   onClick={() => setIsEditingActive((prev) => !prev)}
@@ -79,7 +82,7 @@ export const TerminalCart = ({
         cell: ({ row, getValue }) => {
           return (
              <div className="flex items-center justify-end gap-2">
-                {isPriceEditingEnabled && isEditingActive ? (
+                {canEditPrice && isEditingActive ? (
                    <div style={{ width: 80 }}>
                     <EditablePriceCell
                         initialValue={getValue()}
@@ -141,7 +144,7 @@ export const TerminalCart = ({
         enableResizing: false,
       }),
     ],
-    [isPriceEditingEnabled, isEditingActive, onRemoveItem, onUpdateItem, columnHelper]
+    [canEditPrice, isEditingActive, onRemoveItem, onUpdateItem, columnHelper]
   );
 
   const table = useReactTable({

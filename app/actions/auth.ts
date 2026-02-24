@@ -56,12 +56,33 @@ export async function logout() {
 export async function checkSession() {
   const supabase = await createClient();
   try {
-    // Use getUser() instead of getSession() for security
-    // getUser() authenticates by contacting the Supabase Auth server
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
       return { success: false };
     }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Explicitly decode the token payload rather than trusting session.user
+    if (session?.access_token) {
+      try {
+        const base64Url = session.access_token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        // Node.js safe base64 decoding
+        const jsonPayload = Buffer.from(base64, 'base64').toString('utf-8');
+        const decodedPayload = JSON.parse(jsonPayload);
+        
+        if (decodedPayload?.app_metadata) {
+          user.app_metadata = {
+            ...user.app_metadata,
+            ...decodedPayload.app_metadata,
+          };
+        }
+      } catch (decodeError) {
+        console.error("Failed to decode token on server:", decodeError);
+      }
+    }
+
     return { success: true, user };
   } catch (error) {
     return { success: false };

@@ -6,6 +6,7 @@ import { usePaymentData } from "../../hooks/usePaymentData";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 import { deletePayment } from "@/app/actions/transactions";
+import { usePermissions } from "@/app/hooks/usePermissions";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -27,6 +28,7 @@ export const PaymentHistoryTable = () => {
   } = usePaymentData();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { can_delete_transaction } = usePermissions();
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -204,7 +206,9 @@ export const PaymentHistoryTable = () => {
               <th className="px-6 py-3 font-bold text-green-500 text-right">
                 Change
               </th>
-              <th className="px-6 py-3 rounded-tr-lg text-right">Actions</th>
+              {can_delete_transaction && (
+                <th className="px-6 py-3 rounded-tr-lg text-right">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -246,24 +250,26 @@ export const PaymentHistoryTable = () => {
                   <td className="px-6 py-4 font-bold text-green-500 text-right">
                     ₱{(pay.change ?? 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleDelete(pay.id)}
-                      disabled={deletingId === pay.id}
-                      className={`p-2 rounded-md transition-all ${
-                        deletingId === pay.id
-                          ? "bg-muted text-muted-foreground"
-                          : "hover:bg-red-500/20 text-red-500 hover:text-red-600"
-                      }`}
-                      title="Delete Payment"
-                    >
-                      {deletingId === pay.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  </td>
+                  {can_delete_transaction && (
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => handleDelete(pay.id)}
+                        disabled={deletingId === pay.id}
+                        className={`p-2 rounded-md transition-all ${
+                          deletingId === pay.id
+                            ? "bg-muted text-muted-foreground"
+                            : "hover:bg-red-500/20 text-red-500 hover:text-red-600"
+                        }`}
+                        title="Delete Payment"
+                      >
+                        {deletingId === pay.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

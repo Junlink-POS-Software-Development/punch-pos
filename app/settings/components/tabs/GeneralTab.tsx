@@ -1,6 +1,7 @@
 
 import React from "react";
 import CurrencySelector from "../CurrencySelector";
+import PermissionsDisplay from "../PermissionsDisplay";
 import { useAuthStore } from "@/store/useAuthStore";
 import { User } from "lucide-react";
 
@@ -102,6 +103,11 @@ export const GeneralTab = () => {
                  <div className="pt-4 border-t border-border/30">
                      <CurrencySelector />
                  </div>
+            </div>
+
+            {/* Permissions Section */}
+            <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
+                <PermissionsDisplay />
             </div>
 
             <div className="flex justify-end pt-4">

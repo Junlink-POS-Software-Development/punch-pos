@@ -4,7 +4,8 @@ import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { DollarSign, Filter } from 'lucide-react';
 import CashOutTable from './components/cashout-table/CashOutTable';
 import { getColumns } from './components/cashout-table/columns';
-import { useExpensesInfinite, useExpensesSummary, useCashoutPermissions } from './hooks/useExpenses';
+import { useExpensesInfinite, useExpensesSummary } from './hooks/useExpenses';
+import { usePermissions } from '@/app/hooks/usePermissions';
 import { useFilterStore } from '@/store/useFilterStore';
 import dynamic_next from 'next/dynamic';
 
@@ -30,12 +31,12 @@ function CashoutContent() {
       removeExpense
   } = useExpensesInfinite(20, dateRange);
 
-  const { permissions } = useCashoutPermissions();
+  const { can_manage_expenses } = usePermissions();
   const { summary } = useExpensesSummary(dateRange);
 
   const tableColumns = useMemo(() => 
-    getColumns(removeExpense, permissions.can_manage_expenses), 
-    [removeExpense, permissions.can_manage_expenses]
+    getColumns(removeExpense, can_manage_expenses), 
+    [removeExpense, can_manage_expenses]
   );
 
   if (!isMounted) {
@@ -75,13 +76,15 @@ function CashoutContent() {
               </div>
           </div>
           
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="lg:w-48 bg-primary text-primary-foreground px-4 py-4 rounded-xl hover:opacity-90 transition-all flex flex-col items-center justify-center gap-1 shadow-lg hover:shadow-xl active:scale-95 font-bold border border-primary-foreground/10"
-          >
-            <DollarSign size={24} />
-            <span className="text-xs uppercase tracking-tighter">Record Cash Out</span>
-          </button>
+          {can_manage_expenses && (
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="lg:w-48 bg-primary text-primary-foreground px-4 py-4 rounded-xl hover:opacity-90 transition-all flex flex-col items-center justify-center gap-1 shadow-lg hover:shadow-xl active:scale-95 font-bold border border-primary-foreground/10"
+            >
+              <DollarSign size={24} />
+              <span className="text-xs uppercase tracking-tighter">Record Cash Out</span>
+            </button>
+          )}
         </div>
 
 
