@@ -2,11 +2,12 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { CashoutRecord } from "../../lib/cashout.api"; // Import from lib/cashout.api
-import { Trash2, ArrowUpDown, Truck, Lightbulb, ArrowRight, Store } from "lucide-react";
+import { Trash2, ArrowUpDown, Truck, Lightbulb, ArrowRight, Store, Edit2 } from "lucide-react";
 
 export const getColumns = (
   onDelete?: (id: string) => void,
-  canDelete: boolean = false
+  onEdit?: (record: CashoutRecord) => void,
+  canManage: boolean = false
 ): ColumnDef<CashoutRecord>[] => [
   {
     accessorKey: "date",
@@ -137,10 +138,17 @@ export const getColumns = (
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
     cell: ({ row }) => {
-      if (!canDelete) return null;
+      if (!canManage) return null;
       
       return (
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-1">
+          <button
+            onClick={() => onEdit?.(row.original)}
+            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Edit Transaction"
+          >
+            <Edit2 size={16} />
+          </button>
           <button
             onClick={() => {
                 if (window.confirm("Are you sure you want to delete this transaction?")) {

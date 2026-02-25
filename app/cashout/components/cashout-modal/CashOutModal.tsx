@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Truck, Lightbulb, ArrowRight, X, DollarSign, Save, FileText, Unlock } from 'lucide-react';
-import { CashoutInput, CashoutType } from '../../lib/cashout.api';
+import { CashoutInput, CashoutType, CashoutRecord } from '../../lib/cashout.api';
 import DrawerSelect from "../shared/DrawerSelect";
 import { CogsForm } from './CogsForm';
 import { OpexForm } from './OpexForm';
@@ -14,10 +14,11 @@ import dayjs from 'dayjs';
 interface CashOutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editData?: CashoutRecord | null;
 }
 
-const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
-  const { addExpense, isSubmitting } = useExpenses();
+const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
+  const { addExpense, editExpense, isSubmitting } = useExpenses();
   const { customTransactionDate } = useTransactionStore();
   const [activeTab, setActiveTab] = useState<CashoutType>('COGS'); 
   const [selectedDrawerId, setSelectedDrawerId] = useState<string>("");
@@ -29,19 +30,42 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
       notes: ''
   });
 
-  // Client-side initialization of date
+  // Client-side initialization of data
   useEffect(() => {
-    if (isOpen && !baseData.date) {
-      const initialDate = customTransactionDate 
-        ? dayjs(customTransactionDate).format("YYYY-MM-DD")
-        : new Date().toISOString().split('T')[0];
+    if (isOpen) {
+      if (editData) {
+        // Edit Mode
+        setBaseData({
+          amount: editData.amount.toString(),
+          date: editData.date,
+          notes: editData.notes || ''
+        });
+        setActiveTab(editData.category);
+        setSelectedDrawerId(editData.categoryId || "");
+        
+        // Populate specific data based on category
+        setSpecificData({
+          classification_id: editData.classificationId,
+          expenseCategory: editData.expenseCategory,
+          product: editData.product,
+          manufacturer: editData.manufacturer,
+          receipt_no: editData.receiptNo,
+          referenceNo: editData.referenceNo,
+          subTypeLabel: editData.subTypeLabel
+        });
+      } else if (!baseData.date) {
+        // Create Mode
+        const initialDate = customTransactionDate 
+          ? dayjs(customTransactionDate).format("YYYY-MM-DD")
+          : new Date().toISOString().split('T')[0];
 
-      setBaseData(prev => ({
-        ...prev,
-        date: initialDate
-      }));
+        setBaseData(prev => ({
+          ...prev,
+          date: initialDate
+        }));
+      }
     }
-  }, [isOpen, baseData.date, customTransactionDate]);
+  }, [isOpen, editData, customTransactionDate]);
 
   const [specificData, setSpecificData] = useState<Partial<CashoutInput>>({});
 
@@ -65,7 +89,11 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
     }
 
     try {
-        await addExpense(payload);
+        if (editData?.id) {
+          await editExpense(editData.id, payload);
+        } else {
+          await addExpense(payload);
+        }
         handleClose();
     } catch (e) {
         alert("Failed to save transaction");
@@ -103,7 +131,7 @@ const CashOutModal = ({ isOpen, onClose }: CashOutModalProps) => {
               <div className="bg-red-100/50 p-2 rounded-lg text-red-600">
                 <DollarSign size={20} strokeWidth={3} />
               </div>
-              Record Cash Out
+              {editData ? "Edit Cash Out" : "Record Cash Out"}
             </h2>
             <p className="text-xs text-muted-foreground mt-1 ml-11">Punch POS • Drawer #1 • Session ID: 9942</p>
           </div>

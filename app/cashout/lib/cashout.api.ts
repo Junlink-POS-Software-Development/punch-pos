@@ -42,6 +42,8 @@ interface ExpenseRowDB {
   product_category: {
     category: string;
   } | null;
+  classification_id?: string | null;
+  category_id?: string | null;
 }
 
 interface RawExpenseRow extends ExpenseRowDB {
@@ -95,6 +97,8 @@ export interface CashoutRecord {
   receiptNo?: string;
   referenceNo?: string;
   created_at: string;
+  classificationId?: string;
+  categoryId?: string;
 }
 
 export interface OpexCategory {
@@ -249,7 +253,8 @@ export const fetchExpenses = async (
       // Details
       expenseCategory: row.classification_details?.name ?? (row.cashout_type === 'OPEX' ? "Unclassified" : undefined),
       product: row.product_category?.category ?? (row.source || undefined), // fallback handling
-      
+      classificationId: row.classification_id || undefined,
+      categoryId: row.category_id || undefined,
       // We might need to handle other fields based on the raw data
     })
   );
@@ -308,7 +313,9 @@ export const fetchExpensesPaginated = async (
       notes: row.notes ?? "",
       
       expenseCategory: row.classification_details?.name,
-      product: row.product_category?.category ?? (row.source || undefined)
+      product: row.product_category?.category ?? (row.source || undefined),
+      classificationId: row.classification_id || undefined,
+      categoryId: row.category_id || undefined,
     })
   );
 

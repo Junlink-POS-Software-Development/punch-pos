@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import { DollarSign, Filter } from 'lucide-react';
 import CashOutTable from './components/cashout-table/CashOutTable';
 import { getColumns } from './components/cashout-table/columns';
@@ -8,6 +8,7 @@ import { useExpensesInfinite, useExpensesSummary } from './hooks/useExpenses';
 import { usePermissions } from '@/app/hooks/usePermissions';
 import { useFilterStore } from '@/store/useFilterStore';
 import dynamic_next from 'next/dynamic';
+import { CashoutRecord } from './lib/cashout.api';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal'), {
     ssr: false
@@ -16,6 +17,7 @@ const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashO
 function CashoutContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<CashoutRecord | null>(null);
   const { dateRange } = useFilterStore();
 
   useEffect(() => {
@@ -34,9 +36,20 @@ function CashoutContent() {
   const { can_manage_expenses } = usePermissions();
   const { summary } = useExpensesSummary(dateRange);
 
+  const handleEditExpense = useCallback((record: CashoutRecord) => {
+    setEditingRecord(record);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    // Add a small delay to prevent flickering before the modal closes
+    setTimeout(() => setEditingRecord(null), 300);
+  }, []);
+
   const tableColumns = useMemo(() => 
-    getColumns(removeExpense, can_manage_expenses), 
-    [removeExpense, can_manage_expenses]
+    getColumns(removeExpense, handleEditExpense, can_manage_expenses), 
+    [removeExpense, handleEditExpense, can_manage_expenses]
   );
 
   if (!isMounted) {
@@ -104,7 +117,8 @@ function CashoutContent() {
         {/* Modal */}
         <CashOutModal 
           isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
+          onClose={handleCloseModal} 
+          editData={editingRecord}
         />
       </div>
   );
