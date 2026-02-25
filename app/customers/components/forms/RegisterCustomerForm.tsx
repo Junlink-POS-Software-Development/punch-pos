@@ -375,10 +375,10 @@ export const RegisterCustomerForm = ({
       {/* Duplicate Warning Modal */}
       {showDuplicateModal && (
         <div className="z-50 fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Customer Already Exists</h3>
-              <p className="text-slate-400 mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-2">Customer Already Exists</h3>
+              <p className="text-muted-foreground mb-6">
                 A customer with similar details was found. Do you want to create a duplicate record anyway?
               </p>
               
@@ -388,7 +388,7 @@ export const RegisterCustomerForm = ({
                     setShowDuplicateModal(false);
                     setPendingFormData(null);
                   }}
-                  className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors font-medium text-sm"
+                  className="px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>

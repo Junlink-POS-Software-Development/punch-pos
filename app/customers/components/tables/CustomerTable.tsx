@@ -125,15 +125,15 @@ export const CustomerTable = () => {
     setSelectedCustomerIds(new Set());
   };
 
-  if (isLoading) return <div className="text-gray-500 text-center mt-20">Loading...</div>;
+  if (isLoading) return <div className="text-muted-foreground text-center mt-20">Loading...</div>;
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden flex flex-col h-full">
+    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col h-full">
       
       {/* Bulk Actions Header */}
       {selectedCustomerIds.size > 0 && (
-        <div className="bg-blue-600/20 p-3 flex items-center justify-between animate-in slide-in-from-top-2">
-          <span className="text-blue-200 text-sm font-medium px-2">
+        <div className="bg-primary/20 p-3 flex items-center justify-between animate-in slide-in-from-top-2">
+          <span className="text-primary px-2 text-sm font-medium">
             {selectedCustomerIds.size} selected
           </span>
           <div className="flex items-center gap-3">
@@ -155,12 +155,12 @@ export const CustomerTable = () => {
 
       <div className="overflow-x-auto w-full h-full">
         <table className="w-full text-left min-w-[600px]">
-          <thead className="bg-gray-900/50 text-gray-400 text-xs font-bold uppercase sticky top-0 z-10 backdrop-blur-sm">
+          <thead className="bg-muted/50 text-muted-foreground text-xs font-bold uppercase sticky top-0 z-10 backdrop-blur-sm">
             <tr>
               <th className="p-5 w-10">
                 <button onClick={toggleSelectAll} className="hover:text-white">
                   {customers.length > 0 && selectedCustomerIds.size === customers.length ? (
-                    <CheckSquare size={16} className="text-blue-500" />
+                    <CheckSquare size={16} className="text-primary" />
                   ) : (
                     <Square size={16} />
                   )}
@@ -184,24 +184,24 @@ export const CustomerTable = () => {
               <th className="p-5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-border/50">
             {sortedCustomers.map((c) => {
               const isLocked = c.document_metadata?.isLocked || false;
               return (
                 <tr 
                   key={c.id} 
-                  className={`hover:bg-gray-700/30 transition group ${selectedCustomerIds.has(c.id) ? "bg-blue-500/10" : ""}`}
+                  className={`hover:bg-accent/30 transition group ${selectedCustomerIds.has(c.id) ? "bg-primary/10" : ""}`}
                 >
                   <td className="p-5">
                     <button onClick={() => toggleSelect(c.id)} className="hover:text-white text-gray-500">
                       {selectedCustomerIds.has(c.id) ? (
-                        <CheckSquare size={16} className="text-blue-500" />
+                        <CheckSquare size={16} className="text-primary" />
                       ) : (
                         <Square size={16} />
                       )}
                     </button>
                   </td>
-                  <td className="p-5 font-medium text-white">
+                  <td className="p-5 font-medium text-foreground">
                     <button 
                       onClick={() => handleCustomerClick(c.id)}
                       className="flex items-center gap-3 text-left w-full hover:text-blue-400 transition-colors"

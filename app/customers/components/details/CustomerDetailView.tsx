@@ -26,7 +26,7 @@ export const CustomerDetailView = () => {
   const { isSplit } = useViewStore();
 
   if (!selectedCustomer) {
-    return <div className="p-6 text-gray-400">Loading customer data...</div>;
+    return <div className="p-6 text-muted-foreground">Loading customer data...</div>;
   }
 
   // Format currency helper
@@ -53,12 +53,12 @@ export const CustomerDetailView = () => {
         {/* LEFT COLUMN - Profile & Stats */}
         <div className={`space-y-6 col-span-12 ${isSplit ? "" : "lg:col-span-4"}`}>
           {/* Identity Card */}
-          <div className="bg-gray-800 shadow-lg p-6 border border-gray-700 rounded-2xl">
+          <div className="bg-card shadow-lg p-6 border border-border rounded-2xl">
             <div className="flex flex-col items-center text-center">
               <div className="flex justify-center items-center bg-linear-to-br from-blue-500 to-purple-600 shadow-inner mb-2 rounded-full w-24 h-24 font-bold text-white text-3xl">
                 {selectedCustomer.full_name.charAt(0).toUpperCase()}
               </div>
-              <p className="font-semibold text-gray-400 text-xs uppercase tracking-widest">
+              <p className="font-semibold text-muted-foreground text-xs uppercase tracking-widest">
                 Profile Overview
               </p>
             </div>
@@ -98,31 +98,31 @@ export const CustomerDetailView = () => {
           </div>
 
           {/* Financial Snapshot */}
-          <div className="bg-gray-800 shadow-lg p-6 border border-gray-700 rounded-2xl">
-            <h3 className="mb-4 font-bold text-gray-400 text-xs uppercase tracking-wider">
+          <div className="bg-card shadow-lg p-6 border border-border rounded-2xl">
+            <h3 className="mb-4 font-bold text-muted-foreground text-xs uppercase tracking-wider">
               Financials
             </h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center bg-gray-900/50 p-4 border border-gray-700/50 rounded-xl">
+              <div className="flex justify-between items-center bg-background/50 p-4 border border-border/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-400">
                     <DollarSign size={20} />
                   </div>
-                  <span className="text-gray-300 text-sm">Total Spent</span>
+                  <span className="text-foreground/80 text-sm">Total Spent</span>
                 </div>
-                <span className="font-bold text-white text-lg">
+                <span className="font-bold text-foreground text-lg">
                   {formatCurrency(selectedCustomer.total_spent || 0)}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center bg-gray-900/50 p-4 border border-gray-700/50 rounded-xl">
+              <div className="flex justify-between items-center bg-background/50 p-4 border border-border/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="bg-orange-500/10 p-2 rounded-lg text-orange-400">
                     <Hash size={20} />
                   </div>
-                  <span className="text-gray-300 text-sm">Visits</span>
+                  <span className="text-foreground/80 text-sm">Visits</span>
                 </div>
-                <span className="font-bold text-white text-lg">
+                <span className="font-bold text-foreground text-lg">
                   {selectedCustomer.visit_count || 0}
                 </span>
               </div>
@@ -133,12 +133,12 @@ export const CustomerDetailView = () => {
         {/* RIGHT COLUMN - Details & Content */}
         <div className={`space-y-6 col-span-12 ${isSplit ? "" : "lg:col-span-8"}`}>
           {/* Remarks Section */}
-          <div className="bg-gray-800 shadow-lg p-6 border border-gray-700 rounded-2xl">
+          <div className="bg-card shadow-lg p-6 border border-border rounded-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="text-gray-400" size={18} />
-              <h3 className="font-bold text-white text-lg">Remarks & Notes</h3>
+              <FileText className="text-muted-foreground" size={18} />
+              <h3 className="font-bold text-foreground text-lg">Remarks & Notes</h3>
             </div>
-            <div className="bg-gray-900/50 p-4 border border-gray-700/50 rounded-xl min-h-[100px] text-gray-300 text-sm leading-relaxed">
+            <div className="bg-background/50 p-4 border border-border/50 rounded-xl min-h-[100px] text-foreground/80 text-sm leading-relaxed">
               {selectedCustomer.remarks ||
                 "No remarks added for this customer."}
             </div>
@@ -148,16 +148,16 @@ export const CustomerDetailView = () => {
           <DocumentGallery customer={selectedCustomer} />
 
           {/* Recent Transactions Placeholder */}
-          <div className="bg-gray-800 opacity-75 shadow-lg p-6 border border-gray-700 rounded-2xl">
+          <div className="bg-card opacity-75 shadow-lg p-6 border border-border rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <Clock className="text-gray-400" size={18} />
-                <h3 className="font-bold text-white text-lg">
+                <Clock className="text-muted-foreground" size={18} />
+                <h3 className="font-bold text-foreground text-lg">
                   Recent Transactions
                 </h3>
               </div>
             </div>
-            <div className="bg-gray-900/30 py-10 border border-gray-700/30 rounded-xl text-center">
+            <div className="bg-background/30 py-10 border border-border/30 rounded-xl text-center">
               <p className="text-gray-500">
                 Transaction history module coming soon.
               </p>
@@ -172,7 +172,7 @@ export const CustomerDetailView = () => {
           className="z-50 fixed inset-0 flex justify-center items-center bg-black/90 backdrop-blur-sm p-4 animate-in duration-200 fade-in"
           onClick={() => setPreviewImage(null)}
         >
-          <button className="top-4 right-4 absolute hover:bg-white/10 p-2 rounded-full text-white hover:text-gray-300 transition-colors">
+          <button className="top-4 right-4 absolute hover:bg-foreground/10 p-2 rounded-full text-foreground hover:text-muted-foreground transition-colors">
             <X size={32} />
           </button>
           <img
@@ -198,12 +198,12 @@ const InfoRow = ({
   value: string | null | undefined;
 }) => (
   <div className="flex items-start gap-4">
-    <div className="mt-1 text-gray-500">
+    <div className="mt-1 text-muted-foreground">
       <Icon size={16} />
     </div>
     <div>
-      <p className="text-gray-500 text-xs uppercase tracking-wide">{label}</p>
-      <p className="font-medium text-gray-200 text-sm">{value || "-"}</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-wide">{label}</p>
+      <p className="font-medium text-foreground text-sm">{value || "-"}</p>
     </div>
   </div>
 );

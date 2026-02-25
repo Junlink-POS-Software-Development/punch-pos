@@ -15,34 +15,34 @@ export const DocumentUpload = ({
 }: DocumentUploadProps) => {
   return (
     <div className="space-y-2">
-      <label className="flex items-center gap-2 font-medium text-slate-300 text-sm">
-        <Upload className="w-4 h-4 text-cyan-400" /> Documents / ID
+      <label className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
+        <Upload className="w-4 h-4 text-primary" /> Documents / ID
       </label>
 
       <div className="group relative">
         <div
           className={`flex flex-col justify-center items-center border-2 border-dashed ${
             isCompressing
-              ? "border-cyan-500/50 bg-cyan-500/5 cursor-wait"
-              : "border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800/50 cursor-pointer"
+              ? "border-primary/50 bg-primary/5 cursor-wait"
+              : "border-border hover:border-primary/50 hover:bg-accent/50 cursor-pointer"
           } rounded-xl h-32 transition-all`}
         >
           {isCompressing ? (
             <div className="flex flex-col items-center animate-pulse">
-              <Loader2 className="mb-2 w-8 h-8 text-cyan-400 animate-spin" />
-              <p className="font-medium text-cyan-400 text-sm">
+              <Loader2 className="mb-2 w-8 h-8 text-primary animate-spin" />
+              <p className="font-medium text-primary text-sm">
                 Compressing & Optimizing...
               </p>
             </div>
           ) : (
             <>
-              <div className="bg-slate-800 mb-2 p-3 rounded-full text-cyan-400 group-hover:scale-110 transition-transform">
+              <div className="bg-accent mb-2 p-3 rounded-full text-primary group-hover:scale-110 transition-transform">
                 <Upload className="w-6 h-6" />
               </div>
-              <p className="font-medium text-slate-300 text-sm">
+              <p className="font-medium text-muted-foreground text-sm">
                 Click to upload documents
               </p>
-              <p className="text-slate-500 text-xs">
+              <p className="text-muted-foreground/60 text-xs">
                 Images are auto-compressed (Max 200kb)
               </p>
             </>
@@ -64,15 +64,15 @@ export const DocumentUpload = ({
           {compressedFiles.map((file, idx) => (
             <div
               key={idx}
-              className="slide-in-from-bottom-2 flex justify-between items-center bg-slate-800/50 px-3 py-2 border border-slate-700 rounded-lg animate-in fade-in"
+              className="slide-in-from-bottom-2 flex justify-between items-center bg-card/50 px-3 py-2 border border-border rounded-lg animate-in fade-in"
             >
               <div className="flex items-center gap-2 overflow-hidden">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <div className="flex flex-col overflow-hidden">
-                  <span className="font-medium text-slate-300 text-xs truncate">
+                  <span className="font-medium text-foreground/80 text-xs truncate">
                     {file.name}
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-muted-foreground/60">
                     {(file.size / 1024).toFixed(0)} KB
                   </span>
                 </div>
@@ -80,7 +80,7 @@ export const DocumentUpload = ({
               <button
                 type="button"
                 onClick={() => removeFile(idx)}
-                className="hover:bg-red-500/20 p-1 rounded text-slate-500 hover:text-red-400 transition-colors"
+                className="hover:bg-red-500/20 p-1 rounded text-muted-foreground/60 hover:text-red-400 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>

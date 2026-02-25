@@ -14,12 +14,12 @@ export const UpdateCustomerModal = ({
 }: UpdateCustomerModalProps) => {
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/80 backdrop-blur-sm p-4 animate-in duration-200 fade-in">
-      <div className="bg-gray-800 shadow-2xl border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center bg-gray-900/50 p-6 border-b border-gray-700">
-          <h2 className="font-bold text-white text-xl">Update Customer</h2>
+      <div className="bg-card shadow-2xl border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex justify-between items-center bg-muted/50 p-6 border-b border-border">
+          <h2 className="font-bold text-foreground text-xl">Update Customer</h2>
           <button
             onClick={onClose}
-            className="hover:bg-gray-700 p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+            className="hover:bg-accent p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
           >
             <X size={20} />
           </button>

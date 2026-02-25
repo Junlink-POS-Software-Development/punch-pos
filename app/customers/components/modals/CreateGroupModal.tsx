@@ -33,26 +33,26 @@ export const CreateGroupModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-96 shadow-2xl">
-        <h3 className="text-lg font-bold mb-4 text-white">Create New Group</h3>
+      <div className="bg-card p-6 rounded-2xl border border-border w-96 shadow-2xl">
+        <h3 className="text-lg font-bold mb-4 text-foreground">Create New Group</h3>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. VIP, Wholesalers..."
-          className="w-full bg-gray-900 border border-gray-600 rounded-xl p-3 mb-6 focus:border-blue-500 outline-none text-white"
+          className="w-full bg-background border border-border rounded-xl p-3 mb-6 focus:border-primary outline-none text-foreground"
         />
         <div className="flex justify-end gap-3">
           <button
             onClick={closeGroupModal} // Uses store action
-            className="px-4 py-2 text-gray-400 hover:text-white transition"
+            className="px-4 py-2 text-muted-foreground hover:text-foreground transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition"
+             className="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition"
           >
             {loading ? "Creating..." : "Create Group"}
           </button>

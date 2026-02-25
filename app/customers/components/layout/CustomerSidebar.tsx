@@ -55,9 +55,9 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="p-5 border-gray-700 border-b shrink-0">
+      <div className="p-5 border-border border-b shrink-0">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold text-gray-100 text-lg">Groups</h2>
+          <h2 className="font-bold text-foreground text-lg">Groups</h2>
           <div className="flex gap-2 items-center">
             <button
               onClick={openGroupModal}
@@ -69,7 +69,7 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden bg-gray-700/50 hover:bg-gray-700 p-2 rounded-lg text-gray-400 hover:text-white transition"
+                className="lg:hidden bg-accent/50 hover:bg-accent p-2 rounded-lg text-muted-foreground hover:text-foreground transition"
                 aria-label="Close sidebar"
               >
                 <ChevronLeft size={18} />
@@ -85,8 +85,8 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
           onClick={() => setSelectedGroupId("all")}
           className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
             selectedGroupId === "all"
-              ? "bg-blue-600 text-white"
-              : "text-gray-400 hover:bg-gray-700"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent"
           }`}
         >
           <Layers size={18} /> <span className="font-medium">Grouped</span>
@@ -95,20 +95,20 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
           onClick={() => setSelectedGroupId("ungrouped")}
           className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
             selectedGroupId === "ungrouped"
-              ? "bg-blue-600 text-white"
-              : "text-gray-400 hover:bg-gray-700"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent"
           }`}
         >
           <Users size={18} /> <span className="font-medium">Ungrouped</span>
         </button>
 
-        <div className="mx-2 my-4 border-gray-700 border-t"></div>
+        <div className="mx-2 my-4 border-border border-t"></div>
 
         {/* Dynamic Groups */}
         {groups.map((g) => (
           <div key={g.id} className="group relative flex items-center mb-1">
             {editingGroupId === g.id ? (
-              <div className="flex items-center gap-2 bg-gray-700 p-2 rounded-lg w-full">
+              <div className="flex items-center gap-2 bg-accent p-2 rounded-lg w-full">
                 <input
                   autoFocus
                   value={editingName}
@@ -117,7 +117,7 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
                     if (e.key === "Enter") saveEdit();
                     if (e.key === "Escape") cancelEdit();
                   }}
-                  className="bg-gray-900 px-2 py-1 border border-blue-500 rounded w-full text-sm text-white focus:outline-none"
+                  className="bg-background px-2 py-1 border border-primary rounded w-full text-sm text-foreground focus:outline-none"
                 />
                 <button onClick={saveEdit} className="text-green-400 hover:text-green-300">
                   <Check size={16} />
@@ -132,8 +132,8 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
                   onClick={() => setSelectedGroupId(g.id)}
                   className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-all ${
                     selectedGroupId === g.id
-                      ? "bg-gray-700 text-white border-l-4 border-blue-500"
-                      : "text-gray-400 hover:bg-gray-700/50"
+                      ? "bg-accent text-foreground border-l-4 border-primary"
+                      : "text-muted-foreground hover:bg-accent/50"
                   }`}
                 >
                   <Folder
@@ -148,7 +148,7 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
                       e.stopPropagation();
                       startEditing(g.id, g.name);
                     }}
-                    className="hover:bg-gray-600 p-1 rounded text-gray-500 hover:text-blue-400 transition"
+                    className="hover:bg-accent p-1 rounded text-muted-foreground hover:text-primary transition"
                     title="Rename"
                   >
                     <Edit2 size={14} />
@@ -158,7 +158,7 @@ export const CustomerSidebar = ({ isOpen = true, onClose }: CustomerSidebarProps
                       e.stopPropagation();
                       handleDelete(g.id);
                     }}
-                    className="hover:bg-gray-600 p-1 rounded text-gray-500 hover:text-red-400 transition"
+                    className="hover:bg-accent p-1 rounded text-muted-foreground hover:text-red-400 transition"
                     title="Delete"
                   >
                     <Trash2 size={14} />
