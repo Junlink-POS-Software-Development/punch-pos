@@ -364,3 +364,36 @@ export const fetchTopInventory = async (
 
   return data as InventoryMonitorItem[];
 };
+
+export interface ExpiringSoonItem {
+  id: string;
+  item_name: string;
+  expiry_date: string;
+  batch_remaining: number;
+}
+
+export const fetchExpiringSoon = async (): Promise<ExpiringSoonItem[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  const today = dayjs().format("YYYY-MM-DD");
+  const thirtyDaysFromNow = dayjs().add(30, "day").format("YYYY-MM-DD");
+
+  const { data, error } = await supabase
+    .from("stock_flow")
+    .select("id, item_name, expiry_date, batch_remaining")
+    .eq("store_id", storeId)
+    .eq("flow", "stock-in")
+    .gt("batch_remaining", 0)
+    .not("expiry_date", "is", null)
+    .gte("expiry_date", today)
+    .lte("expiry_date", thirtyDaysFromNow)
+    .order("expiry_date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching expiring soon items:", error);
+    throw new Error(error.message);
+  }
+
+  return data as ExpiringSoonItem[];
+};

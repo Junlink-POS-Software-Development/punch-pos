@@ -64,7 +64,7 @@ export const useInventoryInfinite = (params?: Partial<InventoryParams>) => {
       return fetchInventory({ ...params, page: pageParam, limit: 50 });
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.data.length < 50) return undefined;
+      if (!lastPage?.data || lastPage.data.length < 50) return undefined;
       return allPages.length + 1;
     },
     initialPageParam: 1,
@@ -91,7 +91,7 @@ export const useLowStockInfinite = () => {
     queryKey: ["inventory-low-stock"],
     queryFn: async ({ pageParam = 1 }) => fetchLowStockItems(pageParam, 20),
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.data.length < 20) return undefined;
+      if (!lastPage?.data || lastPage.data.length < 20) return undefined;
       return allPages.length + 1;
     },
     initialPageParam: 1,
@@ -103,7 +103,7 @@ export const useMostStockedInfinite = () => {
     queryKey: ["inventory-most-stocked"],
     queryFn: async ({ pageParam = 1 }) => fetchMostStockedItems(pageParam, 20),
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.data.length < 20) return undefined;
+      if (!lastPage?.data || lastPage.data.length < 20) return undefined;
       return allPages.length + 1;
     },
     initialPageParam: 1,
