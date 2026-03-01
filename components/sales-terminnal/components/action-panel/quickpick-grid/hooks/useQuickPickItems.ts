@@ -24,7 +24,8 @@ const fetchQuickPickItems = async () => {
         sku,
         sales_price,
         description,
-        category_id
+        category_id,
+        image_url
       )
     `)
     .order('position', { ascending: true });
@@ -39,8 +40,11 @@ const fetchQuickPickItems = async () => {
        sku: qpi.item.sku,
        salesPrice: qpi.item.sales_price,
        description: qpi.item.description,
-       category: qpi.item.category_id
-    } : undefined
+       category: qpi.item.category_id,
+       imageUrl: qpi.item.image_url
+    } : undefined,
+    // Fallback: if quick_pick_items doesn't have an image_url, use the inventory item's image
+    image_url: qpi.image_url || qpi.item?.image_url 
   }));
 };
 

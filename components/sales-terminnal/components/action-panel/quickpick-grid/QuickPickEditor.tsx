@@ -66,6 +66,7 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
         item_id: item.id!,
         label: item.itemName,
         color: 'bg-blue-500',
+        image_url: item.imageUrl || undefined,
         position: prev.length,
         item: item
       }]);
