@@ -3,10 +3,10 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlertTriangle, X } from "lucide-react";
-import { GeneralTab } from "./components/tabs/GeneralTab";
-import AccountSettings from "./components/AccountSettings";
-import { SystemConfigTab } from "./components/tabs/SystemConfigTab";
-import { AuditLogsTab } from "./components/tabs/AuditLogsTab";
+import { GeneralTab } from "./components/general/GeneralTab";
+import AccountTab from "./components/account/AccountTab";
+import { SystemTab } from "./components/system/SystemTab";
+import { AuditLogsTab } from "./components/audit/AuditLogsTab";
 
 type TabId = "general" | "account" | "system" | "audit";
 
@@ -34,9 +34,9 @@ function SettingsContent() {
       case "general":
         return <GeneralTab />;
       case "account":
-        return <AccountSettings />;
+        return <AccountTab />;
       case "system":
-        return <SystemConfigTab />;
+        return <SystemTab />;
       case "audit":
         return <AuditLogsTab />;
       default:

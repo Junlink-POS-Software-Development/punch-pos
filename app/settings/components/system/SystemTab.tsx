@@ -1,12 +1,12 @@
 
 import React from "react";
-import VoucherSettings from "../../components/VoucherSettings";
-import SubscriptionSettings from "../../components/SubscriptionSettings";
-import LowStockSettings from "../../components/LowStockSettings";
-import PriceEditingSettings from "../../components/PriceEditingSettings";
+import VoucherSettings from "./VoucherSettings";
+import SubscriptionSettings from "./SubscriptionSettings";
+import LowStockSettings from "./LowStockSettings";
+import PriceEditingSettings from "./PriceEditingSettings";
 import BackdateSettings from "../../backdating/BackdatingSettings";
 
-export const SystemConfigTab = () => {
+export const SystemTab = () => {
     return (
         <div className="space-y-8">
              <div>

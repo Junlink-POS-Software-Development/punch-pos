@@ -28,7 +28,7 @@ export async function getStoreEnrollmentId() {
     const { data: storeData, error: storeError } = await supabase
       .from("stores")
       .select("enrollment_id")
-      .eq("id", userData.store_id)
+      .eq("store_id", userData.store_id)
       .single();
 
     if (storeError) {
@@ -66,7 +66,7 @@ export async function updateStoreEnrollmentId(newEnrollmentId: string) {
     const { error: updateError } = await supabase
       .from("stores")
       .update({ enrollment_id: newEnrollmentId })
-      .eq("id", userData.store_id);
+      .eq("store_id", userData.store_id);
 
     if (updateError) {
       return { success: false, error: updateError.message };
@@ -83,29 +83,15 @@ export async function joinStoreViaEnrollmentId(enrollmentId: string) {
   const supabase = await createClient();
 
   try {
-    // 1. Query the stores table for the provided enrollment_id
-    const { data: storeData, error: storeError } = await supabase
-      .from("stores")
-      .select("store_id, enrollment_code_expires_at")
-      .eq("enrollment_id", enrollmentId)
-      .single();
-
-    if (storeError || !storeData) {
-      return { success: false, error: "Invalid code" };
+    // 1. FORCE AUTH INITIALIZATION: 
+    // This ensures the Supabase client attaches the user JWT to the RPC call
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return { success: false, error: "You must be logged in to join a store." };
     }
 
-    // 2. Validate expiration
-    if (
-      storeData.enrollment_code_expires_at &&
-      new Date().toISOString() > storeData.enrollment_code_expires_at
-    ) {
-      return {
-        success: false,
-        error: "This enrollment code has expired. Please ask your store manager to generate a new one.",
-      };
-    }
-
-    // 3. Proceed with standard enrollment process
+    // 2. Call the RPC (which now securely handles the expiration and updates)
     const { data, error } = await supabase.rpc("join_store_via_enrollment_id", {
       provided_enrollment_id: enrollmentId,
     });
@@ -115,11 +101,10 @@ export async function joinStoreViaEnrollmentId(enrollmentId: string) {
       return { success: false, error: error.message };
     }
 
-    // The RPC should return a JSON object with success/error fields
-    const result = data as { success: boolean; error?: string };
+    const result = data as { success: boolean; message?: string };
 
     if (!result.success) {
-      return { success: false, error: result.error || "Failed to join store." };
+      return { success: false, error: result.message || "Failed to join store." };
     }
 
     revalidatePath("/", "layout");
