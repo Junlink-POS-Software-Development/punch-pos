@@ -397,3 +397,63 @@ export const fetchExpiringSoon = async (): Promise<ExpiringSoonItem[]> => {
 
   return data as ExpiringSoonItem[];
 };
+
+export interface PerformanceItem {
+  item_id?: string;
+  item_name: string;
+  total_sold: number;
+  revenue: number;
+}
+
+export const fetchBestSellers = async (
+  startDate: string,
+  endDate: string,
+  limit: number = 10
+): Promise<PerformanceItem[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  const { data, error } = await supabase.rpc("get_terminal_best_sellers", {
+    p_store_id: storeId,
+    p_start_date: startDate,
+    p_end_date: endDate,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("Error fetching best sellers:", error);
+    throw new Error(error.message);
+  }
+
+  return data as PerformanceItem[];
+};
+
+export const fetchWorstSellers = async (
+  startDate: string,
+  endDate: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<PerformanceItem[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  const { data, error } = await supabase.rpc("get_terminal_worst_sellers", {
+    p_store_id: storeId,
+    p_start_date: startDate,
+    p_end_date: endDate,
+    p_limit: limit,
+    p_offset: offset,
+  });
+
+  if (error) {
+    console.error("Error fetching worst sellers:", error);
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((item: any) => ({
+    item_id: item.item_id,
+    item_name: item.item_name,
+    total_sold: Number(item.total_sold),
+    revenue: Number(item.revenue),
+  }));
+};

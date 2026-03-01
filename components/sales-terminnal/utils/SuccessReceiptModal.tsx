@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, X, Printer } from "lucide-react";
+import { CheckCircle2, X, Printer, Loader2 } from "lucide-react";
 import { TransactionResult } from "../components/buttons/handlers/done";
 
 interface SuccessReceiptModalProps {
@@ -31,7 +31,16 @@ const SuccessReceiptModal: React.FC<SuccessReceiptModalProps> = ({
         <div className="bg-gray-900/50 p-4 border border-retro-cyan/30 rounded font-mono text-sm">
           <div className="flex justify-between mb-2 pb-2 border-retro-cyan/30 border-b">
             <span className="opacity-70">Invoice No:</span>
-            <span className="font-bold text-white">{data.invoice_no}</span>
+            <span className="font-bold text-white flex items-center gap-2">
+              {data.invoice_no === "PENDING..." ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-retro-cyan" />
+                  <span className="animate-pulse">{data.invoice_no}</span>
+                </>
+              ) : (
+                data.invoice_no
+              )}
+            </span>
           </div>
 
           <div className="flex justify-between mb-2">

@@ -151,8 +151,10 @@ export async function getTransactionHistory(
 export interface PaymentRecord {
   id: string; // UUID
   invoice_no: string;
+  transaction_no?: string; // Fallback
   customer_name: string | null;
   grand_total: number;
+  amount_paid?: number; // Fallback
   transaction_time: string;
   amount_rendered: number;
   voucher: number;
@@ -240,6 +242,53 @@ export async function deletePayment(id: string): Promise<ActionResponse> {
     return { success: true };
   } catch (err: any) {
     console.error("❌ Unexpected Error during deletion:", err);
+    return { success: false, error: err.message || "Unknown error occurred" };
+  }
+}
+
+export interface DetailedTransactionItem {
+  transaction_id: string;
+  item_name: string;
+  sku: string;
+  quantity: number;
+  sales_price: number;
+  discount: number;
+  total_price: number;
+}
+
+export interface DetailedInvoice {
+  payment_id: string;
+  invoice_no: string;
+  transaction_no: string;
+  transaction_time: string;
+  amount_paid: number;
+  amount_rendered: number;
+  change: number;
+  voucher: number;
+  store_name: string;
+  cashier_name: string;
+  customer_name: string;
+  items: DetailedTransactionItem[];
+}
+
+export async function getInvoiceDetails(
+  invoiceNo: string
+): Promise<ActionResponse<DetailedInvoice>> {
+  const supabase = await createClient();
+
+  try {
+    const { data, error } = await supabase.rpc("get_invoice_details", {
+      p_invoice_no: invoiceNo,
+    });
+
+    if (error) {
+      console.error("❌ RPC get_invoice_details Error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as DetailedInvoice };
+  } catch (err: any) {
+    console.error("❌ Unexpected get_invoice_details Error:", err);
     return { success: false, error: err.message || "Unknown error occurred" };
   }
 }

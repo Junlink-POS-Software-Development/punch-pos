@@ -206,6 +206,21 @@ export const usePosForm = (): UsePosFormReturn => {
 
     setIsSubmitting(true);
 
+    // [OPTIMISTIC] Show modal immediately with temporary data
+    const optimisticResult: TransactionResult = {
+      invoice_no: "PENDING...",
+      customer_name: data.customerName || "WALK-IN",
+      amount_rendered: data.payment || 0,
+      voucher: data.voucher || 0,
+      grand_total: data.grandTotal,
+      change: data.change,
+      transaction_no: "PENDING...",
+      transaction_time: new Date().toISOString(),
+      cashier_name: user.id, // Will be replaced by real name if available, but ID is fine for optimistic
+    };
+    
+    setSuccessData(optimisticResult);
+
     try {
       // [NEW] Pass customerId and customTransactionDate
       const effectiveDate = customTransactionDate
@@ -224,6 +239,7 @@ export const usePosForm = (): UsePosFormReturn => {
 
       if (result) {
         setIsSubmitting(false);
+        // [OPTIMISTIC] Update with real data
         setSuccessData(result);
 
         queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "payments" });
@@ -233,6 +249,7 @@ export const usePosForm = (): UsePosFormReturn => {
         setIsSubmitting(false);
       }
     } catch (error: unknown) {
+      setSuccessData(null); // Clear optimistic data if it failed
       if (error instanceof Error) {
         console.error("❌ [UI CRASH] Error in submission flow:", error);
         setErrorMessage(error.message);

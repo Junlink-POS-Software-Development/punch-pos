@@ -5,19 +5,21 @@ import type { InventoryStatsData } from "../../lib/dashboardMockData";
 import { LowStockAlertCard } from "./alerts/LowStockAlertCard";
 import { TopInventoryCard } from "./alerts/TopInventoryCard";
 import { ExpiringSoonCard } from "./alerts/ExpiringSoonCard";
+import { PerformanceCard } from "./alerts/PerformanceCard";
 
 interface InventoryAlertsProps {
   inventoryStats: InventoryStatsData;
 }
 
 export function InventoryAlerts({ inventoryStats }: InventoryAlertsProps) {
-  const { lowStockQuery, topInventoryQuery, expiringSoonQuery } = useInventoryMonitor();
+  const { lowStockQuery, topInventoryQuery, expiringSoonQuery, bestSellersQuery, worstSellersQuery } = useInventoryMonitor();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
       <LowStockAlertCard query={lowStockQuery} />
       <TopInventoryCard query={topInventoryQuery} />
       <ExpiringSoonCard query={expiringSoonQuery} />
+      <PerformanceCard bestSellersQuery={bestSellersQuery} worstSellersQuery={worstSellersQuery} />
     </div>
   );
 }

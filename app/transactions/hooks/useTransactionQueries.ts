@@ -71,14 +71,14 @@ export const usePaymentHistory = (
         throw new Error(result.error);
       }
 
-      const formattedData = (result.data as PaymentRecord[]).map((p) => ({
+      const formattedData = (result.data as any[]).map((p) => ({
         id: p.id,
-        transactionNo: p.invoice_no,
-        transactionTime: new Date(p.transaction_time).toLocaleString(),
+        transactionNo: p.invoice_no || p.transaction_no || "N/A",
+        transactionTime: p.transaction_time ? new Date(p.transaction_time).toLocaleString() : "N/A",
         customerName: p.customer_name,
         amountRendered: p.amount_rendered ?? 0,
         voucher: p.voucher ?? 0,
-        grandTotal: p.grand_total ?? 0,
+        grandTotal: p.grand_total || p.amount_paid || 0,
         change: p.change ?? 0,
       })) as FormattedPaymentRecord[];
 

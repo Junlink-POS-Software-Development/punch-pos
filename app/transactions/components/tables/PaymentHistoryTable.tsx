@@ -9,6 +9,7 @@ import { deletePayment } from "@/app/actions/transactions";
 import { usePermissions } from "@/app/hooks/usePermissions";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { TransactionDetailModal } from "../modals/TransactionDetailModal";
 
 export const PaymentHistoryTable = () => {
   const queryClient = useQueryClient();
@@ -28,6 +29,7 @@ export const PaymentHistoryTable = () => {
   } = usePaymentData();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedInvoiceNo, setSelectedInvoiceNo] = useState<string | null>(null);
   const { can_delete_transaction } = usePermissions();
 
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -228,7 +230,12 @@ export const PaymentHistoryTable = () => {
                   className="hover:bg-muted/50 border-border border-b transition-colors"
                 >
                   <td className="px-6 py-4 font-mono text-muted-foreground">
-                    {pay.transactionNo}
+                    <button
+                      onClick={() => setSelectedInvoiceNo(pay.transactionNo)}
+                      className="hover:text-primary hover:underline font-bold transition-all text-left"
+                    >
+                      {pay.transactionNo}
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-muted-foreground text-xs">
                     {pay.transactionTime}
@@ -289,6 +296,13 @@ export const PaymentHistoryTable = () => {
       <div className="p-2 text-xs text-muted-foreground text-center border-t border-border">
         Showing {payments.length} of {totalRows} records
       </div>
+
+      {selectedInvoiceNo && (
+        <TransactionDetailModal
+          invoiceNo={selectedInvoiceNo}
+          onClose={() => setSelectedInvoiceNo(null)}
+        />
+      )}
     </div>
   );
 };
