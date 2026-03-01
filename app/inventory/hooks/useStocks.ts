@@ -15,6 +15,7 @@ export interface StockInput {
   quantity: number;
   capitalPrice: number;
   notes?: string;
+  expiryDate?: string;
 }
 
 interface StockMutationOptions {

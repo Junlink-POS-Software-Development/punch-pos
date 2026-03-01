@@ -17,6 +17,9 @@ export const stockFormSchema = z.object({
     .positive("Price must be a positive number")
     .min(0.01, "Price must be at least 0.01"),
   notes: z.string().optional(),
+  expiryDate: z.string().optional().refine(val => !val || !isNaN(Date.parse(val)), {
+    message: "Invalid date format",
+  }),
 });
 
 /**

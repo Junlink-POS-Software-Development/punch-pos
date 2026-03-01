@@ -295,3 +295,72 @@ export const fetchLatestCategorySales = async (
 
   return result;
 };
+
+export interface InventoryMonitorItem {
+  item_id: string;
+  store_id: string;
+  item_name: string;
+  sku: string | null;
+  category: string | null;
+  sales_price: number;
+  unit_cost: number | null;
+  image_url: string | null;
+  description: string | null;
+  low_stock_threshold: number;
+  quantity_in: number;
+  quantity_manual_out: number;
+  quantity_sold: number;
+  current_stock: number;
+  stock_status: "in_stock" | "low_stock" | "out_of_stock";
+}
+
+export const fetchLowStockAlerts = async (
+  pageParam: number = 0,
+  pageSize: number = 20
+): Promise<InventoryMonitorItem[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  const from = pageParam * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error } = await supabase
+    .from("inventory_monitor_view")
+    .select("*")
+    .eq("store_id", storeId)
+    .in("stock_status", ["low_stock", "out_of_stock"])
+    .order("current_stock", { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error("Error fetching low stock alerts:", error);
+    throw new Error(error.message);
+  }
+
+  return data as InventoryMonitorItem[];
+};
+
+export const fetchTopInventory = async (
+  pageParam: number = 0,
+  pageSize: number = 20
+): Promise<InventoryMonitorItem[]> => {
+  const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
+  const from = pageParam * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error } = await supabase
+    .from("inventory_monitor_view")
+    .select("*")
+    .eq("store_id", storeId)
+    .order("current_stock", { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error("Error fetching top inventory:", error);
+    throw new Error(error.message);
+  }
+
+  return data as InventoryMonitorItem[];
+};

@@ -5,8 +5,6 @@ import { useDashboard } from "./hooks/useDashboard";
 import { HistoricalBanner } from "./components/pos-overview/HistoricalBanner";
 import { DashboardHeader } from "./components/pos-overview/DashboardHeader";
 import { VitalsGrid } from "./components/pos-overview/VitalsGrid";
-import { PaymentMethods } from "./components/pos-overview/PaymentMethods";
-import { ActivityFeed } from "./components/pos-overview/ActivityFeed";
 import { InventoryAlerts } from "./components/pos-overview/InventoryAlerts";
 import { CashoutModal } from "./components/pos-overview/CashoutModal";
 import { CashFlowModal } from "./components/pos-overview/CashFlowModal";
@@ -90,11 +88,6 @@ function DashboardContent() {
           />
         )}
 
-        {/* SECTION 2: OPERATIONS & ACTIVITY */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-          <PaymentMethods />
-          <ActivityFeed recentActivity={recentActivity} />
-        </div>
 
         {/* SECTION 3: INVENTORY ALERTS */}
         <InventoryAlerts inventoryStats={inventoryStats} />

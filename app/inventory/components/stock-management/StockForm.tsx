@@ -28,6 +28,7 @@ export function StockForm({
     reset,
     setFocus,
     control,
+    watch,
   } = useForm<StockFormSchema>({
     resolver: zodResolver(stockFormSchema),
     defaultValues: {
@@ -36,6 +37,7 @@ export function StockForm({
       notes: "",
       quantity: 0,
       capitalPrice: 0,
+      expiryDate: undefined,
     },
   });
 
@@ -53,10 +55,14 @@ export function StockForm({
     { valueAsNumber: true }
   );
   const { ref: rhfNotesRef, ...notesRest } = register("notes");
+  const { ref: rhfExpiryDateRef, ...expiryDateRest } = register("expiryDate");
+  
+  const currentFlow = watch("stockFlow");
 
   const stockFlowRef = useRef<HTMLSelectElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
   const capitalPriceRef = useRef<HTMLInputElement>(null);
+  const expiryDateRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -68,6 +74,7 @@ export function StockForm({
         quantity: itemToEdit.quantity,
         capitalPrice: itemToEdit.capital_price,
         notes: itemToEdit.notes || "",
+        expiryDate: itemToEdit.expiry_date || undefined,
       });
       setTimeout(() => setFocus("stockFlow"), 100);
     } else {
@@ -77,6 +84,7 @@ export function StockForm({
         notes: "",
         quantity: 0,
         capitalPrice: 0,
+        expiryDate: "",
       });
       // Added: Auto-focus Item Name when opening blank form
       setTimeout(() => setFocus("itemName"), 100);
@@ -111,6 +119,12 @@ export function StockForm({
       } else if (name === "quantity" || target.id === "quantity") {
         capitalPriceRef.current?.focus();
       } else if (name === "capitalPrice" || target.id === "capitalPrice") {
+        if (currentFlow === "stock-in") {
+          expiryDateRef.current?.focus();
+        } else {
+          notesRef.current?.focus();
+        }
+      } else if (name === "expiryDate" || target.id === "expiryDate") {
         notesRef.current?.focus();
       } else if (name === "notes" || target.id === "notes") {
         submitButtonRef.current?.focus();
@@ -273,6 +287,35 @@ export function StockForm({
           </p>
         )}
       </div>
+
+      {/* Expiry Date (Conditional) */}
+      {currentFlow === "stock-in" && (
+        <div>
+          <label
+            htmlFor="expiryDate"
+            className="block mb-1 font-medium text-muted-foreground text-sm"
+          >
+            Expiry Date
+          </label>
+          <input
+            id="expiryDate"
+            type="date"
+            {...expiryDateRest}
+            ref={(el) => {
+              rhfExpiryDateRef(el);
+              expiryDateRef.current = el;
+            }}
+            className={`w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
+              errors.expiryDate ? "border-red-500" : ""
+            }`}
+          />
+          {errors.expiryDate && (
+            <p className="mt-1 text-red-500 text-sm">
+              {errors.expiryDate.message}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Notes */}
       <div className={!isSplit ? "" : "md:col-span-2"}>

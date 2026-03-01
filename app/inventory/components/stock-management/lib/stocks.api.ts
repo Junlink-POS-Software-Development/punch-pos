@@ -16,6 +16,8 @@ export interface StockData {
   time_stamp: string;
   user_id: string;
   store_id: string;
+  expiry_date: string | null;
+  batch_remaining: number | null;
 }
 
 // --- HELPER: Prevent Infinite Hanging ---
@@ -51,7 +53,9 @@ export const fetchStocks = async (): Promise<StockData[]> => {
       notes,
       time_stamp,
       user_id,
-      store_id
+      store_id,
+      expiry_date,
+      batch_remaining
     `
     )
     .order("time_stamp", { ascending: false });
@@ -71,6 +75,7 @@ export const insertStock = async (data: {
   quantity: number;
   capitalPrice: number;
   notes?: string;
+  expiryDate?: string;
 }) => {
   console.log("🚀 [API] Sending Stock Payload:", data);
 
@@ -96,6 +101,7 @@ export const insertStock = async (data: {
       quantity_in: data.quantity,
       capital_price_in: data.capitalPrice,
       notes_in: data.notes ?? null,
+      expiry_date_in: data.expiryDate ?? null,
     }),
     10000, // 10-second timeout
     "Insert Stock RPC"
@@ -151,6 +157,7 @@ export const insertStockBatch = async (items: {
   quantity: number;
   capitalPrice: number;
   notes?: string;
+  expiryDate?: string;
 }[]) => {
   console.log("🚀 [API] Sending Batch Stock Payload:", items.length, "items");
   const supabase = await getSupabase();
@@ -184,6 +191,8 @@ export const insertStockBatch = async (items: {
     quantity: i.quantity,
     capital_price: i.capitalPrice,
     notes: i.notes ?? "Batch Update",
+    expiry_date: i.expiryDate ?? null,
+    batch_remaining: i.stockFlow === "stock-in" ? i.quantity : 0,
     user_id: user.id,
     store_id: storeId,
   }));

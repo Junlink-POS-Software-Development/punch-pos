@@ -11,8 +11,10 @@ import { PackagePlus } from "lucide-react";
 import { StockAdjustmentModal } from "./StockAdjustmentModal";
 import { BatchStockUpdateModal } from "./BatchStockUpdateModal";
 import StockTable from "./StockTable";
+import { ExpiryMonitor } from "./ExpiryMonitor";
 
 const StockManagementContent = () => {
+  const [activeTab, setActiveTab] = useState<"history" | "expiry">("history");
   const [editingItem, setEditingItem] = useState<StockData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,14 +103,36 @@ const StockManagementContent = () => {
         </div>
       )}
 
-      {/* Table Section */}
+      {/* Tabs */}
+      <div className="flex border-b border-primary/20 mb-2">
+        <button 
+          onClick={() => setActiveTab("history")}
+          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "history" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"}`}
+        >
+          Stock Movement
+        </button>
+        <button 
+          onClick={() => setActiveTab("expiry")}
+          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "expiry" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"}`}
+        >
+          Expiry Monitor
+        </button>
+      </div>
+
+      {/* Content Section */}
       <div className="flex-1 overflow-hidden min-h-0">
-        <StockTable 
-          onEdit={handleEdit} 
-          onAdd={handleOpenAdjustment}
-          isAdding={isModalOpen}
-          onBatchAdd={() => setIsBatchModalOpen(true)}
-        />
+        {activeTab === "history" ? (
+          <StockTable 
+            onEdit={handleEdit} 
+            onAdd={handleOpenAdjustment}
+            isAdding={isModalOpen}
+            onBatchAdd={() => setIsBatchModalOpen(true)}
+          />
+        ) : (
+          <div className="h-full overflow-y-auto pr-2">
+            <ExpiryMonitor />
+          </div>
+        )}
       </div>
 
       {/* Stock Adjustment Modal */}
