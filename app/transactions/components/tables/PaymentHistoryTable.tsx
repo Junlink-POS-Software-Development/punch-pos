@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useEffect, useRef, useCallback } from "react";
-import { Loader2, AlertCircle, XCircle, Trash2 } from "lucide-react";
+import { Loader2, AlertCircle, XCircle, Trash2, Search } from "lucide-react";
 import { usePaymentData } from "../../hooks/usePaymentData";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
-import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
 import { deletePayment } from "@/app/actions/transactions";
 import { usePermissions } from "@/app/hooks/usePermissions";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { TransactionDetailModal } from "../modals/TransactionDetailModal";
+import { useDebounce } from "@/app/hooks/useDebounce";
 
 export const PaymentHistoryTable = () => {
   const queryClient = useQueryClient();
@@ -27,6 +27,15 @@ export const PaymentHistoryTable = () => {
     hasNextPage,
     isFetchingNextPage
   } = usePaymentData();
+
+  const [searchTerm, setSearchTerm] = useState(filters.search || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== (filters.search || "")) {
+      handleApplyFilter("search", debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedInvoiceNo, setSelectedInvoiceNo] = useState<string | null>(null);
@@ -71,6 +80,7 @@ export const PaymentHistoryTable = () => {
 
   const handleClearAllFilters = () => {
     setFilters({ startDate: "", endDate: "" });
+    setSearchTerm("");
   };
 
   const hasActiveFilters = Object.keys(filters).some(
@@ -145,13 +155,6 @@ export const PaymentHistoryTable = () => {
   };
 
   // 3. UI States
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-10 rounded-lg bg-card border border-border">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
-  }
 
   if (isError) {
     return (
@@ -165,20 +168,33 @@ export const PaymentHistoryTable = () => {
   return (
     <div className="flex flex-col rounded-lg h-full overflow-hidden bg-card border border-border shadow-sm">
       {/* --- Filters Toolbar --- */}
-      <div className="flex justify-between items-center bg-muted/30 p-4 border-border border-b">
-        <DateColumnFilter
-          startDate={filters.startDate || ""}
-          endDate={filters.endDate || ""}
-          onDateChange={handleDateChange}
-          align="start"
-        />
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-muted/30 p-4 border-border border-b">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <DateColumnFilter
+            startDate={filters.startDate || ""}
+            endDate={filters.endDate || ""}
+            onDateChange={handleDateChange}
+            align="start"
+          />
+          
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search Invoice or Customer..."
+              className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         
         {hasActiveFilters && (
           <button
             onClick={handleClearAllFilters}
             className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-500 text-xs transition-all"
           >
-            <XCircle className="w-3 h-3" /> Clear Column Filters
+            <XCircle className="w-3 h-3" /> Clear Filters
           </button>
         )}
       </div>
@@ -188,19 +204,11 @@ export const PaymentHistoryTable = () => {
           <thead className="sticky top-0 z-10 bg-muted text-muted-foreground text-xs uppercase shadow-sm">
             <tr>
               <th className="px-6 py-3 rounded-tl-lg">
-                <HeaderWithFilter
-                  column={{ key: "transactionNo", name: "Invoice No" }}
-                  filters={filters as Record<string, string>}
-                  onApplyFilter={handleApplyFilter}
-                />
+                Invoice No
               </th>
               <th className="px-6 py-3">Date & Time</th>
               <th className="px-6 py-3">
-                <HeaderWithFilter
-                  column={{ key: "customerName", name: "Customer" }}
-                  filters={filters as Record<string, string>}
-                  onApplyFilter={handleApplyFilter}
-                />
+                Customer
               </th>
               <th className="px-6 py-3 text-right">Total</th>
               <th className="px-6 py-3 text-right">Payment</th>
@@ -214,10 +222,19 @@ export const PaymentHistoryTable = () => {
             </tr>
           </thead>
           <tbody>
-            {payments.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={can_delete_transaction ? 8 : 7} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <span className="text-muted-foreground text-xs">Loading payments...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : payments.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={can_delete_transaction ? 8 : 7}
                   className="px-6 py-8 text-muted-foreground text-center"
                 >
                   No payments found.

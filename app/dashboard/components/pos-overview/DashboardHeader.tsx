@@ -27,17 +27,7 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          Overview
-          {isHistoricalView && (
-            <span className="text-xs px-2 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20">
-              History Mode
-            </span>
-          )}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">{today}</p>
-      </div>
+      
 
       <div className="flex items-center gap-2">
         <button

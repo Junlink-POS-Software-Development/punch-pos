@@ -123,6 +123,7 @@ export const useItemTable = () => {
         sales_price: item.sales_price != null ? String(item.sales_price) : "",
         unit_cost: String(item.unit_cost),
         description: item.description || "",
+        image_url: item.image_url || null,
       },
     }));
   };
@@ -150,6 +151,7 @@ export const useItemTable = () => {
         salesPrice: parseFloat(edits.unit_cost) || 0,
         sellingPrice: parseFloat(edits.sales_price) || 0,
         description: edits.description,
+        imageUrl: edits.image_url,
       }
     );
   };
@@ -165,6 +167,7 @@ export const useItemTable = () => {
           sales_price: item.sales_price != null ? String(item.sales_price) : "",
           unit_cost: String(item.unit_cost),
           description: item.description || "",
+          image_url: item.image_url || null,
         };
       });
     setEditingRows((prev) => ({ ...prev, ...newEditing }));

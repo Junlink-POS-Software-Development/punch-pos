@@ -52,18 +52,18 @@ export const QuickPickGrid = ({ onSelect }: QuickPickGridProps) => {
                 key={btn.id}
                 onClick={() => btn.item && onSelect(btn.item)}
                 className={`
-                  ${btn.color} border shadow-lg backdrop-blur-sm
+                  ${btn.color.split('|')[0]} border shadow-lg backdrop-blur-sm
                   rounded-lg p-1 text-[10px] font-bold leading-tight h-12 sm:h-16
                   hover:brightness-110 active:scale-95 transition-all
                   flex items-center justify-center text-center wrap-break-word
                   relative overflow-hidden
                 `}
               >
-                <span className="relative z-10">{btn.label}</span>
+                <span className="relative z-10 drop-shadow-md">{btn.label}</span>
                 {/* Optional: Add image background if image_url exists */}
                 {btn.image_url && (
                   <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-20"
+                    className={`absolute inset-0 ${btn.color.split('|')[1] || 'bg-cover'} bg-center opacity-30`}
                     style={{ backgroundImage: `url(${btn.image_url})` }}
                   />
                 )}

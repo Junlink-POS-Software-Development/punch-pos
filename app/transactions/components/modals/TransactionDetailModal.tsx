@@ -40,7 +40,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative flex flex-col bg-card shadow-2xl border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="relative flex flex-col bg-card text-foreground shadow-2xl border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center gap-2">
@@ -179,6 +179,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
         @media print {
           body * {
             visibility: hidden;
+            background: white !important;
+            color: black !important;
           }
           .receipt-content, .receipt-content * {
             visibility: visible;
@@ -188,6 +190,19 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             left: 0;
             top: 0;
             width: 100%;
+            background: white !important;
+            color: black !important;
+            padding: 20px;
+          }
+          .receipt-content .text-muted-foreground {
+            color: #666 !important;
+          }
+          .receipt-content .text-primary {
+            color: black !important;
+            font-weight: bold;
+          }
+          .receipt-content .border-border {
+            border-color: #000 !important;
           }
         }
       `}</style>

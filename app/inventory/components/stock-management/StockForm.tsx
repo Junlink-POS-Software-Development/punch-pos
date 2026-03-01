@@ -84,7 +84,7 @@ export function StockForm({
         notes: "",
         quantity: 0,
         capitalPrice: 0,
-        expiryDate: "",
+        expiryDate: undefined,
       });
       // Added: Auto-focus Item Name when opening blank form
       setTimeout(() => setFocus("itemName"), 100);

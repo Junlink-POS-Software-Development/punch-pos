@@ -101,7 +101,7 @@ export const insertStock = async (data: {
       quantity_in: data.quantity,
       capital_price_in: data.capitalPrice,
       notes_in: data.notes ?? null,
-      expiry_date_in: data.expiryDate ?? null,
+      expiry_date_in: (data.expiryDate && data.expiryDate.trim() !== "") ? data.expiryDate : null,
     }),
     10000, // 10-second timeout
     "Insert Stock RPC"
@@ -191,7 +191,7 @@ export const insertStockBatch = async (items: {
     quantity: i.quantity,
     capital_price: i.capitalPrice,
     notes: i.notes ?? "Batch Update",
-    expiry_date: i.expiryDate ?? null,
+    expiry_date: (i.expiryDate && i.expiryDate.trim() !== "") ? i.expiryDate : null,
     batch_remaining: i.stockFlow === "stock-in" ? i.quantity : 0,
     user_id: user.id,
     store_id: storeId,

@@ -28,6 +28,7 @@ interface ItemRegState {
     sales_price: string;
     unit_cost: string;
     description: string;
+    image_url: string | null;
   }>;
 
   // Barcode State

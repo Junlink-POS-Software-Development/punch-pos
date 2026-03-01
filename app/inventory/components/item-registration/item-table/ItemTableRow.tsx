@@ -1,8 +1,11 @@
 // app/inventory/components/item-registration/item-table/ItemTableRow.tsx
 
-import React from "react";
-import { Trash2, Edit2, Check, X, Barcode, Package } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Trash2, Edit2, Check, X, Barcode, Package, Loader2, Camera } from "lucide-react";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { usePermissions } from "@/app/hooks/usePermissions";
+import imageCompression from "browser-image-compression";
+import { uploadItemImage } from "../lib/image.api";
 
 interface ItemTableRowProps {
   item: InventoryItem;
@@ -14,8 +17,9 @@ interface ItemTableRowProps {
     sales_price: string;
     unit_cost: string;
     description: string;
+    image_url: string | null;
   } | null;
-  onUpdateField: (field: "item_name" | "sku" | "sales_price" | "unit_cost" | "description", value: string) => void;
+  onUpdateField: (field: "item_name" | "sku" | "sales_price" | "unit_cost" | "description" | "image_url", value: string | null) => void;
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
@@ -36,6 +40,45 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
   onGenerateBarcode,
 }) => {
   const isEditing = !!editingData;
+  const { can_manage_items } = usePermissions();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    if (isEditing && can_manage_items) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const options = {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      const fd = new FormData();
+      const finalFile = new File([compressedFile], file.name, { type: compressedFile.type });
+      fd.append("file", finalFile);
+
+      const publicUrl = await uploadItemImage(fd);
+      onUpdateField("image_url", publicUrl);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const currentImageUrl = isEditing ? editingData.image_url : item.image_url;
 
   return (
     <tr
@@ -53,31 +96,102 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
       </td>
       <td className="px-4 py-1.5 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 shrink-0 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden">
-            {item.image_url ? (
-              <img src={item.image_url} alt={item.item_name} className="h-full w-full object-cover" />
+          <div 
+            className={`h-10 w-10 shrink-0 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden relative group/image ${
+              isEditing ? "cursor-pointer hover:border-orange-500/50 transition-colors" : ""
+            }`}
+            onClick={handleImageClick}
+          >
+            {isUploading ? (
+              <Loader2 size={18} className="text-primary animate-spin" />
+            ) : currentImageUrl ? (
+              <img src={currentImageUrl} alt={item.item_name} className="h-full w-full object-cover" />
             ) : (
-              <Package size={16} className="text-muted-foreground/40" />
+              <Package size={18} className="text-muted-foreground/30" />
+            )}
+
+            {isEditing && !isUploading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity">
+                <Camera size={14} className="text-white" />
+              </div>
+            )}
+
+            {isEditing && (
+              <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
             )}
           </div>
-          <div className="font-medium text-foreground text-sm">
-            {item.item_name}
+          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+            {isEditing ? (
+              <input
+                type="text"
+                value={editingData.item_name}
+                onChange={(e) => onUpdateField("item_name", e.target.value)}
+                className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-sm font-medium"
+                placeholder="Item Name"
+              />
+            ) : (
+              <div className="font-medium text-foreground text-sm truncate">
+                {item.item_name}
+              </div>
+            )}
           </div>
         </div>
       </td>
-      <td className="px-4 py-1.5 border-b border-border font-mono text-xs">
-        {item.sku}
+      <td className="px-4 py-1.5 border-b border-border">
+        {isEditing ? (
+          <input
+            type="text"
+            value={editingData.sku}
+            onChange={(e) => onUpdateField("sku", e.target.value)}
+            className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs font-mono"
+            placeholder="SKU"
+          />
+        ) : (
+          <span className="font-mono text-xs">{item.sku}</span>
+        )}
       </td>
       <td className="px-4 py-1.5 border-b border-border">
         <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
           {item.category || "General"}
         </span>
       </td>
-      <td className="px-4 py-1.5 border-b border-border text-right font-medium text-sm">
-        ₱{(item.sales_price || 0).toLocaleString()}
+      <td className="px-4 py-1.5 border-b border-border text-right">
+        {isEditing ? (
+          <input
+            type="number"
+            step="0.01"
+            value={editingData.sales_price}
+            onChange={(e) => onUpdateField("sales_price", e.target.value)}
+            className="w-24 px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-sm font-medium text-right"
+            placeholder="0.00"
+          />
+        ) : (
+          <div className="font-medium text-sm text-foreground">
+            ₱{(item.sales_price || 0).toLocaleString()}
+          </div>
+        )}
       </td>
-      <td className="px-4 py-1.5 border-b border-border text-right text-muted-foreground text-xs">
-        ₱{(item.unit_cost || 0).toLocaleString()}
+      <td className="px-4 py-1.5 border-b border-border text-right">
+        {isEditing ? (
+          <input
+            type="number"
+            step="0.01"
+            value={editingData.unit_cost}
+            onChange={(e) => onUpdateField("unit_cost", e.target.value)}
+            className="w-24 px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs text-muted-foreground text-right"
+            placeholder="0.00"
+          />
+        ) : (
+          <div className="text-muted-foreground text-xs">
+            ₱{(item.unit_cost || 0).toLocaleString()}
+          </div>
+        )}
       </td>
       <td className="px-4 py-1.5 border-b border-border">
         {isEditing ? (
@@ -85,7 +199,7 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
             type="text"
             value={editingData.description}
             onChange={(e) => onUpdateField("description", e.target.value)}
-            className="w-full px-2 py-1 bg-background border border-orange-500/50 rounded outline-none text-xs"
+            className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs"
             placeholder="Description..."
           />
         ) : (
@@ -112,27 +226,31 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
           </div>
         ) : (
           <div className="flex justify-end gap-1 transition-all">
-            <button
-              onClick={onEdit}
-              className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors"
-              title="Edit Item"
-            >
-              <Edit2 size={16} />
-            </button>
-            <button
-              onClick={onGenerateBarcode}
-              className="p-1.5 text-purple-500 hover:bg-purple-500/10 rounded-md transition-colors"
-              title="Print Barcode"
-            >
-              <Barcode size={16} />
-            </button>
-            <button
-              onClick={onDelete}
-              className="p-1.5 text-destructive hover:bg-destructive/10 bg-destructive/5 rounded-lg transition-colors border border-destructive/10"
-              title="Delete Item"
-            >
-              <Trash2 size={16} />
-            </button>
+            {can_manage_items && (
+              <>
+                <button
+                  onClick={onEdit}
+                  className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors"
+                  title="Edit Item"
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={onGenerateBarcode}
+                  className="p-1.5 text-purple-500 hover:bg-purple-500/10 rounded-md transition-colors"
+                  title="Print Barcode"
+                >
+                  <Barcode size={16} />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="p-1.5 text-destructive hover:bg-destructive/10 bg-destructive/5 rounded-lg transition-colors border border-destructive/10"
+                  title="Delete Item"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
           </div>
         )}
       </td>

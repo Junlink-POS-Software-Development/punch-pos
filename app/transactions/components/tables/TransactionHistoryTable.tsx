@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
-import { Loader2, AlertCircle, XCircle } from "lucide-react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
+import { Loader2, AlertCircle, XCircle, Search } from "lucide-react";
 import { useTransactionData } from "../../hooks/useTransactionData";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
-import { HeaderWithFilter } from "@/components/reusables/HeaderWithFilter";
+import { useDebounce } from "@/app/hooks/useDebounce";
 
 export const TransactionHistoryTable = () => {
   const {
@@ -19,6 +19,15 @@ export const TransactionHistoryTable = () => {
     hasNextPage,
     isFetchingNextPage
   } = useTransactionData();
+
+  const [searchTerm, setSearchTerm] = useState(filters.transactionNo || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== (filters.transactionNo || "")) {
+      handleApplyFilter("transactionNo", debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -59,19 +68,13 @@ export const TransactionHistoryTable = () => {
 
   const handleClearAllFilters = () => {
     setFilters({ startDate: "", endDate: "" });
+    setSearchTerm("");
   };
 
   const hasActiveFilters = Object.keys(filters).some(
     (key) => key !== "startDate" && key !== "endDate" && filters[key]
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-10 rounded-lg bg-card border border-border">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
-  }
 
   if (isError) {
     return (
@@ -85,17 +88,30 @@ export const TransactionHistoryTable = () => {
   return (
     <div className="flex flex-col rounded-lg h-full overflow-hidden bg-card border border-border shadow-sm">
       {/* Filters Toolbar */}
-      <div className="flex justify-between items-center bg-muted/30 p-4 border-border border-b">
-        <DateColumnFilter
-          startDate={filters.startDate || ""}
-          endDate={filters.endDate || ""}
-          onDateChange={handleDateChange}
-          align="start"
-        />
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-muted/30 p-4 border-border border-b">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <DateColumnFilter
+            startDate={filters.startDate || ""}
+            endDate={filters.endDate || ""}
+            onDateChange={handleDateChange}
+            align="start"
+          />
+          
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search Invoice..."
+              className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         
         {hasActiveFilters && (
           <button onClick={handleClearAllFilters} className="flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/30 rounded text-red-500 text-xs transition-all">
-            <XCircle className="w-3 h-3" /> Clear Column Filters
+            <XCircle className="w-3 h-3" /> Clear Filters
           </button>
         )}
       </div>
@@ -110,25 +126,13 @@ export const TransactionHistoryTable = () => {
               </th>
               
               <th className="px-6 py-3 whitespace-nowrap">
-                <HeaderWithFilter
-                  column={{ key: "transactionNo", name: "Invoice Ref" }}
-                  filters={filters as Record<string, string>}
-                  onApplyFilter={handleApplyFilter}
-                />
+                Invoice Ref
               </th>
               <th className="px-6 py-3 whitespace-nowrap">
-                <HeaderWithFilter
-                  column={{ key: "barcode", name: "SKU" }}
-                  filters={filters as Record<string, string>}
-                  onApplyFilter={handleApplyFilter}
-                />
+                SKU
               </th>
               <th className="px-6 py-3 whitespace-nowrap">
-                 <HeaderWithFilter
-                  column={{ key: "ItemName", name: "Item Name" }}
-                  filters={filters as Record<string, string>}
-                  onApplyFilter={handleApplyFilter}
-                />
+                Item Name
               </th>
               <th className="px-6 py-3 text-right whitespace-nowrap">Price</th>
               <th className="px-6 py-3 text-right whitespace-nowrap">Qty</th>
@@ -136,7 +140,16 @@ export const TransactionHistoryTable = () => {
             </tr>
           </thead>
           <tbody>
-            {transactions.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <span className="text-muted-foreground text-xs">Loading transactions...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : transactions.length === 0 ? (
                <tr><td colSpan={7} className="px-6 py-8 text-muted-foreground text-center">No transactions found.</td></tr>
             ) : (
               transactions.map((item, index) => (

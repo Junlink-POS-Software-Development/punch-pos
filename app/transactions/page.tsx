@@ -31,7 +31,7 @@ function TransactionsContent() {
       case "history":
         return (
           <div className="space-y-4 p-6">
-            <h2 className="font-semibold text-slate-300 text-xl">
+            <h2 className="font-semibold text-foreground text-xl">
               Item Sales Log
             </h2>
             <TransactionHistoryTable />
@@ -40,7 +40,7 @@ function TransactionsContent() {
       case "payments":
         return (
           <div className="space-y-4 p-6">
-            <h2 className="font-semibold text-slate-300 text-xl">
+            <h2 className="font-semibold text-foreground text-xl">
               Payment Transactions
             </h2>
             <PaymentHistoryTable />
@@ -52,7 +52,7 @@ function TransactionsContent() {
   };
 
   return (
-    <div className="bg-[#0B1120] min-h-screen text-white">
+    <div className="bg-background min-h-screen text-foreground">
       {/* Main Content Area */}
       <div className="slide-in-from-bottom-2 animate-in duration-300 fade-in">
         {renderView()}
@@ -63,7 +63,7 @@ function TransactionsContent() {
 
 export default function TransactionsPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-white">Loading...</div>}>
+    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
       <TransactionsContent />
     </Suspense>
   );

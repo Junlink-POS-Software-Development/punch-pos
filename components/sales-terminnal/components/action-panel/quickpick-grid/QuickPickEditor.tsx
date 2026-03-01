@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
+import { createPortal } from "react-dom";
 import { useItems } from '@/app/inventory/hooks/useItems';
 import { QuickPickItem } from './hooks/useQuickPickItems';
 import { Item } from '@/app/inventory/components/item-registration/utils/itemTypes';
@@ -18,6 +21,11 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
   const [selectedItems, setSelectedItems] = useState<QuickPickItemInput[]>([]);
   const [activeTab, setActiveTab] = useState<'select' | 'customize'>('select');
   const [isSaving, setIsSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -83,10 +91,10 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 lg:p-12">
       <div className="bg-card w-[90vw] h-[85vh] rounded-xl shadow-lg border border-border flex flex-col overflow-hidden text-foreground">
         {/* Header */}
         <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
@@ -166,7 +174,7 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
                             <td className="p-2 text-muted-foreground text-sm">{item.sku}</td>
                             <td className="p-2 text-muted-foreground text-sm">{item.categoryName || '-'}</td>
                             <td className="p-2 text-right font-mono text-foreground">
-                              {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(item.salesPrice)}
+                              {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(item.sellingPrice ?? 0)}
                             </td>
                           </tr>
                         );
@@ -214,14 +222,52 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
                       </div>
                     </div>
 
-                    <div className="mt-2 p-2 rounded-lg border border-dashed border-border flex items-center justify-center min-h-[60px]">
-                      <button 
-                        className={`
-                          ${item.color} text-white font-bold text-xs p-2 rounded shadow-sm w-full h-full min-h-[40px] wrap-break-word
-                        `}
-                      >
-                        {item.label}
-                      </button>
+                    {item.image_url && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Image Fit</label>
+                        <div className="flex gap-2">
+                          {[
+                            { label: 'Cover', value: 'bg-cover' },
+                            { label: 'Contain', value: 'bg-contain' }
+                          ].map(fit => {
+                             const [currentColor, currentFit = 'bg-cover'] = item.color.split('|');
+                             return (
+                              <button
+                                key={fit.value}
+                                onClick={() => handleUpdateItem(idx, { color: `${currentColor}|${fit.value}` })}
+                                className={`px-3 py-1 text-xs rounded-md border transition-all ${
+                                  currentFit === fit.value 
+                                    ? 'bg-primary text-primary-foreground border-primary font-bold' 
+                                    : 'bg-background text-foreground border-input hover:bg-muted'
+                                }`}
+                              >
+                                {fit.label}
+                              </button>
+                             );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-2 p-1 rounded-lg border border-dashed border-border flex items-center justify-center min-h-[70px] bg-card">
+                      {(() => {
+                        const [pureColor, fitClass = 'bg-cover'] = item.color.split('|');
+                        return (
+                          <button 
+                            className={`
+                              ${pureColor} text-white font-bold text-[10px] p-1 rounded shadow-sm w-full h-12 sm:h-16 flex items-center justify-center text-center relative overflow-hidden transition-all
+                            `}
+                          >
+                            <span className="relative z-10 drop-shadow-md">{item.label}</span>
+                            {item.image_url && (
+                              <div 
+                                className={`absolute inset-0 ${fitClass} bg-center opacity-40`}
+                                style={{ backgroundImage: `url(${item.image_url})` }}
+                              />
+                            )}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -247,6 +293,7 @@ export const QuickPickEditor = ({ isOpen, onClose, currentItems, onSave }: Quick
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

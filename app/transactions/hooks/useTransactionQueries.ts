@@ -50,7 +50,6 @@ export const useTransactionHistory = (
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled: isAuthenticated,
-    placeholderData: keepPreviousData,
   });
 };
 
@@ -91,6 +90,5 @@ export const usePaymentHistory = (
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled: isAuthenticated,
-    placeholderData: keepPreviousData,
   });
 };

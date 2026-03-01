@@ -32,6 +32,7 @@ export interface TransactionFilters {
   transactionNo?: string;
   barcode?: string;
   ItemName?: string;
+  search?: string;
 }
 
 interface ActionResponse<T = any> {
@@ -117,12 +118,16 @@ export async function getTransactionHistory(
     .from("transactions")
     .select("*", { count: "exact" });
 
-  // Apply Filters
-  if (filters.startDate) {
-    query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
-  }
-  if (filters.endDate) {
-    query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
+  // Apply Filters (Only if no specific identifiers are provided for a "global" search feel)
+  const isGlobalSearch = !!(filters.transactionNo || filters.barcode || filters.ItemName || filters.search);
+
+  if (!isGlobalSearch) {
+    if (filters.startDate) {
+      query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
+    }
+    if (filters.endDate) {
+      query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
+    }
   }
 
   // Handle Text Search Filters
@@ -167,6 +172,7 @@ export interface PaymentFilters {
   endDate?: string;
   transactionNo?: string; // mapped to invoice_no
   customerName?: string;
+  search?: string;
 }
 
 export async function getPaymentHistory(
@@ -180,20 +186,28 @@ export async function getPaymentHistory(
 
   let query = supabase.from("payments").select("*", { count: "exact" });
 
-  // Apply Filters
-  if (filters.startDate) {
-    query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
-  }
-  if (filters.endDate) {
-    query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
+  // Apply Filters (Ignore dates if searching for a specific term for "global" database search)
+  const isSearching = !!(filters.search || filters.transactionNo || filters.customerName);
+
+  if (!isSearching) {
+    if (filters.startDate) {
+      query = query.gte("transaction_time", `${filters.startDate}T00:00:00`);
+    }
+    if (filters.endDate) {
+      query = query.lte("transaction_time", `${filters.endDate}T23:59:59`);
+    }
   }
 
   // Handle Text Search Filters
-  if (filters.transactionNo) {
-    query = query.ilike("invoice_no", `%${filters.transactionNo}%`);
-  }
-  if (filters.customerName) {
-    query = query.ilike("customer_name", `%${filters.customerName}%`);
+  if (filters.search) {
+     query = query.or(`invoice_no.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`);
+  } else {
+    if (filters.transactionNo) {
+      query = query.ilike("invoice_no", `%${filters.transactionNo}%`);
+    }
+    if (filters.customerName) {
+      query = query.ilike("customer_name", `%${filters.customerName}%`);
+    }
   }
 
   const { data, error, count } = await query
