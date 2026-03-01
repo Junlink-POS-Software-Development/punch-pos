@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Filter, Download, Clock, RefreshCcw } from "lucide-react";
+import { Calendar, Filter, Download, Clock, RefreshCcw, BookOpen } from "lucide-react";
 
 interface DashboardHeaderProps {
   storeName: string;
@@ -11,6 +11,7 @@ interface DashboardHeaderProps {
   isHistoricalView: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onOpenCashFlow: () => void;
 }
 
 export function DashboardHeader({
@@ -22,6 +23,7 @@ export function DashboardHeader({
   isHistoricalView,
   onRefresh,
   isRefreshing,
+  onOpenCashFlow,
 }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
@@ -38,6 +40,14 @@ export function DashboardHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenCashFlow}
+          className="flex items-center gap-2 bg-card hover:bg-muted px-3 py-2 border border-input rounded-lg text-sm font-medium text-foreground shadow-sm transition-all active:scale-[0.98]"
+        >
+          <BookOpen size={16} className="text-emerald-500" />
+          <span className="hidden sm:inline">Cash Flow Ledger</span>
+        </button>
+
         {/* Live Time Display */}
         <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-card border border-input rounded-lg text-sm font-mono text-muted-foreground shadow-sm">
           <Clock size={16} />
