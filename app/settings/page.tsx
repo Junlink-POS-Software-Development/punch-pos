@@ -3,16 +3,17 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlertTriangle, X } from "lucide-react";
-import { GeneralTab } from "./components/general/GeneralTab";
-import AccountTab from "./components/account/AccountTab";
-import { SystemTab } from "./components/system/SystemTab";
 import { AuditLogsTab } from "./components/audit/AuditLogsTab";
+import { ProfileTab } from "./components/profile/ProfileTab";
+import { StoreTab } from "./components/store/StoreTab";
+import { PreferencesTab } from "./components/preferences/PreferencesTab";
+import { SubscriptionTab } from "./components/subscription/SubscriptionTab";
 
-type TabId = "general" | "account" | "system" | "audit";
+type TabId = "profile" | "store" | "preferences" | "subscription" | "audit";
 
 function SettingsContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<TabId>("general");
+  const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ function SettingsContent() {
 
     // Check for deep link tab
     const tab = searchParams.get("tab") as TabId;
-    const validTabs: TabId[] = ["general", "account", "system", "audit"];
+    const validTabs: TabId[] = ["profile", "store", "preferences", "subscription", "audit"];
     if (tab && validTabs.includes(tab)) {
       setActiveTab(tab);
     }
@@ -31,16 +32,18 @@ function SettingsContent() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "general":
-        return <GeneralTab />;
-      case "account":
-        return <AccountTab />;
-      case "system":
-        return <SystemTab />;
+      case "profile":
+        return <ProfileTab />;
+      case "store":
+        return <StoreTab />;
+      case "preferences":
+        return <PreferencesTab />;
+      case "subscription":
+        return <SubscriptionTab />;
       case "audit":
         return <AuditLogsTab />;
       default:
-        return <GeneralTab />;
+        return <ProfileTab />;
     }
   };
 
@@ -49,10 +52,7 @@ function SettingsContent() {
       {/* Main Content Area - Independently scrollable */}
       <div className="w-full p-6 lg:p-10 overflow-y-auto h-full scroll-smooth flex flex-col items-center">
         <div className="max-w-4xl w-full">
-          <div className="mb-10">
-             <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
-             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Manage your account and system preferences</p>
-          </div>
+          
 
           {showBanner && (
               <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">

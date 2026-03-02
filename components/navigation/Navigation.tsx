@@ -121,9 +121,10 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       Icon: Settings,
       href: "/settings",
       shortcuts: [
-        { label: "General", href: "/settings?tab=general" },
-        { label: "Account", href: "/settings?tab=account" },
-        { label: "System", href: "/settings?tab=system" },
+        { label: "Profile", href: "/settings?tab=profile" },
+        { label: "Store", href: "/settings?tab=store" },
+        { label: "Preferences", href: "/settings?tab=preferences" },
+        { label: "Subscription", href: "/settings?tab=subscription" },
         { label: "Audit Logs", href: "/settings?tab=audit" },
       ],
     },

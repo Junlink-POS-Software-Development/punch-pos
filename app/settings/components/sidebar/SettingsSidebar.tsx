@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Settings, User, Server, FileText } from "lucide-react";
+import { Settings, User, Server, FileText, Store } from "lucide-react";
 
-type TabId = "general" | "account" | "system" | "audit";
+type TabId = "profile" | "store" | "preferences" | "subscription" | "audit";
 
 interface SettingsSidebarProps {
   activeTab: TabId;
@@ -11,9 +11,10 @@ interface SettingsSidebarProps {
 
 export const SettingsSidebar = ({ activeTab, setActiveTab }: SettingsSidebarProps) => {
   const menuItems = [
-    { id: "general", label: "General", icon: Settings },
-    { id: "account", label: "Account Settings", icon: User },
-    { id: "system", label: "System Config", icon: Server },
+    { id: "profile", label: "Profile", icon: User },
+    { id: "store", label: "Store Settings", icon: Store },
+    { id: "preferences", label: "Preferences", icon: Settings },
+    { id: "subscription", label: "Subscription", icon: Server },
     { id: "audit", label: "Audit Logs", icon: FileText },
   ] as const;
 
