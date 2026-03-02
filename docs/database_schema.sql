@@ -199,6 +199,7 @@ CREATE TABLE public.staff_permissions (
   can_manage_categories boolean DEFAULT false,
   can_manage_customers boolean DEFAULT false,
   can_manage_expenses boolean DEFAULT false,
+  can_manage_store boolean NOT NULL DEFAULT false,
   CONSTRAINT staff_permissions_pkey PRIMARY KEY (id),
   CONSTRAINT staff_permissions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
@@ -214,6 +215,8 @@ CREATE TABLE public.stock_flow (
   store_id uuid,
   item_id uuid NOT NULL,
   category_id uuid,
+  expiry_date date,
+  batch_remaining numeric DEFAULT 0,
   CONSTRAINT stock_flow_pkey PRIMARY KEY (id),
   CONSTRAINT stock_flow_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT stock_flow_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.product_category(id),

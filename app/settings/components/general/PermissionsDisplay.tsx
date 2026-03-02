@@ -19,6 +19,7 @@ import {
   Tags,
   Users,
   Receipt,
+  Store,
 } from "lucide-react";
 
 /** Map each permission key to a matching icon */
@@ -31,6 +32,7 @@ const PERMISSION_ICONS: Record<keyof UserPermissions, React.ReactNode> = {
   can_manage_categories: <Tags className="w-4 h-4" />,
   can_manage_customers: <Users className="w-4 h-4" />,
   can_manage_expenses: <Receipt className="w-4 h-4" />,
+  can_manage_store: <Store className="w-4 h-4" />,
 };
 
 const PermissionsDisplay = () => {

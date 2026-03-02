@@ -142,6 +142,8 @@ export async function uploadStoreLogo(formData: FormData) {
       cacheControl: "3600",
       upsert: false,
     });
+  
+  console.log("Upload result:", { data: uploadData, error: uploadError });
 
   if (uploadError) {
     console.error("Store logo upload error details:", uploadError);
@@ -178,6 +180,13 @@ export async function updateStoreInfo(data: {
       .select("store_id")
       .eq("user_id", user.id)
       .single();
+    
+    console.log("Debug updateStoreInfo:", {
+      userId: user.id,
+      appMetadata: user.app_metadata,
+      userData: userData,
+      userError: userError
+    });
 
     if (userError || !userData?.store_id) {
       return { success: false, error: "Store not found for user" };
@@ -191,10 +200,14 @@ export async function updateStoreInfo(data: {
       return { success: true };
     }
 
-    const { error: updateError } = await supabase
+    const { data: updateResult, error: updateError } = await supabase
       .from("stores")
       .update(updatePayload)
-      .eq("store_id", userData.store_id);
+      .eq("store_id", userData.store_id)
+      .select(); // Added select() to see what was updated
+
+    console.log("Update payload:", updatePayload);
+    console.log("Update result:", { data: updateResult, error: updateError });
 
     if (updateError) {
       return { success: false, error: updateError.message };

@@ -5,7 +5,10 @@ import { ProfilePictureSection } from "./ProfilePictureSection";
 import { StoreInfoSection } from "./StoreInfoSection";
 import { BusinessInfoSection } from "./BusinessInfoSection";
 
+import { usePermissions } from "@/app/hooks/usePermissions";
+
 export const GeneralTab = () => {
+    const { can_manage_store } = usePermissions();
 
     return (
         <div className="space-y-6">
@@ -19,7 +22,7 @@ export const GeneralTab = () => {
             <ProfilePictureSection />
 
             {/* Store Identity Section */}
-            <StoreInfoSection />
+            {can_manage_store && <StoreInfoSection />}
 
             {/* Business Info Section */}
             <BusinessInfoSection />

@@ -11,6 +11,7 @@ export interface UserPermissions {
   can_manage_categories: boolean;
   can_manage_customers: boolean;
   can_manage_expenses: boolean;
+  can_manage_store: boolean;
 }
 
 const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -22,6 +23,7 @@ const DEFAULT_PERMISSIONS: UserPermissions = {
   can_manage_categories: false,
   can_manage_customers: false,
   can_manage_expenses: false,
+  can_manage_store: false,
 };
 
 /** Safely decodes a JWT payload in the browser */
@@ -105,6 +107,7 @@ export const PERMISSION_LABELS: Record<keyof UserPermissions, string> = {
   can_manage_categories: "Manage Categories",
   can_manage_customers: "Manage Customers",
   can_manage_expenses: "Manage Expenses",
+  can_manage_store: "Manage Store Identity",
 };
 
 export const PERMISSION_DESCRIPTIONS: Record<keyof UserPermissions, string> = {
@@ -116,4 +119,5 @@ export const PERMISSION_DESCRIPTIONS: Record<keyof UserPermissions, string> = {
   can_manage_categories: "Allows creating and managing product categories",
   can_manage_customers: "Allows registering, editing, and deleting customers",
   can_manage_expenses: "Allows recording and deleting cash-out expenses",
+  can_manage_store: "Allows updating store name, logo, and business details",
 };
