@@ -160,3 +160,20 @@ input::placeholder, textarea::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
 }
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+  width: fit-content;
+}
+
+/* Optional: pause on hover */
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

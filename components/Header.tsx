@@ -4,12 +4,13 @@ import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon, Monitor, Store } from "lucide-react";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFilterStore } from "@/store/useFilterStore";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
+import { getStoreInfo } from "@/app/actions/store";
 
 interface HeaderProps {
   onSignInClick: () => void;
@@ -37,7 +38,22 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => setMounted(true), []);
+  const [storeInfo, setStoreInfo] = React.useState<{ name: string; img: string | null }>({ name: "", img: null });
+
+  const fetchStoreInfo = React.useCallback(async () => {
+    const result = await getStoreInfo();
+    if (result.success) {
+      setStoreInfo({ name: result.storeName || "", img: result.storeImg || null });
+    }
+  }, []);
+
+  React.useEffect(() => {
+    setMounted(true);
+    fetchStoreInfo();
+
+    window.addEventListener("store-updated", fetchStoreInfo);
+    return () => window.removeEventListener("store-updated", fetchStoreInfo);
+  }, [fetchStoreInfo]);
 
   const activeTitle = ROUTE_TITLES[pathname];
 
@@ -53,32 +69,39 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
     theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
-    <header className="flex items-center justify-between gap-6 px-6 pt-4">
-      {/* LEFT: Spacer for where logo used to be (optional, but keep for balance if needed) */}
-      <div className="w-[180px] hidden lg:block shrink-0" />
-
-      <div className="flex-1 flex items-center justify-center max-w-4xl mx-auto gap-8">
-        {activeTitle && (
-          <h2 className="text-3xl font-bold text-foreground tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-500 font-lexend shrink-0">
-            {activeTitle}
-          </h2>
-        )}
-
-        {pathname === "/cashout" && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-700">
-            <DateRangeFilter
-              startDate={dateRange.start}
-              endDate={dateRange.end}
-              onStartDateChange={(d) => setDateRange({ ...dateRange, start: d })}
-              onEndDateChange={(d) => setDateRange({ ...dateRange, end: d })}
-              onClear={resetDateRange}
-            />
-          </div>
-        )}
+    <header className="flex items-center justify-between gap-6 px-6 pt-4 h-16 overflow-hidden">
+      {/* Container that occupies the whole span between logo area and right actions */}
+      <div className="flex-1 hidden lg:flex items-center overflow-hidden h-10 bg-muted/20 border border-border/50 rounded-full px-4 relative group">
+        {/* Gradient Masks for premium look */}
+        <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background/20 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background/20 to-transparent z-10 pointer-events-none" />
+        
+        <div className="animate-marquee flex items-center flex-nowrap min-w-max gap-20 py-1">
+          {/* Repeat content multiple times for seamless infinite loop */}
+          {Array(8).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center gap-6 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                {storeInfo.img ? (
+                  <img src={storeInfo.img} alt="Logo" className="w-5 h-5 object-cover rounded-md shadow-sm" />
+                ) : (
+                  <Store className="w-5 h-5 text-primary" />
+                )}
+                <span className="font-black text-sm tracking-tight text-foreground uppercase italic">{storeInfo.name || "PUNCH POS"}</span>
+              </div>
+              
+              {activeTitle && (
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] font-bold text-muted-foreground/60 tracking-[0.4em] uppercase">{activeTitle}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* RIGHT: User Actions */}
-      <div className="flex items-center gap-4 shrink-0">
+      <div className="flex items-center gap-4 shrink-0 ml-auto">
         {/* Welcome Text - Subtle */}
         <p className="hidden lg:block text-xs text-muted-foreground text-right">
           {isAuthReady 
