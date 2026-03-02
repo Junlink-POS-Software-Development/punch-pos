@@ -1,36 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Hash, Loader2, AlertTriangle, ArrowRight, User } from "lucide-react";
-import { linkUserToStore } from "@/app/actions/onboarding";
-import { updateProfile } from "@/app/actions/profile";
+import { Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-
-const onboardingSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  jobTitle: z.string().min(1, "Job title is required"),
-  enrollmentId: z.string().optional(),
-});
-
-type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+import { OnboardingForm } from "./components/OnboardingForm";
+import { WelcomeModal } from "./components/WelcomeModal";
 
 export default function OnboardingPage() {
-  const [isPending, setIsPending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasStore, setHasStore] = useState(false);
+  const [defaultValues, setDefaultValues] = useState<{
+    firstName?: string;
+    lastName?: string;
+    jobTitle?: string;
+    storeName?: string;
+  }>({});
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-    setError: setFormError,
-  } = useForm<OnboardingFormValues>({
-    resolver: zodResolver(onboardingSchema),
+  // Welcome modal state
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeData, setWelcomeData] = useState({
+    userName: "",
+    storeName: "",
+    storeLogo: null as string | null,
   });
 
   useEffect(() => {
@@ -41,7 +32,6 @@ export default function OnboardingPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
-        // Fetch public.users
         const { data: userData } = await supabase
           .from("users")
           .select("first_name, last_name, store_id, metadata")
@@ -49,70 +39,61 @@ export default function OnboardingPage() {
           .single();
 
         if (userData) {
-          setValue("firstName", userData.first_name || "");
-          setValue("lastName", userData.last_name || "");
-          setValue("jobTitle", (userData.metadata as any)?.job_title || "");
+          const defaults: typeof defaultValues = {
+            firstName: userData.first_name || "",
+            lastName: userData.last_name || "",
+            jobTitle: (userData.metadata as any)?.job_title || "",
+          };
+
           if (userData.store_id) {
             setHasStore(true);
+
+            // Fetch existing store info to pre-fill
+            const { data: storeData } = await supabase
+              .from("stores")
+              .select("store_name, store_img")
+              .eq("store_id", userData.store_id)
+              .single();
+
+            if (storeData) {
+              // Don't pre-fill the default "My New Store" name
+              defaults.storeName =
+                storeData.store_name === "My New Store"
+                  ? ""
+                  : storeData.store_name || "";
+            }
           }
+
+          setDefaultValues(defaults);
         } else {
-          // Try to get from auth metadata
           const meta = user.user_metadata;
           if (meta) {
-            // Google gives "full_name" or "name"
             const fullName = meta.full_name || meta.name || "";
             const parts = fullName.split(" ");
-            if (parts.length > 0) setValue("firstName", parts[0]);
-            if (parts.length > 1)
-              setValue("lastName", parts.slice(1).join(" "));
+            setDefaultValues({
+              firstName: parts[0] || "",
+              lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
+            });
           }
         }
       }
       setIsLoading(false);
     };
     fetchUser();
-  }, [setValue]);
+  }, []);
 
-  const onSubmit = async (values: OnboardingFormValues) => {
-    setFormError("root.serverError", { message: "" });
-
-    if (!hasStore && !values.enrollmentId) {
-      setFormError("enrollmentId", { message: "Enrollment ID is required" });
-      return;
-    }
-
-    setIsPending(true);
-    try {
-      // Always update profile first (updates auth metadata and public.users if exists)
-      const profileResult = await updateProfile({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        jobTitle: values.jobTitle,
-      });
-
-      if (!profileResult.success) {
-        // If profile update failed, it might be because public.users row doesn't exist yet.
-        // But updateProfile also updates auth.users, which shouldn't fail.
-        // If it failed on public.users update, we might ignore it if we are about to join store (which creates the row).
-        // But let's check the error.
-        console.warn("Profile update warning:", profileResult.error);
-      }
-
-      if (!hasStore) {
-        // Join store (creates public.users row using auth metadata)
-        const linkResult = await linkUserToStore(values.enrollmentId!);
-        if (!linkResult.success) throw new Error(linkResult.error);
-      }
-
+  const handleSuccess = (data: {
+    userName: string;
+    storeName: string;
+    storeLogo: string | null;
+  }) => {
+    if (hasStore) {
+      // Store owner — show welcome modal
+      setWelcomeData(data);
+      setShowWelcome(true);
+    } else {
+      // Staff joining — just redirect
       window.location.href = "/";
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      setFormError("root.serverError", {
-        type: "server",
-        message: (err as Error).message,
-      });
-    } finally {
-      setIsPending(false);
     }
   };
 
@@ -126,142 +107,30 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+      {showWelcome && (
+        <WelcomeModal
+          userName={welcomeData.userName}
+          storeName={welcomeData.storeName}
+          storeLogo={welcomeData.storeLogo}
+          onClose={() => (window.location.href = "/")}
+        />
+      )}
+
       <div className="w-full max-w-md bg-card p-8 rounded-xl border border-border shadow-md">
         <h2 className="mb-2 font-bold text-3xl text-center">
-          {hasStore ? "Complete Profile" : "Welcome! 👋"}
+          {hasStore ? "Set Up Your Store 🏪" : "Welcome! 👋"}
         </h2>
         <p className="mb-8 text-muted-foreground text-center">
           {hasStore
-            ? "Please complete your profile details."
+            ? "Complete your profile and customize your store."
             : "To complete your setup, please enter your details and Company Code."}
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* First Name */}
-          <div>
-            <label className="block mb-2 font-medium text-muted-foreground text-sm">
-              First Name
-            </label>
-            <div className="relative">
-              <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-muted-foreground" />
-              </span>
-              <input
-                type="text"
-                placeholder="First Name"
-                {...register("firstName")}
-                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
-                  errors.firstName ? "border-red-500" : ""
-                }`}
-              />
-            </div>
-            {errors.firstName && (
-              <p className="mt-2 text-red-500 text-sm">
-                {errors.firstName.message}
-              </p>
-            )}
-          </div>
-
-          {/* Last Name */}
-          <div>
-            <label className="block mb-2 font-medium text-muted-foreground text-sm">
-              Last Name
-            </label>
-            <div className="relative">
-              <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-muted-foreground" />
-              </span>
-              <input
-                type="text"
-                placeholder="Last Name"
-                {...register("lastName")}
-                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
-                  errors.lastName ? "border-red-500" : ""
-                }`}
-              />
-            </div>
-            {errors.lastName && (
-              <p className="mt-2 text-red-500 text-sm">
-                {errors.lastName.message}
-              </p>
-            )}
-          </div>
-
-          {/* Job Title */}
-          <div>
-            <label className="block mb-2 font-medium text-muted-foreground text-sm">
-              Job Title
-            </label>
-            <div className="relative">
-              <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <User className="w-5 h-5 text-muted-foreground" />
-              </span>
-              <input
-                type="text"
-                placeholder="e.g. Sales Associate"
-                {...register("jobTitle")}
-                className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
-                  errors.jobTitle ? "border-red-500" : ""
-                }`}
-              />
-            </div>
-            {errors.jobTitle && (
-              <p className="mt-2 text-red-500 text-sm">
-                {errors.jobTitle.message}
-              </p>
-            )}
-          </div>
-
-          {!hasStore && (
-            <div>
-              <label
-                htmlFor="enrollmentId"
-                className="block mb-2 font-medium text-muted-foreground text-sm"
-              >
-                Company Code
-              </label>
-              <div className="relative">
-                <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                  <Hash className="w-5 h-5 text-muted-foreground" />
-                </span>
-                <input
-                  type="text"
-                  id="enrollmentId"
-                  placeholder="e.g. A7B2C9"
-                  {...register("enrollmentId")}
-                  className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
-                    errors.enrollmentId ? "border-red-500" : ""
-                  }`}
-                />
-              </div>
-              {errors.enrollmentId && (
-                <p className="mt-2 text-red-500 text-sm">
-                  {errors.enrollmentId.message}
-                </p>
-              )}
-            </div>
-          )}
-
-          {errors.root?.serverError && (
-            <div className="flex items-center gap-2 text-red-500 text-sm">
-              <AlertTriangle className="w-5 h-5" />
-              <span>{errors.root.serverError.message}</span>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="flex justify-center items-center gap-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-md transition-colors"
-            disabled={isPending}
-          >
-            {isPending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <ArrowRight className="w-5 h-5" />
-            )}
-            <span>{isPending ? "Saving..." : "Continue"}</span>
-          </button>
-        </form>
+        <OnboardingForm
+          hasStore={hasStore}
+          defaultValues={defaultValues}
+          onSuccess={handleSuccess}
+        />
       </div>
     </div>
   );

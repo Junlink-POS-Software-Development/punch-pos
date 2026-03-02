@@ -169,7 +169,8 @@ export async function middleware(request: NextRequest) {
       // Define paths to exempt (so they don't get stuck in a redirect loop)
       const isSubscriptionPage =
         request.nextUrl.pathname.startsWith("/settings") ||
-        request.nextUrl.pathname.startsWith("/subscribe-required");
+        request.nextUrl.pathname.startsWith("/subscribe-required") ||
+        request.nextUrl.pathname.startsWith("/onboarding");
 
       // If inactive and NOT on the subscription page, redirect them
       if (!isActive && !isSubscriptionPage && !isApiRoute) {

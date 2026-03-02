@@ -1,11 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import CurrencySelector from "./CurrencySelector";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getStoreInfo } from "@/app/actions/store";
 
 export function BusinessInfoSection() {
   const { user } = useAuthStore();
+  const [businessName, setBusinessName] = useState("");
+
+  useEffect(() => {
+    const fetchStoreName = async () => {
+      const result = await getStoreInfo();
+      if (result.success && result.storeName) {
+        setBusinessName(result.storeName);
+      }
+    };
+    fetchStoreName();
+  }, []);
 
   return (
     <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm space-y-8">
@@ -14,7 +26,9 @@ export function BusinessInfoSection() {
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">Business Name</label>
             <input 
                 type="text" 
-                defaultValue="JunLink POS"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Your business name"
                 className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/50"
             />
         </div>

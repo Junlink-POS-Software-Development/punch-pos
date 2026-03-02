@@ -2,6 +2,7 @@
 import React from "react";
 import PermissionsDisplay from "./PermissionsDisplay";
 import { ProfilePictureSection } from "./ProfilePictureSection";
+import { StoreInfoSection } from "./StoreInfoSection";
 import { BusinessInfoSection } from "./BusinessInfoSection";
 
 export const GeneralTab = () => {
@@ -16,6 +17,9 @@ export const GeneralTab = () => {
 
             {/* Profile Picture Section */}
             <ProfilePictureSection />
+
+            {/* Store Identity Section */}
+            <StoreInfoSection />
 
             {/* Business Info Section */}
             <BusinessInfoSection />

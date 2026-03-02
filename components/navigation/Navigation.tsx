@@ -19,10 +19,12 @@ import {
   Menu,
   X,
   Table,
+  Store,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useViewStore } from "../window-layouts/store/useViewStore";
+import { getStoreInfo } from "@/app/actions/store";
 
 // Mock data for the specific page shortcuts/dropdowns
 const MOCK_SHORTCUTS = [
@@ -39,7 +41,28 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { setViewState } = useViewStore(); // Removed setMobileView
+  const { setViewState } = useViewStore();
+
+  // Store logo/name for sidebar
+  const [storeInfo, setStoreInfo] = useState<{ name: string; img: string | null }>({ name: "", img: null });
+
+  const fetchStoreInfo = async () => {
+    const result = await getStoreInfo();
+    if (result.success) {
+      setStoreInfo({ name: result.storeName || "", img: result.storeImg || null });
+    }
+  };
+
+  useEffect(() => {
+    if (variant === "sidebar") {
+      fetchStoreInfo();
+
+      // Listen for store updates to sync across components
+      const handleUpdate = () => fetchStoreInfo();
+      window.addEventListener("store-updated", handleUpdate);
+      return () => window.removeEventListener("store-updated", handleUpdate);
+    }
+  }, [variant]);
 
   const nav = [
     {
@@ -236,21 +259,33 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       {/* Header / Logo Area */}
       <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden">
         <div className="flex items-center gap-3 shrink-0">
-          <Image
-            src="/punch-logo.png"
-            alt="PUNCH POS Logo"
-            width={40}
-            height={40}
-            className="object-contain min-w-[40px]"
-          />
+          {storeInfo.img ? (
+            <div className="w-10 h-10 min-w-[40px] rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center">
+              <img
+                src={storeInfo.img}
+                alt={storeInfo.name || "Store Logo"}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <Image
+              src="/punch-logo.png"
+              alt="PUNCH POS Logo"
+              width={40}
+              height={40}
+              className="object-contain min-w-[40px]"
+            />
+          )}
           {!isCollapsed && (
             <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
-              <h1 className="text-base font-bold tracking-tight text-foreground leading-none">
-                PUNCH<span className="font-light text-muted-foreground ml-1">POS</span>
+              <h1 className="text-base font-bold tracking-tight text-foreground leading-none truncate max-w-[160px]">
+                {storeInfo.name || (<>PUNCH<span className="font-light text-muted-foreground ml-1">POS</span></>)}
               </h1>
-              <p className="text-[8px] text-muted-foreground/70 tracking-wide whitespace-nowrap">
-                by JunLink Software
-              </p>
+              {!storeInfo.name && (
+                <p className="text-[8px] text-muted-foreground/70 tracking-wide whitespace-nowrap">
+                  by JunLink Software
+                </p>
+              )}
             </div>
           )}
         </div>
