@@ -69,7 +69,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
     theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
-    <header className="flex items-center justify-between gap-6 px-6 pt-4 h-16 overflow-hidden">
+    <header className="flex items-center justify-between gap-6 px-6 pt-4 h-16">
       {/* Container that occupies the whole span between logo area and right actions */}
       <div className="flex-1 hidden lg:flex items-center overflow-hidden h-10 bg-muted/20 border border-border/50 rounded-full px-4 relative group">
         {/* Gradient Masks for premium look */}
@@ -101,7 +101,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       </div>
 
       {/* RIGHT: User Actions */}
-      <div className="flex items-center gap-4 shrink-0 ml-auto">
+      <div className="flex items-center gap-4 shrink-0 ml-auto relative z-20">
         {/* Welcome Text - Subtle */}
         <p className="hidden lg:block text-xs text-muted-foreground text-right">
           {isAuthReady 
