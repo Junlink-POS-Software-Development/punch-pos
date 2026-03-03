@@ -15,21 +15,6 @@ export async function GET(request: Request) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data: userData, error: profileError } = await supabase
-          .from("users")
-          .select("role")
-          .eq("user_id", user.id)
-          .single();
-
-        if (userData?.role === "admin") {
-          await supabase.auth.signOut();
-          return NextResponse.redirect(
-            `${origin}/login?error=Access%20denied.%20Admins%20must%20sign%20in%20via%20the%20admin%20app.`
-          );
-        }
-      }
-
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
       if (isLocalEnv) {

@@ -21,27 +21,6 @@ export async function login(formData: SignInFormValues) {
     return { success: false, error: "Sign in successful but no session created." };
   }
 
-  // Verify user role
-  const { data: userData, error: profileError } = await supabase
-    .from("users")
-    .select("role")
-    .eq("user_id", data.session.user.id)
-    .single();
-
-  if (profileError) {
-    await supabase.auth.signOut();
-    return { success: false, error: "Could not verify user role." };
-  }
-
-  if (userData.role !== "member") {
-    await supabase.auth.signOut();
-    if (userData.role === "admin") {
-      return { success: false, error: "Access denied. Admins must sign in via the admin app." };
-    } else {
-      return { success: false, error: `Access denied. Your role (${userData.role}) is not 'member'.` };
-    }
-  }
-
   revalidatePath("/", "layout");
   return { success: true };
 }
@@ -98,8 +77,8 @@ export async function signUp(values: SignUpFormValues) {
     password: values.password,
     options: {
       data: {
-        signup_type: "member",
-        role: "member",
+        source: "terminal",
+        full_name: `${values.firstName} ${values.lastName}`,
         first_name: values.firstName,
         last_name: values.lastName,
         contact_email: values.email,

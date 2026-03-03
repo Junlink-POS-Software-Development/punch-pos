@@ -74,7 +74,8 @@ export async function middleware(request: NextRequest) {
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
-  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute;
+  const isSelectStorePageP = request.nextUrl.pathname.startsWith("/select-store");
+  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP;
 
   // If user is not logged in and trying to access a protected route
   if (!user && !isPublicRoute) {
@@ -139,20 +140,27 @@ export async function middleware(request: NextRequest) {
       .single();
 
     const isOnboardingPage = request.nextUrl.pathname.startsWith("/onboarding");
+    const isSelectStorePage = request.nextUrl.pathname.startsWith("/select-store");
 
     const hasStore = !!userData?.store_id;
     const hasName = !!userData?.first_name && !!userData?.last_name;
     const jobTitle = (userData?.metadata as { job_title?: string })?.job_title;
     const hasJobTitle = !!jobTitle;
 
-    const isProfileComplete = hasStore && hasName && hasJobTitle;
-
-    if (!isProfileComplete) {
-      // If user has incomplete profile, redirect to onboarding
+    // 1. Profile Name/Job not complete -> Onboarding
+    if (!hasName || !hasJobTitle) {
       if (!isOnboardingPage && !isApiRoute) {
         return NextResponse.redirect(new URL("/onboarding", request.url));
       }
-    } else {
+    } 
+    // 2. Profile Name/Job complete but no Store selected -> Store Selection
+    else if (!hasStore) {
+      if (!isSelectStorePage && !isApiRoute && !isOnboardingPage) {
+        return NextResponse.redirect(new URL("/select-store", request.url));
+      }
+    }
+    // 3. Everything complete -> Check Subscription
+    else {
       // Check subscription status for that store
       const { data: sub } = await supabase
         .from("store_subscriptions")
@@ -167,14 +175,14 @@ export async function middleware(request: NextRequest) {
       const isActive = sub?.status === "PAID" && endDate && endDate > now;
 
       // Define paths to exempt (so they don't get stuck in a redirect loop)
-      const isSubscriptionPage =
+      const isExemptPage =
         request.nextUrl.pathname.startsWith("/settings") ||
         request.nextUrl.pathname.startsWith("/subscribe-required") ||
-        request.nextUrl.pathname.startsWith("/onboarding");
+        request.nextUrl.pathname.startsWith("/onboarding") ||
+        isSelectStorePage;
 
-      // If inactive and NOT on the subscription page, redirect them
-      if (!isActive && !isSubscriptionPage && !isApiRoute) {
-        // Redirect to your subscription settings page
+      // If inactive and NOT on an exempt page, redirect them
+      if (!isActive && !isExemptPage && !isApiRoute) {
         return NextResponse.redirect(new URL("/subscribe-required", request.url));
       }
     }

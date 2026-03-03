@@ -260,3 +260,93 @@ export async function getStoreInfo() {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Fetches all stores the current user has access to via staff_permissions.
+ * Returns an array of { store_id, store_name, store_img, role }.
+ */
+export async function getUserStores() {
+  const supabase = await createClient();
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    
+    if (!user) return { success: false, error: "Not authenticated", stores: [] };
+
+    // Query the stores table directly. 
+    // RLS policies will automatically filter this to only stores the user is allowed to see.
+    const { data: storesData, error: storesError } = await supabase
+      .from("stores")
+      .select("store_id, store_name, store_img, user_id, co_admins");
+
+    if (storesError) {
+      console.error("Error fetching stores:", storesError);
+      return { success: false, error: storesError.message, stores: [] };
+    }
+
+    // Determine the user's role for the UI based on ownership/co-admin status
+    const stores = (storesData || []).map((store) => {
+      let role = "staff";
+      
+      if (store.user_id === user.id) {
+        role = "owner";
+      } else if (store.co_admins && store.co_admins.includes(user.id)) {
+        role = "co-admin";
+      }
+
+      return {
+        store_id: store.store_id,
+        store_name: store.store_name,
+        store_img: store.store_img,
+        role: role,
+      };
+    });
+
+    return { success: true, stores };
+  } catch (error: any) {
+    console.error("Unexpected error in getUserStores:", error);
+    return { success: false, error: error.message, stores: [] };
+  }
+}
+
+/**
+ * Switches the user's active store by calling the switch_active_store RPC,
+ * then refreshes the session to update JWT claims.
+ */
+export async function switchActiveStore(targetStoreId: string) {
+  const supabase = await createClient();
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    // Call the RPC to switch stores
+    const { error: rpcError } = await supabase.rpc("switch_active_store", {
+      target_store_id: targetStoreId,
+    });
+
+    if (rpcError) {
+      console.error("Error switching store:", rpcError);
+      return { success: false, error: rpcError.message };
+    }
+
+    // Refresh session to get updated JWT claims
+    const { error: refreshError } = await supabase.auth.refreshSession();
+
+    if (refreshError) {
+      console.error("Error refreshing session:", refreshError);
+      return { success: false, error: "Store switched but session refresh failed. Please log out and back in." };
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Unexpected error switching store:", error);
+    return { success: false, error: error.message };
+  }
+}
