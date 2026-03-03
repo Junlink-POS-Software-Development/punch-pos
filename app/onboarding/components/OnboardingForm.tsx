@@ -12,7 +12,7 @@ import {
   User,
   Store,
 } from "lucide-react";
-import { linkUserToStore } from "@/app/actions/onboarding";
+import { joinStoreViaEnrollmentId } from "@/app/actions/store";
 import { updateProfile } from "@/app/actions/profile";
 import { updateStoreInfo, uploadStoreLogo } from "@/app/actions/store";
 import imageCompression from "browser-image-compression";
@@ -129,7 +129,7 @@ export function OnboardingForm({
 
       // 2. Staff: join store via enrollment code
       if (!hasStore) {
-        const linkResult = await linkUserToStore(values.enrollmentId!);
+        const linkResult = await joinStoreViaEnrollmentId(values.enrollmentId!);
         if (!linkResult.success) throw new Error(linkResult.error);
       }
 
