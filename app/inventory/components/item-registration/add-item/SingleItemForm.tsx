@@ -111,7 +111,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, name: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e, categoryRef)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all text-foreground placeholder:text-muted-foreground/40 shadow-inner"
+            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all text-foreground placeholder:text-muted-foreground/40 shadow-inner"
             placeholder="e.g., Croissant"
           />
         </div>
@@ -130,7 +130,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               }
             }}
             onKeyDown={(e) => handleKeyDown(e, descriptionRef)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer text-foreground shadow-inner"
+            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer text-foreground shadow-inner"
           >
             <option value="" className="bg-slate-900">Select Category</option>
             {categories.map((cat) => (
@@ -155,7 +155,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             setFormData({ ...formData, description: e.target.value })
           }
           onKeyDown={(e) => handleKeyDown(e, sellingPriceRef)}
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none resize-none text-foreground placeholder:text-muted-foreground/40 shadow-inner transition-all"
+          className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none resize-none text-foreground placeholder:text-muted-foreground/40 shadow-inner transition-all"
           placeholder="Enter a brief description of the item..."
         ></textarea>
       </div>
@@ -177,7 +177,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, sellingPrice: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e, salesPriceRef)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-white/20"
+            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-foreground/20"
             placeholder="0.00"
           />
         </div>
@@ -199,7 +199,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, salesPrice: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e, skuRef)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-white/20"
+            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all hover:border-foreground/20"
             placeholder="0.00"
           />
         </div>
@@ -216,7 +216,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, sku: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e)} // Prevents Enter from submitting
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
+            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="Auto-generate"
           />
         </div>
@@ -226,7 +226,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             Thumbnail
           </label>
           <div className="flex items-center gap-3 h-[50px]">
-            <div className="h-full aspect-square bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-muted-foreground/60 overflow-hidden shadow-inner">
+            <div className="h-full aspect-square bg-foreground/5 rounded-xl border border-foreground/10 flex items-center justify-center text-muted-foreground/60 overflow-hidden shadow-inner">
               {formData.imageUrl ? (
                 <img
                   src={formData.imageUrl}
@@ -237,7 +237,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
                 <ImageIcon size={20} />
               )}
             </div>
-            <label className="flex-1 h-full px-4 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border border-dashed border-white/20 rounded-xl transition-all cursor-pointer">
+            <label className="flex-1 h-full px-4 flex flex-col items-center justify-center bg-foreground/5 hover:bg-foreground/10 border border-dashed border-foreground/20 rounded-xl transition-all cursor-pointer">
               <span className="text-[10px] font-bold text-primary/80 uppercase tracking-widest leading-none">
                 {isUploading ? "Uploading..." : "UPLOAD"}
               </span>
@@ -259,7 +259,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
       </div>
 
       {/* Bottom Row: Inventory */}
-      <div className="p-6 bg-white/5 rounded-2xl border border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-inner backdrop-blur-sm">
+      <div className="p-6 bg-foreground/5 rounded-2xl border border-foreground/5 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-inner backdrop-blur-sm">
         <div className="space-y-2.5">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1">
             Initial Stock balance
@@ -273,7 +273,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, stock: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e, minStockRef)}
-            className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
+            className="w-full px-4 py-3 bg-black/20 border border-foreground/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="0"
           />
         </div>
@@ -290,17 +290,17 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               setFormData({ ...formData, minStock: e.target.value })
             }
             onKeyDown={(e) => handleKeyDown(e)}
-            className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
+            className="w-full px-4 py-3 bg-black/20 border border-foreground/5 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="e.g. 10"
           />
         </div>
       </div>
 
-      <div className="pt-6 flex justify-end gap-4 border-t border-white/5">
+      <div className="pt-6 flex justify-end gap-4 border-t border-foreground/5">
         <button
           type="button"
           onClick={handleDiscard}
-          className="px-8 py-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+          className="px-8 py-3 text-muted-foreground hover:text-foreground hover:bg-foreground/5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
         >
           Discard
         </button>
@@ -316,4 +316,4 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   );
 };
 
-export default SingleItemForm;
+export { SingleItemForm };

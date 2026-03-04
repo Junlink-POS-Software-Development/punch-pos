@@ -33,7 +33,7 @@ interface StockTableProps {
   onBatchAdd?: () => void;
 }
 
-export default function StockTable({
+export function StockTable({
   onEdit,
   onAdd,
   isAdding,

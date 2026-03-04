@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { fetchSummaryStats } from "./lib/repository";
-import Spreadsheet from "@/app/playground/components/Spreadsheet";
+import { Spreadsheet } from "@/app/playground/components/Spreadsheet";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 

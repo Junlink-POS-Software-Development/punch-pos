@@ -10,7 +10,7 @@ import { ErrorMessage } from "@/components/sales-terminnal/components/ErrorMessa
 import { PackagePlus } from "lucide-react";
 import { StockAdjustmentModal } from "./StockAdjustmentModal";
 import { BatchStockUpdateModal } from "./BatchStockUpdateModal";
-import StockTable from "./StockTable";
+import { StockTable } from "./StockTable";
 import { ExpiryMonitor } from "./ExpiryMonitor";
 
 const StockManagementContent = () => {

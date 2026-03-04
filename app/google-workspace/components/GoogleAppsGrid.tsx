@@ -22,7 +22,7 @@ const GOOGLE_APPS = [
   { name: "Chat", icon: MessageSquare, url: "https://chat.google.com", color: "text-green-600", bg: "bg-green-600/10" },
 ];
 
-export default function GoogleAppsGrid() {
+export function GoogleAppsGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {GOOGLE_APPS.map((app) => (

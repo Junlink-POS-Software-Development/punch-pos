@@ -73,7 +73,7 @@ const UserProfile = ({
                 <Link 
                   href="/settings?tab=account"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 hover:bg-white/5 px-3 py-2 rounded-xl w-full text-slate-300 hover:text-white text-sm transition-all group"
+                  className="flex items-center gap-3 hover:bg-foreground/5 px-3 py-2 rounded-xl w-full text-slate-300 hover:text-white text-sm transition-all group"
                 >
                   <Settings className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" /> 
                   <span>Account Settings</span>
@@ -109,4 +109,4 @@ const UserProfile = ({
   );
 };
 
-export default UserProfile;
+export { UserProfile };

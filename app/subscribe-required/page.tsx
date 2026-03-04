@@ -1,4 +1,4 @@
-import SubscriptionRequired from "@/components/subscription/SubscriptionRequired";
+import { SubscriptionRequired } from "@/components/subscription/SubscriptionRequired";
 
 export default function SubscribeRequiredPage() {
   return (

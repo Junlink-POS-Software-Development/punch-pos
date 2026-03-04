@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { useTransactionStore } from "./stores/useTransactionStore";
 import { useStaffPermissions } from "./stores/useStaffPermissions";
 
-export default function BackdateSettings() {
+export function BackdateSettings() {
   const { customTransactionDate, setCustomTransactionDate } =
     useTransactionStore();
   const { canBackdate, isLoading } = useStaffPermissions();

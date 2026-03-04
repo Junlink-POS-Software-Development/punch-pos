@@ -1,22 +1,22 @@
 "use client";
 
-import FormFields from "./components/FormFields";
+import { FormFields } from "./components/FormFields";
 
-import TerminalHeader from "./components/terminal-header/TerminalHeader";
+import { TerminalHeader } from "./components/terminal-header/TerminalHeader";
 import { ShortcutsGuide } from "./components/terminal-header/ShortcutsGuide";
 
 import { FormProvider } from "react-hook-form";
 import "react-data-grid/lib/styles.css";
-import TerminalCart from "./components/terminal-cart/TerminalCart";
+import { TerminalCart } from "./components/terminal-cart/TerminalCart";
 import { usePosForm } from "./components/form/usePosForm";
-import SuccessReceiptModal from "./utils/SuccessReceiptModal";
-import ErrorMessage from "./components/ErrorMessage";
+import { SuccessReceiptModal } from "./utils/SuccessReceiptModal";
+import { ErrorMessage } from "./components/ErrorMessage";
 // 1. Import the new hook
 import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts"; // Adjust path as needed
 import { PaymentPopup } from "./modals/PaymentPopup";
 import { FreeItemModal } from "./modals/FreeItemModal";
 import { useState, useEffect } from "react";
-import ActionPanel from "./components/ActionPanel";
+import { ActionPanel } from "./components/ActionPanel";
 
 const SalesTerminal = () => {
   const {
@@ -207,4 +207,4 @@ const SalesTerminal = () => {
   );
 };
 
-export default SalesTerminal;
+export { SalesTerminal };

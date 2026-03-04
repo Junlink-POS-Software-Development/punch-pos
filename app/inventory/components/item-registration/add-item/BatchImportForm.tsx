@@ -58,12 +58,12 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
           <p className="text-muted-foreground/80 text-sm mt-1 mb-3">
             Format each line exactly as shown to ensure successful processing:
           </p>
-          <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-2">
+          <div className="bg-black/30 p-4 rounded-xl border border-foreground/5 space-y-2">
             <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Header Structure</p>
             <p className="text-xs font-mono text-muted-foreground break-all">
               Name, Category, Selling Price (Price), Cost Price (Unit Cost), Stock, MinStock, Description
             </p>
-            <div className="h-px bg-white/5 my-2" />
+            <div className="h-px bg-foreground/5 my-2" />
             <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Example Data</p>
             <code className="block text-xs font-mono text-foreground/80 break-all leading-relaxed">
               Latte, Beverage, 120, 45, 100, 10, "Smooth espresso with steamed milk"
@@ -81,7 +81,7 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
         <textarea
           value={batchRawText}
           onChange={(e) => setBatchRawText(e.target.value)}
-          className="w-full h-56 px-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none font-mono text-sm text-foreground placeholder:text-muted-foreground/20 shadow-inner transition-all resize-none"
+          className="w-full h-56 px-4 py-4 bg-foreground/5 border border-foreground/10 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none font-mono text-sm text-foreground placeholder:text-muted-foreground/20 shadow-inner transition-all resize-none"
           placeholder="LATTE, BEVERAGE, 120, 45, 100, 10, 'Morning bestseller'..."
         ></textarea>
       </div>
@@ -99,14 +99,14 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
           </label>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-        <button className="flex items-center gap-2 text-primary/60 hover:text-primary text-xs font-bold uppercase tracking-widest transition-all px-4 py-2 hover:bg-white/5 rounded-xl">
+      <div className="flex items-center justify-between pt-4 border-t border-foreground/5">
+        <button className="flex items-center gap-2 text-primary/60 hover:text-primary text-xs font-bold uppercase tracking-widest transition-all px-4 py-2 hover:bg-foreground/5 rounded-xl">
           <Upload size={18} /> Upload file
         </button>
         <div className="flex gap-4">
           <button
             onClick={onCancel}
-            className="px-8 py-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+            className="px-8 py-3 text-muted-foreground hover:text-foreground hover:bg-foreground/5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
           >
             Cancel
           </button>
@@ -124,4 +124,4 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
   );
 };
 
-export default BatchImportForm;
+export { BatchImportForm };

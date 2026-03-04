@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 
-export default function SubscriptionSettings() {
+export function SubscriptionSettings() {
   const { subscription, payments, loading, subscribe } = useSubscription();
 
   const handleSubscribe = async () => {

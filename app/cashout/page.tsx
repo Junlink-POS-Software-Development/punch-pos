@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import { DollarSign, Filter } from 'lucide-react';
-import CashOutTable from './components/cashout-table/CashOutTable';
+import { CashOutTable } from "./components/cashout-table/CashOutTable";
 import { getColumns } from './components/cashout-table/columns';
 import { useExpensesInfinite, useExpensesSummary } from './hooks/useExpenses';
 import { usePermissions } from '@/app/hooks/usePermissions';
@@ -10,7 +10,7 @@ import { useFilterStore } from '@/store/useFilterStore';
 import dynamic_next from 'next/dynamic';
 import { CashoutRecord } from './lib/cashout.api';
 
-const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal'), {
+const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal').then(m => m.CashOutModal), {
     ssr: false
 });
 

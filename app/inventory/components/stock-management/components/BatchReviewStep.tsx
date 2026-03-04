@@ -53,7 +53,7 @@ export const BatchReviewStep: React.FC<BatchReviewStepProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar px-6 pb-6">
         <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-slate-900 text-xs uppercase font-semibold text-gray-500">
+            <thead className="bg-slate-900 text-xs uppercase font-semibold text-muted-foreground">
               <tr>
                 <th className="p-4 w-1/3">Item Name</th>
                 <th className="p-4 text-center">Add Qty</th>
@@ -68,7 +68,7 @@ export const BatchReviewStep: React.FC<BatchReviewStepProps> = ({
                   <tr key={item.id} className="text-sm">
                     <td className="p-4 text-slate-300 font-medium">
                       {item.itemName}
-                      {item.sku && <div className="text-xs text-gray-600">{item.sku}</div>}
+                      {item.sku && <div className="text-xs text-muted-foreground/80">{item.sku}</div>}
                     </td>
                     <td className="p-4 text-center font-mono text-blue-300">
                       +{data.addQuantity}

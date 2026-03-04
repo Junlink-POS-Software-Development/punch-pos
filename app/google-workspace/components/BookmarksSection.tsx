@@ -11,7 +11,7 @@ interface BookmarkItem {
   createdAt: number;
 }
 
-export default function BookmarksSection() {
+export function BookmarksSection() {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");

@@ -452,4 +452,4 @@ export const BatchImportReviewTable: React.FC<BatchImportReviewTableProps> = ({
   );
 };
 
-export default BatchImportReviewTable;
+// export default removed (named export already exists)

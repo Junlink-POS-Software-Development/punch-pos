@@ -1,4 +1,4 @@
-import FeaturePlaceholder from "../components/FeaturePlaceholder";
+import { FeaturePlaceholder } from "../components/FeaturePlaceholder";
 
 export default function JunfueAIPage() {
   return (

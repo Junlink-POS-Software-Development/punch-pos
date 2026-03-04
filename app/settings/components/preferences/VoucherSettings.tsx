@@ -8,7 +8,7 @@ import {
   setDefaultVoucherSource,
 } from "@/app/inventory/components/item-registration/lib/categories.api";
 
-export default function VoucherSettings() {
+export function VoucherSettings() {
   const queryClient = useQueryClient();
   const [updating, setUpdating] = useState(false);
 

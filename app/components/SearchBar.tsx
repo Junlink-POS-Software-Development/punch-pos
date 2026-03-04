@@ -19,4 +19,4 @@ const SearchBar = () => (
   </div>
 );
 
-export default SearchBar;
+export { SearchBar };

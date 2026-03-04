@@ -1,0 +1,19 @@
+﻿
+> pos-next@0.1.0 type-check
+> tsc --noEmit
+
+app/cashout/page.tsx(13,35): error TS2345: Argument of type '() => Promise<typeof import("C:/Desktop/pos-next/app/cashout/components/cashout-modal/CashOutModal")>' is not assignable to parameter of type 'DynamicOptions<{}> | Loader<{}>'.
+  Type '() => Promise<typeof import("C:/Desktop/pos-next/app/cashout/components/cashout-modal/CashOutModal")>' is not assignable to type '() => LoaderComponent<{}>'.
+    Type 'Promise<typeof import("C:/Desktop/pos-next/app/cashout/components/cashout-modal/CashOutModal")>' is not assignable to type 'LoaderComponent<{}>'.
+      Type 'typeof import("C:/Desktop/pos-next/app/cashout/components/cashout-modal/CashOutModal")' is not assignable to type 'ComponentType<{}> | ComponentModule<{}>'.
+app/cashout/page.tsx(119,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ isOpen: boolean; onClose: () => void; editData: CashoutRecord | null; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'isOpen' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ isOpen: boolean; onClose: () => void; editData: CashoutRecord | null; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'isOpen' does not exist on type 'IntrinsicAttributes'.
+app/page.tsx(8,3): error TS2345: Argument of type '() => Promise<typeof import("C:/Desktop/pos-next/components/sales-terminnal/SalesTerminal")>' is not assignable to parameter of type 'DynamicOptions<{}> | Loader<{}>'.
+  Type '() => Promise<typeof import("C:/Desktop/pos-next/components/sales-terminnal/SalesTerminal")>' is not assignable to type '() => LoaderComponent<{}>'.
+    Type 'Promise<typeof import("C:/Desktop/pos-next/components/sales-terminnal/SalesTerminal")>' is not assignable to type 'LoaderComponent<{}>'.
+      Type 'typeof import("C:/Desktop/pos-next/components/sales-terminnal/SalesTerminal")' is not assignable to type 'ComponentType<{}> | ComponentModule<{}>'.

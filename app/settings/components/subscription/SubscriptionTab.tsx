@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import SubscriptionSettings from "./SubscriptionSettings";
+import { SubscriptionSettings } from "./SubscriptionSettings";
 
 export const SubscriptionTab = () => {
     return (

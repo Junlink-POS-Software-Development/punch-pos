@@ -5,7 +5,7 @@ import { CURRENCIES, CurrencyCode } from "@/lib/utils/currency";
 import { Check, ChevronDown, Coins } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-export default function CurrencySelector() {
+export function CurrencySelector() {
   const { currency, setCurrency } = useSettingsStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

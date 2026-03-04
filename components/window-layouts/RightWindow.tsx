@@ -28,4 +28,4 @@ const RightWindow = ({ rightWidth, children, isTransitioning }: RightWindowProps
   );
 };
 
-export default RightWindow;
+export { RightWindow };

@@ -3,7 +3,7 @@
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Lock, Unlock } from "lucide-react";
 
-export default function PriceEditingSettings() {
+export function PriceEditingSettings() {
   const { isPriceEditingEnabled, setPriceEditingEnabled } = useSettingsStore();
 
   return (

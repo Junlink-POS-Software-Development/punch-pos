@@ -7,11 +7,11 @@ import { Package, FileText, X } from "lucide-react";
 import { useItemReg } from "./hooks/useItemReg";
 import { useItemTable } from "./hooks/useItemTable";
 import { useBarcode } from "./hooks/useBarcode";
-import SingleItemForm from "./add-item/SingleItemForm";
-import BatchImportForm from "./add-item/BatchImportForm";
+import { SingleItemForm } from "./add-item/SingleItemForm";
+import { BatchImportForm } from "./add-item/BatchImportForm";
 
-import BarcodeModal from "./barcode-modal/BarcodeModal";
-import ItemTable from "./item-table/ItemTable";
+import { BarcodeModal } from "./barcode-modal/BarcodeModal";
+import { ItemTable } from "./item-table/ItemTable";
 
 const ItemReg = () => {
   const {
@@ -55,7 +55,7 @@ const ItemReg = () => {
               className={`px-6 py-4 text-sm font-semibold flex items-center gap-2 transition-all ${
                 addTab === "single"
                   ? "text-primary border-b-2 border-primary bg-primary/10"
-                  : "text-muted-foreground hover:bg-white/5"
+                  : "text-muted-foreground hover:bg-foreground/5"
               }`}
             >
               <Package size={18} /> Single Item
@@ -65,7 +65,7 @@ const ItemReg = () => {
               className={`px-6 py-4 text-sm font-semibold flex items-center gap-2 transition-all ${
                 addTab === "batch"
                   ? "text-primary border-b-2 border-primary bg-primary/10"
-                  : "text-muted-foreground hover:bg-white/5"
+                  : "text-muted-foreground hover:bg-foreground/5"
               }`}
             >
               <FileText size={18} /> Batch Import
@@ -74,7 +74,7 @@ const ItemReg = () => {
           
           <button 
             onClick={() => setViewMode("list")}
-            className="p-2 mr-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 mr-2 hover:bg-foreground/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
           >
             <X size={20} />
           </button>
@@ -128,6 +128,6 @@ const ItemReg = () => {
   );
 };
 
-export default ItemReg;
+export { ItemReg };
 
 

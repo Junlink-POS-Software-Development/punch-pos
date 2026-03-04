@@ -56,4 +56,4 @@ const SubscriptionRequired = () => {
   );
 };
 
-export default SubscriptionRequired;
+export { SubscriptionRequired };

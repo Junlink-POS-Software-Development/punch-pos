@@ -89,8 +89,8 @@ export function CashoutModal({
                     onClick={() => setExpenseCategory(cat.id as ExpenseCategory)}
                     className={`py-2 px-1 rounded-lg text-xs font-semibold border transition-all ${
                       expenseCategory === cat.id
-                        ? "bg-slate-800 text-white border-slate-800 dark:bg-slate-100 dark:text-slate-900"
-                        : "bg-transparent text-muted-foreground border-border hover:border-slate-400"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-transparent text-muted-foreground border-border hover:border-primary/50"
                     }`}
                   >
                     {cat.label}

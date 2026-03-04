@@ -5,8 +5,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor, Store, X } from "lucide-react";
-import Notifications from "@/app/components/Notifications";
-import UserProfile from "@/app/components/UserProfile";
+import { Notifications } from "@/app/components/Notifications";
+import { UserProfile } from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFilterStore } from "@/store/useFilterStore";
 import { DateRangeFilter } from "@/components/reusables/DateRangeFilter";
@@ -31,7 +31,7 @@ const ROUTE_TITLES: Record<string, string> = {
 
 const THEME_CYCLE = ["light", "dark", "system"] as const;
 
-export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
+export function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const { user, isAuthReady } = useAuthStore();
   const { dateRange, setDateRange, resetDateRange } = useFilterStore();
   const pathname = usePathname();

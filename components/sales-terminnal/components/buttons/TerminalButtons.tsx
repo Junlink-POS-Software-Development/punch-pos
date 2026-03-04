@@ -42,4 +42,4 @@ const TerminalButtons = React.memo(
   }
 );
 TerminalButtons.displayName = "TerminalButtons";
-export default TerminalButtons;
+export { TerminalButtons };

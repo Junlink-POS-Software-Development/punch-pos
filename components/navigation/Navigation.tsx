@@ -391,4 +391,4 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
 
 Navigation.displayName = "Navigation";
 
-export default Navigation;
+export { Navigation };

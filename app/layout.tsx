@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, VT323, Lexend } from "next/font/google";
 import "./globals.css";
-import MainWindow from "../components/window-layouts/MainWindow";
+import { MainWindow } from "../components/window-layouts/MainWindow";
 import { AuthInit } from "@/components/AuthInit";
-import SessionMonitor from "@/components/reusables/SessionMonitor";
-import QueryProvider from "@/components/providers/QueryProvider";
+import { SessionMonitor } from "@/components/reusables/SessionMonitor";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 

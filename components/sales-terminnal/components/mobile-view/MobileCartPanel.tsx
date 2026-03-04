@@ -128,4 +128,4 @@ export const MobileCartPanel = ({
   );
 };
 
-export default MobileCartPanel;
+// export default removed (named export already exists)

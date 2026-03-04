@@ -99,4 +99,4 @@ const DrawerSelect: React.FC<DrawerSelectProps> = ({
   );
 };
 
-export default DrawerSelect;
+export { DrawerSelect };

@@ -19,7 +19,7 @@ interface SpreadsheetProps {
   storeId: string;
 }
 
-export default function Spreadsheet({ initialStats, storeId }: SpreadsheetProps) {
+export function Spreadsheet({ initialStats, storeId }: SpreadsheetProps) {
   const [loading, setLoading] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [data, setData] = useState<any>([{ name: "Sheet1", status: 1, celldata: [] }]); // Default sheet

@@ -3,7 +3,7 @@
 import React from "react";
 import { PersonalInfoSection } from "./PersonalInfoSection";
 import { AccountActionsSection } from "./AccountActionsSection";
-import PermissionsDisplay from "./PermissionsDisplay";
+import { PermissionsDisplay } from "./PermissionsDisplay";
 
 export const ProfileTab = () => {
   return (

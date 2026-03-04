@@ -68,7 +68,7 @@ export function SplitScreenControls({
       <div className="fixed bottom-6 left-6 z-50">
         <button
           onClick={onToggleClick}
-          className="flex items-center justify-center w-12 h-12 bg-white shadow-xl rounded-full text-blue-600 active:scale-90 transition-transform border border-blue-100/50"
+          className="flex items-center justify-center w-12 h-12 bg-background shadow-xl rounded-full text-primary active:scale-90 transition-transform border border-border"
           aria-label={mobileView === "left" ? "Hide Terminal" : "Show Terminal"}
         >
           {mobileView === "left" ? <ArrowLeftIcon /> : <ArrowRightIcon />}

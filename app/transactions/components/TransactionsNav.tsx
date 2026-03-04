@@ -31,7 +31,7 @@ const TransactionsNav: React.FC<TransactionsNavProps> = ({
             ${
               activeView === item.id
                 ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-gray-200 hover:border-b-2 hover:border-slate-500"
+                : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-border"
             }
           `}
           onClick={() => setActiveView(item.id as TransactionsView)}
@@ -44,4 +44,4 @@ const TransactionsNav: React.FC<TransactionsNavProps> = ({
   );
 };
 
-export default TransactionsNav;
+export { TransactionsNav };

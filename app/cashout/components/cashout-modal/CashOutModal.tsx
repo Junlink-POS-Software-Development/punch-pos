@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Lightbulb, ArrowRight, X, DollarSign, Save, FileText, Unlock } from 'lucide-react';
 import { CashoutInput, CashoutType, CashoutRecord } from '../../lib/cashout.api';
-import DrawerSelect from "../shared/DrawerSelect";
+import { DrawerSelect } from "../shared/DrawerSelect";
 import { CogsForm } from './CogsForm';
 import { OpexForm } from './OpexForm';
 import { RemittanceForm } from './RemittanceForm';
@@ -243,4 +243,4 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
   );
 };
 
-export default CashOutModal;
+export { CashOutModal };

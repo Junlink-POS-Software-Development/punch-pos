@@ -20,7 +20,7 @@ interface DataTableProps<TData, TValue> {
   isLoadingMore?: boolean;
 }
 
-export default function CashOutTable<TData, TValue>({
+export function CashOutTable<TData, TValue>({
   columns,
   data,
   onClear,

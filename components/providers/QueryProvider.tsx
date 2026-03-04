@@ -5,7 +5,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { useState, useEffect } from "react";
 
-export default function QueryProvider({
+export function QueryProvider({
   children,
 }: {
   children: React.ReactNode;

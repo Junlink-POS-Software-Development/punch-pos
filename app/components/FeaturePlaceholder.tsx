@@ -6,7 +6,7 @@ interface FeaturePlaceholderProps {
   description?: string;
 }
 
-export default function FeaturePlaceholder({ 
+export function FeaturePlaceholder({ 
   title, 
   description = "This feature is currently under development. Stay tuned for updates!" 
 }: FeaturePlaceholderProps) {

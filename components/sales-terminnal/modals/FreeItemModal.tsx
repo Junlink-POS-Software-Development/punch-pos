@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { X, Search, Package } from "lucide-react";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 import { useItems } from "@/app/inventory/hooks/useItems";
-import ErrorMessage from "../components/ErrorMessage";
+import { ErrorMessage } from "../components/ErrorMessage";
 
 interface FreeItemModalProps {
   isOpen: boolean;

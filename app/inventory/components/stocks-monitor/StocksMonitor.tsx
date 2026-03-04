@@ -6,7 +6,7 @@ import { StocksMonitorContent } from "./components/StocksMonitorContent";
 
 const MemoizedInventorySummary = memo(InventorySummary);
 
-export default function StocksMonitor() {
+export function StocksMonitor() {
   return (
     <div className="flex flex-col gap-8 p-6 text-foreground">
       {/* 

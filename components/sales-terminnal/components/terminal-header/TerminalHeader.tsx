@@ -8,8 +8,8 @@ import { HeaderToolbar } from "./components/HeaderToolbar";
 import { TimeDisplay } from "./components/TimeDisplay";
 import { ProductDisplay } from "./components/ProductDisplay";
 import { MobileHeader } from "../mobile-view/MobileHeader";
-import FormFields from "../FormFields";
-import MobileFormFields from "../mobile-view/MobileFormFields";
+import { FormFields } from "../FormFields";
+import { MobileFormFields } from "../mobile-view/MobileFormFields";
 
 type TerminalHeaderProps = {
   setCustomerId: (id: string | null) => void;
@@ -158,4 +158,4 @@ export const TerminalHeader = ({
   );
 };
 
-export default TerminalHeader;
+// export default removed (named export already exists)

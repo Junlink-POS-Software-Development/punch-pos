@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "../../app/hooks/useMediaQuery";
 import { useViewStore } from "./store/useViewStore";
-import Navigation from "../navigation/Navigation";
-import Header from "../Header";
+import { Navigation } from "../navigation/Navigation";
+import { Header } from "../Header";
 import { useAuthStore } from "@/store/useAuthStore";
 import { X, Loader2 } from "lucide-react";
 
@@ -30,7 +30,7 @@ const SignIn = dynamic(
 
 type AuthModalState = "hidden" | "signIn" | "signUp";
 
-export default function MainWindow({
+export function MainWindow({
   children,
 }: {
   children: React.ReactNode;

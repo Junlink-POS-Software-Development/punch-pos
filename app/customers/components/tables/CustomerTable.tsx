@@ -137,10 +137,10 @@ export const CustomerTable = () => {
             {selectedCustomerIds.size} selected
           </span>
           <div className="flex items-center gap-3">
-             <span className="text-gray-400 text-xs">Move to:</span>
+             <span className="text-muted-foreground text-xs">Move to:</span>
              <select
                 onChange={(e) => handleBulkMove(e.target.value)}
-                className="bg-gray-900 border border-gray-600 text-xs text-white rounded px-2 py-1.5 outline-none focus:border-blue-500"
+                className="bg-background border border-input text-xs text-foreground rounded px-2 py-1.5 outline-none focus:border-ring"
                 defaultValue=""
              >
                 <option value="" disabled>Select Group</option>
@@ -193,7 +193,7 @@ export const CustomerTable = () => {
                   className={`hover:bg-accent/30 transition group ${selectedCustomerIds.has(c.id) ? "bg-primary/10" : ""}`}
                 >
                   <td className="p-5">
-                    <button onClick={() => toggleSelect(c.id)} className="hover:text-white text-gray-500">
+                    <button onClick={() => toggleSelect(c.id)} className="hover:text-foreground text-muted-foreground">
                       {selectedCustomerIds.has(c.id) ? (
                         <CheckSquare size={16} className="text-primary" />
                       ) : (
@@ -206,10 +206,10 @@ export const CustomerTable = () => {
                       onClick={() => handleCustomerClick(c.id)}
                       className="flex items-center gap-3 text-left w-full hover:text-blue-400 transition-colors"
                     >
-                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold shrink-0 relative">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0 relative">
                         {(c.full_name || "?").charAt(0).toUpperCase()}
                         {isLocked && (
-                          <div className="absolute -top-1 -right-1 bg-gray-800 rounded-full p-0.5">
+                          <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5">
                             <Lock size={10} className="text-yellow-500" />
                           </div>
                         )}
@@ -217,13 +217,13 @@ export const CustomerTable = () => {
                       {formatDisplayName(c.full_name || "Unknown", sortByLastName)}
                     </button>
                   </td>
-                  <td className="p-5 text-gray-400">{c.phone_number || "-"}</td>
+                  <td className="p-5 text-muted-foreground">{c.phone_number || "-"}</td>
                   <td className="p-5">
                      <select
                       value={c.group_id || "ungrouped"}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleGroupChange(c.id, e.target.value, isLocked)}
-                      className={`bg-gray-900 border border-gray-700 text-xs text-gray-300 rounded px-2 py-1 outline-none focus:border-blue-500 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`bg-background border border-input text-xs text-foreground rounded px-2 py-1 outline-none focus:border-ring ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       // disabled={isLocked} // Optional: strictly disable it
                     >
                       <option value="ungrouped">Ungrouped</option>
@@ -236,14 +236,14 @@ export const CustomerTable = () => {
                     <div className="flex justify-end gap-2">
                       <button 
                           onClick={(e) => handleLockToggle(e, c)}
-                          className={`${isLocked ? "text-yellow-500 hover:text-yellow-400" : "text-gray-500 hover:text-gray-300"}`}
+                          className={`${isLocked ? "text-yellow-500 hover:text-yellow-400" : "text-muted-foreground hover:text-foreground"}`}
                           title={isLocked ? "Unlock Customer" : "Lock Customer"}
                       >
                           {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
                       </button>
                       <button 
                           onClick={() => handleCustomerClick(c.id)}
-                          className="text-gray-400 hover:text-blue-400" 
+                          className="text-muted-foreground hover:text-primary" 
                           title="Edit"
                       >
                           <Edit2 size={16} />
@@ -253,7 +253,7 @@ export const CustomerTable = () => {
                               e.stopPropagation();
                               handleDelete(c.id, isLocked);
                           }}
-                          className={`text-gray-400 hover:text-red-400 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`text-muted-foreground hover:text-red-500 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Delete"
                       >
                           <Trash2 size={16} />

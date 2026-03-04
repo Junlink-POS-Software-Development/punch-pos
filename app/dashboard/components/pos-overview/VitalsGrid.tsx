@@ -210,13 +210,13 @@ export function VitalsGrid({
               <div className="flex items-center gap-2">
                 <p
                   className={`${
-                    isHighRisk ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"
+                    isHighRisk ? "text-amber-500" : "text-muted-foreground"
                   } text-xs font-semibold uppercase tracking-wider`}
                 >
                   Cash in Drawer
                 </p>
                 {isHighRisk && (
-                  <span className="text-[9px] font-bold text-amber-700 dark:text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded animate-pulse">
+                  <span className="text-[9px] font-bold text-amber-600 bg-amber-500/20 px-1.5 py-0.5 rounded animate-pulse">
                     REMIT NOW
                   </span>
                 )}
@@ -224,7 +224,7 @@ export function VitalsGrid({
               <div
                 className={`p-1.5 rounded-md ${
                   isHighRisk
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-500"
+                    ? "bg-amber-500/10 text-amber-500"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -237,14 +237,14 @@ export function VitalsGrid({
             </div>
             <h3
               className={`text-2xl font-bold ${
-                isHighRisk ? "text-amber-700 dark:text-amber-500" : "text-foreground"
+                isHighRisk ? "text-amber-500 text-shadow-sm" : "text-foreground"
               }`}
             >
               ₱{stats.cashInDrawer.toLocaleString()}
             </h3>
             <p
               className={`text-[10px] mt-auto ${
-                isHighRisk ? "text-amber-600/80 dark:text-amber-500/80" : "text-muted-foreground"
+                isHighRisk ? "text-amber-500/80" : "text-muted-foreground"
               }`}
             >
               Physical cash currently at the register.

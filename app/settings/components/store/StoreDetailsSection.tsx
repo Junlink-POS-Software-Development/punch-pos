@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Store, Camera, Loader2, Check, Globe, DollarSign, Clock, Mail, Layout } from "lucide-react";
 import { getStoreInfo, updateStoreInfo, uploadStoreLogo } from "@/app/actions/store";
 import imageCompression from "browser-image-compression";
-import CurrencySelector from "./CurrencySelector";
+import { CurrencySelector } from "./CurrencySelector";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function StoreDetailsSection() {

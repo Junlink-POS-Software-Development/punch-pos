@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import ItemReg from "./components/item-registration/ItemReg";
+import { ItemReg } from "./components/item-registration/ItemReg";
 import { StockManagement } from "./components/stock-management/StockManagement";
-import StocksMonitor from "./components/stocks-monitor/StocksMonitor";
+import { StocksMonitor } from "./components/stocks-monitor/StocksMonitor";
 
 
 function InventoryContent() {

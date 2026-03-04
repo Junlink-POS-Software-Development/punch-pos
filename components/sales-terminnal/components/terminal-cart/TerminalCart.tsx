@@ -227,4 +227,4 @@ export const TerminalCart = ({
   );
 };
 
-export default TerminalCart;
+// export default removed (named export already exists)

@@ -1,6 +1,6 @@
 import React from "react";
-import GoogleAppsGrid from "./components/GoogleAppsGrid";
-import BookmarksSection from "./components/BookmarksSection";
+import { GoogleAppsGrid } from "./components/GoogleAppsGrid";
+import { BookmarksSection } from "./components/BookmarksSection";
 import { Grid, ArrowBigLeft } from "lucide-react";
 import Link from "next/link";
 

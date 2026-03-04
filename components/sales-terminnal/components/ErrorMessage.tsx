@@ -74,4 +74,4 @@ export const ErrorMessage = ({ message, onClose }: ErrorMessageProps) => {
   );
 };
 
-export default ErrorMessage;
+// export default removed (named export already exists)

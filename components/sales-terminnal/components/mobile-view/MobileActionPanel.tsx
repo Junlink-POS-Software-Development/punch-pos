@@ -97,4 +97,4 @@ export const MobileActionPanel = ({
   );
 };
 
-export default MobileActionPanel;
+// export default removed (named export already exists)

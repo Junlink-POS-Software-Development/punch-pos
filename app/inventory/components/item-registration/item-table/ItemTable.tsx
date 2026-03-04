@@ -2,8 +2,8 @@
 
 import React from "react";
 import { ArrowUpDown } from "lucide-react";
-import TableToolbar from "./TableToolbar";
-import ItemTableRow from "./ItemTableRow";
+import { TableToolbar } from "./TableToolbar";
+import { ItemTableRow } from "./ItemTableRow";
 import { useItemTable, SortKey } from "../hooks/useItemTable";
 import { useBarcode } from "../hooks/useBarcode";
 
@@ -139,4 +139,4 @@ const ItemTable: React.FC<ItemTableProps> = ({
   );
 };
 
-export default ItemTable;
+export { ItemTable };

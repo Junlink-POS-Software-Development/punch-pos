@@ -20,7 +20,7 @@ interface ActionPanelProps {
   onToggle: () => void;
 }
 
-export default function ActionPanel({
+export function ActionPanel({
   onAddToCart,
   onClearAll,
   onCharge,

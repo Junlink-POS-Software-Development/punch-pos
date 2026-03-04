@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import VoucherSettings from "./VoucherSettings";
-import LowStockSettings from "./LowStockSettings";
-import PriceEditingSettings from "./PriceEditingSettings";
-import BackdateSettings from "../../backdating/BackdatingSettings";
+import { VoucherSettings } from "./VoucherSettings";
+import { LowStockSettings } from "./LowStockSettings";
+import { PriceEditingSettings } from "./PriceEditingSettings";
+import { BackdateSettings } from "../../backdating/BackdatingSettings";
 
 export const PreferencesTab = () => {
   return (

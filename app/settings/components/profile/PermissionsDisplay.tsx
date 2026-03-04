@@ -141,4 +141,4 @@ const PermissionsDisplay = () => {
   );
 };
 
-export default PermissionsDisplay;
+export { PermissionsDisplay };

@@ -6,7 +6,7 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { AlertTriangle, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export default function LowStockSettings() {
+export function LowStockSettings() {
   const { lowStockThreshold, setLowStockThreshold } = useSettingsStore();
   const [localValue, setLocalValue] = useState<string>(lowStockThreshold.toString());
 

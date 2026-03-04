@@ -186,4 +186,4 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
 
 MobileFormFields.displayName = "MobileFormFields";
 
-export default MobileFormFields;
+// export default removed (named export already exists)

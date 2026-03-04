@@ -59,7 +59,7 @@ const Notifications = () => {
             {mockAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className="flex gap-3 hover:bg-white/5 px-4 py-3 border-slate-800/50 border-b last:border-0 transition-colors cursor-pointer group"
+                className="flex gap-3 hover:bg-foreground/5 px-4 py-3 border-slate-800/50 border-b last:border-0 transition-colors cursor-pointer group"
               >
                 <div className="mt-1 shrink-0">
                   {alert.type === "success" ? (
@@ -90,4 +90,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications;
+export { Notifications };

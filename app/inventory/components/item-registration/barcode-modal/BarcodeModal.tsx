@@ -115,4 +115,4 @@ const BarcodeModal: React.FC = () => {
   );
 };
 
-export default BarcodeModal;
+export { BarcodeModal };

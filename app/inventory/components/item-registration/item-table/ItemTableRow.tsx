@@ -258,4 +258,4 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
   );
 };
 
-export default ItemTableRow;
+export { ItemTableRow };

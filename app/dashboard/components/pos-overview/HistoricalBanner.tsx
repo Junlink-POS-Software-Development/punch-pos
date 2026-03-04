@@ -15,14 +15,14 @@ export function HistoricalBanner({
   return (
     <div className="mb-6 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-amber-500/20 rounded-full text-amber-600 dark:text-amber-500">
+        <div className="p-2 bg-amber-500/20 rounded-full text-amber-500">
           <History size={18} />
         </div>
         <div>
-          <p className="text-sm font-bold text-amber-800 dark:text-amber-500">
+          <p className="text-sm font-bold text-amber-600">
             Viewing Historical Data
           </p>
-          <p className="text-xs text-amber-700/80 dark:text-amber-400">
+          <p className="text-xs text-amber-600/90">
             You are viewing records for{" "}
             <span className="font-mono font-bold">{selectedDate}</span>.
           </p>

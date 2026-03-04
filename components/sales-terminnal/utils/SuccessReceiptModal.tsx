@@ -97,4 +97,4 @@ const SuccessReceiptModal: React.FC<SuccessReceiptModalProps> = ({
   );
 };
 
-export default SuccessReceiptModal;
+export { SuccessReceiptModal };

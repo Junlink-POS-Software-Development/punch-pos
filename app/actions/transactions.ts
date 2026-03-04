@@ -50,6 +50,9 @@ export async function processTransaction(
 ): Promise<ActionResponse<{ invoice_no: string; payment_id: string }>> {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
   try {
     // 1. Call the Database RPC
     // We do NOT manually insert into 'payments' or 'transactions' anymore.
@@ -109,6 +112,9 @@ export async function getTransactionHistory(
   filters: TransactionFilters = {}
 ): Promise<ActionResponse<TransactionRecord[]>> {
   const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
 
   // Calculate pagination range
   const from = (page - 1) * pageSize;
@@ -181,6 +187,10 @@ export async function getPaymentHistory(
   filters: PaymentFilters
 ): Promise<ActionResponse<PaymentRecord[]>> {
   const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -224,6 +234,9 @@ export async function getPaymentHistory(
 
 export async function deletePayment(id: string): Promise<ActionResponse> {
   const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
 
   try {
     // 1. Delete associated transactions first to avoid orphan rows 
@@ -289,6 +302,9 @@ export async function getInvoiceDetails(
   invoiceNo: string
 ): Promise<ActionResponse<DetailedInvoice>> {
   const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
 
   try {
     const { data, error } = await supabase.rpc("get_invoice_details", {

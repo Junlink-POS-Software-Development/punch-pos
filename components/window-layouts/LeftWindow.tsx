@@ -1,4 +1,4 @@
-import SalesTerminal from "../sales-terminnal/SalesTerminal";
+import { SalesTerminal } from "../sales-terminnal/SalesTerminal";
 import { WindowLoading } from "./WindowLoading";
 
 interface LeftWindowProps {
@@ -25,4 +25,4 @@ const LeftWindow = ({ leftWidth, isTransitioning }: LeftWindowProps) => {
   );
 };
 
-export default LeftWindow;
+export { LeftWindow };

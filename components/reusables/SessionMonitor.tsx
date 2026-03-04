@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { checkSession } from "@/app/actions/auth";
 
-export default function SessionMonitor() {
+export function SessionMonitor() {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === "visible") {

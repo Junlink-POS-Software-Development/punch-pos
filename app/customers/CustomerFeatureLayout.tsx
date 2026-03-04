@@ -26,7 +26,7 @@ interface Props {
   };
 }
 
-export default function CustomerFeatureLayout({ initialData }: Props) {
+export function CustomerFeatureLayout({ initialData }: Props) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
