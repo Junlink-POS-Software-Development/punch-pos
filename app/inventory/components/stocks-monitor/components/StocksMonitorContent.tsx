@@ -1,7 +1,6 @@
 import React from "react";
 import { useInventoryInfinite } from "../../../../dashboard/hooks/useInventory";
 import { useStocksLogic } from "../hooks/useStocksLogic";
-import { getStocksColumns } from "./Columns";
 import { StocksHeader } from "./StocksHeader";
 import { StocksDataGrid } from "./StocksDataGrid";
 
@@ -46,13 +45,6 @@ export function StocksMonitorContent() {
     }
   };
 
-  const columns = getStocksColumns({
-    inventory: inventory || [], // Pass current rows for context if needed
-    filters,
-    sortState,
-    onApplyFilter: handleApplyFilter,
-    onSort: handleSort,
-  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,7 +57,6 @@ export function StocksMonitorContent() {
 
       <StocksDataGrid
         inventory={inventory}
-        columns={columns}
         isFetchingNextPage={isFetchingNextPage}
         onScroll={handleScroll}
         isLoading={isLoading}

@@ -66,9 +66,29 @@ export const deleteCategory = async (id: string) => {
   if (error) throw new Error(error.message);
 };
 
-// 5. Set Default Voucher Source
+// 5. Set Default Voucher Source (Enforces only one source per store)
 export const setDefaultVoucherSource = async (id: string) => {
   const supabase = await getSupabase();
+  
+  // 1. Get user's store_id
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+  
+  if (!userData?.store_id) throw new Error("Store ID not found");
+
+  // 2. Reset all categories for this store to false
+  await supabase
+    .from("product_category")
+    .update({ is_default_voucher_source: false })
+    .eq("store_id", userData.store_id);
+
+  // 3. Set the target category to true
   const { error } = await supabase
     .from("product_category")
     .update({ is_default_voucher_source: true })

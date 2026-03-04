@@ -12,7 +12,6 @@ import { InventoryItem } from "../lib/inventory.api";
 
 interface StocksDataGridProps {
   inventory: InventoryItem[];
-  columns: any[]; // Kept for prop compatibility if needed, but we'll define internal columns
   isFetchingNextPage: boolean;
   onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
   isLoading: boolean;
