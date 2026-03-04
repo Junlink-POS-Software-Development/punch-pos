@@ -59,14 +59,14 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLElement | null>) => {
     if (e.key === "Enter") {
-      if (e.shiftKey) {
-        // Shift + Enter -> Submit form
+      if (e.shiftKey || !nextRef) {
+        // Shift + Enter OR last field -> Submit form
         e.preventDefault();
         e.currentTarget.closest("form")?.requestSubmit();
         return;
       }
       
-      // Regular Enter -> Move to next field
+      // Regular Enter with next field -> Move to next field
       e.preventDefault();
       
       // Special handling for Select elements to open them on Enter
@@ -215,7 +215,7 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             onChange={(e) =>
               setFormData({ ...formData, sku: e.target.value })
             }
-            onKeyDown={(e) => handleKeyDown(e)} // Prevents Enter from submitting
+            onKeyDown={(e) => handleKeyDown(e, stockRef)}
             className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none text-foreground shadow-inner transition-all"
             placeholder="Auto-generate"
           />

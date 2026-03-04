@@ -221,6 +221,21 @@ const {
 });
 ```
 
+### Form UX Behavior (Enter Key Progression)
+Forms should prevent default submission when the user presses "Enter" on an input field. Instead, the focus should jump to the next logical input field. Only the last input field in the sequence (or an explicit submit action, e.g. Shift+Enter) should trigger form submission.
+
+Implement a `handleKeyDown` helper and attach it to `onKeyDown` for inputs in the sequence:
+```tsx
+const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField: string) => {
+  if (e.key === "Enter") {
+    if (e.shiftKey) return; // Allow Shift+Enter to submit if desired
+    e.preventDefault();
+    const nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
+    if (nextInput) nextInput.focus();
+  }
+};
+```
+
 ### Error Display Pattern
 ```tsx
 {errors.fieldName && (

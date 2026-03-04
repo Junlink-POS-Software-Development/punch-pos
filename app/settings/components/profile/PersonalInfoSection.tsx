@@ -9,6 +9,20 @@ export function PersonalInfoSection() {
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField?: string) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) return;
+      e.preventDefault();
+      
+      if (nextField) {
+        const nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
+        if (nextInput) nextInput.focus();
+      } else {
+        setIsSaving(true);
+      }
+    }
+  };
+
   if (!user) return null;
 
   const metadata = user.user_metadata || {};
@@ -61,7 +75,9 @@ export function PersonalInfoSection() {
                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">First Name</label>
                 <input 
                     type="text" 
+                    name="firstName"
                     defaultValue={firstName}
+                    onKeyDown={(e) => handleKeyDown(e, "lastName")}
                     placeholder="Enter first name"
                     className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
                 />
@@ -70,7 +86,9 @@ export function PersonalInfoSection() {
                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">Last Name</label>
                 <input 
                     type="text" 
+                    name="lastName"
                     defaultValue={lastName}
+                    onKeyDown={(e) => handleKeyDown(e, "phoneNumber")}
                     placeholder="Enter last name"
                     className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
                 />
@@ -94,6 +112,8 @@ export function PersonalInfoSection() {
                 </label>
                 <input 
                     type="tel" 
+                    name="phoneNumber"
+                    onKeyDown={(e) => handleKeyDown(e)} // Last field
                     placeholder="+63 000 000 0000"
                     className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
                 />

@@ -242,6 +242,29 @@ export const usePosForm = (): UsePosFormReturn => {
         // [OPTIMISTIC] Update with real data
         setSuccessData(result);
 
+        // [OPTIMISTIC] Update inventory caching immediately to avoid phantom stocks
+        queryClient.setQueryData(["inventory-all-pos"], (oldData: any) => {
+          if (!oldData || !oldData.data) return oldData;
+          return {
+            ...oldData,
+            data: oldData.data.map((inv: any) => {
+              const cartItemQuantity = cartItems
+                .filter(item => item.sku === inv.sku)
+                .reduce((sum, item) => sum + item.quantity, 0);
+
+              if (cartItemQuantity > 0) {
+                return {
+                  ...inv,
+                  current_stock: inv.current_stock - cartItemQuantity
+                };
+              }
+              return inv;
+            })
+          };
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["inventory-all-pos"] });
+        queryClient.invalidateQueries({ queryKey: ["inventory-infinite"] });
         queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "payments" });
         queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "transaction-items" });
         queryClient.invalidateQueries({ queryKey: ["dashboard-financial-report"] });

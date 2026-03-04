@@ -175,6 +175,16 @@ export function OnboardingForm({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, nextField: string) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextInput = document.querySelector(`input[name="${nextField}"]`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* First Name */}
@@ -190,6 +200,7 @@ export function OnboardingForm({
             type="text"
             placeholder="First Name"
             {...register("firstName")}
+            onKeyDown={(e) => handleKeyDown(e, "lastName")}
             className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
               errors.firstName ? "border-red-500" : ""
             }`}
@@ -215,6 +226,7 @@ export function OnboardingForm({
             type="text"
             placeholder="Last Name"
             {...register("lastName")}
+            onKeyDown={(e) => handleKeyDown(e, "jobTitle")}
             className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
               errors.lastName ? "border-red-500" : ""
             }`}
@@ -240,6 +252,7 @@ export function OnboardingForm({
             type="text"
             placeholder="e.g. Sales Associate"
             {...register("jobTitle")}
+            onKeyDown={(e) => handleKeyDown(e, hasStore ? "storeName" : "enrollmentId")}
             className={`pl-10! w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring ${
               errors.jobTitle ? "border-red-500" : ""
             }`}

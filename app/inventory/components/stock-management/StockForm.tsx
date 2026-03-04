@@ -127,7 +127,7 @@ export function StockForm({
       } else if (name === "expiryDate" || target.id === "expiryDate") {
         notesRef.current?.focus();
       } else if (name === "notes" || target.id === "notes") {
-        submitButtonRef.current?.focus();
+        handleSubmit(handleFormSubmit)();
       }
     }
   };

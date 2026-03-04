@@ -9,6 +9,27 @@ interface ManualFormProps {
 }
 
 export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField?: string) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) return;
+      e.preventDefault();
+
+      if (e.currentTarget instanceof HTMLSelectElement) {
+        try {
+          (e.currentTarget as any).showPicker();
+          return;
+        } catch (err) {}
+      }
+
+      if (nextField) {
+        const nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
+        if (nextInput) nextInput.focus();
+      } else {
+        e.currentTarget.closest("form")?.requestSubmit();
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* ROW 1: Name & Phone */}
@@ -19,6 +40,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           </label>
           <input
             {...register("full_name")}
+            onKeyDown={(e) => handleKeyDown(e, "phone_number")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.full_name ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all`}
             placeholder="e.g. Juan Dela Cruz"
           />
@@ -35,6 +57,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           </label>
           <input
             {...register("phone_number")}
+            onKeyDown={(e) => handleKeyDown(e, "email")}
             className="bg-muted/50 focus:bg-muted px-4 py-3 border border-border focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all"
             placeholder="0912 345 6789"
           />
@@ -50,6 +73,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           <input
             type="email"
             {...register("email")}
+            onKeyDown={(e) => handleKeyDown(e, "group_id")}
             className="bg-muted/50 focus:bg-muted px-4 py-3 border border-border focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all"
             placeholder="juan@example.com"
           />
@@ -61,6 +85,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           </label>
           <select
             {...register("group_id")}
+            onKeyDown={(e) => handleKeyDown(e, "address")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.group_id ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
           >
             <option value="">Select Group</option>
@@ -85,6 +110,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
         </label>
         <input
           {...register("address")}
+          onKeyDown={(e) => handleKeyDown(e, "birthdate")}
           className="bg-slate-950/50 focus:bg-slate-950 px-4 py-3 border border-slate-800 focus:border-cyan-500/50 rounded-xl focus:outline-none w-full text-white placeholder:text-slate-600 transition-all"
           placeholder="House No, Street, Barangay, City"
         />
@@ -99,6 +125,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           <input
             type="date"
             {...register("birthdate")}
+            onKeyDown={(e) => handleKeyDown(e, "date_of_registration")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.birthdate ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all`}
           />
           {errors.birthdate && (
@@ -114,6 +141,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           <input
             type="date"
             {...register("date_of_registration")}
+            onKeyDown={(e) => handleKeyDown(e, "civil_status")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.date_of_registration ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all`}
           />
           {errors.date_of_registration && (
@@ -132,6 +160,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           </label>
           <select
             {...register("civil_status")}
+            onKeyDown={(e) => handleKeyDown(e, "gender")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.civil_status ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
           >
             <option value="">Select Status</option>
@@ -154,6 +183,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           </label>
           <select
             {...register("gender")}
+            onKeyDown={(e) => handleKeyDown(e, "remarks")}
             className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.gender ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
           >
             <option value="">Select Gender</option>
@@ -176,6 +206,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
         </label>
         <textarea
           {...register("remarks")}
+          onKeyDown={(e) => handleKeyDown(e)}
           rows={2}
           className="bg-muted/50 focus:bg-muted px-4 py-3 border border-border focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all resize-none"
           placeholder="Any additional info..."

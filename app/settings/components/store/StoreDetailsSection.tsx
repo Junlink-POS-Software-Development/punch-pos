@@ -62,6 +62,20 @@ export function StoreDetailsSection() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField?: string) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) return;
+      e.preventDefault();
+      
+      if (nextField) {
+        const nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
+        if (nextInput) nextInput.focus();
+      } else {
+        handleSave();
+      }
+    }
+  };
+
   const isDirty = 
     storeName !== originalName || 
     businessName !== originalBusinessName ||
@@ -170,8 +184,10 @@ export function StoreDetailsSection() {
                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">Store Name</label>
                     <input 
                         type="text" 
+                        name="storeName"
                         value={storeName}
                         onChange={(e) => setStoreName(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, "businessName")}
                         placeholder="Public name of your store"
                         className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
@@ -181,8 +197,10 @@ export function StoreDetailsSection() {
                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1">Business Registered Name</label>
                     <input 
                         type="text" 
+                        name="businessName"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e)} // End of sequence
                         placeholder="Legal business name"
                         className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />

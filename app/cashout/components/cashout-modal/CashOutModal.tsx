@@ -107,6 +107,32 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
     onClose();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField?: string) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) return;
+      e.preventDefault();
+      
+      if (nextField) {
+        let nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
+        
+        // Skip date if it's disabled or readonly
+        if (nextField === "date" && customTransactionDate) {
+            const skipTo = activeTab === 'COGS' ? 'receipt_no' : 'notes';
+            nextInput = document.querySelector(`[name="${skipTo}"]`) as HTMLElement;
+        }
+
+        if (nextInput) {
+            nextInput.focus();
+            if (nextInput instanceof HTMLSelectElement) {
+                try { (nextInput as any).showPicker(); } catch(err){}
+            }
+        }
+      } else {
+        handleSave();
+      }
+    }
+  };
+
   const renderTabButton = (id: CashoutType, label: string, icon: React.ReactNode) => (
     <button
       onClick={() => setActiveTab(id)}
@@ -163,10 +189,12 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
                 </div>
                 <input
                   type="number"
+                  name="amount"
                   className="pl-8 w-full border-input rounded-xl shadow-sm focus:ring-2 focus:ring-ring focus:border-ring text-3xl font-bold py-3 border text-foreground bg-muted/20 focus:bg-card transition-colors placeholder-muted-foreground/50"
                   placeholder="0.00"
                   value={baseData.amount}
                   onChange={(e) => setBaseData({...baseData, amount: e.target.value})}
+                  onKeyDown={(e) => handleKeyDown(e, "date")}
                   autoFocus
                 />
               </div>
@@ -175,9 +203,11 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Date</label>
               <input 
                 type="date"
+                name="date"
                 className={`w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring py-4 px-3 border bg-muted/20 text-foreground text-sm ${customTransactionDate ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
                 value={baseData.date}
                 onChange={(e) => setBaseData({...baseData, date: e.target.value})}
+                onKeyDown={(e) => handleKeyDown(e, activeTab === 'COGS' ? 'receipt_no' : 'notes')}
                 disabled={!!customTransactionDate}
               />
             </div>
@@ -207,11 +237,13 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
                     <FileText size={16} />
                 </div>
                 <textarea
+                name="notes"
                 className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring border p-3 pl-9 text-sm bg-muted/20 focus:bg-card transition-colors text-foreground"
                 rows={2}
                 placeholder="Add any additional details regarding this transaction..."
                 value={baseData.notes}
                 onChange={(e) => setBaseData({...baseData, notes: e.target.value})}
+                onKeyDown={(e) => handleKeyDown(e)}
                 />
             </div>
           </div>
