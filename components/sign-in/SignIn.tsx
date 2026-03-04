@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, LogIn, AlertTriangle, Loader2 } from "lucide-react";
+import { Mail, Lock, LogIn, AlertTriangle, Loader2, Play } from "lucide-react";
 import { signInSchema, SignInFormValues } from "@/lib/types";
 import { login } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
@@ -58,6 +58,30 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
       onSuccess();
     } catch (err) {
       console.error("Error signing in:", err);
+      setFormError("root.serverError", {
+        type: "server",
+        message: (err as Error).message,
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleDemoClick = async () => {
+    setIsPending(true);
+    setFormError("root.serverError", { message: "" });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInAnonymously({
+        options: {
+          data: { source: "demo", full_name: "Guest Tester" },
+        },
+      });
+      if (error) throw error;
+      console.log("Anonymous sign in successful:", data);
+      onSuccess();
+    } catch (err) {
+      console.error("Demo login error:", err);
       setFormError("root.serverError", {
         type: "server",
         message: (err as Error).message,
@@ -169,6 +193,21 @@ export function SignIn({ onSwitchToSignUp, onSuccess }: SignInProps) {
 
         <button
           type="button"
+          onClick={handleDemoClick}
+          disabled={isPending}
+          className="flex justify-center items-center gap-2 mb-4 w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground py-2 rounded-md transition-colors"
+        >
+          {isPending ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Play className="w-5 h-5" />
+          )}
+          <span className="font-medium">{isPending ? "Provisioning Sandbox..." : "Test POS (Try Demo)"}</span>
+        </button>
+
+        <button
+          type="button"
+          disabled={isPending}
           onClick={async () => {
             try {
               console.log("Initiating Google Sign In...");

@@ -181,8 +181,10 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith("/onboarding") ||
         isSelectStorePage;
 
-      // If inactive and NOT on an exempt page, redirect them
-      if (!isActive && !isExemptPage && !isApiRoute) {
+      // If inactive and NOT on an exempt page, and NOT a demo user (anonymous), redirect them
+      const isDemoUser = user?.is_anonymous;
+      
+      if (!isActive && !isExemptPage && !isApiRoute && !isDemoUser) {
         return NextResponse.redirect(new URL("/subscribe-required", request.url));
       }
     }

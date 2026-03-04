@@ -28,7 +28,7 @@ export function PersonalInfoSection() {
                     ) : (
                         <div className="flex flex-col items-center">
                             <User className="w-10 h-10 opacity-20" />
-                            <span className="text-xl font-bold opacity-40">{user.email?.[0].toUpperCase()}</span>
+                            <span className="text-xl font-bold opacity-40">{(user.email?.[0] || firstName?.[0] || "?").toUpperCase()}</span>
                         </div>
                     )}
                 </div>
@@ -83,7 +83,7 @@ export function PersonalInfoSection() {
                 </label>
                 <input 
                     type="email" 
-                    value={user.email}
+                    value={user.email || ""}
                     disabled
                     className="w-full bg-muted/40 border border-border/30 rounded-xl px-4 py-3 text-sm text-muted-foreground cursor-not-allowed italic"
                 />

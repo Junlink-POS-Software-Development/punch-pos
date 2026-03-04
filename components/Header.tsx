@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor, Store } from "lucide-react";
+import { Sun, Moon, Monitor, Store, X } from "lucide-react";
 import Notifications from "@/app/components/Notifications";
 import UserProfile from "@/app/components/UserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -37,6 +37,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const [showSandboxBanner, setShowSandboxBanner] = React.useState(true);
 
   const [storeInfo, setStoreInfo] = React.useState<{ name: string; img: string | null }>({ name: "", img: null });
 
@@ -68,9 +69,30 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
   const ThemeIcon =
     theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
+  const isSandbox =
+    user?.is_anonymous ||
+    (user?.user_metadata?.role === "admin" &&
+      storeInfo.name === "Punch POS Sandbox");
+
   return (
-    <header className="flex items-center justify-between gap-6 px-6 pt-4 h-16">
-      {/* Container that occupies the whole span between logo area and right actions */}
+    <>
+      {isSandbox && showSandboxBanner && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-600 px-4 py-2 text-sm flex justify-between items-center z-50">
+          <div className="flex flex-1 items-center justify-center gap-2 text-center">
+            <span className="font-semibold text-amber-600/90 hidden sm:inline">Sandbox Mode:</span>
+            <span>This is a temporary test environment. Data will be cleared in 24 hours.</span>
+          </div>
+          <button
+            onClick={() => setShowSandboxBanner(false)}
+            className="hover:bg-amber-500/20 p-1 rounded-full text-amber-600 transition-colors"
+            title="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      <header className="flex items-center justify-between gap-6 px-6 pt-4 h-[calc(4rem-2px)] min-h-[64px]">
+        {/* Container that occupies the whole span between logo area and right actions */}
       <div className="flex-1 hidden lg:flex items-center overflow-hidden h-10 bg-muted/20 border border-border/50 rounded-full px-4 relative group">
         {/* Gradient Masks for premium look */}
         <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background/20 to-transparent z-10 pointer-events-none" />
@@ -139,6 +161,7 @@ export default function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
         </div>
       </div>
     </header>
+    </>
   );
 }
 

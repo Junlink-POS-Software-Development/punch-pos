@@ -27,6 +27,16 @@ export async function login(formData: SignInFormValues) {
 
 export async function logout() {
   const supabase = await createClient();
+  
+  // Check if current user is a demo user
+  const { data: { user } } = await supabase.auth.getUser();
+  const isDemo = user?.is_anonymous || user?.user_metadata?.source === "demo";
+
+  if (isDemo) {
+    console.log("Cleaning up demo store for user:", user?.id);
+    await supabase.rpc("cleanup_my_demo_store");
+  }
+
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/login");
