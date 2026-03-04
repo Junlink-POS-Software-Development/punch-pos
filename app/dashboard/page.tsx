@@ -109,6 +109,7 @@ function DashboardContent() {
         <CashFlowModal
           isOpen={isCashFlowOpen}
           onClose={() => setIsCashFlowOpen(false)}
+          isMultiDrawer={isMultiDrawer}
         />
       </div>
     </div>

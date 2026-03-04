@@ -8,7 +8,7 @@ import {
 } from "../lib/dashboardMockData";
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardStats, fetchHasVoucherSource, fetchLatestCategorySales } from "../lib/dashboard.api";
+import { fetchDashboardStats, fetchDrawerMode, fetchLatestCategorySales } from "../lib/dashboard.api";
 
 export type FlipCardKey = "sales" | "profit" | "cash" | "cashout";
 export type ExpenseCategory = "COGS" | "OPEX" | "REMIT";
@@ -27,12 +27,14 @@ export function useDashboard() {
     refetchInterval: isHistorical ? false : 1000 * 30, // Auto-refresh every 30s when not in history mode
   });
 
-  // ─── Multi-Drawer Detection ────────────────────────────────────────────────
-  const { data: isMultiDrawer = false } = useQuery({
-    queryKey: ["has-voucher-source"],
-    queryFn: fetchHasVoucherSource,
+  // ─── Drawer Mode ───────────────────────────────────────────────────────────
+  const { data: drawerMode = "unified" } = useQuery({
+    queryKey: ["drawer-mode"],
+    queryFn: fetchDrawerMode,
     staleTime: 1000 * 60 * 30, // 30 minutes — rarely changes
   });
+
+  const isMultiDrawer = drawerMode === "multiple";
 
   // ─── Categorical Cash Flow (only in multi-drawer mode) ─────────────────────
   const { data: categorySales = [], isFetching: isFetchingCategorySales, refetch: refetchCategorySales, dataUpdatedAt: categoryUpdatedAt } = useQuery({

@@ -20,9 +20,10 @@ import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilt
 interface CashFlowModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isMultiDrawer?: boolean;
 }
 
-export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
+export function CashFlowModal({ isOpen, onClose, isMultiDrawer = false }: CashFlowModalProps) {
   // --- Filter State ---
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [startDate, setStartDate] = useState(
@@ -33,16 +34,17 @@ export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
   );
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // --- 1. Fetch Categories ---
+  // --- 1. Fetch Categories (only in multi-drawer mode) ---
   const { data: categories = [] } = useQuery({
     queryKey: ["flow-categories"],
     queryFn: fetchFlowCategories,
-    enabled: isOpen,
+    enabled: isOpen && isMultiDrawer,
   });
 
   // --- Derived State ---
-  const activeCategory =
-    selectedCategory || (categories.length > 0 ? categories[0] : "Overall");
+  const activeCategory = isMultiDrawer
+    ? (selectedCategory || (categories.length > 0 ? categories[0] : "Overall"))
+    : "Overall";
 
   const dateRangeParam = useMemo(
     () => ({ start: startDate, end: endDate }),
@@ -211,24 +213,26 @@ export function CashFlowModal({ isOpen, onClose }: CashFlowModalProps) {
 
         {/* --- Filter Bar --- */}
         <div className="flex flex-wrap items-end gap-4 px-5 py-3 border-b border-border bg-muted/30 shrink-0">
-          {/* Category Dropdown */}
-          <div className="flex flex-col gap-1.5">
-            <label className="flex items-center gap-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-              <Filter className="w-3 h-3" /> Category
-            </label>
-            <select
-              value={activeCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="block bg-card p-2 border border-border focus:border-emerald-500 rounded-lg focus:ring-emerald-500 w-full md:w-48 text-foreground text-sm outline-none"
-            >
-              {categories.length === 0 && <option>Loading...</option>}
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Category Dropdown — only in multi-drawer mode */}
+          {isMultiDrawer && (
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+                <Filter className="w-3 h-3" /> Category
+              </label>
+              <select
+                value={activeCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="block bg-card p-2 border border-border focus:border-emerald-500 rounded-lg focus:ring-emerald-500 w-full md:w-48 text-foreground text-sm outline-none"
+              >
+                {categories.length === 0 && <option>Loading...</option>}
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date Range */}
           <DateColumnFilter

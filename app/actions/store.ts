@@ -350,3 +350,45 @@ export async function switchActiveStore(targetStoreId: string) {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Updates the store's drawer mode (unified or multiple).
+ * Unified = single cash pool. Multiple = per-category drawers.
+ */
+export async function updateDrawerMode(mode: "unified" | "multiple") {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    // 1. Get user's store_id
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (userError || !userData?.store_id) {
+      return { success: false, error: "Store not found for user" };
+    }
+
+    // 2. Update drawer_mode
+    const { error: updateError } = await supabase
+      .from("stores")
+      .update({ drawer_mode: mode })
+      .eq("store_id", userData.store_id);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    // 3. Revalidate affected paths
+    revalidatePath("/", "layout");
+    revalidatePath("/dashboard");
+    revalidatePath("/settings");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

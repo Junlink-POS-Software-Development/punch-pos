@@ -246,20 +246,24 @@ export const fetchQuantitySoldByCategory = async (
   }));
 };
 
-export const fetchHasVoucherSource = async (): Promise<boolean> => {
+export type DrawerMode = "unified" | "multiple";
+
+export const fetchDrawerMode = async (): Promise<DrawerMode> => {
   const supabase = await getSupabase();
+  const storeId = await getStoreId();
+
   const { data, error } = await supabase
-    .from("product_category")
-    .select("id")
-    .eq("is_default_voucher_source", true)
-    .limit(1);
+    .from("stores")
+    .select("drawer_mode")
+    .eq("store_id", storeId)
+    .single();
 
   if (error) {
-    console.error("Error checking voucher source:", error);
-    return false;
+    console.error("Error fetching drawer mode:", error);
+    return "unified";
   }
 
-  return (data?.length ?? 0) > 0;
+  return (data?.drawer_mode as DrawerMode) || "unified";
 };
 
 export const fetchLatestCategorySales = async (

@@ -121,18 +121,18 @@ export function VitalsGrid({
               </p>
             </div>
           ) : (
-            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
-              <div className="p-2 bg-slate-800 rounded-full mb-2 text-emerald-400">
+            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+              <div className="p-2 bg-muted rounded-full mb-2 text-emerald-500">
                 <TrendingUp size={20} />
               </div>
-              <h4 className="font-bold text-slate-100 text-sm mb-2">
+              <h4 className="font-bold text-foreground text-sm mb-2">
                 What is Net Sales?
               </h4>
-              <p className="text-xs text-slate-400 leading-relaxed px-1">
+              <p className="text-xs text-muted-foreground leading-relaxed px-1">
                 The true money you earned from selling items today, calculated
                 after taking away any discounts given, item returns, or allowances.
               </p>
-              <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
+              <p className="text-[9px] text-muted-foreground/60 mt-auto font-medium tracking-wide uppercase">
                 Click to flip back
               </p>
             </div>
@@ -176,18 +176,18 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
-            <div className="p-2 bg-slate-800 rounded-full mb-2 text-blue-400">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+            <div className="p-2 bg-muted rounded-full mb-2 text-blue-500">
               <TrendingUp size={20} />
             </div>
-            <h4 className="font-bold text-slate-100 text-sm mb-2">
+            <h4 className="font-bold text-foreground text-sm mb-2">
               What is Net Profit?
             </h4>
-            <p className="text-xs text-slate-400 leading-relaxed px-1">
+            <p className="text-xs text-muted-foreground leading-relaxed px-1">
               The money the business gets to keep. It is your Net Sales minus
               the cost of the goods you sold (COGS) and daily operations (OPEX).
             </p>
-            <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
+            <p className="text-[9px] text-muted-foreground/60 mt-auto font-medium tracking-wide uppercase">
               Click to flip back
             </p>
           </div>
@@ -252,29 +252,60 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
-            <div
-              className={`p-2 bg-slate-800 rounded-full mb-2 ${
-                isHighRisk ? "text-amber-400" : "text-slate-300"
-              }`}
-            >
-              {isHighRisk ? (
-                <AlertTriangle size={20} />
-              ) : (
-                <Wallet size={20} />
-              )}
+          isMultiDrawer && categorySales.length > 0 ? (
+            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`p-1.5 rounded-md ${isHighRisk ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"}`}>
+                  <Wallet size={14} />
+                </div>
+                <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+                  Cash per Category
+                </h4>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0">
+                {categorySales.map((entry) => (
+                  <div
+                    key={entry.category}
+                    className="flex items-center justify-between text-[11px] bg-muted/40 px-2.5 py-1.5 rounded-lg"
+                  >
+                    <span className="text-muted-foreground font-medium truncate mr-2">
+                      {entry.category}
+                    </span>
+                    <span className="font-mono font-semibold text-foreground whitespace-nowrap">
+                      ₱{entry.cash_in.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-2 font-medium tracking-wide uppercase text-center shrink-0">
+                Click to flip back
+              </p>
             </div>
-            <h4 className="font-bold text-slate-100 text-sm mb-2">
-              What is Cash in Drawer?
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed px-1">
-              The exact physical cash sitting in your register right now. If
-              it&apos;s too high, it&apos;s safer to remit some to the manager or safe.
-            </p>
-            <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
-              Click to flip back
-            </p>
-          </div>
+          ) : (
+            <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+              <div
+                className={`p-2 bg-muted rounded-full mb-2 ${
+                  isHighRisk ? "text-amber-500" : "text-muted-foreground"
+                }`}
+              >
+                {isHighRisk ? (
+                  <AlertTriangle size={20} />
+                ) : (
+                  <Wallet size={20} />
+                )}
+              </div>
+              <h4 className="font-bold text-foreground text-sm mb-2">
+                What is Cash in Drawer?
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed px-1">
+                The exact physical cash sitting in your register right now. If
+                it&apos;s too high, it&apos;s safer to remit some to the manager or safe.
+              </p>
+              <p className="text-[9px] text-muted-foreground/60 mt-auto font-medium tracking-wide uppercase">
+                Click to flip back
+              </p>
+            </div>
+          )
         }
       />
 
@@ -327,18 +358,18 @@ export function VitalsGrid({
           </div>
         }
         backContent={
-          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
-            <div className="p-2 bg-slate-800 rounded-full mb-2 text-red-400">
+          <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-4 rounded-xl shadow-inner flex flex-col justify-center items-center text-center">
+            <div className="p-2 bg-muted rounded-full mb-2 text-red-500">
               <ArrowDownLeft size={20} />
             </div>
-            <h4 className="font-bold text-slate-100 text-sm mb-2">
+            <h4 className="font-bold text-foreground text-sm mb-2">
               What is Cashout?
             </h4>
-            <p className="text-xs text-slate-400 leading-relaxed px-1">
+            <p className="text-xs text-muted-foreground leading-relaxed px-1">
               Money that left the cash drawer today. This includes paying
               suppliers, daily expenses (like ice), and money safely remitted.
             </p>
-            <p className="text-[9px] text-slate-500 mt-auto font-medium tracking-wide uppercase">
+            <p className="text-[9px] text-muted-foreground/60 mt-auto font-medium tracking-wide uppercase">
               Click to flip back
             </p>
           </div>
