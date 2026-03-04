@@ -10,6 +10,9 @@ import { RemittanceForm } from './RemittanceForm';
 import { useExpenses } from '../../hooks/useExpenses'; // Reuse the hook logic
 import { useTransactionStore } from '@/app/settings/backdating/stores/useTransactionStore';
 import dayjs from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
+import { fetchDrawerMode } from '@/app/dashboard/lib/dashboard.api';
+import { useDrawers } from '../../hooks/useDrawers';
 
 interface CashOutModalProps {
   isOpen: boolean;
@@ -22,6 +25,23 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
   const { customTransactionDate } = useTransactionStore();
   const [activeTab, setActiveTab] = useState<CashoutType>('COGS'); 
   const [selectedDrawerId, setSelectedDrawerId] = useState<string>("");
+  
+  // ─── Drawer Mode & Drawers ────────────────────────────────────────────────
+  const { drawers, isLoading: isLoadingDrawers } = useDrawers();
+  const { data: drawerMode = "unified" } = useQuery({
+    queryKey: ["drawer-mode"],
+    queryFn: fetchDrawerMode,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+
+  const isMultiDrawer = drawerMode === "multiple";
+
+  // Auto-select drawer in Unified mode
+  useEffect(() => {
+    if (!isMultiDrawer && drawers.length > 0 && !selectedDrawerId) {
+      setSelectedDrawerId(drawers[0].id);
+    }
+  }, [isMultiDrawer, drawers, selectedDrawerId]);
   
   // Initialize with empty values to avoid hydration mismatch
   const [baseData, setBaseData] = useState<{amount: string, date: string, notes: string}>({
@@ -90,13 +110,13 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
 
     try {
         if (editData?.id) {
-          await editExpense(editData.id, payload);
+          editExpense(editData.id, payload);
         } else {
-          await addExpense(payload);
+          addExpense(payload);
         }
         handleClose();
     } catch (e) {
-        alert("Failed to save transaction");
+        console.error("Failed to save transaction:", e);
     }
   };
 
@@ -173,12 +193,14 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
         </div>
 
         <div className="p-6 overflow-y-auto flex-1 bg-card">
-          <div className="mb-6">
-               <DrawerSelect 
-                  value={selectedDrawerId}
-                  onChange={setSelectedDrawerId}
-               />
-          </div>
+          {isMultiDrawer && (
+            <div className="mb-6">
+                 <DrawerSelect 
+                    value={selectedDrawerId}
+                    onChange={setSelectedDrawerId}
+                 />
+            </div>
+          )}
           
           <div className="flex gap-4 mb-6">
             <div className="flex-1">

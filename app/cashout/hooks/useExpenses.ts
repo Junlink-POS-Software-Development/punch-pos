@@ -8,6 +8,7 @@ import {
   deleteExpense,
   fetchExpensesSummary,
   fetchUserPermissions,
+  fetchCurrentBalance,
   CashoutInput,
   CashoutRecord,
   CashoutPermissions,
@@ -51,41 +52,127 @@ export function useExpenses(dateRange?: DateRange) {
   const addExpense = useCallback(
     async (data: CashoutInput) => {
       setIsSubmitting(true);
+
+      // 1. Update Summary Cache
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          totalAmount: old.totalAmount + data.amount,
+          totalCount: old.totalCount + 1,
+        };
+      });
+
+      // 2. Update Balance Cache
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old - data.amount;
+      });
+
       try {
         await createExpense(data);
-        // Invalidate all expense queries to ensure freshness everywhere
+        // Invalidate to ensure freshness
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+      } catch (error) {
+        // Invalidate on error to restore correct data
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [queryClient]
+    [queryClient, dateRange]
   );
 
   const editExpense = useCallback(
     async (id: string, data: CashoutInput) => {
       setIsSubmitting(true);
+
+      // Try to find the original amount from various caches to calculate the difference
+      // This is a bit tricky since useExpenses doesn't know about infinite pages, 
+      // but they share the same queryClient.
+      const listData = queryClient.getQueryData<CashoutRecord[]>(queryKey);
+      const originalRecord = listData?.find(e => e.id === id);
+      
+      // Also check infinite cache if not found in list
+      let originalAmount = originalRecord?.amount;
+      if (originalAmount === undefined) {
+          const infiniteData = queryClient.getQueryData<InfiniteData<CashoutPage>>([EXPENSES_KEY, "infinite", 20, dateRange?.start, dateRange?.end]);
+          originalAmount = infiniteData?.pages.flatMap(p => p.data).find(e => e.id === id)?.amount || 0;
+      }
+      
+      const amountDiff = data.amount - originalAmount;
+
+      // 1. Update Summary
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          totalAmount: old.totalAmount + amountDiff,
+        };
+      });
+
+      // 2. Update Balance
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old - amountDiff;
+      });
+
       try {
         await updateExpense(id, data);
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+      } catch (error) {
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [queryClient]
+    [queryClient, queryKey, dateRange]
   );
 
   const removeExpense = useCallback(
     async (id: string) => {
+      // Find amount for summary/balance update
+      const listData = queryClient.getQueryData<CashoutRecord[]>(queryKey);
+      const originalRecord = listData?.find(e => e.id === id);
+      
+      let originalAmount = originalRecord?.amount;
+      if (originalAmount === undefined) {
+          const infiniteData = queryClient.getQueryData<InfiniteData<CashoutPage>>([EXPENSES_KEY, "infinite", 20, dateRange?.start, dateRange?.end]);
+          originalAmount = infiniteData?.pages.flatMap(p => p.data).find(e => e.id === id)?.amount || 0;
+      }
+
+      // 1. Update Summary
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          totalAmount: old.totalAmount - originalAmount,
+          totalCount: old.totalCount - 1,
+        };
+      });
+
+      // 2. Update Balance
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old + originalAmount;
+      });
+
       try {
         await deleteExpense(id);
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
         console.error("Failed to delete expense:", error);
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
         throw error;
       }
     },
-    [queryClient]
+    [queryClient, queryKey, dateRange]
   );
 
   return {
@@ -105,6 +192,7 @@ export function useExpenses(dateRange?: DateRange) {
 // New hook for infinite scroll with optimistic updates
 export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange) {
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const queryKey = useMemo(
     () => [EXPENSES_KEY, "infinite", pageSize, dateRange?.start, dateRange?.end],
@@ -148,6 +236,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
   // Optimistic Add
   const addExpenseOptimistic = useCallback(
     async (input: CashoutInput) => {
+      setIsSubmitting(true);
       const tempId = `temp-${Date.now()}`;
       // Basic optimistic record - simplified
       const optimistic: OptimisticCashoutRecord = {
@@ -165,7 +254,7 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
         _syncing: true,
       };
 
-      // Optimistically add to cache (prepend to first page) for THIS query
+      // 1. Update Infinite Query Cache
       queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
         const newPages = [...old.pages];
@@ -174,6 +263,23 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
           data: [optimistic, ...newPages[0].data],
         };
         return { ...old, pages: newPages };
+      });
+
+      // 2. Update Summary Query Cache
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          totalAmount: old.totalAmount + input.amount,
+          totalCount: old.totalCount + 1,
+        };
+      });
+
+      // 3. Update Balance Query Cache
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old - input.amount;
       });
 
       try {
@@ -190,19 +296,28 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
           }));
           return { ...old, pages: newPages };
         });
+        // Invalidate summaries/balance on error to restore correct data
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
         throw error;
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient, queryKey, dateRange]
   );
 
   // Optimistic Edit
   const editExpenseOptimistic = useCallback(
     async (id: string, input: CashoutInput) => {
-      // Store previous data for rollback
-      const previousData = queryClient.getQueryData(queryKey);
+      setIsSubmitting(true);
+      
+      // Get previous amount for calculations
+      const pages = queryClient.getQueryData<InfiniteData<CashoutPage>>(queryKey)?.pages;
+      const originalRecord = pages?.flatMap(p => p.data).find(e => e.id === id);
+      const originalAmount = originalRecord?.amount || 0;
+      const amountDiff = input.amount - originalAmount;
 
-      // Optimistically update
+      // 1. Update Infinite Query
       queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
         const newPages = old.pages.map((page) => ({
@@ -224,25 +339,47 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
         return { ...old, pages: newPages };
       });
 
+      // 2. Update Summary
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          totalAmount: old.totalAmount + amountDiff,
+        };
+      });
+
+      // 3. Update Balance
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old - amountDiff;
+      });
+
       try {
         await updateExpense(id, input);
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
-        // Rollback on error
-        queryClient.setQueryData(queryKey, previousData);
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
         throw error;
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient, queryKey, dateRange]
   );
 
   // Optimistic Delete
   const removeExpenseOptimistic = useCallback(
     async (id: string) => {
-      // Store previous data for rollback
-      const previousData = queryClient.getQueryData(queryKey);
+      setIsSubmitting(true);
 
-      // Optimistically remove
+      // Get amount for calculations
+      const pages = queryClient.getQueryData<InfiniteData<CashoutPage>>(queryKey)?.pages;
+      const originalRecord = pages?.flatMap(p => p.data).find(e => e.id === id);
+      const originalAmount = originalRecord?.amount || 0;
+
+      // 1. Update Infinite Query
       queryClient.setQueryData<InfiniteData<CashoutPage>>(queryKey, (old) => {
         if (!old) return old;
         const newPages = old.pages.map((page) => ({
@@ -252,21 +389,40 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
         return { ...old, pages: newPages };
       });
 
+      // 2. Update Summary
+      const summaryKey = [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end];
+      queryClient.setQueryData<{ totalAmount: number; totalCount: number }>(summaryKey, (old) => {
+        if (!old) return old;
+        return {
+          totalAmount: old.totalAmount - originalAmount,
+          totalCount: old.totalCount - 1,
+        };
+      });
+
+      // 3. Update Balance
+      const balanceKey = [EXPENSES_KEY, "balance"];
+      queryClient.setQueryData<number>(balanceKey, (old) => {
+        if (old === undefined) return old;
+        return old + originalAmount;
+      });
+
       try {
         await deleteExpense(id);
         await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
       } catch (error) {
-        // Rollback on error
-        queryClient.setQueryData(queryKey, previousData);
+        await queryClient.invalidateQueries({ queryKey: [EXPENSES_KEY] });
         throw error;
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [queryClient, queryKey]
+    [queryClient, queryKey, dateRange]
   );
 
   return {
     expenses,
     isLoading,
+    isSubmitting,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
@@ -297,7 +453,7 @@ export function useCashoutPermissions() {
 }
 
 
-// New hook for summary cards
+// Hook for summary cards
 export function useExpensesSummary(dateRange?: DateRange) {
   const queryKey = useMemo(
     () => [EXPENSES_KEY, "summary", dateRange?.start, dateRange?.end],
@@ -313,5 +469,20 @@ export function useExpensesSummary(dateRange?: DateRange) {
     summary: data || { totalAmount: 0, totalCount: 0 },
     isLoading,
     error,
+  };
+}
+
+
+// New hook for current cash balance
+export function useCurrentBalance() {
+  const { data: balance = 0, isLoading } = useQuery({
+    queryKey: [EXPENSES_KEY, "balance"],
+    queryFn: fetchCurrentBalance,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  return {
+    balance,
+    isLoading,
   };
 }

@@ -14,6 +14,7 @@ interface CashoutModalProps {
   expenseCategory: ExpenseCategory;
   setExpenseCategory: (cat: ExpenseCategory) => void;
   onSubmit: (e: FormEvent) => void;
+  isMultiDrawer: boolean;
 }
 
 export function CashoutModal({
@@ -26,6 +27,7 @@ export function CashoutModal({
   expenseCategory,
   setExpenseCategory,
   onSubmit,
+  isMultiDrawer,
 }: CashoutModalProps) {
   if (!isOpen) return null;
 
@@ -72,32 +74,34 @@ export function CashoutModal({
               </div>
             </div>
 
-            {/* Category Selection */}
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Category
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: "COGS", label: "Supplier (COGS)" },
-                  { id: "OPEX", label: "Expense (OPEX)" },
-                  { id: "REMIT", label: "Remittance" },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setExpenseCategory(cat.id as ExpenseCategory)}
-                    className={`py-2 px-1 rounded-lg text-xs font-semibold border transition-all ${
-                      expenseCategory === cat.id
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-transparent text-muted-foreground border-border hover:border-primary/50"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+            {/* Category Selection - Only show in Multi Drawer Mode */}
+            {isMultiDrawer && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Category
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "COGS", label: "Supplier (COGS)" },
+                    { id: "OPEX", label: "Expense (OPEX)" },
+                    { id: "REMIT", label: "Remittance" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setExpenseCategory(cat.id as ExpenseCategory)}
+                      className={`py-2 px-1 rounded-lg text-xs font-semibold border transition-all ${
+                        expenseCategory === cat.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-transparent text-muted-foreground border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Reason/Description Input */}
             <div>

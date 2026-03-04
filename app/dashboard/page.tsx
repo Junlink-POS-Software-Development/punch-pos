@@ -103,6 +103,7 @@ function DashboardContent() {
           expenseCategory={expenseCategory}
           setExpenseCategory={setExpenseCategory}
           onSubmit={handleAddExpense}
+          isMultiDrawer={isMultiDrawer}
         />
 
         {/* CASH FLOW LEDGER MODAL */}

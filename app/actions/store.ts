@@ -383,7 +383,19 @@ export async function updateDrawerMode(mode: "unified" | "multiple") {
       return { success: false, error: updateError.message };
     }
 
-    // 3. Revalidate affected paths
+    // 3. If switching to unified, reset all is_default_voucher_source to false
+    if (mode === "unified") {
+      const { error: resetError } = await supabase
+        .from("product_category")
+        .update({ is_default_voucher_source: false })
+        .eq("store_id", userData.store_id);
+      
+      if (resetError) {
+        console.error("Error resetting voucher sources:", resetError);
+      }
+    }
+
+    // 4. Revalidate affected paths
     revalidatePath("/", "layout");
     revalidatePath("/dashboard");
     revalidatePath("/settings");

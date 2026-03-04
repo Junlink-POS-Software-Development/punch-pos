@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
-import { DollarSign, Filter } from 'lucide-react';
+import { DollarSign, Filter, Wallet } from 'lucide-react';
 import { CashOutTable } from "./components/cashout-table/CashOutTable";
 import { getColumns } from './components/cashout-table/columns';
-import { useExpensesInfinite, useExpensesSummary } from './hooks/useExpenses';
+import { useExpensesInfinite, useExpensesSummary, useCurrentBalance } from './hooks/useExpenses';
 import { usePermissions } from '@/app/hooks/usePermissions';
 import { useFilterStore } from '@/store/useFilterStore';
 import dynamic_next from 'next/dynamic';
 import { CashoutRecord } from './lib/cashout.api';
+import { formatCurrency } from '@/lib/utils/currency';
+import { useQuery } from '@tanstack/react-query';
+import { fetchDrawerMode } from '../dashboard/lib/dashboard.api';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal').then(m => m.CashOutModal), {
     ssr: false
@@ -20,6 +23,14 @@ function CashoutContent() {
   const [editingRecord, setEditingRecord] = useState<CashoutRecord | null>(null);
   const { dateRange } = useFilterStore();
 
+  const { data: drawerMode = "unified" } = useQuery({
+    queryKey: ["drawer-mode"],
+    queryFn: fetchDrawerMode,
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const isMultiDrawer = drawerMode === "multiple";
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -30,11 +41,14 @@ function CashoutContent() {
       fetchNextPage, 
       hasNextPage, 
       isFetchingNextPage,
-      removeExpense
+      removeExpense,
+      editExpense,
+      isSubmitting
   } = useExpensesInfinite(20, dateRange);
 
   const { can_manage_expenses } = usePermissions();
   const { summary } = useExpensesSummary(dateRange);
+  const { balance } = useCurrentBalance();
 
   const handleEditExpense = useCallback((record: CashoutRecord) => {
     setEditingRecord(record);
@@ -47,9 +61,27 @@ function CashoutContent() {
     setTimeout(() => setEditingRecord(null), 300);
   }, []);
 
+  const handleInlineUpdate = useCallback(async (id: string, values: any) => {
+    try {
+      // Map table values back to API input
+      const payload = {
+        transaction_date: values.date,
+        amount: values.amount,
+        notes: values.notes,
+        cashout_type: values.category,
+        product: values.product,
+      };
+      await editExpense(id, payload as any);
+      return true;
+    } catch (error) {
+      console.error("Failed to update expense:", error);
+      return false;
+    }
+  }, [editExpense]);
+
   const tableColumns = useMemo(() => 
-    getColumns(removeExpense, handleEditExpense, can_manage_expenses), 
-    [removeExpense, handleEditExpense, can_manage_expenses]
+    getColumns(removeExpense, handleEditExpense, can_manage_expenses, isMultiDrawer), 
+    [removeExpense, handleEditExpense, can_manage_expenses, isMultiDrawer]
   );
 
   if (!isMounted) {
@@ -59,7 +91,7 @@ function CashoutContent() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4 text-white">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
         
         {/* Top Summary & Actions Area */}
         <div className="flex flex-col lg:flex-row items-stretch gap-4">
@@ -69,7 +101,7 @@ function CashoutContent() {
                       <div className="p-1.5 bg-red-100/50 text-red-600 rounded-lg"><DollarSign size={16}/></div>
                       <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Cash Out</h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">₱{(summary.totalAmount ?? 0).toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(summary.totalAmount ?? 0, 'PHP')}</p>
               </div>
               <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-1">
@@ -78,14 +110,12 @@ function CashoutContent() {
                   </div>
                   <p className="text-2xl font-bold text-foreground">{summary.totalCount}</p>
               </div>
-              <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-primary text-[10px] font-bold uppercase tracking-wider mb-1">Session Status</h3>
-                    <div className="flex items-center gap-2">
-                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                       <p className="text-lg font-bold text-foreground">Open & Syncing</p>
-                    </div>
+              <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1.5 bg-emerald-100/50 text-emerald-600 rounded-lg"><Wallet size={16}/></div>
+                      <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Cash Remaining</h3>
                   </div>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(balance, 'PHP')}</p>
               </div>
           </div>
           
@@ -111,6 +141,8 @@ function CashoutContent() {
                 onLoadMore={() => fetchNextPage()}
                 hasMore={hasNextPage}
                 isLoadingMore={isFetchingNextPage}
+                updateData={handleInlineUpdate}
+                isUpdating={isSubmitting}
             />
         )}
 

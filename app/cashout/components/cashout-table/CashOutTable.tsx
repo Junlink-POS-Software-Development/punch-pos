@@ -18,6 +18,8 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  updateData: (id: string, values: any) => Promise<boolean>;
+  isUpdating?: boolean;
 }
 
 export function CashOutTable<TData, TValue>({
@@ -27,9 +29,12 @@ export function CashOutTable<TData, TValue>({
   onLoadMore,
   hasMore,
   isLoadingMore,
+  updateData,
+  isUpdating,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
@@ -42,6 +47,12 @@ export function CashOutTable<TData, TValue>({
     state: {
       sorting,
       rowSelection,
+    },
+    meta: {
+      editingRowId,
+      setEditingRowId,
+      updateData,
+      isUpdating
     },
   });
 
@@ -75,7 +86,7 @@ export function CashOutTable<TData, TValue>({
     <div className="border border-border rounded-xl shadow-sm bg-card flex flex-col overflow-hidden">
       <div className="overflow-y-auto max-h-[calc(100vh-220px)] relative scrollbar-thin scrollbar-thumb-muted-foreground/20">
         <table className="w-full text-sm text-left border-collapse">
-          <thead className="bg-muted/95 backdrop-blur-md text-muted-foreground font-medium border-b border-border sticky top-0 z-20">
+          <thead className="bg-muted/95 backdrop-blur-md text-muted-foreground font-medium border-b border-border sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -132,7 +143,7 @@ export function CashOutTable<TData, TValue>({
         
         {/* Loading Indicator Overlay */}
         {isLoadingMore && (
-           <div className="p-4 flex justify-center items-center gap-2 text-primary font-medium bg-background/80 backdrop-blur-sm sticky bottom-0 border-t border-border z-10">
+           <div className="p-4 flex justify-center items-center gap-2 text-primary font-medium bg-card/80 backdrop-blur-sm sticky bottom-0 border-t border-border z-10">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-xs">Loading more records...</span>
            </div>

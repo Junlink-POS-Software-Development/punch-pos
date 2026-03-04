@@ -99,6 +99,7 @@ export interface CashoutRecord {
   created_at: string;
   classificationId?: string;
   categoryId?: string;
+  drawerName?: string;
 }
 
 export interface OpexCategory {
@@ -255,6 +256,7 @@ export const fetchExpenses = async (
       product: row.product_category?.category ?? (row.source || undefined), // fallback handling
       classificationId: row.classification_id || undefined,
       categoryId: row.category_id || undefined,
+      drawerName: row.product_category?.category ?? undefined,
       // We might need to handle other fields based on the raw data
     })
   );
@@ -316,6 +318,7 @@ export const fetchExpensesPaginated = async (
       product: row.product_category?.category ?? (row.source || undefined),
       classificationId: row.classification_id || undefined,
       categoryId: row.category_id || undefined,
+      drawerName: row.product_category?.category ?? undefined,
     })
   );
 
@@ -575,4 +578,37 @@ export const updateExpense = async (id: string, input: CashoutInput) => {
     console.error("Error updating expense:", error);
     throw new Error(error.message);
   }
+};
+
+// 12. Fetch Current Balance (for monitoring)
+export const fetchCurrentBalance = async (): Promise<number> => {
+  const supabase = await getSupabase();
+  
+  // 1. Get current user's store_id
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("store_id")
+    .eq("user_id", user.id)
+    .single();
+  
+  if (!userData?.store_id) return 0;
+
+  // 2. Get latest balance from overall_cash_flow
+  const { data, error } = await supabase
+    .from("overall_cash_flow")
+    .select("balance")
+    .eq("store_id", userData.store_id)
+    .order("date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching balance:", error);
+    return 0;
+  }
+
+  return data?.balance || 0;
 };
