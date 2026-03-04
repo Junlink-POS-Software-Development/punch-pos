@@ -17,7 +17,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@fortune-sheet/react": "^1.0.4",
+
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.8.0",
@@ -37,7 +37,7 @@
     "openai": "^6.16.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.1",
-    "react-data-grid": "^7.0.0-beta.58",
+
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.66.0",
     "recharts": "^3.5.0",

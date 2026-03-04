@@ -149,16 +149,7 @@ CREATE TABLE public.payments (
   CONSTRAINT payments_cashier_name_fkey FOREIGN KEY (cashier_id) REFERENCES auth.users(id),
   CONSTRAINT payments_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
 );
-CREATE TABLE public.playground_states (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  store_id uuid NOT NULL,
-  name text NOT NULL,
-  content jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT playground_states_pkey PRIMARY KEY (id),
-  CONSTRAINT playground_states_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
-);
+
 CREATE TABLE public.product_category (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   category text NOT NULL,

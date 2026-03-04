@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Table,
   Store,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
@@ -185,16 +184,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         { label: "Shared", href: "/notes" },
       ],
     },
-    {
-      id: "playground",
-      text: "Playground",
-      Icon: Table,
-      href: "/playground",
-      shortcuts: [
-        { label: "New Sheet", href: "/playground" },
-        { label: "My Models", href: "/playground" },
-      ],
-    },
+
   ];
 
   // Filter items for Grid view (exclude Terminal)
