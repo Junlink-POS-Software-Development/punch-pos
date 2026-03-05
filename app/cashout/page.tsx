@@ -13,6 +13,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDrawerMode, fetchLatestCategorySales } from '../dashboard/lib/dashboard.api';
 import { DashboardHeader } from '../dashboard/components/pos-overview/DashboardHeader';
+import { VitalCard } from '../dashboard/components/pos-overview/VitalCard';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal').then(m => m.CashOutModal), {
     ssr: false
@@ -21,6 +22,7 @@ const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashO
 function CashoutContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CashoutRecord | null>(null);
   const { dateRange, setDateRange } = useFilterStore();
 
@@ -132,43 +134,58 @@ function CashoutContent() {
                   </div>
                   <p className="text-2xl font-bold text-foreground">{summary.totalCount}</p>
               </div>
-              <div className={`p-4 rounded-xl shadow-sm border flex flex-col justify-center transition-colors ${
-                  balance < 0 
-                  ? "bg-red-500/10 border-red-500/50 text-red-600 animate-pulse" 
-                  : "bg-card border-border text-foreground"
-              }`}>
-                  <div className="flex items-center gap-2 mb-1">
-                      <div className={`p-1.5 rounded-lg ${balance < 0 ? "bg-red-100 text-red-600" : "bg-emerald-100/50 text-emerald-600"}`}>
-                        <Wallet size={16}/>
+              <VitalCard
+                flipped={isFlipped}
+                onFlip={() => isMultiDrawer && categorySales.length > 0 && setIsFlipped(!isFlipped)}
+                frontContent={
+                  <div className={`w-full h-full backface-hidden p-4 rounded-xl shadow-sm border flex flex-col justify-center transition-colors ${
+                    balance < 0 
+                    ? "bg-red-500/10 border-red-500/50 text-red-600 animate-pulse" 
+                    : "bg-card border-border text-foreground hover:border-blue-500/50"
+                  }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                          <div className={`p-1 rounded-md ${balance < 0 ? "bg-red-100 text-red-600" : "bg-emerald-100/50 text-emerald-600"}`}>
+                            <Wallet size={14}/>
+                          </div>
+                          <h3 className={`text-[10px] font-bold uppercase tracking-wider ${balance < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                            Total Cash Remaining
+                          </h3>
+                          {balance < 0 && (
+                            <span className="ml-auto flex items-center gap-1 text-[9px] font-black bg-red-600 text-white px-1 py-0.5 rounded-sm animate-bounce">
+                              NEGATIVE BALANCE
+                            </span>
+                          )}
                       </div>
-                      <h3 className={`text-[10px] font-bold uppercase tracking-wider ${balance < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-                        Total Cash Remaining
-                      </h3>
-                      {balance < 0 && (
-                        <span className="ml-auto flex items-center gap-1 text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-sm animate-bounce">
-                          NEGATIVE BALANCE
-                        </span>
-                      )}
+                      <div className="flex items-baseline justify-between mb-1">
+                        <p className={`text-xl font-bold ${balance < 0 ? "text-red-600" : "text-foreground"}`}>
+                          {formatCurrency(balance, 'PHP')}
+                        </p>
+                        {isFetchingCategorySales && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-2"></div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-auto">
+                        {isMultiDrawer && categorySales.length > 0 ? "Click to see breakdown" : "Overall physical cash remaining."}
+                      </p>
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <p className={`text-2xl font-bold ${balance < 0 ? "text-red-600" : "text-foreground"}`}>
-                      {formatCurrency(balance, 'PHP')}
-                    </p>
-                    {isFetchingCategorySales && (
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-2"></div>
-                    )}
-                  </div>
-
-                  {isMultiDrawer && categorySales.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-border/60">
-                      <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Drawer Breakdown</h4>
-                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                }
+                backContent={
+                  <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-card border border-border p-2 rounded-xl shadow-inner flex flex-col">
+                      <div className="flex items-center">
+                        <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
+                          <Wallet size={14} />
+                        </div>
+                        <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+                          Drawer Breakdown
+                        </h4>
+                      </div>
+                      <div className="flex-1 overflow-y-auto min-h-0">
                         {categorySales.map((entry) => (
                           <div
                             key={entry.category}
-                            className="flex items-center justify-between text-[11px] bg-muted/30 px-2 py-1.5 rounded-md"
+                            className="flex items-center justify-between text-[11px] bg-muted/40 rounded-lg"
                           >
-                            <span className="text-muted-foreground font-medium truncate mr-2">
+                            <span className="text-muted-foreground font-medium truncate">
                               {entry.category}
                             </span>
                             <span className="font-mono font-semibold text-foreground whitespace-nowrap">
@@ -177,9 +194,9 @@ function CashoutContent() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-              </div>
+                  </div>
+                }
+              />
           </div>
           
           {can_manage_expenses && (
