@@ -20,7 +20,7 @@ import {
   X,
   Store,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useViewStore } from "../window-layouts/store/useViewStore";
 import { getStoreInfo } from "@/app/actions/store";
@@ -39,8 +39,48 @@ interface NavigationProps {
 const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setViewState } = useViewStore();
+
+  const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const itemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSidebarEnter = () => {
+    if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
+    setIsCollapsed(false);
+  };
+
+  const handleSidebarLeave = () => {
+    sidebarTimeoutRef.current = setTimeout(() => {
+      setIsCollapsed(true);
+      setHoveredItemId(null);
+    }, 300);
+  };
+
+  const handleItemEnter = (id: string) => {
+    if (itemTimeoutRef.current) clearTimeout(itemTimeoutRef.current);
+    
+    // If no item is currently hovered, open immediately
+    if (!hoveredItemId) {
+      setHoveredItemId(id);
+      return;
+    }
+
+    // If another item is hovered, wait 200ms (dwell delay) before switching
+    if (hoveredItemId !== id) {
+      itemTimeoutRef.current = setTimeout(() => {
+        setHoveredItemId(id);
+      }, 200);
+    }
+  };
+
+  const handleItemLeave = () => {
+    if (itemTimeoutRef.current) clearTimeout(itemTimeoutRef.current);
+    itemTimeoutRef.current = setTimeout(() => {
+      setHoveredItemId(null);
+    }, 500);
+  };
 
   // Store logo/name for sidebar
   const [storeInfo, setStoreInfo] = useState<{ name: string; img: string | null }>({ name: "", img: null });
@@ -83,17 +123,6 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       ],
     },
     {
-      id: "inventory",
-      text: "Inventory",
-      Icon: Archive,
-      href: "/inventory",
-      shortcuts: [
-        { label: "Register Item", href: "/inventory?view=register" },
-        { label: "Manage Stocks", href: "/inventory?view=manage" },
-        { label: "Stocks Monitor", href: "/inventory?view=monitor" },
-      ],
-    },
-    {
       id: "cashout",
       text: "Cash Out",
       Icon: TrendingDown,
@@ -102,6 +131,17 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         { label: "Record Cashout", href: "/cashout?view=cashout" },
         { label: "Expenses Monitor", href: "/cashout?view=monitor" },
         { label: "Cash Flow", href: "/cashout?view=cashflow" },
+      ],
+    },
+    {
+      id: "inventory",
+      text: "Inventory",
+      Icon: Archive,
+      href: "/inventory",
+      shortcuts: [
+        { label: "Register Item", href: "/inventory?view=register" },
+        { label: "Manage Stocks", href: "/inventory?view=manage" },
+        { label: "Stocks Monitor", href: "/inventory?view=monitor" },
       ],
     },
     {
@@ -228,8 +268,8 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   // --- SIDEBAR VARIANT (Desktop) ---
   return (
     <aside
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
+      onMouseEnter={handleSidebarEnter}
+      onMouseLeave={handleSidebarLeave}
       className={`
         fixed left-0 top-0 z-100 h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl flex flex-col
         ${isCollapsed ? "w-20" : "w-64"}
@@ -294,7 +334,12 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
           const isExpandable = ["inventory", "transactions", "settings"].includes(item.id);
 
           return (
-            <div key={item.id} className="group/nav-item flex flex-col gap-1">
+            <div 
+              key={item.id} 
+              className="group/nav-item flex flex-col gap-1"
+              onMouseEnter={() => handleItemEnter(item.id)}
+              onMouseLeave={handleItemLeave}
+            >
               <Link
                 href={item.href}
                 className={`
@@ -306,7 +351,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                   }
                   ${isCollapsed ? "justify-center" : ""}
                   /* Use blue accent (primary) when expanded and hovered for specific items */
-                  ${!isCollapsed && isExpandable ? "group-hover/nav-item:bg-primary group-hover/nav-item:text-white" : ""}
+                  ${!isCollapsed && isExpandable && (hoveredItemId === item.id) ? "bg-primary text-white" : ""}
                 `}
               >
                 <div className="relative">
@@ -337,11 +382,12 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
 
               {/* Sub-items list - smoother slide-down reveal using CSS grid row transition */}
               {!isCollapsed && isExpandable && hasShortcuts && (
-                <div className="grid grid-rows-[0fr] group-hover/nav-item:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${hoveredItemId === item.id ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                   <div className="overflow-hidden">
                     <div className="flex flex-col ml-6 pl-4 border-l border-border/50 py-1 space-y-0.5">
                       {item.shortcuts.map((shortcut, idx) => {
                         const isShortcutActive = pathname === shortcut.href;
+                        const isVisible = hoveredItemId === item.id;
                         return (
                           <Link
                             key={idx}
@@ -352,11 +398,10 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                                 ? "text-primary font-semibold bg-primary/10" 
                                 : "text-muted-foreground hover:text-primary hover:bg-primary/5"}
                               /* Staggered-like entry effect */
-                              opacity-0 group-hover/nav-item:opacity-100
-                              translate-x-[-10px] group-hover/nav-item:translate-x-0
+                              ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-[-10px]"}
                               transition-all duration-300
                             `}
-                            style={{ transitionDelay: `${idx * 50}ms` }}
+                            style={{ transitionDelay: isVisible ? `${idx * 50}ms` : "0ms" }}
                           >
                             {shortcut.label}
                           </Link>
