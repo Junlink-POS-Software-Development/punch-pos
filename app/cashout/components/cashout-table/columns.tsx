@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 import { ColumnDef } from "@tanstack/react-table";
 import { CashoutRecord, CashoutType } from "../../lib/cashout.api";
 import { Trash2, ArrowUpDown, Truck, Lightbulb, ArrowRight, Store, Edit2, Check, X as CloseX, Loader2 } from "lucide-react";
@@ -70,15 +71,15 @@ export const getColumns = (
 
       if (isEditing) {
         return (
-          <select 
+          <StandardSelect 
             name="category"
             defaultValue={category}
-            className="w-full bg-muted border border-border rounded px-2 py-1 text-xs text-foreground outline-none"
+            className="py-1 px-2 h-8"
           >
-            <option value="COGS">COGS</option>
-            <option value="OPEX">OPEX</option>
-            <option value="REMITTANCE">REMITTANCE</option>
-          </select>
+            <option value="COGS" className="bg-background">COGS</option>
+            <option value="OPEX" className="bg-background">OPEX</option>
+            <option value="REMITTANCE" className="bg-background">REMITTANCE</option>
+          </StandardSelect>
         );
       }
       

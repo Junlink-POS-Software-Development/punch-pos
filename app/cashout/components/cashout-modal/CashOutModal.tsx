@@ -205,21 +205,16 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Amount Taken</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-muted-foreground text-xl font-bold">₱</span>
-                </div>
                 <input
                   type="number"
                   name="amount"
-                  className="pl-12 w-full border-input rounded-xl shadow-sm focus:ring-2 focus:ring-ring focus:border-ring text-3xl font-bold py-3 border text-foreground bg-muted/20 focus:bg-card transition-colors placeholder-muted-foreground/50"
+                  className="px-5 w-full border-input rounded-xl shadow-sm focus:ring-2 focus:ring-ring focus:border-ring text-3xl font-bold py-3 border text-foreground bg-muted/20 focus:bg-card transition-colors placeholder-muted-foreground/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0.00"
                   value={baseData.amount}
                   onChange={(e) => setBaseData({...baseData, amount: e.target.value})}
                   onKeyDown={(e) => handleKeyDown(e, "date")}
                   autoFocus
                 />
-              </div>
             </div>
             <div className="w-1/3">
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Date</label>
@@ -254,20 +249,15 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
             <label className="block text-sm font-medium text-foreground mb-2">
                 Description / Notes <span className="text-muted-foreground font-normal">(Optional)</span>
             </label>
-            <div className="relative">
-                <div className="absolute top-3 left-3 text-muted-foreground">
-                    <FileText size={16} />
-                </div>
                 <textarea
                 name="notes"
-                className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring border p-3 pl-11 text-sm bg-muted/20 focus:bg-card transition-colors text-foreground"
-                rows={2}
+                className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring border p-3 px-4 text-sm bg-muted/20 focus:bg-card transition-colors text-foreground"
+                rows={3}
                 placeholder="Add any additional details regarding this transaction..."
                 value={baseData.notes}
                 onChange={(e) => setBaseData({...baseData, notes: e.target.value})}
                 onKeyDown={(e) => handleKeyDown(e)}
                 />
-            </div>
           </div>
         </div>
 

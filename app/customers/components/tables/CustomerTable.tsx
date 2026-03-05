@@ -3,6 +3,7 @@ import { Edit2, Trash2, CheckSquare, Square, MoreHorizontal, Lock, Unlock, Arrow
 import { useCustomerData, useCustomerMutations } from "../../hooks/useCustomerData";
 import { useCustomerStore } from "../../store/useCustomerStore";
 import { updateCustomerGroup, deleteCustomer, bulkUpdateCustomerGroup, toggleCustomerLock } from "../../api/services";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 // Helper function to parse name parts from a full name
 const parseNameParts = (fullName: string) => {
@@ -137,18 +138,19 @@ export const CustomerTable = () => {
             {selectedCustomerIds.size} selected
           </span>
           <div className="flex items-center gap-3">
-             <span className="text-muted-foreground text-xs">Move to:</span>
-             <select
+              <StandardSelect
                 onChange={(e) => handleBulkMove(e.target.value)}
-                className="bg-background border border-input text-xs text-foreground rounded px-2 py-1.5 outline-none focus:border-ring"
                 defaultValue=""
-             >
-                <option value="" disabled>Select Group</option>
-                <option value="ungrouped">Ungrouped</option>
+                className="py-1 px-2 h-8 min-w-[120px]"
+                containerClassName="flex-row items-center gap-2 space-y-0"
+                label="Move to:"
+              >
+                <option value="" disabled className="bg-background">Select Group</option>
+                <option value="ungrouped" className="bg-background">Ungrouped</option>
                 {groups.map((g) => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
+                  <option key={g.id} value={g.id} className="bg-background">{g.name}</option>
                 ))}
-             </select>
+              </StandardSelect>
           </div>
         </div>
       )}
@@ -219,18 +221,17 @@ export const CustomerTable = () => {
                   </td>
                   <td className="p-5 text-muted-foreground">{c.phone_number || "-"}</td>
                   <td className="p-5">
-                     <select
+                     <StandardSelect
                       value={c.group_id || "ungrouped"}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleGroupChange(c.id, e.target.value, isLocked)}
-                      className={`bg-background border border-input text-xs text-foreground rounded px-2 py-1 outline-none focus:border-ring ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      // disabled={isLocked} // Optional: strictly disable it
+                      className={`py-1 px-2 h-8 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <option value="ungrouped">Ungrouped</option>
+                      <option value="ungrouped" className="bg-background">Ungrouped</option>
                       {groups.map((g) => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
+                        <option key={g.id} value={g.id} className="bg-background">{g.name}</option>
                       ))}
-                    </select>
+                    </StandardSelect>
                   </td>
                   <td className="p-5 text-right">
                     <div className="flex justify-end gap-2">

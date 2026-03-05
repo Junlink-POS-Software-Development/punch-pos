@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, ChevronDown } from "lucide-react";
 import { Category } from "../../../hooks/useCategories";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 interface SingleItemFormProps {
   formData: {
@@ -115,31 +116,25 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
             placeholder="e.g., Croissant"
           />
         </div>
-        <div className="space-y-2.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1">
-            Category
-          </label>
-          <select
+          <StandardSelect
             ref={categoryRef}
+            label="Category"
             value={formData.category}
             onChange={(e) => {
               setFormData({ ...formData, category: e.target.value });
-              // After selection, proceed to description
               if (e.target.value) {
                 descriptionRef.current?.focus();
               }
             }}
             onKeyDown={(e) => handleKeyDown(e, descriptionRef)}
-            className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer text-foreground shadow-inner"
           >
-            <option value="" className="bg-slate-900">Select Category</option>
+            <option value="" className="bg-background">Select Category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id} className="bg-slate-900">
+              <option key={cat.id} value={cat.id} className="bg-background">
                 {cat.category}
               </option>
             ))}
-          </select>
-        </div>
+          </StandardSelect>
       </div>
 
       {/* Description Row */}

@@ -8,7 +8,8 @@ import {
   useReactTable,
   ColumnDef,
 } from "@tanstack/react-table";
-import { X, Filter, Loader2, RefreshCw } from "lucide-react";
+import { X, Filter, Loader2, RefreshCw, ChevronDown } from "lucide-react";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 import dayjs from "dayjs";
 import {
   fetchCashFlowLedger,
@@ -215,23 +216,20 @@ export function CashFlowModal({ isOpen, onClose, isMultiDrawer = false }: CashFl
         <div className="flex flex-wrap items-end gap-4 px-5 py-3 border-b border-border bg-muted/30 shrink-0">
           {/* Category Dropdown — only in multi-drawer mode */}
           {isMultiDrawer && (
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                <Filter className="w-3 h-3" /> Category
-              </label>
-              <select
+              <StandardSelect
                 value={activeCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="block bg-card p-2 border border-border focus:border-emerald-500 rounded-lg focus:ring-emerald-500 w-full md:w-48 text-foreground text-sm outline-none"
+                label="Category"
+                containerClassName="w-full md:w-48"
+                className="py-2 h-10"
               >
-                {categories.length === 0 && <option>Loading...</option>}
+                {categories.length === 0 && <option className="bg-background">Loading...</option>}
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
+                  <option key={cat} value={cat} className="bg-background">
                     {cat}
                   </option>
                 ))}
-              </select>
-            </div>
+              </StandardSelect>
           )}
 
           {/* Date Range */}

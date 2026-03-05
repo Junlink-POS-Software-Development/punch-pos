@@ -6,6 +6,7 @@ import { getStoreInfo, updateStoreInfo, uploadStoreLogo } from "@/app/actions/st
 import imageCompression from "browser-image-compression";
 import { CurrencySelector } from "./CurrencySelector";
 import { useAuthStore } from "@/store/useAuthStore";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 export function StoreDetailsSection() {
   const { user } = useAuthStore();
@@ -227,21 +228,14 @@ export function StoreDetailsSection() {
                 </div>
 
                 <div className="space-y-2.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 ml-1 flex items-center gap-2">
-                        <Clock className="w-3 h-3" /> System Timezone
-                    </label>
-                    <div className="relative">
-                        <select className="w-full appearance-none bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer">
-                            <option>Asia/Manila (GMT+8)</option>
-                            <option>America/New_York (GMT-5)</option>
-                            <option>Europe/London (GMT+0)</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground/50">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
+                    <StandardSelect
+                        label="System Timezone"
+                        className="cursor-pointer"
+                    >
+                        <option className="bg-background">Asia/Manila (GMT+8)</option>
+                        <option className="bg-background">America/New_York (GMT-5)</option>
+                        <option className="bg-background">Europe/London (GMT+0)</option>
+                    </StandardSelect>
                 </div>
 
                 <div className="space-y-2.5">

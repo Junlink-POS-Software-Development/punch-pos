@@ -9,7 +9,8 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 
-import { Filter, Loader2, Download } from "lucide-react";
+import { Filter, Loader2, Download, ChevronDown } from "lucide-react";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 import {
   fetchCashFlowLedger,
   fetchFlowCategories,
@@ -135,52 +136,49 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* --- Controls Header --- */}
-      <div className="flex md:flex-row flex-col justify-between items-end md:items-center gap-4 bg-slate-900/50 p-4 border border-slate-800 rounded-xl glass-effect">
+      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 bg-card/50 p-4 border border-border rounded-xl backdrop-blur-sm">
         {/* Left: Filters */}
-        <div className="flex md:flex-row flex-col gap-4 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           {/* Category Dropdown */}
-          <div className="flex flex-col gap-1.5">
-            <label className="flex items-center gap-2 font-medium text-slate-400 text-xs uppercase tracking-wider">
-              <Filter className="w-3 h-3" /> Category
-            </label>
-            <select
-              value={activeCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="block bg-slate-800 p-2.5 border border-slate-700 focus:border-blue-500 rounded-lg focus:ring-blue-500 w-full md:w-48 text-white text-sm"
-            >
-              {categories.length === 0 && <option>Loading...</option>}
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
+          <StandardSelect
+            ref={null}
+            label="Category"
+            value={activeCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            containerClassName="w-full md:w-48"
+          >
+            {categories.length === 0 && <option className="bg-background">Loading...</option>}
+            {categories.map((cat) => (
+              <option key={cat} value={cat} className="bg-background">
+                {cat}
+              </option>
+            ))}
+          </StandardSelect>
         </div>
 
         {/* Right: Actions */}
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 border border-slate-700 rounded-lg font-medium text-slate-300 text-sm transition-colors">
+          <button className="flex items-center gap-2 bg-muted hover:bg-muted/80 px-4 py-2 border border-border rounded-lg font-medium text-foreground text-sm transition-colors">
             <Download className="w-4 h-4" /> Export CSV
           </button>
         </div>
       </div>
 
       {/* --- Data Table --- */}
-      <div className="border border-slate-800 rounded-md overflow-hidden">
+      <div className="border border-border rounded-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             {/* Header */}
-            <thead className="bg-slate-900">
+            <thead className="bg-muted/50">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr
                   key={headerGroup.id}
-                  className="border-slate-700 border-b-2"
+                  className="border-border border-b-2"
                 >
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-sm uppercase tracking-wider"
+                      className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground"
                     >
                       {header.isPlaceholder
                         ? null
@@ -195,7 +193,7 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
             </thead>
 
             {/* Body */}
-            <tbody className="bg-slate-900/50 text-slate-200">
+            <tbody className="bg-card/30 text-foreground">
               {isLoading ? (
                 <tr>
                   <td colSpan={columns.length} className="h-32 text-center">
@@ -206,7 +204,7 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="hover:bg-slate-800/80 border-slate-800 border-b transition-colors"
+                    className="hover:bg-muted/50 border-border border-b transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-4 py-3">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, TrendingDown, RefreshCcw } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCcw, ChevronDown } from "lucide-react";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 interface PerformanceCardProps {
   bestSellersQuery: any;
@@ -36,14 +37,15 @@ export function PerformanceCard({ bestSellersQuery, worstSellersQuery }: Perform
           >
             <RefreshCcw size={12} className={isFetching ? "animate-spin" : ""} />
           </button>
-          <select 
-            value={view} 
+          <StandardSelect
+            value={view}
             onChange={(e) => setView(e.target.value as any)}
-            className="text-[10px] bg-muted border border-border rounded px-2 py-1 text-foreground cursor-pointer outline-none focus:ring-1 focus:ring-primary/20"
+            className="text-[10px] py-1 px-2 h-8 min-w-[70px]"
+            containerClassName="mb-0"
           >
-            <option value="best">Best</option>
-            <option value="worst">Worst</option>
-          </select>
+            <option value="best" className="bg-background">Best</option>
+            <option value="worst" className="bg-background">Worst</option>
+          </StandardSelect>
         </div>
       </div>
 

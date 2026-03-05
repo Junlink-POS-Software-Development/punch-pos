@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useClassifications } from "../../hooks/useClassifications";
 import { Classification } from "../../lib/cashout.api";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 interface ClassificationManagerProps {
   isOpen: boolean;
@@ -142,19 +143,17 @@ export const ClassificationManager = ({ isOpen, onClose }: ClassificationManager
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Transfer transactions to:</label>
-                <select 
-                  className="w-full bg-muted/20 border border-border rounded-lg p-2.5 text-sm text-foreground focus:ring-ring"
+                <StandardSelect 
+                  label="Transfer transactions to:"
                   value={transferToId}
                   onChange={(e) => setTransferToId(e.target.value)}
+                  className="py-2 h-10"
                 >
-                  <option value="">Select a new category...</option>
+                  <option value="" className="bg-background">Select a new category...</option>
                   {classifications.filter(c => c.id !== deletingId).map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id} className="bg-background">{c.name}</option>
                   ))}
-                </select>
-              </div>
+                </StandardSelect>
 
               <div className="flex gap-3 pt-2">
                 <button 

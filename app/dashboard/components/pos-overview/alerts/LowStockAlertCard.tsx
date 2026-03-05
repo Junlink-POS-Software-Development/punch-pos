@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 interface LowStockAlertCardProps {
   query: any; // Result from useInfiniteQuery
@@ -41,20 +42,21 @@ export function LowStockAlertCard({ query }: LowStockAlertCardProps) {
             Low Stock Alert
           </h3>
         </div>
-        <select 
-          value={lowStockLimit} 
+        <StandardSelect
+          value={lowStockLimit}
           onChange={(e) => {
             const val = e.target.value;
             setLowStockLimit(val === "all" ? "all" : Number(val));
           }}
-          className="text-xs bg-muted border border-border rounded px-2 py-1 text-foreground cursor-pointer outline-none focus:ring-1 focus:ring-primary/20"
+          className="text-[10px] py-1 px-2 h-8 min-w-[80px]"
+          containerClassName="mb-0"
         >
-          <option value={5}>Top 5</option>
-          <option value={10}>Top 10</option>
-          <option value={15}>Top 15</option>
-          <option value={20}>Top 20</option>
-          <option value="all">Show All</option>
-        </select>
+          <option value={5} className="bg-background">Top 5</option>
+          <option value={10} className="bg-background">Top 10</option>
+          <option value={15} className="bg-background">Top 15</option>
+          <option value={20} className="bg-background">Top 20</option>
+          <option value="all" className="bg-background">Show All</option>
+        </StandardSelect>
       </div>
       <div 
         ref={scrollRef}

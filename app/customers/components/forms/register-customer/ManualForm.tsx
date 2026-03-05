@@ -1,6 +1,7 @@
 import { UseFormRegister, FieldErrors } from "react-hook-form";
-import { User, Phone, Mail, Users, MapPin, Calendar, Heart, FileText } from "lucide-react";
+import { User, Phone, Mail, Users, MapPin, Calendar, Heart, FileText, ChevronDown } from "lucide-react";
 import { CustomerFormValues, CustomerGroup } from "../../../lib/types";
+import { StandardSelect } from "@/components/reusables/StandardSelect";
 
 interface ManualFormProps {
   register: UseFormRegister<CustomerFormValues>;
@@ -79,28 +80,19 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
-            <Users className="w-4 h-4 text-primary" /> Customer Group *
-          </label>
-          <select
-            {...register("group_id")}
-            onKeyDown={(e) => handleKeyDown(e, "address")}
-            className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.group_id ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
-          >
-            <option value="">Select Group</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-          {errors.group_id && (
-            <p className="text-red-400 text-xs">
-              {errors.group_id.message}
-            </p>
-          )}
-        </div>
+        <StandardSelect
+          label="Customer Group *"
+          {...register("group_id")}
+          error={errors.group_id?.message as string}
+          onKeyDown={(e) => handleKeyDown(e, "address")}
+        >
+          <option value="" className="bg-background">Select Group</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id} className="bg-background">
+              {g.name}
+            </option>
+          ))}
+        </StandardSelect>
       </div>
 
       {/* ROW 3: Address */}
@@ -111,7 +103,7 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
         <input
           {...register("address")}
           onKeyDown={(e) => handleKeyDown(e, "birthdate")}
-          className="bg-slate-950/50 focus:bg-slate-950 px-4 py-3 border border-slate-800 focus:border-cyan-500/50 rounded-xl focus:outline-none w-full text-white placeholder:text-slate-600 transition-all"
+          className="bg-muted/50 focus:bg-muted px-4 py-3 border border-border focus:border-primary rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all shadow-inner"
           placeholder="House No, Street, Barangay, City"
         />
       </div>
@@ -154,49 +146,31 @@ export const ManualForm = ({ register, errors, groups }: ManualFormProps) => {
 
       {/* ROW 5: Civil Status & Gender */}
       <div className="gap-4 grid md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
-            <Heart className="w-4 h-4 text-primary" /> Civil Status *
-          </label>
-          <select
-            {...register("civil_status")}
-            onKeyDown={(e) => handleKeyDown(e, "gender")}
-            className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.civil_status ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
-          >
-            <option value="">Select Status</option>
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-            <option value="Widowed">Widowed</option>
-            <option value="Divorced">Divorced</option>
-            <option value="Separated">Separated</option>
-          </select>
-          {errors.civil_status && (
-            <p className="text-red-400 text-xs">
-              {errors.civil_status.message}
-            </p>
-          )}
-        </div>
+        <StandardSelect
+          label="Civil Status *"
+          {...register("civil_status")}
+          error={errors.civil_status?.message as string}
+          onKeyDown={(e) => handleKeyDown(e, "gender")}
+        >
+          <option value="" className="bg-background">Select Status</option>
+          <option value="Single" className="bg-background">Single</option>
+          <option value="Married" className="bg-background">Married</option>
+          <option value="Widowed" className="bg-background">Widowed</option>
+          <option value="Divorced" className="bg-background">Divorced</option>
+          <option value="Separated" className="bg-background">Separated</option>
+        </StandardSelect>
 
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
-            <User className="w-4 h-4 text-primary" /> Gender *
-          </label>
-          <select
-            {...register("gender")}
-            onKeyDown={(e) => handleKeyDown(e, "remarks")}
-            className={`bg-muted/50 focus:bg-muted px-4 py-3 border ${errors.gender ? 'border-red-500/50' : 'border-border'} focus:border-primary/50 rounded-xl focus:outline-none w-full text-foreground placeholder:text-muted-foreground/60 transition-all appearance-none`}
-          >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Not Specified">Not Specified</option>
-          </select>
-          {errors.gender && (
-            <p className="text-red-400 text-xs">
-              {errors.gender.message}
-            </p>
-          )}
-        </div>
+        <StandardSelect
+          label="Gender *"
+          {...register("gender")}
+          error={errors.gender?.message as string}
+          onKeyDown={(e) => handleKeyDown(e, "remarks")}
+        >
+          <option value="" className="bg-background">Select Gender</option>
+          <option value="Male" className="bg-background">Male</option>
+          <option value="Female" className="bg-background">Female</option>
+          <option value="Not Specified" className="bg-background">Not Specified</option>
+        </StandardSelect>
       </div>
 
       {/* ROW 5: Remarks */}
