@@ -18,7 +18,7 @@ interface VitalsGridProps {
   isHighRisk: boolean;
   isHistorical: boolean;
   isMultiDrawer: boolean;
-  categorySales: { category: string; cash_in: number }[];
+  categorySales: { category: string; cash_in: number; balance: number }[];
   isFetching?: boolean;
   lastUpdatedAt?: number;
 }
@@ -268,11 +268,16 @@ export function VitalsGrid({
                     key={entry.category}
                     className="flex items-center justify-between text-[11px] bg-muted/40 px-2.5 py-1.5 rounded-lg"
                   >
-                    <span className="text-muted-foreground font-medium truncate mr-2">
-                      {entry.category}
-                    </span>
+                    <div className="flex flex-col mr-2 truncate">
+                      <span className="text-muted-foreground font-medium truncate">
+                        {entry.category}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground/70">
+                        Sales: ₱{entry.cash_in.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
                     <span className="font-mono font-semibold text-foreground whitespace-nowrap">
-                      ₱{entry.cash_in.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ₱{entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))}

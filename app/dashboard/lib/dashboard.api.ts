@@ -268,16 +268,16 @@ export const fetchDrawerMode = async (): Promise<DrawerMode> => {
 
 export const fetchLatestCategorySales = async (
   date: string = dayjs().format("YYYY-MM-DD")
-): Promise<{ category: string; cash_in: number }[]> => {
+): Promise<{ category: string; cash_in: number; balance: number }[]> => {
   const supabase = await getSupabase();
   const storeId = await getStoreId();
 
   // Get the latest row per category up to the given date
   const { data, error } = await supabase
     .from("categorical_cash_flow")
-    .select("category, cash_in, date")
+    .select("category, cash_in, balance, date")
     .eq("store_id", storeId)
-    .eq("date", date)
+    .lte("date", date)
     .order("date", { ascending: false });
 
   if (error) {
@@ -289,11 +289,20 @@ export const fetchLatestCategorySales = async (
 
   // Deduplicate by category — keep the latest (first) row per category
   const seen = new Set<string>();
-  const result: { category: string; cash_in: number }[] = [];
+  const result: { category: string; cash_in: number; balance: number }[] = [];
   for (const row of data) {
     if (!seen.has(row.category)) {
       seen.add(row.category);
-      result.push({ category: row.category, cash_in: Number(row.cash_in) || 0 });
+      
+      // If the latest row is from a previous date, today's cash_in shouldn't include that old 
+      // row's cash_in. Instead, the balance is forwarded, but cash_in for "today" is 0.
+      const isToday = row.date === date;
+
+      result.push({ 
+        category: row.category, 
+        cash_in: isToday ? (Number(row.cash_in) || 0) : 0,
+        balance: Number(row.balance) || 0 
+      });
     }
   }
 
