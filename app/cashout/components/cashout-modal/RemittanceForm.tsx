@@ -1,39 +1,48 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Landmark, ShieldCheck, User, Briefcase } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { CashoutInput } from "../../lib/cashout.api";
+import { useRemittanceCategories } from "../../hooks/useRemittanceCategories";
 
 interface RemittanceFormProps {
   data: Partial<CashoutInput>;
   onChange: (data: Partial<CashoutInput>) => void;
 }
 
-const REMITTANCE_TYPES = [
-  { id: 'bank', label: 'Transfer to Bank', icon: <Landmark size={20} className="text-blue-600"/> },
-  { id: 'safe', label: 'Transfer to Safe', icon: <ShieldCheck size={20} className="text-green-600"/> },
-  { id: 'manager', label: 'Remit to Manager', icon: <User size={20} className="text-purple-600"/> },
-  { id: 'drawings', label: "Owner's Drawings", icon: <Briefcase size={20} className="text-orange-600"/> },
-];
-
 const generateRefNumber = () => `REF-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 100)}`;
 
 export const RemittanceForm = ({ data, onChange }: RemittanceFormProps) => {
-  const { subType, referenceNo } = data;
+  const { referenceNo, remittance_category_id } = data;
+  const { categories, isLoading } = useRemittanceCategories();
 
   useEffect(() => {
     // Generate ref number on mount if not present
     if (!referenceNo) {
-        onChange({ ...data, referenceNo: generateRefNumber(), subType: subType || 'bank' });
+        onChange({ ...data, referenceNo: generateRefNumber() });
     }
   }, []);
 
+  // Auto-select first category if none selected
+  useEffect(() => {
+    if (!remittance_category_id && categories.length > 0) {
+      const first = categories[0];
+      onChange({
+        ...data,
+        remittance_category_id: first.id,
+        subType: first.name,
+        subTypeLabel: first.name,
+      });
+    }
+  }, [categories, remittance_category_id]);
+
   const handleTypeChange = (id: string) => {
-      const type = REMITTANCE_TYPES.find(r => r.id === id);
+      const cat = categories.find(c => c.id === id);
       onChange({
           ...data, 
-          subType: id, 
-          subTypeLabel: type?.label
+          remittance_category_id: id,
+          subType: cat?.name,
+          subTypeLabel: cat?.name,
       });
   };
 
@@ -54,33 +63,43 @@ export const RemittanceForm = ({ data, onChange }: RemittanceFormProps) => {
 
       <div>
         <label className="block text-sm font-medium text-foreground mb-3">Transfer Destination</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {REMITTANCE_TYPES.map((type) => (
-            <label 
-                key={type.id} 
-                className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all relative overflow-hidden ${
-                    subType === type.id 
-                    ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' 
-                    : 'bg-card hover:bg-muted/50 hover:border-border'
-                }`}
-            >
-              <input 
-                type="radio" 
-                name="remitType" 
-                className="sr-only" // Hide default radio
-                checked={subType === type.id}
-                onChange={() => handleTypeChange(type.id)}
-              />
-              {/* Custom Radio Circle */}
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${subType === type.id ? 'border-primary' : 'border-muted-foreground'}`}>
-                  {subType === type.id && <div className="w-2 h-2 rounded-full bg-primary"></div>}
-              </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6 text-muted-foreground gap-2">
+            <Loader2 size={16} className="animate-spin" />
+            <span className="text-sm">Loading categories...</span>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground text-sm">
+            No remittance categories found. Please add categories in the database.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {categories.map((cat) => (
+              <label 
+                  key={cat.id} 
+                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all relative overflow-hidden ${
+                      remittance_category_id === cat.id 
+                      ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' 
+                      : 'bg-card hover:bg-muted/50 hover:border-border'
+                  }`}
+              >
+                <input 
+                  type="radio" 
+                  name="remitType" 
+                  className="sr-only"
+                  checked={remittance_category_id === cat.id}
+                  onChange={() => handleTypeChange(cat.id)}
+                />
+                {/* Custom Radio Circle */}
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${remittance_category_id === cat.id ? 'border-primary' : 'border-muted-foreground'}`}>
+                    {remittance_category_id === cat.id && <div className="w-2 h-2 rounded-full bg-primary"></div>}
+                </div>
 
-              <div className="p-1.5 bg-muted rounded-lg">{type.icon}</div>
-              <span className="text-sm font-medium text-foreground">{type.label}</span>
-            </label>
-          ))}
-        </div>
+                <span className="text-sm font-medium text-foreground">{cat.name}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

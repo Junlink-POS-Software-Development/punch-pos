@@ -179,7 +179,7 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
               </div>
               {editData ? "Edit Cash Out" : "Record Cash Out"}
             </h2>
-            <p className="text-xs text-muted-foreground mt-1 ml-11">Punch POS • Drawer #1 • Session ID: 9942</p>
+            <p className="text-xs text-muted-foreground mt-1 ml-11">Manage your store's outgoing cash flow and expenses</p>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors">
             <X size={24} />
@@ -212,7 +212,7 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
                 <input
                   type="number"
                   name="amount"
-                  className="pl-8 w-full border-input rounded-xl shadow-sm focus:ring-2 focus:ring-ring focus:border-ring text-3xl font-bold py-3 border text-foreground bg-muted/20 focus:bg-card transition-colors placeholder-muted-foreground/50"
+                  className="pl-12 w-full border-input rounded-xl shadow-sm focus:ring-2 focus:ring-ring focus:border-ring text-3xl font-bold py-3 border text-foreground bg-muted/20 focus:bg-card transition-colors placeholder-muted-foreground/50"
                   placeholder="0.00"
                   value={baseData.amount}
                   onChange={(e) => setBaseData({...baseData, amount: e.target.value})}
@@ -260,7 +260,7 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
                 </div>
                 <textarea
                 name="notes"
-                className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring border p-3 pl-9 text-sm bg-muted/20 focus:bg-card transition-colors text-foreground"
+                className="w-full border-input rounded-xl shadow-sm focus:ring-ring focus:border-ring border p-3 pl-11 text-sm bg-muted/20 focus:bg-card transition-colors text-foreground"
                 rows={2}
                 placeholder="Add any additional details regarding this transaction..."
                 value={baseData.notes}

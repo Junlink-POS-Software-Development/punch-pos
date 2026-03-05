@@ -1,29 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Store, Plus, Settings, Lightbulb, Wifi, Coffee, Wrench, Truck, Briefcase, ShieldCheck, User, DollarSign } from "lucide-react";
+import { Store, Plus, Settings } from "lucide-react";
 import { CashoutInput } from "../../lib/cashout.api";
 import { useClassifications } from "../../hooks/useClassifications";
-import { ClassificationManager } from "./ClassificationManager";
+import { ClassificationManager, ICON_MAP } from "./ClassificationManager";
 
 interface OpexFormProps {
   data: Partial<CashoutInput>;
   onChange: (data: Partial<CashoutInput>) => void;
 }
-
-// Icon Map for Dynamic OpEx Categories
-const ICON_MAP: Record<string, React.ReactNode> = {
-  Lightbulb: <Lightbulb size={20} />,
-  Wifi: <Wifi size={20} />,
-  Coffee: <Coffee size={20} />,
-  Wrench: <Wrench size={20} />,
-  Store: <Store size={20} />,
-  Truck: <Truck size={20} />,
-  Briefcase: <Briefcase size={20} />,
-  ShieldCheck: <ShieldCheck size={20} />,
-  User: <User size={20} />,
-  DollarSign: <DollarSign size={20} />
-};
 
 export const OpexForm = ({ data, onChange }: OpexFormProps) => {
   const { classifications, isLoading } = useClassifications();

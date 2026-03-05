@@ -54,6 +54,8 @@ interface RawExpenseRow extends ExpenseRowDB {
     name: string;
   } | null;
   cashout_type: CashoutType | null;
+  metadata: Record<string, any> | null;
+  remittance_category_id: string | null;
 }
 
 // --- TYPES ---
@@ -80,6 +82,13 @@ export interface CashoutInput {
   expenseCategory?: string;
   icon?: string;
   category_id?: string; // For Drawer / Source of Funds
+  remittance_category_id?: string; // FK to remittance_categories table
+}
+
+export interface RemittanceCategory {
+  id: string;
+  name: string;
+  created_at?: string;
 }
 
 export interface CashoutRecord {
@@ -240,25 +249,30 @@ export const fetchExpenses = async (
   if (error) throw new Error(error.message);
 
   return (data || []).map(
-    (row: RawExpenseRow): CashoutRecord => ({
-      id: row.id,
-      date: row.transaction_date,
-      timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      created_at: row.created_at,
-      // Map the joined name to the flat object for the UI
-      category: row.cashout_type || 'OPEX', // Default fallback
-      amount: row.amount,
-      receiptNo: row.receipt_no ?? "",
-      notes: row.notes ?? "",
-      
-      // Details
-      expenseCategory: row.classification_details?.name ?? (row.cashout_type === 'OPEX' ? "Unclassified" : undefined),
-      product: row.product_category?.category ?? (row.source || undefined), // fallback handling
-      classificationId: row.classification_id || undefined,
-      categoryId: row.category_id || undefined,
-      drawerName: row.product_category?.category ?? undefined,
-      // We might need to handle other fields based on the raw data
-    })
+    (row: RawExpenseRow): CashoutRecord => {
+      const meta = row.metadata || {};
+      return {
+        id: row.id,
+        date: row.transaction_date,
+        timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        created_at: row.created_at,
+        category: row.cashout_type || 'OPEX',
+        amount: row.amount,
+        receiptNo: row.receipt_no ?? "",
+        notes: row.notes ?? "",
+        
+        // Details — extract from metadata first, fallback to joined relations
+        expenseCategory: meta.expenseCategory || (row.classification_details?.name ?? (row.cashout_type === 'OPEX' ? "Unclassified" : undefined)),
+        product: meta.product || (row.product_category?.category ?? (row.source || undefined)),
+        manufacturer: meta.manufacturer || undefined,
+        subTypeLabel: meta.subTypeLabel || undefined,
+        referenceNo: meta.referenceNo || undefined,
+        icon: meta.icon || undefined,
+        classificationId: row.classification_id || undefined,
+        categoryId: row.category_id || undefined,
+        drawerName: row.product_category?.category ?? undefined,
+      };
+    }
   );
 };
 
@@ -304,22 +318,30 @@ export const fetchExpensesPaginated = async (
   if (error) throw new Error(error.message);
 
   const mappedData = (data || []).map(
-    (row: RawExpenseRow): CashoutRecord => ({
-      id: row.id,
-      date: row.transaction_date,
-      timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      created_at: row.created_at,
-      category: row.cashout_type || 'OPEX',
-      amount: row.amount,
-      receiptNo: row.receipt_no ?? "",
-      notes: row.notes ?? "",
-      
-      expenseCategory: row.classification_details?.name,
-      product: row.product_category?.category ?? (row.source || undefined),
-      classificationId: row.classification_id || undefined,
-      categoryId: row.category_id || undefined,
-      drawerName: row.product_category?.category ?? undefined,
-    })
+    (row: RawExpenseRow): CashoutRecord => {
+      const meta = row.metadata || {};
+      return {
+        id: row.id,
+        date: row.transaction_date,
+        timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        created_at: row.created_at,
+        category: row.cashout_type || 'OPEX',
+        amount: row.amount,
+        receiptNo: row.receipt_no ?? "",
+        notes: row.notes ?? "",
+        
+        // Details — extract from metadata first, fallback to joined relations
+        expenseCategory: meta.expenseCategory || row.classification_details?.name,
+        product: meta.product || (row.product_category?.category ?? (row.source || undefined)),
+        manufacturer: meta.manufacturer || undefined,
+        subTypeLabel: meta.subTypeLabel || undefined,
+        referenceNo: meta.referenceNo || undefined,
+        icon: meta.icon || undefined,
+        classificationId: row.classification_id || undefined,
+        categoryId: row.category_id || undefined,
+        drawerName: row.product_category?.category ?? undefined,
+      };
+    }
   );
 
   return { data: mappedData, count: count ?? 0 };
@@ -380,7 +402,19 @@ export const createExpense = async (input: CashoutInput) => {
     throw new Error("Store ID not found for user. Please ensure you are assigned to a store.");
   }
 
-  // 3. Call the RPC
+  // 3. Build metadata from form-specific fields
+  const metadata: Record<string, any> = { ...(input.metadata || {}) };
+  if (input.product) metadata.product = input.product;
+  if (input.manufacturer) metadata.manufacturer = input.manufacturer;
+  if (input.brand) metadata.brand = input.brand;
+  if (input.specs) metadata.specs = input.specs;
+  if (input.referenceNo) metadata.referenceNo = input.referenceNo;
+  if (input.subType) metadata.subType = input.subType;
+  if (input.subTypeLabel) metadata.subTypeLabel = input.subTypeLabel;
+  if (input.expenseCategory) metadata.expenseCategory = input.expenseCategory;
+  if (input.icon) metadata.icon = input.icon;
+
+  // 4. Call the RPC
   const { error } = await supabase.rpc("insert_new_expense", {
     transaction_date_in: input.transaction_date,
     amount_in: input.amount,
@@ -388,9 +422,10 @@ export const createExpense = async (input: CashoutInput) => {
     store_id_in: storeId, 
     classification_id_in: input.classification_id || null, 
     cashout_type_in: input.cashout_type,
-    metadata_in: input.metadata || {},
+    metadata_in: metadata,
     receipt_no_in: input.receipt_no || null, 
-    category_id_in: input.category_id || null 
+    category_id_in: input.category_id || null,
+    remittance_category_id_in: input.remittance_category_id || null,
   });
 
   if (error) {
@@ -560,17 +595,30 @@ export const transferClassification = async (fromId: string, toId: string) => {
 // 9. Update Expense (Direct Update)
 export const updateExpense = async (id: string, input: CashoutInput) => {
   const supabase = await getSupabase();
+
+  // Build metadata from form-specific fields
+  const metadata: Record<string, any> = { ...(input.metadata || {}) };
+  if (input.product) metadata.product = input.product;
+  if (input.manufacturer) metadata.manufacturer = input.manufacturer;
+  if (input.brand) metadata.brand = input.brand;
+  if (input.specs) metadata.specs = input.specs;
+  if (input.referenceNo) metadata.referenceNo = input.referenceNo;
+  if (input.subType) metadata.subType = input.subType;
+  if (input.subTypeLabel) metadata.subTypeLabel = input.subTypeLabel;
+  if (input.expenseCategory) metadata.expenseCategory = input.expenseCategory;
+  if (input.icon) metadata.icon = input.icon;
   
   const { error } = await supabase
     .from("expenses")
     .update({
       transaction_date: input.transaction_date,
-      // source: input.source, // Removed or mapped?
       classification_id: input.classification_id, 
       amount: input.amount,
       receipt_no: input.receipt_no,
       notes: input.notes,
       cashout_type: input.cashout_type,
+      metadata,
+      remittance_category_id: input.remittance_category_id || null,
     })
     .eq("id", id);
 
@@ -580,7 +628,26 @@ export const updateExpense = async (id: string, input: CashoutInput) => {
   }
 };
 
-// 12. Fetch Current Balance (for monitoring)
+// 12. Fetch Remittance Categories
+export const fetchRemittanceCategories = async (): Promise<RemittanceCategory[]> => {
+  const supabase = await getSupabase();
+  
+  const { data, error, status } = await supabase
+    .from("remittance_categories")
+    .select("*")
+    .order("name", { ascending: true });
+
+  console.log("[RemittanceCategories] status:", status, "data:", data?.length ?? 0, "error:", error?.message ?? "none");
+
+  if (error) {
+    console.error("Error fetching remittance categories:", error);
+    return [];
+  }
+
+  return data || [];
+};
+
+// 13. Fetch Current Balance (for monitoring)
 export const fetchCurrentBalance = async (): Promise<number> => {
   const supabase = await getSupabase();
   

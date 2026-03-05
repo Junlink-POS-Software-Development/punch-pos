@@ -170,10 +170,44 @@ export const getColumns = (
   {
     accessorKey: "reference",
     header: "Reference / Supplier",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const record = row.original;
+      const meta = table.options.meta as CashoutTableMeta;
+      const isEditing = meta?.editingRowId === row.original.id;
 
+      if (isEditing) {
         if (record.category === "COGS") {
+          return (
+            <div className="flex flex-col gap-1.5 min-w-[130px]">
+              <input
+                name="manufacturer"
+                defaultValue={record.manufacturer || ''}
+                placeholder="Manufacturer"
+                className="w-full bg-muted border border-border rounded px-2 py-1 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary"
+              />
+              <input
+                name="receipt_no"
+                defaultValue={record.receiptNo || ''}
+                placeholder="Receipt / Invoice No."
+                className="w-full bg-muted border border-border rounded px-2 py-1 text-xs font-mono text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          );
+        }
+        if (record.category === "REMITTANCE") {
+          return (
+            <input
+              name="referenceNo"
+              defaultValue={record.referenceNo || ''}
+              placeholder="Reference No."
+              className="w-full bg-muted border border-border rounded px-2 py-1 text-xs font-mono text-foreground outline-none focus:ring-1 focus:ring-primary min-w-[130px]"
+            />
+          );
+        }
+        return <span className="text-muted-foreground/30">-</span>;
+      }
+
+      if (record.category === "COGS") {
         return (
            <div className="flex flex-col">
             <span className="font-medium text-foreground/80">{record.manufacturer || 'Unknown Mfr.'}</span>
@@ -228,7 +262,7 @@ export const getColumns = (
       const meta = table.options.meta as CashoutTableMeta;
       const isEditing = meta?.editingRowId === row.original.id;
 
-      const handleSaveInline = async (e: React.MouseEvent) => {
+      const handleSaveInline = (e: React.MouseEvent) => {
         // Find inputs in the current row
         const rowElement = (e.currentTarget as HTMLElement).closest('tr');
         if (!rowElement) return;
@@ -241,10 +275,9 @@ export const getColumns = (
           }
         });
 
-        const success = await meta.updateData(row.original.id, values);
-        if (success) {
-          meta.setEditingRowId(null);
-        }
+        // Trigger update (optimistic) and close edit mode instantly
+        meta.updateData(row.original.id, values);
+        meta.setEditingRowId(null);
       };
 
       if (isEditing) {

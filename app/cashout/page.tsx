@@ -12,6 +12,7 @@ import { CashoutRecord } from './lib/cashout.api';
 import { formatCurrency } from '@/lib/utils/currency';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDrawerMode } from '../dashboard/lib/dashboard.api';
+import { DashboardHeader } from '../dashboard/components/pos-overview/DashboardHeader';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal').then(m => m.CashOutModal), {
     ssr: false
@@ -21,7 +22,11 @@ function CashoutContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CashoutRecord | null>(null);
-  const { dateRange } = useFilterStore();
+  const { dateRange, setDateRange } = useFilterStore();
+
+  const handleDateChange = useCallback((date: string) => {
+    setDateRange({ start: date, end: date });
+  }, [setDateRange]);
 
   const { data: drawerMode = "unified" } = useQuery({
     queryKey: ["drawer-mode"],
@@ -70,6 +75,9 @@ function CashoutContent() {
         notes: values.notes,
         cashout_type: values.category,
         product: values.product,
+        manufacturer: values.manufacturer,
+        receipt_no: values.receipt_no,
+        referenceNo: values.referenceNo,
       };
       await editExpense(id, payload as any);
       return true;
@@ -93,6 +101,12 @@ function CashoutContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
         
+        <DashboardHeader 
+          selectedDate={dateRange.start} 
+          onDateChange={handleDateChange} 
+          today={new Date().toISOString().split('T')[0]} 
+        />
+
         {/* Top Summary & Actions Area */}
         <div className="flex flex-col lg:flex-row items-stretch gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 flex-1">
@@ -110,12 +124,27 @@ function CashoutContent() {
                   </div>
                   <p className="text-2xl font-bold text-foreground">{summary.totalCount}</p>
               </div>
-              <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col justify-center">
+              <div className={`p-4 rounded-xl shadow-sm border flex flex-col justify-center transition-colors ${
+                  balance < 0 
+                  ? "bg-red-500/10 border-red-500/50 text-red-600 animate-pulse" 
+                  : "bg-card border-border text-foreground"
+              }`}>
                   <div className="flex items-center gap-2 mb-1">
-                      <div className="p-1.5 bg-emerald-100/50 text-emerald-600 rounded-lg"><Wallet size={16}/></div>
-                      <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Cash Remaining</h3>
+                      <div className={`p-1.5 rounded-lg ${balance < 0 ? "bg-red-100 text-red-600" : "bg-emerald-100/50 text-emerald-600"}`}>
+                        <Wallet size={16}/>
+                      </div>
+                      <h3 className={`text-[10px] font-bold uppercase tracking-wider ${balance < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                        Total Cash Remaining
+                      </h3>
+                      {balance < 0 && (
+                        <span className="ml-auto flex items-center gap-1 text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-sm animate-bounce">
+                          NEGATIVE BALANCE
+                        </span>
+                      )}
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(balance, 'PHP')}</p>
+                  <p className={`text-2xl font-bold ${balance < 0 ? "text-red-600" : "text-foreground"}`}>
+                    {formatCurrency(balance, 'PHP')}
+                  </p>
               </div>
           </div>
           

@@ -331,6 +331,10 @@ export function useExpensesInfinite(pageSize: number = 30, dateRange?: DateRange
                   amount: input.amount,
                   notes: input.notes,
                   receiptNo: input.receipt_no,
+                  product: input.product,
+                  manufacturer: input.manufacturer,
+                  referenceNo: input.referenceNo,
+                  subTypeLabel: input.subTypeLabel,
                   _syncing: true,
                 }
               : e
