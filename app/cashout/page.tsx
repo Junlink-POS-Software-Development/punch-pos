@@ -11,7 +11,7 @@ import dynamic_next from 'next/dynamic';
 import { CashoutRecord } from './lib/cashout.api';
 import { formatCurrency } from '@/lib/utils/currency';
 import { useQuery } from '@tanstack/react-query';
-import { fetchDrawerMode } from '../dashboard/lib/dashboard.api';
+import { fetchDrawerMode, fetchLatestCategorySales } from '../dashboard/lib/dashboard.api';
 import { DashboardHeader } from '../dashboard/components/pos-overview/DashboardHeader';
 
 const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashOutModal').then(m => m.CashOutModal), {
@@ -35,6 +35,14 @@ function CashoutContent() {
   });
 
   const isMultiDrawer = drawerMode === "multiple";
+
+  // Fetch categorical cash flow breakdown only if multi-drawer is active
+  const { data: categorySales = [], isFetching: isFetchingCategorySales } = useQuery({
+    queryKey: ["daily-category-sales", dateRange.start],
+    queryFn: () => fetchLatestCategorySales(dateRange.start),
+    enabled: isMultiDrawer && !!dateRange.start,
+    staleTime: 1000 * 30,
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -142,9 +150,35 @@ function CashoutContent() {
                         </span>
                       )}
                   </div>
-                  <p className={`text-2xl font-bold ${balance < 0 ? "text-red-600" : "text-foreground"}`}>
-                    {formatCurrency(balance, 'PHP')}
-                  </p>
+                  <div className="flex items-baseline justify-between">
+                    <p className={`text-2xl font-bold ${balance < 0 ? "text-red-600" : "text-foreground"}`}>
+                      {formatCurrency(balance, 'PHP')}
+                    </p>
+                    {isFetchingCategorySales && (
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-2"></div>
+                    )}
+                  </div>
+
+                  {isMultiDrawer && categorySales.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-border/60">
+                      <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Drawer Breakdown</h4>
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                        {categorySales.map((entry) => (
+                          <div
+                            key={entry.category}
+                            className="flex items-center justify-between text-[11px] bg-muted/30 px-2 py-1.5 rounded-md"
+                          >
+                            <span className="text-muted-foreground font-medium truncate mr-2">
+                              {entry.category}
+                            </span>
+                            <span className="font-mono font-semibold text-foreground whitespace-nowrap">
+                              ₱{entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
           </div>
           
