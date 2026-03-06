@@ -1,78 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { Store, ChevronDown, Check, Loader2, AlertTriangle, ArrowRightLeft } from "lucide-react";
-import { getUserStores, switchActiveStore, getStoreInfo } from "@/app/actions/store";
-
-interface StoreEntry {
-  store_id: string;
-  store_name: string;
-  store_img: string | null;
-  role: string;
-}
+import { useStoreSwitcher } from "@/app/settings/hooks/useStoreSwitcher";
 
 export function StoreSwitcher() {
-  const [stores, setStores] = useState<StoreEntry[]>([]);
-  const [currentStoreId, setCurrentStoreId] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSwitching, setIsSwitching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchStores = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [storesResult, storeInfoResult] = await Promise.all([
-        getUserStores(),
-        getStoreInfo(),
-      ]);
-
-      if (storesResult.success && storesResult.stores) {
-        setStores(storesResult.stores);
-      }
-
-      // Identify the current store by matching the store name from getStoreInfo
-      if (storeInfoResult.success && storeInfoResult.storeName && storesResult.stores) {
-        const current = storesResult.stores.find(
-          (s) => s.store_name === storeInfoResult.storeName
-        );
-        if (current) setCurrentStoreId(current.store_id);
-      }
-    } catch (err) {
-      console.error("Failed to load stores:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStores();
-  }, [fetchStores]);
-
-  const handleSwitch = async (targetStoreId: string) => {
-    if (targetStoreId === currentStoreId || isSwitching) return;
-
-    setIsSwitching(true);
-    setError(null);
-    setIsOpen(false);
-
-    try {
-      const result = await switchActiveStore(targetStoreId);
-
-      if (!result.success) {
-        setError(result.error || "Failed to switch store");
-        setIsSwitching(false);
-        return;
-      }
-
-      // Full reload to refresh JWT claims, permissions, and all store-dependent state
-      window.location.reload();
-    } catch (err) {
-      console.error("Switch store error:", err);
-      setError((err as Error).message);
-      setIsSwitching(false);
-    }
-  };
+  const {
+    stores,
+    currentStore,
+    otherStores,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    isSwitching,
+    error,
+    handleSwitch,
+  } = useStoreSwitcher();
 
   // Don't render if loading or only 1 store (no switching needed)
   if (isLoading) {
@@ -84,9 +27,6 @@ export function StoreSwitcher() {
   }
 
   if (stores.length <= 1) return null;
-
-  const currentStore = stores.find((s) => s.store_id === currentStoreId);
-  const otherStores = stores.filter((s) => s.store_id !== currentStoreId);
 
   return (
     <div className="relative">

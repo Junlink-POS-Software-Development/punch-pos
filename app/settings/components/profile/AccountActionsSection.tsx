@@ -3,11 +3,18 @@
 import React, { useState } from "react";
 import { LogOut, ShieldEllipsis, KeyRound } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 
 export function AccountActionsSection() {
   const { signOut } = useAuthStore();
+  const queryClient = useQueryClient();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const handleSignOut = () => {
+    queryClient.clear();
+    signOut();
+  };
 
   return (
     <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-8 space-y-6">
@@ -36,7 +43,7 @@ export function AccountActionsSection() {
         </button>
 
         <button 
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             className="flex items-center gap-3 px-6 py-4 bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 rounded-xl transition-all text-left"
         >
             <div className="p-2 bg-destructive/20 rounded-lg text-destructive">

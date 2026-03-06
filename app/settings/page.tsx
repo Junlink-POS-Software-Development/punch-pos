@@ -30,22 +30,7 @@ function SettingsContent() {
     }
   }, [searchParams]);
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "profile":
-        return <ProfileTab />;
-      case "store":
-        return <StoreTab />;
-      case "preferences":
-        return <PreferencesTab />;
-      case "subscription":
-        return <SubscriptionTab />;
-      case "audit":
-        return <AuditLogsTab />;
-      default:
-        return <ProfileTab />;
-    }
-  };
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-foreground font-lexend relative items-center">
@@ -76,8 +61,20 @@ function SettingsContent() {
               </div>
           )}
 
-          <div className="animate-in fade-in zoom-in-95 duration-300">
-             {renderContent()}
+          <div style={{ display: activeTab === "profile" ? "block" : "none" }}>
+            <ProfileTab />
+          </div>
+          <div style={{ display: activeTab === "store" ? "block" : "none" }}>
+            <StoreTab />
+          </div>
+          <div style={{ display: activeTab === "preferences" ? "block" : "none" }}>
+            <PreferencesTab />
+          </div>
+          <div style={{ display: activeTab === "subscription" ? "block" : "none" }}>
+            <SubscriptionTab />
+          </div>
+          <div style={{ display: activeTab === "audit" ? "block" : "none" }}>
+            <AuditLogsTab />
           </div>
         </div>
       </div>

@@ -48,6 +48,7 @@ export function useStoreAccess() {
       };
     },
     enabled: !!user,
+    staleTime: Infinity,
   });
 
   // ─── Mutations ──────────────────────────────────────────────────────────────

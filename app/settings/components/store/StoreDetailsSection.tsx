@@ -1,133 +1,29 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { Store, Camera, Loader2, Check, Globe, DollarSign, Clock, Mail, Layout } from "lucide-react";
-import { getStoreInfo, updateStoreInfo, uploadStoreLogo } from "@/app/actions/store";
-import imageCompression from "browser-image-compression";
+import React from "react";
+import { Store, Camera, Loader2, Check, Globe, DollarSign, Mail, Layout } from "lucide-react";
 import { CurrencySelector } from "./CurrencySelector";
-import { useAuthStore } from "@/store/useAuthStore";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
+import { useStoreDetails } from "@/app/settings/hooks/useStoreDetails";
 
 export function StoreDetailsSection() {
-  const { user } = useAuthStore();
-  const [storeName, setStoreName] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [storeImg, setStoreImg] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
-  const logoInputRef = useRef<HTMLInputElement>(null);
-
-  // Original values for dirty checking
-  const [originalName, setOriginalName] = useState("");
-  const [originalImg, setOriginalImg] = useState<string | null>(null);
-  const [originalBusinessName, setOriginalBusinessName] = useState("");
-  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    const fetchStore = async () => {
-      const result = await getStoreInfo();
-      if (result.success) {
-        setStoreName(result.storeName || "");
-        setBusinessName(result.storeName || ""); // Placeholder if business name is same
-        setStoreImg(result.storeImg || null);
-        setOriginalName(result.storeName || "");
-        setOriginalBusinessName(result.storeName || "");
-        setOriginalImg(result.storeImg || null);
-      }
-      setIsLoading(false);
-    };
-    fetchStore();
-  }, []);
-
-  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingLogo(true);
-    try {
-      const options = { maxSizeMB: 0.3, maxWidthOrHeight: 512, useWebWorker: true };
-      const compressed = await imageCompression(file, options);
-      const finalFile = new File([compressed], file.name, { type: compressed.type });
-      setPendingLogoFile(finalFile);
-
-      const reader = new FileReader();
-      reader.onload = (ev) => setStoreImg(ev.target?.result as string);
-      reader.readAsDataURL(finalFile);
-    } catch (err) {
-      console.error("Logo compression failed:", err);
-    } finally {
-      setIsUploadingLogo(false);
-      if (logoInputRef.current) logoInputRef.current.value = "";
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, nextField?: string) => {
-    if (e.key === "Enter") {
-      if (e.shiftKey) return;
-      e.preventDefault();
-      
-      if (nextField) {
-        const nextInput = document.querySelector(`[name="${nextField}"]`) as HTMLElement;
-        if (nextInput) nextInput.focus();
-      } else {
-        handleSave();
-      }
-    }
-  };
-
-  const isDirty = 
-    storeName !== originalName || 
-    businessName !== originalBusinessName ||
-    storeImg !== originalImg || 
-    pendingLogoFile !== null;
-
-  const handleSave = async () => {
-    if (!isDirty) return;
-    setIsSaving(true);
-    setSaveStatus("idle");
-
-    try {
-      let logoUrl: string | undefined;
-
-      if (pendingLogoFile) {
-        const fd = new FormData();
-        fd.append("file", pendingLogoFile);
-        const uploadResult = await uploadStoreLogo(fd);
-        
-        if (uploadResult.success && uploadResult.url) {
-          logoUrl = uploadResult.url;
-        } else {
-          throw new Error(uploadResult.error || "Failed to upload store logo");
-        }
-      }
-
-      const result = await updateStoreInfo({
-        storeName: storeName !== originalName ? storeName : undefined,
-        storeImg: logoUrl,
-      });
-
-      if (result.success) {
-        setSaveStatus("saved");
-        setOriginalName(storeName);
-        setOriginalBusinessName(businessName);
-        if (logoUrl) {
-          setStoreImg(logoUrl);
-          setOriginalImg(logoUrl);
-        }
-        setPendingLogoFile(null);
-        window.dispatchEvent(new Event("store-updated"));
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } else {
-        setSaveStatus("error")
-      }
-    } catch {
-      setSaveStatus("error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const {
+    user,
+    isLoading,
+    storeName,
+    setStoreName,
+    businessName,
+    setBusinessName,
+    storeImg,
+    isSaving,
+    isUploadingLogo,
+    saveStatus,
+    isDirty,
+    logoInputRef,
+    handleLogoSelect,
+    handleSave,
+    handleKeyDown,
+  } = useStoreDetails();
 
   if (isLoading) {
     return (
@@ -201,7 +97,7 @@ export function StoreDetailsSection() {
                         name="businessName"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e)} // End of sequence
+                        onKeyDown={(e) => handleKeyDown(e)}
                         placeholder="Legal business name"
                         className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />

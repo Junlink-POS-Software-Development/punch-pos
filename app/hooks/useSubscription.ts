@@ -42,6 +42,7 @@ export function useSubscription() {
         return { storeId: null, subscription: null, payments: [] };
       }
     },
+    staleTime: Infinity,
   });
 
   const subscription = data?.subscription || null;
