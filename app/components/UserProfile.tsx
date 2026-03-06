@@ -40,31 +40,43 @@ const UserProfile = ({
 
   const displayEmail = currentUser?.email || "No active session";
   const displayRole = currentUser ? "Authenticated" : "Visitor";
+  const avatarUrl = currentUser?.user_metadata?.avatar_url;
 
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex justify-center items-center rounded-full ring-2 ring-transparent hover:ring-cyan-500/50 w-9 h-9 transition-all active:scale-95 ${
-          currentUser
+        className={`flex justify-center items-center rounded-full ring-2 ring-transparent hover:ring-cyan-500/50 w-9 h-9 transition-all active:scale-95 overflow-hidden ${
+          currentUser && !avatarUrl
             ? "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20"
+            : currentUser && avatarUrl 
+            ? "shadow-lg shadow-cyan-500/20" 
             : "bg-slate-700"
         }`}
       >
-        <UserIcon className="w-4 h-4 text-white" />
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+        ) : (
+          <UserIcon className="w-4 h-4 text-white" />
+        )}
       </button>
 
       {isOpen && (
         <div className="right-0 z-50 absolute bg-[#0f172a]/95 backdrop-blur-xl shadow-2xl mt-4 border border-slate-700/50 rounded-2xl w-64 overflow-hidden origin-top-right animate-in duration-200 fade-in zoom-in-95 slide-in-from-top-2">
-          <div className="bg-slate-800/40 p-4 border-slate-700/50 border-b">
-            <p className="font-semibold text-white text-sm truncate">{displayName}</p>
-            <p className="mt-0.5 text-slate-500 text-xs truncate">
-              {displayEmail}
-            </p>
-            <div className="mt-3">
-              <span className="inline-flex items-center bg-cyan-500/10 px-2 py-0.5 border border-cyan-500/20 rounded-md font-bold text-[10px] text-cyan-400 uppercase tracking-wider">
-                {displayRole}
-              </span>
+          <div className="bg-slate-800/40 p-4 border-slate-700/50 border-b flex items-center gap-3">
+            {avatarUrl && (
+              <img src={avatarUrl} alt={displayName} className="w-10 h-10 rounded-full object-cover border border-slate-700 shadow-sm shrink-0" />
+            )}
+            <div className="overflow-hidden">
+              <p className="font-semibold text-white text-sm truncate">{displayName}</p>
+              <p className="mt-0.5 text-slate-500 text-xs truncate">
+                {displayEmail}
+              </p>
+              <div className="mt-2">
+                <span className="inline-flex items-center bg-cyan-500/10 px-2 py-0.5 border border-cyan-500/20 rounded-md font-bold text-[10px] text-cyan-400 uppercase tracking-wider">
+                  {displayRole}
+                </span>
+              </div>
             </div>
           </div>
           <div className="p-1.5">
