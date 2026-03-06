@@ -25,6 +25,54 @@ export async function login(formData: SignInFormValues) {
   return { success: true };
 }
 
+export async function requestPasswordReset(email: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // In our case we are not using a magic link URL, but receiving the 6 digit OTP.
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function verifyResetOtp(email: string, token: string) {
+  const supabase = await createClient();
+
+  // Verify the OTP directly as a 'recovery' type 
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'recovery',
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  // Once the OTP is verified, the user session is authenticated. We can proceed to use updateUser
+  return { success: true };
+}
+
+export async function updatePassword(newPassword: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  // Session remains active after password change by default in Supabase.
+  revalidatePath("/settings");
+  return { success: true };
+}
+
 export async function logout() {
   const supabase = await createClient();
   

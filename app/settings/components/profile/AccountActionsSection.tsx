@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { LogOut, ShieldEllipsis, KeyRound } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
 export function AccountActionsSection() {
   const { signOut } = useAuthStore();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   return (
     <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-8 space-y-6">
@@ -21,6 +23,7 @@ export function AccountActionsSection() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button 
+            onClick={() => setShowPasswordModal(true)}
             className="flex items-center gap-3 px-6 py-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-all text-left group"
         >
             <div className="p-2 bg-muted rounded-lg group-hover:bg-primary/10 group-hover:text-primary transition-colors">
@@ -45,6 +48,10 @@ export function AccountActionsSection() {
             </div>
         </button>
       </div>
+
+      {showPasswordModal && (
+        <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+      )}
     </div>
   );
 }

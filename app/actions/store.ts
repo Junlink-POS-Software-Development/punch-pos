@@ -404,3 +404,46 @@ export async function updateDrawerMode(mode: "unified" | "multiple") {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Leaves the current store. Requires password confirmation.
+ */
+export async function leaveStore(password: string) {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { success: false, error: "Not authenticated" };
+
+    // 1. Verify Password
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: password,
+    });
+
+    if (authError) {
+      return { success: false, error: "Incorrect password." };
+    }
+
+    // 2. Remove user from store and set role to admin
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ store_id: null, role: "admin" })
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    // 3. Remove permissions
+    await supabase.from("staff_permissions").delete().eq("user_id", user.id);
+
+    // Refresh session to get updated JWT claims (so that role and store_id are null)
+    await supabase.auth.refreshSession();
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
