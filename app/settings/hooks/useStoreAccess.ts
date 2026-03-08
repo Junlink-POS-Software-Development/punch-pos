@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/useAuthStore";
 import { createClient } from "@/utils/supabase/client";
 import { decodeJwtPayload } from "@/lib/utils/jwt";
 import {
-  getStoreEnrollmentId,
-  updateStoreEnrollmentId,
+  getEnrollmentCodeStatus,
+  generateEnrollmentCode,
   joinStoreViaEnrollmentId,
 } from "@/app/actions/store";
 
@@ -16,11 +16,11 @@ export function useStoreAccess() {
   const queryClient = useQueryClient();
 
   // ─── Local State ──────────────────────────────────────────────────────────
-  const [enrollmentId, setEnrollmentId] = useState("");
   const [joinId, setJoinId] = useState("");
-  const [enrollmentMessage, setEnrollmentMessage] = useState("");
   const [joinMessage, setJoinMessage] = useState("");
+  const [codeMessage, setCodeMessage] = useState("");
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState("");
 
   // ─── Data Fetching ──────────────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
@@ -28,11 +28,10 @@ export function useStoreAccess() {
     queryFn: async () => {
       if (!user) return null;
       
-      const result = await getStoreEnrollmentId();
-      if (result.success && result.enrollmentId) {
-        setEnrollmentId(result.enrollmentId);
-      }
+      // Fetch enrollment code status
+      const codeResult = await getEnrollmentCodeStatus();
 
+      // Decode role from JWT
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -43,7 +42,8 @@ export function useStoreAccess() {
       }
 
       return {
-        enrollmentId: result.success ? result.enrollmentId : null,
+        code: codeResult.success ? codeResult.code : null,
+        expiresAt: codeResult.success ? codeResult.expiresAt : null,
         role: userRole,
       };
     },
@@ -51,19 +51,48 @@ export function useStoreAccess() {
     staleTime: Infinity,
   });
 
+  // ─── Countdown Timer ─────────────────────────────────────────────────────
+  const calculateTimeRemaining = useCallback(() => {
+    if (!data?.expiresAt) return "";
+    const diff = new Date(data.expiresAt).getTime() - Date.now();
+    if (diff <= 0) return "";
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+  }, [data?.expiresAt]);
+
+  useEffect(() => {
+    if (!data?.expiresAt) {
+      setTimeRemaining("");
+      return;
+    }
+
+    setTimeRemaining(calculateTimeRemaining());
+    const interval = setInterval(() => {
+      const remaining = calculateTimeRemaining();
+      setTimeRemaining(remaining);
+      if (!remaining) {
+        clearInterval(interval);
+        queryClient.invalidateQueries({ queryKey: ["storeAccess"] });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [data?.expiresAt, calculateTimeRemaining, queryClient]);
+
   // ─── Mutations ──────────────────────────────────────────────────────────────
-  const updateEnrollmentMutation = useMutation({
-    mutationFn: (newId: string) => updateStoreEnrollmentId(newId),
+  const generateCodeMutation = useMutation({
+    mutationFn: () => generateEnrollmentCode(),
     onSuccess: (result) => {
       if (result.success) {
-        setEnrollmentMessage("Enrollment ID updated successfully.");
+        setCodeMessage("Enrollment code generated successfully.");
         queryClient.invalidateQueries({ queryKey: ["storeAccess"] });
       } else {
-        setEnrollmentMessage("Failed to update: " + result.error);
+        setCodeMessage("Failed to generate: " + result.error);
       }
     },
     onError: () => {
-      setEnrollmentMessage("An error occurred.");
+      setCodeMessage("An error occurred.");
     },
   });
 
@@ -83,9 +112,9 @@ export function useStoreAccess() {
   });
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
-  const handleUpdateEnrollment = () => {
-    setEnrollmentMessage("");
-    updateEnrollmentMutation.mutate(enrollmentId);
+  const handleGenerateCode = () => {
+    setCodeMessage("");
+    generateCodeMutation.mutate();
   };
 
   const handleJoinStore = () => {
@@ -99,24 +128,24 @@ export function useStoreAccess() {
     role: data?.role || "owner",
     isLoading,
     
-    // State
-    enrollmentId,
-    setEnrollmentId,
+    // Enrollment Code
+    generatedCode: data?.code || null,
+    timeRemaining,
+    codeMessage,
+    isGenerating: generateCodeMutation.isPending,
+    
+    // Join Store
     joinId,
     setJoinId,
+    joinMessage,
+    isJoining: joinStoreMutation.isPending,
+    
+    // Exit
     isExitModalOpen,
     setIsExitModalOpen,
     
-    // Messages
-    enrollmentMessage,
-    joinMessage,
-    
-    // Status
-    isSaving: updateEnrollmentMutation.isPending,
-    isJoining: joinStoreMutation.isPending,
-    
     // Handlers
-    handleUpdateEnrollment,
+    handleGenerateCode,
     handleJoinStore,
   };
 }

@@ -107,6 +107,9 @@ export async function joinStoreViaEnrollmentId(enrollmentId: string) {
       return { success: false, error: result.message || "Failed to join store." };
     }
 
+    // 3. Refresh session to update JWT claims immediately
+    await supabase.auth.refreshSession();
+
     revalidatePath("/", "layout");
     revalidatePath("/settings");
     return { success: true };
@@ -443,6 +446,99 @@ export async function leaveStore(password: string) {
 
     revalidatePath("/", "layout");
     return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Generates a random 8-character alphanumeric enrollment code for the store.
+ * Sets enrollment_code_expires_at to 1 hour from now.
+ */
+export async function generateEnrollmentCode() {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    // 1. Get user's store_id
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (userError || !userData?.store_id) {
+      return { success: false, error: "Store not found for user" };
+    }
+
+    // 2. Generate a random 8-character alphanumeric code
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // 3. Update store with new code and expiry (1 hour from now)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    const { error: updateError } = await supabase
+      .from("stores")
+      .update({
+        enrollment_id: code,
+        enrollment_code_expires_at: expiresAt,
+      })
+      .eq("store_id", userData.store_id);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    revalidatePath("/settings");
+    return { success: true, code, expiresAt };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Fetches the current enrollment code and its expiry for the user's store.
+ */
+export async function getEnrollmentCodeStatus() {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    // 1. Get user's store_id
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (userError || !userData?.store_id) {
+      return { success: false, error: "Store not found for user" };
+    }
+
+    // 2. Fetch enrollment_id and enrollment_code_expires_at
+    const { data: storeData, error: storeError } = await supabase
+      .from("stores")
+      .select("enrollment_id, enrollment_code_expires_at")
+      .eq("store_id", userData.store_id)
+      .single();
+
+    if (storeError) {
+      return { success: false, error: storeError.message };
+    }
+
+    return {
+      success: true,
+      code: storeData.enrollment_id,
+      expiresAt: storeData.enrollment_code_expires_at,
+    };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

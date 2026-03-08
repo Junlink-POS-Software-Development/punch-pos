@@ -1,31 +1,39 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, AlertTriangle, Key, Users, Loader2, ArrowRight, LogOut } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Key, Users, Loader2, ArrowRight, LogOut, RefreshCw, Copy, Check, Clock } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ExitStoreModal } from "./ExitStoreModal";
 import { useStoreAccess } from "@/app/settings/hooks/useStoreAccess";
 
 export function StoreAccessSection() {
   const { user } = useAuthStore();
+  const [copied, setCopied] = React.useState(false);
   const {
     role,
     isLoading,
-    enrollmentId,
-    setEnrollmentId,
+    generatedCode,
+    timeRemaining,
+    codeMessage,
+    isGenerating,
     joinId,
     setJoinId,
     isExitModalOpen,
     setIsExitModalOpen,
-    enrollmentMessage,
     joinMessage,
-    isSaving,
     isJoining,
-    handleUpdateEnrollment,
+    handleGenerateCode,
     handleJoinStore,
   } = useStoreAccess();
 
   if (!user || isLoading) return null;
+
+  const handleCopyCode = () => {
+    if (!generatedCode) return;
+    navigator.clipboard.writeText(generatedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (role === "member") {
     return (
@@ -51,6 +59,8 @@ export function StoreAccessSection() {
     );
   }
 
+  const isCodeActive = !!generatedCode && !!timeRemaining;
+
   return (
     <div className="bg-card/50 border border-border rounded-2xl shadow-sm backdrop-blur-sm p-8 space-y-10">
       <div className="flex items-center gap-4">
@@ -64,50 +74,81 @@ export function StoreAccessSection() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Manage Enrollment */}
+        {/* Generate Enrollment Code */}
         <div className="space-y-6">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-muted rounded-lg text-muted-foreground/50">
                     <Key className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm uppercase tracking-widest opacity-70">Enrollment ID</h4>
+                <h4 className="font-bold text-sm uppercase tracking-widest opacity-70">Enrollment Code</h4>
             </div>
             
             <p className="text-sm text-muted-foreground leading-relaxed">
-                Set a unique identifier for your store so other authorized members can adopt or join it via the POS platform.
+                Generate a temporary enrollment code that expires in 1 hour. Share it with staff members so they can join your store.
             </p>
 
             <div className="flex flex-col gap-3">
-                <input
-                    type="text"
-                    value={enrollmentId}
-                    onChange={(e) => setEnrollmentId(e.target.value)}
-                    placeholder="Enter Custom Enrollment ID"
-                    className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
-                />
-                <button
-                    onClick={handleUpdateEnrollment}
-                    disabled={isSaving || isLoading}
+                {isCodeActive ? (
+                  <>
+                    {/* Active Code Display */}
+                    <div className="bg-muted/30 border border-border/50 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Code</span>
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{timeRemaining}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-center text-2xl font-mono font-bold tracking-[0.3em] text-foreground select-all">
+                          {generatedCode}
+                        </code>
+                        <button
+                          onClick={handleCopyCode}
+                          className="p-2 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95"
+                          title="Copy code"
+                        >
+                          {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Regenerate Button */}
+                    <button
+                      onClick={handleGenerateCode}
+                      disabled={isGenerating}
+                      className="flex justify-center items-center gap-2 bg-muted/50 hover:bg-muted disabled:opacity-50 px-6 py-3 rounded-xl font-bold text-muted-foreground hover:text-foreground transition-all active:scale-[0.98]"
+                    >
+                      {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      {isGenerating ? "Generating..." : "Regenerate Code"}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleGenerateCode}
+                    disabled={isGenerating}
                     className="flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 px-6 py-3 rounded-xl font-bold text-primary-foreground transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
-                >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {isSaving ? "Updating..." : "Update Enrollment"}
-                </button>
-                {enrollmentMessage && (
-                    <p className={`text-xs text-center font-medium ${enrollmentMessage.includes("success") ? "text-emerald-500" : "text-destructive"}`}>
-                        {enrollmentMessage}
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {isGenerating ? "Generating..." : "Generate Enrollment Code"}
+                  </button>
+                )}
+
+                {codeMessage && (
+                    <p className={`text-xs text-center font-medium ${codeMessage.includes("success") ? "text-emerald-500" : "text-destructive"}`}>
+                        {codeMessage}
                     </p>
                 )}
             </div>
         </div>
 
-        {/* Join Store */}
+        {/* Join Existing Store */}
         <div className="space-y-6">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
                     <Users className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm uppercase tracking-widest opacity-70">Join Other Store</h4>
+                <h4 className="font-bold text-sm uppercase tracking-widest opacity-70">Join Existing Store</h4>
             </div>
 
             <div className="bg-destructive/5 p-4 border border-destructive/10 rounded-xl flex gap-3 text-destructive">
@@ -123,7 +164,7 @@ export function StoreAccessSection() {
                         type="text"
                         value={joinId}
                         onChange={(e) => setJoinId(e.target.value)}
-                        placeholder="Enrollment ID to Join"
+                        placeholder="Enrollment Code to Join"
                         className="w-full bg-muted/20 border border-border/50 rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
                     />
                 </div>
@@ -133,7 +174,7 @@ export function StoreAccessSection() {
                     className="flex justify-center items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 px-6 py-3 rounded-xl font-bold text-white transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/15"
                 >
                     {isJoining ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <ArrowRight className="w-4 h-4 text-white" />}
-                    {isJoining ? "Transferring..." : "Transfer Access"}
+                    {isJoining ? "Joining..." : "Join Existing Store"}
                 </button>
                 {joinMessage && (
                     <p className={`text-xs text-center font-medium ${joinMessage.includes("success") ? "text-emerald-500" : "text-destructive"}`}>
