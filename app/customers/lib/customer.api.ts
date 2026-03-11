@@ -62,3 +62,23 @@ export async function fetchDashboardData() {
     customers: customersRes.data || [] 
   };
 }
+export async function fetchTopSpenders() {
+  const supabase = await createClient();
+
+  // Fetch groups and top spenders via RPC
+  const [groupsRes, topSpendersRes] = await Promise.all([
+    supabase.from("customer_groups").select("*").order("name"),
+    supabase.rpc("get_top_spenders"),
+  ]);
+
+  if (topSpendersRes.error) {
+    console.error("fetchTopSpenders error:", topSpendersRes.error);
+    throw new Error(topSpendersRes.error.message);
+  }
+
+  return {
+    groups: groupsRes.data || [],
+    customers: (topSpendersRes.data as any[]) || [],
+    guestTransactions: [], // Not needed for this view specifically, but keep structure consistent
+  };
+}

@@ -29,6 +29,9 @@ interface CustomerState {
   // Header Collapse state
   isHeaderCollapsed: boolean;
   setHeaderCollapsed: (collapsed: boolean) => void;
+  // Top Spenders filter
+  showTopSpendersOnly: boolean;
+  setShowTopSpendersOnly: (show: boolean) => void;
   // Hydration state
   hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
@@ -45,6 +48,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 
   selectedGroupId: "all",
   searchTerm: "",
+  showTopSpendersOnly: false,
   isGroupModalOpen: false,
   isCustomerModalOpen: false,
   isManageGroupsOpen: false,
@@ -58,6 +62,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 
   setSelectedGroupId: (id) => set({ selectedGroupId: id, isHeaderCollapsed: false }),
   setSearchTerm: (term) => set({ searchTerm: term }),
+  setShowTopSpendersOnly: (show) => set({ showTopSpendersOnly: show, isHeaderCollapsed: false }),
 
   openGroupModal: () => set({ isGroupModalOpen: true }),
   closeGroupModal: () => set({ isGroupModalOpen: false }),

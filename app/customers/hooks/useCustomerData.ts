@@ -1,12 +1,16 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import { fetchCustomerFeatureData } from "../lib/customer.api";
+import { useState, useMemo, useCallback } from "react";
+import { fetchCustomerFeatureData, fetchTopSpenders } from "../lib/customer.api";
 import { useCustomerStore } from "../store/useCustomerStore";
 import { CustomerGroup, Customer, GuestTransaction } from "../lib/types";
 
 const QUERY_KEY_PREFIX = "customer-feature-data";
+
+const EMPTY_GROUPS: CustomerGroup[] = [];
+const EMPTY_CUSTOMERS: Customer[] = [];
+const EMPTY_TRANSACTIONS: GuestTransaction[] = [];
 
 // Helper to format date as YYYY-MM-DD
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -34,21 +38,25 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
   const searchTerm = useCustomerStore((s) => s.searchTerm);
   const selectedGroupId = useCustomerStore((s) => s.selectedGroupId);
   const selectedCustomerId = useCustomerStore((s) => s.selectedCustomerId);
+  const showTopSpendersOnly = useCustomerStore((s) => s.showTopSpendersOnly);
 
   // ─── Data Fetching ──────────────────────────────────────────────────────────
-  const queryKey = [QUERY_KEY_PREFIX, startDate, endDate];
+  const queryKey = [QUERY_KEY_PREFIX, startDate, endDate, showTopSpendersOnly];
 
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, isFetching } = useQuery({
     queryKey,
-    queryFn: () => fetchCustomerFeatureData(startDate, endDate),
-    initialData: startDate === getTodayDate() && endDate === getTodayDate() ? initialData : undefined,
+    queryFn: () => {
+      if (showTopSpendersOnly) return fetchTopSpenders();
+      return fetchCustomerFeatureData(startDate, endDate);
+    },
+    initialData: !showTopSpendersOnly && startDate === getTodayDate() && endDate === getTodayDate() ? initialData : undefined,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // ─── Filtered Data ──────────────────────────────────────────────────────────
-  const groups = data?.groups || [];
-  const rawCustomers = data?.customers || [];
-  const guestTransactions = data?.guestTransactions || [];
+  const groups = data?.groups || EMPTY_GROUPS;
+  const rawCustomers = data?.customers || EMPTY_CUSTOMERS;
+  const guestTransactions = data?.guestTransactions || EMPTY_TRANSACTIONS;
 
   const filteredCustomers = useMemo(() => {
     return rawCustomers.filter((c) => {
@@ -57,11 +65,12 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
         (c.phone_number?.includes(searchTerm) || false);
 
       if (!matchesSearch) return false;
+      if (showTopSpendersOnly) return true; // Already filtered by server
       if (selectedGroupId === "all") return true;
       if (selectedGroupId === "ungrouped") return c.group_id === null;
       return c.group_id === selectedGroupId;
     });
-  }, [rawCustomers, searchTerm, selectedGroupId]);
+  }, [rawCustomers, searchTerm, selectedGroupId, showTopSpendersOnly]);
 
   const filteredGuestTransactions = useMemo(() => {
     return guestTransactions.filter(
@@ -108,9 +117,11 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
     
     // Status
     isLoading,
+    isFetching,
     isError: !!error,
     error: error as any,
     selectedGroupId,
+    showTopSpendersOnly,
     
     // Handlers
     handleDateChange,
@@ -121,10 +132,10 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
 export function useCustomerMutations() {
   const queryClient = useQueryClient();
 
-  const refreshData = () => queryClient.invalidateQueries({
+  const refreshData = useCallback(() => queryClient.invalidateQueries({
     predicate: (query) =>
       Array.isArray(query.queryKey) && query.queryKey[0] === QUERY_KEY_PREFIX
-  });
+  }), [queryClient]);
 
   return { refreshData };
 }

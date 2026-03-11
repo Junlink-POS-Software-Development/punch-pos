@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Filter, Settings2 } from "lucide-react";
+import { Search, Filter, Settings2, Trophy, Loader2 } from "lucide-react";
 import { useCustomerStore } from "../../store/useCustomerStore";
 import { useCustomerData } from "../../hooks/useCustomerData";
 
@@ -15,7 +15,9 @@ export function CustomerToolbar() {
   const selectedGroupId = useCustomerStore((s) => s.selectedGroupId);
   const setSelectedGroupId = useCustomerStore((s) => s.setSelectedGroupId);
   const setManageGroupsOpen = useCustomerStore((s) => s.setManageGroupsOpen);
-  const { groups } = useCustomerData();
+  const showTopSpendersOnly = useCustomerStore((s) => s.showTopSpendersOnly);
+  const setShowTopSpendersOnly = useCustomerStore((s) => s.setShowTopSpendersOnly);
+  const { groups, isFetching } = useCustomerData();
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -60,6 +62,25 @@ export function CustomerToolbar() {
             ))}
           </select>
         </div>
+
+        {/* Top Spenders Toggle */}
+        <button
+          onClick={() => setShowTopSpendersOnly(!showTopSpendersOnly)}
+          disabled={isFetching}
+          className={`flex items-center gap-2 border px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            showTopSpendersOnly
+              ? "bg-amber-500/10 border-amber-500/50 text-amber-600 shadow-sm shadow-amber-500/10"
+              : "bg-card border-border hover:bg-accent text-foreground"
+          } ${isFetching ? "opacity-50 cursor-not-allowed" : "hover:bg-amber-500/20"}`}
+        >
+          {isFetching ? (
+            <Loader2 size={16} className="text-amber-500 animate-spin" />
+          ) : (
+            <Trophy size={16} className={showTopSpendersOnly ? "text-amber-500" : "text-muted-foreground"} />
+          )}
+          <span className="hidden sm:inline">Top Spenders</span>
+          <span className="sm:hidden">Top</span>
+        </button>
 
         {/* Manage Groupings Button */}
         <button

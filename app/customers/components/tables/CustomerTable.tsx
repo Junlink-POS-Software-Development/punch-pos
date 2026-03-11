@@ -16,6 +16,9 @@ import {
   Unlock,
   ArrowUpDown,
   User,
+  Trophy,
+  Medal,
+  Loader2,
 } from "lucide-react";
 import { useCustomerData, useCustomerMutations } from "../../hooks/useCustomerData";
 import { useCustomerStore } from "../../store/useCustomerStore";
@@ -59,11 +62,19 @@ const getLastName = (fullName: string): string => {
 
 const columnHelper = createColumnHelper<Customer>();
 
-// ─── Memoized Row Component ──────────────────────────────────────────────────
-const MemoizedRow = React.memo(({ row, setViewMode, setSelectedCustomerId }: {
+// ─── Table Meta Extension ───────────────────────────────────────────────────
+declare module "@tanstack/react-table" {
+  interface TableMeta<TData> {
+    showTopSpendersOnly?: boolean;
+  }
+}
+
+const MemoizedRow = React.memo(({ row, setViewMode, setSelectedCustomerId, showTopSpendersOnly, absoluteIndex }: {
   row: any,
   setViewMode: (mode: 'list' | 'detail') => void,
-  setSelectedCustomerId: (id: string | null) => void
+  setSelectedCustomerId: (id: string | null) => void,
+  showTopSpendersOnly?: boolean,
+  absoluteIndex: number
 }) => {
   return (
     <tr
@@ -79,9 +90,9 @@ const MemoizedRow = React.memo(({ row, setViewMode, setSelectedCustomerId }: {
       {row.getVisibleCells().map((cell: any) => (
         <td
           key={cell.id}
-          className="px-4 py-1.5 align-middle"
+          className="px-4 py-1.5 align-middle relative"
         >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), absoluteIndex, showTopSpendersOnly })}
         </td>
       ))}
     </tr>
@@ -91,12 +102,13 @@ const MemoizedRow = React.memo(({ row, setViewMode, setSelectedCustomerId }: {
 MemoizedRow.displayName = "MemoizedRow";
 
 export const CustomerTable = () => {
-  const { customers, groups, isLoading } = useCustomerData();
+  const { customers, groups, isLoading, isFetching } = useCustomerData();
   const { refreshData } = useCustomerMutations();
   const setViewMode = useCustomerStore((s) => s.setViewMode);
   const setSelectedCustomerId = useCustomerStore((s) => s.setSelectedCustomerId);
   const isHeaderCollapsed = useCustomerStore((s) => s.isHeaderCollapsed);
   const setHeaderCollapsed = useCustomerStore((s) => s.setHeaderCollapsed);
+  const showTopSpendersOnly = useCustomerStore((s) => s.showTopSpendersOnly);
 
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -137,6 +149,15 @@ export const CustomerTable = () => {
   const isSortedByLastName = useMemo(() => {
     return sorting.some(s => s.id === 'name');
   }, [sorting]);
+
+  // Handle default sorting for Top Spenders
+  useEffect(() => {
+    if (showTopSpendersOnly) {
+      setSorting([{ id: "spent", desc: true }]);
+    } else {
+      setSorting([]);
+    }
+  }, [showTopSpendersOnly]);
 
   const columns = useMemo(() => [
     columnHelper.display({
@@ -181,12 +202,13 @@ export const CustomerTable = () => {
           />
         </button>
       ),
-      cell: ({ row, getValue }) => {
+      cell: ({ row, getValue, table }) => {
         const c = row.original;
         const isLocked = c.document_metadata?.isLocked || false;
         return (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setSelectedCustomerId(c.id);
               setViewMode("detail");
             }}
@@ -201,9 +223,27 @@ export const CustomerTable = () => {
                 />
               )}
             </div>
-            <span className="text-sm font-semibold truncate max-w-[140px]">
-              {formatDisplayName(getValue() || "Unknown", isSortedByLastName)}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-semibold truncate max-w-[140px]">
+                  {formatDisplayName(getValue() || "Unknown", isSortedByLastName)}
+                </span>
+                {table.options.meta?.showTopSpendersOnly && (row.index < 3) && (
+                  <div className={`p-1 rounded-full ${
+                    row.index === 0 ? "bg-amber-500/20 text-amber-600" :
+                    row.index === 1 ? "bg-slate-400/20 text-slate-600" :
+                    "bg-orange-500/20 text-orange-600"
+                  }`}>
+                    <Trophy size={10} />
+                  </div>
+                )}
+              </div>
+              {table.options.meta?.showTopSpendersOnly && (
+                <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">
+                  Rank #{row.index + 1}
+                </span>
+              )}
+            </div>
           </button>
         );
       },
@@ -320,7 +360,8 @@ export const CustomerTable = () => {
               {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
             </button>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setSelectedCustomerId(c.id);
                 setViewMode("detail");
               }}
@@ -363,6 +404,9 @@ export const CustomerTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
+    meta: {
+      showTopSpendersOnly
+    }
   });
 
   const allRows = table.getRowModel().rows;
@@ -436,8 +480,16 @@ export const CustomerTable = () => {
 
       <div
         onScroll={handleScroll}
-        className="flex-1 overflow-auto w-full custom-scrollbar"
+        className="flex-1 overflow-auto w-full custom-scrollbar relative"
       >
+        {isFetching && !isLoading && (
+          <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] z-50 flex items-center justify-center">
+            <div className="bg-card border border-border px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Refreshing Data...</span>
+            </div>
+          </div>
+        )}
         <table className="w-full text-left min-w-[1100px] border-collapse translate-z-0">
           <thead className="bg-muted/30 text-muted-foreground text-[10px] font-bold uppercase sticky top-0 z-10 backdrop-blur-md border-b border-border">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -453,12 +505,14 @@ export const CustomerTable = () => {
             ))}
           </thead>
           <tbody className="divide-y divide-border/30 will-change-transform translate-z-0">
-            {pagedRows.map((row) => (
+            {pagedRows.map((row, idx) => (
               <MemoizedRow
                 key={row.id}
                 row={row}
                 setViewMode={setViewMode}
                 setSelectedCustomerId={setSelectedCustomerId}
+                showTopSpendersOnly={showTopSpendersOnly}
+                absoluteIndex={idx}
               />
             ))}
           </tbody>
