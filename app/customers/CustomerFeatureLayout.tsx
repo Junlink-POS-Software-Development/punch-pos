@@ -1,24 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowBigLeft, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import React from "react";
 
 // Components
-import { CustomerSidebar } from "./components/layout/CustomerSidebar";
-import { CustomerHeader } from "./components/layout/CustomerHeader";
-import { CustomerDetailHeader } from "./components/details/CustomerDetailHeader";
-import { CustomerTable } from "./components/tables/CustomerTable";
-import { CustomerDetailView } from "./components/details/CustomerDetailView";
+import { CustomerHeaderSwitcher } from "./components/layout/CustomerHeaderSwitcher";
+import { CustomerContentSwitcher } from "./components/layout/CustomerContentSwitcher";
+import { CustomerKpiCards } from "./components/layout/CustomerKpiCards";
+import { CustomerToolbar } from "./components/layout/CustomerToolbar";
 import { CreateGroupModal } from "./components/modals/CreateGroupModal";
 import { RegisterCustomerModal } from "./components/modals/RegisterCustomerModal";
-import { GuestTransactionsTable } from "./components/tables/GuestTransactionsTable";
+import { ManageGroupsModal } from "./components/modals/ManageGroupsModal";
 
 // State & Types
-import { useCustomerStore } from "./store/useCustomerStore";
 import { CustomerGroup, Customer, GuestTransaction } from "./lib/types";
+import { useCustomerData } from "./hooks/useCustomerData";
+import { useCustomerStore } from "./store/useCustomerStore";
 
-interface Props {
+interface CustomerFeatureLayoutProps {
   initialData: {
     groups: CustomerGroup[];
     customers: Customer[];
@@ -26,123 +24,81 @@ interface Props {
   };
 }
 
-export function CustomerFeatureLayout({ initialData }: Props) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+/**
+ * ─── Customer Feature Layout ────────────────────────────────────────────────
+ * Full-width dashboard layout for the customer management feature.
+ */
+export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProps) {
+  const { viewMode, isTableExpanded, setIsTableExpanded } = useCustomerStore();
+
+  // Initialize data with hydration
+  useCustomerData({ initialData });
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (viewMode !== "list") return;
+
+    // Find the scrollable container
+    const scrollable = (e.target as HTMLElement).closest('.custom-scrollbar');
+    const scrollTop = scrollable ? scrollable.scrollTop : 0;
+
+    if (e.deltaY > 10 && !isTableExpanded) {
+      setIsTableExpanded(true);
+    } else if (e.deltaY < -10 && isTableExpanded && scrollTop <= 5) {
+      setIsTableExpanded(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col bg-background max-w-screen h-screen overflow-hidden font-sans text-foreground">
-      {/* Top Nav (Fixed) */}
-      <div className="px-6 py-3 border-border border-b shrink-0">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm transition-colors"
+    <div className="flex flex-col bg-background w-full h-screen overflow-hidden font-sans text-foreground">
+      {/* Main Content Area */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {viewMode === "list" ? (
+          <div className="flex flex-col h-full overflow-hidden">
+            {/* Collapsible Header/Stats section */}
+            <div 
+              className={`transition-all duration-700 ease-in-out shrink-0 overflow-hidden ${
+                isTableExpanded 
+                  ? "max-h-0 opacity-0 pointer-events-none" 
+                  : "max-h-[800px] opacity-100 p-6 lg:p-8 space-y-6 pb-2"
+              }`}
             >
-              <ArrowBigLeft size={20} />
-              Back to Dashboard
-            </Link>
-            {/* Desktop Collapse Toggle */}
-            <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="hidden lg:flex items-center gap-2 bg-card hover:bg-accent px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground text-sm transition"
-              title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              {isSidebarCollapsed ? (
-                <PanelLeftOpen size={16} />
-              ) : (
-                <PanelLeftClose size={16} />
-              )}
-              <span className="text-xs">{isSidebarCollapsed ? "Show Groups" : "Hide Groups"}</span>
-            </button>
-          </div>
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden bg-card hover:bg-accent p-2 rounded-lg text-muted-foreground hover:text-foreground transition"
-            aria-label="Open sidebar"
-          >
-            <Menu size={20} />
-          </button>
-        </div>
-      </div>
+              {/* Page Header */}
+              <CustomerHeaderSwitcher />
 
-      {/* Content Grid */}
-      <div className={`flex-1 grid grid-cols-1 overflow-hidden relative transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:grid-cols-1' : 'lg:grid-cols-[280px_1fr]'
-      }`}>
-        {/* Sidebar Overlay for Mobile */}
-        {isSidebarOpen && (
-          <div
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+              {/* KPI Cards */}
+              <CustomerKpiCards />
+            </div>
+
+            {/* Toolbar section - stays visible but can be adjusted */}
+            <div className={`transition-all duration-500 px-6 lg:px-8 ${isTableExpanded ? 'py-2 border-b border-border/50 bg-background/50 backdrop-blur-md sticky top-0 z-20' : 'pb-4'}`}>
+              <CustomerToolbar />
+            </div>
+
+            {/* Table section - flexes to fill remaining space */}
+            <div 
+              onWheel={handleWheel}
+              className={`flex-1 min-h-0 px-6 lg:px-8 pb-6 lg:pb-8 transition-all duration-500 ${isTableExpanded ? 'px-0 pb-0 lg:px-0 lg:pb-0' : ''}`}
+            >
+              <CustomerContentSwitcher />
+            </div>
+          </div>
+        ) : (
+          /* Detail View — full height */
+          <div className="flex flex-col h-full">
+            <div className="border-b border-border bg-background z-10 min-h-16">
+              <CustomerHeaderSwitcher />
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <CustomerContentSwitcher />
+            </div>
+          </div>
         )}
-
-        {/* Sidebar (Fixed on desktop, sliding on mobile) */}
-        <div
-          className={`
-            bg-card border-border border-r h-full overflow-hidden
-            lg:relative lg:translate-x-0
-            fixed inset-y-0 left-0 z-50 w-[280px]
-            transition-all duration-300 ease-in-out
-            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-            ${isSidebarCollapsed ? 'lg:hidden' : 'lg:block'}
-          `}
-        >
-          <CustomerSidebar 
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-          />
-        </div>
-
-        {/* Main Content Area */}
-        <div className="flex flex-col bg-background min-w-0 h-full min-h-0">
-          {/* Dynamic Header (Fixed) */}
-          <div className="z-10 bg-background border-border border-b w-full min-h-24 h-auto">
-            <HeaderSwitcher />
-          </div>
-
-          {/* Dynamic Content (Scrollable Container) */}
-          <div className="flex-1 bg-background min-h-0 overflow-hidden">
-            <ContentSwitcher />
-          </div>
-        </div>
       </div>
 
       {/* Modals */}
       <CreateGroupModal />
       <RegisterCustomerModal />
+      <ManageGroupsModal />
     </div>
   );
 }
-
-// ------------------------------------------------------------------
-// Sub-components
-// ------------------------------------------------------------------
-
-const HeaderSwitcher = () => {
-  const { viewMode } = useCustomerStore();
-  return viewMode === "detail" ? <CustomerDetailHeader /> : <CustomerHeader />;
-};
-
-const ContentSwitcher = () => {
-  const { selectedGroupId, viewMode } = useCustomerStore();
-
-  // 1. Detail View - Handles its own scroll and padding internally
-  if (viewMode === "detail") {
-    return <CustomerDetailView />;
-  }
-
-  // 2. Table Views - Wrapped in a container to maintain the padding we removed from the layout
-  return (
-    <div className="p-6 h-full overflow-hidden">
-      {selectedGroupId === "ungrouped" ? (
-        <GuestTransactionsTable />
-      ) : (
-        <CustomerTable />
-      )}
-    </div>
-  );
-};

@@ -1,10 +1,35 @@
-import React from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCustomerData } from "../../hooks/useCustomerData";
-import { Calendar, User, FileText, Search } from "lucide-react";
+import { useCustomerStore } from "../../store/useCustomerStore";
+import { Calendar, User, FileText, Search, ArrowUpDown } from "lucide-react";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 
 export const GuestTransactionsTable = () => {
   const { guestTransactions, isLoading, startDate, endDate, handleDateChange } = useCustomerData();
+  const { isTableExpanded } = useCustomerStore();
+  const [visibleCount, setVisibleCount] = useState(50);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const pagedTransactions = useMemo(() => {
+    return guestTransactions.slice(0, visibleCount);
+  }, [guestTransactions, visibleCount]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < guestTransactions.length) {
+          setVisibleCount((prev) => prev + 50);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [visibleCount, guestTransactions.length]);
 
   if (isLoading) {
     return (
@@ -13,72 +38,68 @@ export const GuestTransactionsTable = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Filter Toolbar - Always visible */}
-      <div className="flex justify-between items-center bg-card/30 mb-4 p-4 border border-border rounded-lg">
+    <div className="flex flex-col h-full gap-4">
+      {/* Filter Toolbar */}
+      <div className="flex justify-between items-center bg-card/30 p-3 border border-border rounded-xl">
         <DateColumnFilter
           startDate={startDate}
           endDate={endDate}
           onDateChange={handleDateChange}
           align="start"
         />
-        <div className="text-muted-foreground text-xs">
+        <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
           {guestTransactions.length > 0 ? (
-            <>Showing {guestTransactions.length} transaction{guestTransactions.length !== 1 ? 's' : ''}</>
+            <>{guestTransactions.length} Record{guestTransactions.length !== 1 ? 's' : ''}</>
           ) : (
-            <>No transactions for selected date range</>
+            <>No records found</>
           )}
         </div>
       </div>
 
       {/* Empty State or Table */}
       {guestTransactions.length === 0 ? (
-        <div className="flex flex-col flex-1 justify-center items-center bg-card/20 border-2 border-border/50 border-dashed rounded-xl">
+        <div className="flex flex-col flex-1 justify-center items-center bg-card/20 border-2 border-border/50 border-dashed rounded-xl p-8">
           <div className="bg-accent mb-3 p-4 rounded-full">
             <Search className="w-8 h-8 text-slate-500" />
           </div>
-          <p className="font-medium text-muted-foreground text-lg">
-            No Guest Transactions Found
-          </p>
-          <p className="text-muted-foreground/60 text-sm">
-            Try adjusting the date filter above to view transactions from other dates.
-          </p>
+          <p className="font-bold text-muted-foreground text-lg">No Guest Transactions Found</p>
+          <p className="text-muted-foreground/60 text-xs">Adjust the date filter above to expand your search.</p>
         </div>
       ) : (
-        <div className="flex-1 bg-card shadow-xl border border-border rounded-xl overflow-hidden">
-          <div className="h-full overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="top-0 z-10 sticky bg-background font-medium text-muted-foreground text-xs uppercase">
+        <div className={`flex-1 bg-card transition-all duration-500 border border-border overflow-hidden flex flex-col ${
+          isTableExpanded ? "rounded-none border-x-0 border-b-0" : "shadow-md rounded-2xl"
+        }`}>
+          <div className="flex-1 overflow-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse">
+              <thead className="top-0 z-10 sticky bg-muted/30 backdrop-blur-md font-bold text-muted-foreground text-[10px] uppercase border-b border-border">
                 <tr>
-                  <th className="bg-background px-6 py-4">Invoice #</th>
-                  <th className="bg-background px-6 py-4">Customer Name</th>
-                  <th className="bg-background px-6 py-4">Date & Time</th>
-                  <th className="bg-background px-6 py-4 text-right">
-                    Total Amount
-                  </th>
-                  <th className="bg-background px-6 py-4 text-center">Cashier</th>
+                  <th className="px-4 py-2">Invoice #</th>
+                  <th className="px-4 py-2">Customer Name</th>
+                  <th className="px-4 py-2">Date & Time</th>
+                  <th className="px-4 py-2 text-right">Total Amount</th>
+                  <th className="px-4 py-2 text-center">Cashier</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
-                {guestTransactions.map((tx) => (
+              <tbody className="divide-y divide-border/30">
+                {pagedTransactions.map((tx) => (
                   <tr
                     key={tx.invoice_no}
-                    className="group hover:bg-accent/40 transition-colors"
+                    className="group hover:bg-accent/20 transition-colors"
                   >
-                    <td className="px-6 py-4 font-mono font-medium text-cyan-400">
+                    <td className="px-4 py-1.5 font-mono font-bold text-xs text-primary/80">
                       {tx.invoice_no}
                     </td>
-                    <td className="px-6 py-4 font-medium text-foreground">
+                    <td className="px-4 py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-amber-500/10 rounded-full w-8 h-8 text-amber-500 shrink-0">
-                          <User className="w-4 h-4" />
+                        <div className="flex justify-center items-center bg-amber-500/10 rounded-full w-7 h-7 text-amber-500 shrink-0">
+                          <User className="w-3.5 h-3.5" />
                         </div>
-                        <span>{tx.customer_name}</span>
+                        <span className="font-semibold text-sm truncate max-w-[150px]">{tx.customer_name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="opacity-50 w-4 h-4 text-muted-foreground" />
+                    <td className="px-4 py-1.5 text-[11px] text-muted-foreground font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="opacity-40 w-3 h-3" />
                         <span className="whitespace-nowrap">
                           {new Date(tx.transaction_time).toLocaleString("en-US", {
                             month: "short",
@@ -89,18 +110,17 @@ export const GuestTransactionsTable = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="bg-emerald-500/10 px-2 py-1 rounded font-mono font-medium text-emerald-400">
-                        ₱
-                        {Number(tx.grand_total).toLocaleString("en-US", {
+                    <td className="px-4 py-1.5 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded">
+                        ₱{Number(tx.grand_total).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                         })}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground text-xs text-center">
+                    <td className="px-4 py-1.5 text-center">
                       <span
                         title={tx.cashier_id}
-                        className="border-border border-b border-dotted cursor-help"
+                        className="text-[10px] font-bold text-muted-foreground/60 border-b border-dotted border-border cursor-help hover:text-foreground transition-colors"
                       >
                         View ID
                       </span>
@@ -109,6 +129,11 @@ export const GuestTransactionsTable = () => {
                 ))}
               </tbody>
             </table>
+            {visibleCount < guestTransactions.length && (
+              <div ref={loadMoreRef} className="py-4 text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest animate-pulse">
+                Loading more transactions...
+              </div>
+            )}
           </div>
         </div>
       )}

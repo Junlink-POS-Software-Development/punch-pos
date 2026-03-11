@@ -1,9 +1,33 @@
-import React, { useState, useMemo } from "react";
-import { Edit2, Trash2, CheckSquare, Square, MoreHorizontal, Lock, Unlock, ArrowUpDown } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+} from "@tanstack/react-table";
+import {
+  Edit2,
+  Trash2,
+  CheckSquare,
+  Square,
+  Lock,
+  Unlock,
+  ArrowUpDown,
+  User,
+} from "lucide-react";
 import { useCustomerData, useCustomerMutations } from "../../hooks/useCustomerData";
 import { useCustomerStore } from "../../store/useCustomerStore";
-import { updateCustomerGroup, deleteCustomer, bulkUpdateCustomerGroup, toggleCustomerLock } from "../../api/services";
+import {
+  updateCustomerGroup,
+  deleteCustomer,
+  bulkUpdateCustomerGroup,
+  toggleCustomerLock,
+} from "../../api/services";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
+
+import { Customer } from "../../lib/types";
 
 // Helper function to parse name parts from a full name
 const parseNameParts = (fullName: string) => {
@@ -14,258 +38,381 @@ const parseNameParts = (fullName: string) => {
   if (parts.length === 2) {
     return { firstName: parts[0], middleName: "", lastName: parts[1] };
   }
-  // Assume last part is last name, first part is first name, rest is middle
   const firstName = parts[0];
   const lastName = parts[parts.length - 1];
   const middleName = parts.slice(1, -1).join(" ");
   return { firstName, middleName, lastName };
 };
 
-// Format display name based on sort mode
 const formatDisplayName = (fullName: string, sortByLastName: boolean): string => {
   if (!sortByLastName) return fullName;
-  
   const { firstName, middleName, lastName } = parseNameParts(fullName);
   if (!lastName) return fullName;
-  
   const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : "";
   return `${lastName}, ${firstName}${middleInitial}`;
 };
 
-// Get last name for sorting
 const getLastName = (fullName: string): string => {
   const parts = fullName.trim().split(/\s+/);
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : parts[0].toLowerCase();
 };
+
+const columnHelper = createColumnHelper<Customer>();
+
 export const CustomerTable = () => {
   const { customers, groups, isLoading } = useCustomerData();
   const { refreshData } = useCustomerMutations();
-  const { setViewMode, setSelectedCustomerId } = useCustomerStore();
-  
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
-  const [sortByLastName, setSortByLastName] = useState(false);
+  const { setViewMode, setSelectedCustomerId, isTableExpanded } = useCustomerStore();
 
-  // Sort customers based on the current mode
-  const sortedCustomers = useMemo(() => {
-    return [...customers].sort((a, b) => {
-      if (sortByLastName) {
-        return getLastName(a.full_name || "").localeCompare(getLastName(b.full_name || ""));
-      }
-      return (a.full_name || "").toLowerCase().localeCompare((b.full_name || "").toLowerCase());
-    });
-  }, [customers, sortByLastName]);
-  const handleGroupChange = async (customerId: string, groupId: string, isLocked: boolean) => {
-    if (isLocked) {
-      alert("This customer is locked and cannot be moved.");
-      return;
+  const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [visibleCount, setVisibleCount] = useState(50);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Sync sorting with the "Sort by Last Name" preference if needed, 
+  // but TanStack handles sorting state natively now.
+  const isSortedByLastName = useMemo(() => {
+    return sorting.some(s => s.id === 'name');
+  }, [sorting]);
+
+  const columns = useMemo(() => [
+    columnHelper.display({
+      id: "select",
+      header: ({ table }) => (
+        <button
+          onClick={table.getToggleAllRowsSelectedHandler()}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {table.getIsAllRowsSelected() ? (
+            <CheckSquare size={14} className="text-primary" />
+          ) : (
+            <Square size={14} />
+          )}
+        </button>
+      ),
+      cell: ({ row }) => (
+        <button
+          onClick={row.getToggleSelectedHandler()}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {row.getIsSelected() ? (
+            <CheckSquare size={14} className="text-primary" />
+          ) : (
+            <Square size={14} />
+          )}
+        </button>
+      ),
+      size: 40,
+    }),
+    columnHelper.accessor("full_name", {
+      id: "name",
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting()}
+          className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+        >
+          Name
+          <ArrowUpDown
+            size={12}
+            className={column.getIsSorted() ? "text-primary" : "opacity-30"}
+          />
+        </button>
+      ),
+      cell: ({ row, getValue }) => {
+        const c = row.original;
+        const isLocked = c.document_metadata?.isLocked || false;
+        return (
+          <button
+            onClick={() => {
+              setSelectedCustomerId(c.id);
+              setViewMode("detail");
+            }}
+            className="flex items-center gap-2 text-left hover:text-primary transition-colors pr-4"
+          >
+            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-black shrink-0 relative">
+              {(getValue() || "?").charAt(0).toUpperCase()}
+              {isLocked && (
+                <Lock
+                  size={8}
+                  className="absolute -top-0.5 -right-0.5 text-yellow-500 bg-background rounded-full"
+                />
+              )}
+            </div>
+            <span className="text-sm font-semibold truncate max-w-[140px]">
+              {formatDisplayName(getValue() || "Unknown", isSortedByLastName)}
+            </span>
+          </button>
+        );
+      },
+      sortingFn: (rowA, rowB) => {
+        const a = getLastName(rowA.original.full_name || "");
+        const b = getLastName(rowB.original.full_name || "");
+        return a.localeCompare(b);
+      },
+    }),
+    columnHelper.accessor("phone_number", {
+      id: "contact",
+      header: "Contact",
+      cell: (info) => (
+        <span className="text-xs text-muted-foreground font-medium">
+          {info.getValue() || "-"}
+        </span>
+      ),
+    }),
+    columnHelper.accessor("total_spent", {
+      id: "spent",
+      header: "Spent",
+      cell: (info) => (
+        <span className="text-xs font-bold text-foreground">
+          ₱{(info.getValue() || 0).toLocaleString()}
+        </span>
+      ),
+    }),
+    columnHelper.accessor("visit_count", {
+      id: "orders",
+      header: "Orders",
+      cell: (info) => (
+        <span className="text-xs font-medium text-muted-foreground">
+          {info.getValue() || 0}
+        </span>
+      ),
+    }),
+    columnHelper.accessor("last_visit_at", {
+      id: "lastVisit",
+      header: "Last Visit",
+      cell: (info) => {
+        const val = info.getValue();
+        return (
+          <span className="text-[10px] text-muted-foreground/80 font-medium">
+            {val ? new Date(val).toLocaleDateString() : "-"}
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("group_id", {
+      id: "membership",
+      header: "Membership",
+      cell: ({ row, getValue }) => {
+        const c = row.original;
+        const isLocked = c.document_metadata?.isLocked || false;
+        return (
+          <div className="pr-2">
+            <StandardSelect
+              value={getValue() || "ungrouped"}
+              onChange={async (e) => {
+                if (isLocked) {
+                  alert("This customer is locked and cannot be moved.");
+                  return;
+                }
+                if (!confirm("Are you sure you want to move this customer?")) return;
+                await updateCustomerGroup(c.id, e.target.value);
+                refreshData();
+              }}
+              className="py-0.5 px-2 h-7 text-[10px] font-bold"
+            >
+              <option value="ungrouped" className="bg-background">
+                Ungrouped
+              </option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id} className="bg-background">
+                  {g.name}
+                </option>
+              ))}
+            </StandardSelect>
+          </div>
+        );
+      },
+    }),
+    columnHelper.accessor("date_of_registration", {
+      id: "joined",
+      header: "Joined",
+      cell: (info) => {
+        const val = info.getValue();
+        return (
+          <span className="text-[10px] text-muted-foreground/80 font-medium">
+            {val ? new Date(val).toLocaleDateString() : "-"}
+          </span>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const c = row.original;
+        const isLocked = c.document_metadata?.isLocked || false;
+        return (
+          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newLockStatus = !isLocked;
+                await toggleCustomerLock(c.id, newLockStatus, c.document_metadata || {});
+                refreshData();
+              }}
+              className={`p-1 rounded hover:bg-muted ${
+                isLocked ? "text-yellow-500" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCustomerId(c.id);
+                setViewMode("detail");
+              }}
+              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary"
+            >
+              <Edit2 size={14} />
+            </button>
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (isLocked) {
+                  alert("This customer is locked and cannot be deleted.");
+                  return;
+                }
+                if (!confirm("Are you sure you want to delete?")) return;
+                await deleteCustomer(c.id);
+                refreshData();
+              }}
+              className={`p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-500 ${
+                isLocked ? "opacity-30 cursor-not-allowed" : ""
+              }`}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        );
+      },
+    }),
+  ], [groups, isSortedByLastName, setSelectedCustomerId, setViewMode, refreshData]);
+
+  const table = useReactTable({
+    data: customers,
+    columns,
+    state: {
+      rowSelection,
+      sorting,
+    },
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    enableRowSelection: true,
+  });
+
+  const allRows = table.getRowModel().rows;
+  const pagedRows = useMemo(() => {
+    return allRows.slice(0, visibleCount);
+  }, [allRows, visibleCount]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < allRows.length) {
+          setVisibleCount((prev) => prev + 50);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
     }
 
-    if (!confirm("Are you sure you want to move this customer to a different group?")) return;
-
-    await updateCustomerGroup(customerId, groupId);
-    refreshData();
-  };
-
-  const handleCustomerClick = (id: string) => {
-    setSelectedCustomerId(id);
-    setViewMode("detail");
-  };
-
-  const handleDelete = async (id: string, isLocked: boolean) => {
-    if (isLocked) {
-      alert("This customer is locked and cannot be deleted.");
-      return;
-    }
-    if (!confirm("Are you sure you want to delete this customer?")) return;
-    await deleteCustomer(id);
-    refreshData();
-  };
-
-  const handleLockToggle = async (e: React.MouseEvent, customer: any) => {
-    e.stopPropagation();
-    const newLockStatus = !customer.document_metadata?.isLocked;
-    await toggleCustomerLock(customer.id, newLockStatus, customer.document_metadata || {});
-    refreshData();
-  };
-
-  // Selection Logic
-  const toggleSelectAll = () => {
-    if (selectedCustomerIds.size === customers.length) {
-      setSelectedCustomerIds(new Set());
-    } else {
-      setSelectedCustomerIds(new Set(customers.map(c => c.id)));
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedCustomerIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedCustomerIds(newSelected);
-  };
+    return () => observer.disconnect();
+  }, [visibleCount, allRows.length]);
 
   const handleBulkMove = async (groupId: string) => {
-    if (selectedCustomerIds.size === 0) return;
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
 
-    // Check for locked customers
-    const selectedCustomers = customers.filter(c => selectedCustomerIds.has(c.id));
-    const lockedCustomers = selectedCustomers.filter(c => c.document_metadata?.isLocked);
-
+    const lockedCustomers = selectedRows.filter((r) => r.original.document_metadata?.isLocked);
     if (lockedCustomers.length > 0) {
-      alert(`Cannot move customers. ${lockedCustomers.length} selected customer(s) are locked.`);
+      alert(`Cannot move. ${lockedCustomers.length} selected customer(s) are locked.`);
       return;
     }
 
-    if (!confirm(`Are you sure you want to move ${selectedCustomerIds.size} customers to this group?`)) return;
-
-    await bulkUpdateCustomerGroup(Array.from(selectedCustomerIds), groupId);
+    const ids = selectedRows.map((r) => r.original.id);
+    await bulkUpdateCustomerGroup(ids, groupId);
     refreshData();
-    setSelectedCustomerIds(new Set());
+    table.resetRowSelection();
   };
 
   if (isLoading) return <div className="text-muted-foreground text-center mt-20">Loading...</div>;
 
+  const selectedCount = Object.keys(rowSelection).length;
+
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col h-full">
-      
-      {/* Bulk Actions Header */}
-      {selectedCustomerIds.size > 0 && (
-        <div className="bg-primary/20 p-3 flex items-center justify-between animate-in slide-in-from-top-2">
-          <span className="text-primary px-2 text-sm font-medium">
-            {selectedCustomerIds.size} selected
-          </span>
-          <div className="flex items-center gap-3">
-              <StandardSelect
-                onChange={(e) => handleBulkMove(e.target.value)}
-                defaultValue=""
-                className="py-1 px-2 h-8 min-w-[120px]"
-                containerClassName="flex-row items-center gap-2 space-y-0"
-                label="Move to:"
-              >
-                <option value="" disabled className="bg-background">Select Group</option>
-                <option value="ungrouped" className="bg-background">Ungrouped</option>
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id} className="bg-background">{g.name}</option>
-                ))}
-              </StandardSelect>
-          </div>
+    <div className={`bg-card transition-all duration-500 overflow-hidden flex flex-col h-full ${
+      isTableExpanded ? "rounded-none border-x-0 border-b-0" : "rounded-2xl border border-border shadow-md"
+    }`}>
+      {selectedCount > 0 && (
+        <div className="bg-primary/10 p-2 px-4 flex items-center justify-between border-b border-primary/20 animate-in slide-in-from-top-2 duration-200">
+          <span className="text-primary text-xs font-bold">{selectedCount} selected</span>
+          <StandardSelect
+            onChange={(e) => handleBulkMove(e.target.value)}
+            defaultValue=""
+            className="py-1 px-2 h-7 min-w-[100px] text-xs"
+            containerClassName="flex-row items-center gap-2 space-y-0"
+            label="Move:"
+          >
+            <option value="" disabled className="bg-background">
+              Select Group
+            </option>
+            <option value="ungrouped" className="bg-background">
+              Ungrouped
+            </option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id} className="bg-background">
+                {g.name}
+              </option>
+            ))}
+          </StandardSelect>
         </div>
       )}
 
-      <div className="overflow-x-auto w-full h-full">
-        <table className="w-full text-left min-w-[600px]">
-          <thead className="bg-muted/50 text-muted-foreground text-xs font-bold uppercase sticky top-0 z-10 backdrop-blur-sm">
-            <tr>
-              <th className="p-5 w-10">
-                <button onClick={toggleSelectAll} className="hover:text-white">
-                  {customers.length > 0 && selectedCustomerIds.size === customers.length ? (
-                    <CheckSquare size={16} className="text-primary" />
-                  ) : (
-                    <Square size={16} />
-                  )}
-                </button>
-              </th>
-              <th className="p-5">
-                <button 
-                  onClick={() => setSortByLastName(!sortByLastName)}
-                  className="flex items-center gap-2 hover:text-white transition-colors"
-                  title={sortByLastName ? "Sorting by Last Name" : "Sorting by First Name"}
-                >
-                  Name
-                  <ArrowUpDown size={14} className={sortByLastName ? "text-blue-400" : ""} />
-                  <span className="text-[10px] font-normal normal-case opacity-70">
-                    ({sortByLastName ? "Last Name" : "First Name"})
-                  </span>
-                </button>
-              </th>
-              <th className="p-5">Contact</th>
-              <th className="p-5">Group</th>
-              <th className="p-5 text-right">Actions</th>
-            </tr>
+      <div className="flex-1 overflow-auto w-full custom-scrollbar">
+        <table className="w-full text-left min-w-[1100px] border-collapse translate-z-0">
+          <thead className="bg-muted/30 text-muted-foreground text-[10px] font-bold uppercase sticky top-0 z-10 backdrop-blur-md border-b border-border">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="px-4 py-2">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
-          <tbody className="divide-y divide-border/50">
-            {sortedCustomers.map((c) => {
-              const isLocked = c.document_metadata?.isLocked || false;
-              return (
-                <tr 
-                  key={c.id} 
-                  className={`hover:bg-accent/30 transition group ${selectedCustomerIds.has(c.id) ? "bg-primary/10" : ""}`}
-                >
-                  <td className="p-5">
-                    <button onClick={() => toggleSelect(c.id)} className="hover:text-foreground text-muted-foreground">
-                      {selectedCustomerIds.has(c.id) ? (
-                        <CheckSquare size={16} className="text-primary" />
-                      ) : (
-                        <Square size={16} />
-                      )}
-                    </button>
+          <tbody className="divide-y divide-border/30">
+            {pagedRows.map((row) => (
+              <tr
+                key={row.id}
+                className={`hover:bg-accent/20 transition-colors group ${
+                  row.getIsSelected() ? "bg-primary/5" : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-1.5 align-middle">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
-                  <td className="p-5 font-medium text-foreground">
-                    <button 
-                      onClick={() => handleCustomerClick(c.id)}
-                      className="flex items-center gap-3 text-left w-full hover:text-blue-400 transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0 relative">
-                        {(c.full_name || "?").charAt(0).toUpperCase()}
-                        {isLocked && (
-                          <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5">
-                            <Lock size={10} className="text-yellow-500" />
-                          </div>
-                        )}
-                      </div>
-                      {formatDisplayName(c.full_name || "Unknown", sortByLastName)}
-                    </button>
-                  </td>
-                  <td className="p-5 text-muted-foreground">{c.phone_number || "-"}</td>
-                  <td className="p-5">
-                     <StandardSelect
-                      value={c.group_id || "ungrouped"}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => handleGroupChange(c.id, e.target.value, isLocked)}
-                      className={`py-1 px-2 h-8 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <option value="ungrouped" className="bg-background">Ungrouped</option>
-                      {groups.map((g) => (
-                        <option key={g.id} value={g.id} className="bg-background">{g.name}</option>
-                      ))}
-                    </StandardSelect>
-                  </td>
-                  <td className="p-5 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button 
-                          onClick={(e) => handleLockToggle(e, c)}
-                          className={`${isLocked ? "text-yellow-500 hover:text-yellow-400" : "text-muted-foreground hover:text-foreground"}`}
-                          title={isLocked ? "Unlock Customer" : "Lock Customer"}
-                      >
-                          {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
-                      </button>
-                      <button 
-                          onClick={() => handleCustomerClick(c.id)}
-                          className="text-muted-foreground hover:text-primary" 
-                          title="Edit"
-                      >
-                          <Edit2 size={16} />
-                      </button>
-                      <button 
-                          onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(c.id, isLocked);
-                          }}
-                          className={`text-muted-foreground hover:text-red-500 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          title="Delete"
-                      >
-                          <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
+        {visibleCount < allRows.length && (
+          <div
+            ref={loadMoreRef}
+            className="py-4 text-center text-xs text-muted-foreground font-bold animate-pulse"
+          >
+            Loading more records...
+          </div>
+        )}
       </div>
     </div>
   );

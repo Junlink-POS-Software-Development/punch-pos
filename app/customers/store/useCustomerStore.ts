@@ -10,20 +10,24 @@ interface CustomerState {
   // Modal State
   isGroupModalOpen: boolean;
   isCustomerModalOpen: boolean;
-  activeCustomerId: string | null; // For the edit button
+  isManageGroupsOpen: boolean;
+  activeCustomerId: string | null;
 
-  // --- NEW STATE ---
+  // Selection & View
   selectedCustomerId: string | null;
   setSelectedCustomerId: (id: string | null) => void;
-  
   viewMode: 'list' | 'detail';
   setViewMode: (mode: 'list' | 'detail') => void;
-  
+
+  // Actions
   openGroupModal: () => void;
   closeGroupModal: () => void;
   openCustomerModal: () => void;
   closeCustomerModal: () => void;
-  openEditCustomer: (id: string) => void; // "Toggle" for edit
+  openEditCustomer: (id: string) => void;
+  setManageGroupsOpen: (open: boolean) => void;
+  isTableExpanded: boolean;
+  setIsTableExpanded: (expanded: boolean) => void;
 }
 
 export const useCustomerStore = create<CustomerState>((set) => ({
@@ -31,11 +35,12 @@ export const useCustomerStore = create<CustomerState>((set) => ({
   searchTerm: "",
   isGroupModalOpen: false,
   isCustomerModalOpen: false,
+  isManageGroupsOpen: false,
   activeCustomerId: null,
-  // --- NEW ACTIONS ---
+
   selectedCustomerId: null,
   setSelectedCustomerId: (id) => set({ selectedCustomerId: id }),
-  
+
   viewMode: 'list',
   setViewMode: (mode) => set({ viewMode: mode }),
 
@@ -44,9 +49,12 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 
   openGroupModal: () => set({ isGroupModalOpen: true }),
   closeGroupModal: () => set({ isGroupModalOpen: false }),
-  
+
   openCustomerModal: () => set({ isCustomerModalOpen: true, activeCustomerId: null }),
   closeCustomerModal: () => set({ isCustomerModalOpen: false, activeCustomerId: null }),
-  
+
   openEditCustomer: (id) => set({ isCustomerModalOpen: true, activeCustomerId: id }),
+  setManageGroupsOpen: (open) => set({ isManageGroupsOpen: open }),
+  isTableExpanded: false,
+  setIsTableExpanded: (expanded) => set({ isTableExpanded: expanded }),
 }));

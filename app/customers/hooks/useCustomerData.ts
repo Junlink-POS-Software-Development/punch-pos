@@ -1,7 +1,10 @@
+"use client";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchCustomerFeatureData } from "../api/services";
-import { useCustomerStore } from "../store/useCustomerStore";
 import { useState } from "react";
+import { fetchCustomerFeatureData } from "../lib/customer.api";
+import { useCustomerStore } from "../store/useCustomerStore";
+import { CustomerGroup, Customer, GuestTransaction } from "../lib/types";
 
 const QUERY_KEY_PREFIX = "customer-feature-data";
 
@@ -11,25 +14,35 @@ const formatDate = (date: Date) => date.toISOString().split("T")[0];
 // Get today's date as default
 const getTodayDate = () => formatDate(new Date());
 
-export const useCustomerData = () => {
+interface UseCustomerDataProps {
+  initialData?: {
+    groups: CustomerGroup[];
+    customers: Customer[];
+    guestTransactions: GuestTransaction[];
+  };
+}
+
+export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
   const queryClient = useQueryClient();
-  // Date filter state - default to today's date
+  
+  // ─── State ──────────────────────────────────────────────────────────────────
   const [startDate, setStartDate] = useState<string>(getTodayDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
+  const { searchTerm, selectedGroupId, selectedCustomerId } = useCustomerStore();
 
-  // Generate query key with date parameters to trigger refetch when dates change
+  // ─── Data Fetching ──────────────────────────────────────────────────────────
   const queryKey = [QUERY_KEY_PREFIX, startDate, endDate];
 
   const { data, error, isLoading } = useQuery({
     queryKey,
     queryFn: () => fetchCustomerFeatureData(startDate, endDate),
+    initialData: startDate === getTodayDate() && endDate === getTodayDate() ? initialData : undefined,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { searchTerm, selectedGroupId, selectedCustomerId } = useCustomerStore();
-
+  // ─── Filtered Data ──────────────────────────────────────────────────────────
   const groups = data?.groups || [];
   const rawCustomers = data?.customers || [];
-  // [NEW] Get guest transactions
   const guestTransactions = data?.guestTransactions || [];
 
   const filteredCustomers = rawCustomers.filter((c) => {
@@ -43,7 +56,6 @@ export const useCustomerData = () => {
     return c.group_id === selectedGroupId;
   });
 
-  // [NEW] Filter guest transactions if user searches
   const filteredGuestTransactions = guestTransactions.filter(
     (g) =>
       g.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,47 +69,45 @@ export const useCustomerData = () => {
       ? "Ungrouped Customers"
       : groups.find((g) => g.id === selectedGroupId)?.name || "Unknown";
 
-
-  // [NEW] Find the selected customer for the detail view
-  
   const selectedCustomer = rawCustomers.find(c => c.id === selectedCustomerId) || null;
   
-  // [NEW] Find the group name for the specific customer
   const selectedCustomerGroupName = selectedCustomer?.group_id 
     ? groups.find(g => g.id === selectedCustomer.group_id)?.name 
     : "Ungrouped";
 
-  // Date change handler
+  // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleDateChange = (start: string, end: string) => {
     setStartDate(start);
     setEndDate(end);
   };
 
+  const refreshCustomers = () => queryClient.invalidateQueries({ queryKey });
+
   return {
+    // Data
     groups,
     customers: filteredCustomers,
     guestTransactions: filteredGuestTransactions,
     rawCustomers,
     currentGroupName,
-    
-    // [NEW] Export these
     selectedCustomer,
     selectedCustomerGroupName,
-    
-    // Date filter state and handlers
     startDate,
     endDate,
-    handleDateChange,
     
+    // Status
     isLoading,
-    isError: error,
+    isError: !!error,
+    error: error as any,
     selectedGroupId,
-    refreshCustomers: () => queryClient.invalidateQueries({ queryKey }),
+    
+    // Handlers
+    handleDateChange,
+    refreshCustomers,
   };
-};
+}
 
-// Hook to handle mutations easily
-export const useCustomerMutations = () => {
+export function useCustomerMutations() {
   const queryClient = useQueryClient();
 
   const refreshData = () => queryClient.invalidateQueries({
@@ -106,4 +116,4 @@ export const useCustomerMutations = () => {
   });
 
   return { refreshData };
-};
+}

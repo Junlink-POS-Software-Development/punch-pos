@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import imageCompression from "browser-image-compression";
@@ -9,7 +9,7 @@ import {
   useCustomerData,
   useCustomerMutations,
 } from "../../hooks/useCustomerData";
-import { createCustomer, updateCustomer } from "../../api/services";
+import { createCustomerAction, updateCustomerAction } from "@/app/actions/customers";
 import { Customer, CustomerFormValues, customerSchema } from "../../lib/types";
 
 // Sub-components
@@ -26,11 +26,16 @@ interface RegisterCustomerFormProps {
   initialData?: Customer;
 }
 
-export const RegisterCustomerForm = ({
+/**
+ * ─── Register Customer Form ────────────────────────────────────────────────
+ * Main form component for registering new customers or editing existing ones.
+ * Supports manual entry and AI-assisted scanning.
+ */
+export function RegisterCustomerForm({
   onSuccess,
   onCancel,
   initialData,
-}: RegisterCustomerFormProps) => {
+}: RegisterCustomerFormProps) {
   const { groups } = useCustomerData();
   const { refreshData } = useCustomerMutations();
 
@@ -43,6 +48,7 @@ export const RegisterCustomerForm = ({
   // Duplicate Handling State
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -66,8 +72,6 @@ export const RegisterCustomerForm = ({
     },
   });
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -89,9 +93,8 @@ export const RegisterCustomerForm = ({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
-        // Mobile browsers often crash on extremely large images during compression
         if (file.size > 20 * 1024 * 1024) {
-          setErrorMessage(`File ${file.name} is too large (>20MB). Please use a smaller image.`);
+          setErrorMessage(`File ${file.name} is too large (>20MB).`);
           continue;
         }
 
@@ -101,7 +104,6 @@ export const RegisterCustomerForm = ({
         }
 
         try {
-          // Robust access to the compression function
           const compress = typeof imageCompression === 'function' 
             ? imageCompression 
             : (imageCompression as any).default;
@@ -113,18 +115,13 @@ export const RegisterCustomerForm = ({
           });
           newCompressedFiles.push(finalFile);
         } catch (err) {
-          console.error(
-            `Skipping compression for ${file.name} due to error:`,
-            err
-          );
-          // Still push the original file if compression fails, but warn the user locally
+          console.error(`Compression failed for ${file.name}, using original:`, err);
           newCompressedFiles.push(file);
         }
       }
 
       setCompressedFiles((prev) => [...prev, ...newCompressedFiles]);
     } catch (error: any) {
-      console.error("Batch upload failed:", error);
       setErrorMessage("Failed to process images: " + (error.message || "Unknown error"));
     } finally {
       setIsCompressing(false);
@@ -142,9 +139,8 @@ export const RegisterCustomerForm = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check size before processing to prevent OOM on mobile
     if (file.size > 15 * 1024 * 1024) {
-      setErrorMessage("Document image is too large (>15MB) for AI processing. Please take a clearer, smaller photo.");
+      setErrorMessage("Document image is too large (>15MB) for AI processing.");
       event.target.value = "";
       return;
     }
@@ -153,13 +149,11 @@ export const RegisterCustomerForm = ({
     setErrorMessage(null);
 
     try {
-      // 1. Initial Compression BEFORE sending to AI if it's very large
-      // This reduces payload size and helps avoid mobile network timeouts
       let fileToUpload = file;
       if (file.size > 2 * 1024 * 1024) {
         try {
           const aiCompressionOptions = {
-            maxSizeMB: 1.5, // Slightly higher quality for AI OCR
+            maxSizeMB: 1.5,
             maxWidthOrHeight: 2048,
             useWebWorker: true,
           };
@@ -170,7 +164,7 @@ export const RegisterCustomerForm = ({
           const compressedBlob = await compress(file, aiCompressionOptions);
           fileToUpload = new File([compressedBlob], file.name, { type: file.type });
         } catch (compErr) {
-          console.warn("AI pre-scan compression failed, using original:", compErr);
+          console.warn("AI pre-scan compression failed:", compErr);
         }
       }
 
@@ -199,38 +193,11 @@ export const RegisterCustomerForm = ({
       if (data.gender) setValue("gender", data.gender);
       if (data.remarks) setValue("remarks", data.remarks);
 
-      // Compress and add the scanned document to the files list
-      if (file.type.startsWith("image/")) {
-        const compressionOptions = {
-          maxSizeMB: 0.2,
-          maxWidthOrHeight: 1280,
-          useWebWorker: true,
-          initialQuality: 0.6,
-        };
-        try {
-          const compress = typeof imageCompression === 'function' 
-            ? imageCompression 
-            : (imageCompression as any).default;
-
-          const compressedBlob = await compress(file, compressionOptions);
-          const compressedFile = new File([compressedBlob], file.name, {
-            type: file.type,
-            lastModified: new Date().getTime(),
-          });
-          setCompressedFiles((prev) => [...prev, compressedFile]);
-        } catch (compressionError) {
-          console.error("Compression failed, using original file:", compressionError);
-          setCompressedFiles((prev) => [...prev, file]);
-        }
-      } else {
-        setCompressedFiles((prev) => [...prev, file]);
-      }
-
-      // Switch back to manual view for review
+      // Add to files list
+      setCompressedFiles((prev) => [...prev, fileToUpload]);
       setView("manual");
     } catch (error: any) {
-      console.error("AI Scan Error:", error);
-      setErrorMessage(error.message || "Failed to extract information. Please try again or enter manually.");
+      setErrorMessage(error.message || "Failed to extract information.");
     } finally {
       setIsAiProcessing(false);
       event.target.value = "";
@@ -242,7 +209,7 @@ export const RegisterCustomerForm = ({
     setErrorMessage(null);
     try {
       if (initialData) {
-        // Update existing customer
+        // 1. Update existing customer
         const payload = {
           ...data,
           group_id: data.group_id === "" ? null : data.group_id,
@@ -252,9 +219,10 @@ export const RegisterCustomerForm = ({
           remarks: data.remarks === "" ? null : data.remarks,
           birthdate: data.birthdate === "" ? null : data.birthdate,
         };
-        await updateCustomer(initialData.id, payload);
+        const result = await updateCustomerAction(initialData.id, payload);
+        if (!result.success) throw new Error(result.error);
       } else {
-        // Create new customer
+        // 2. Create new customer
         const formData = new FormData();
 
         Object.entries(data).forEach(([key, value]) => {
@@ -267,26 +235,25 @@ export const RegisterCustomerForm = ({
           formData.append("documents", file);
         });
 
-        const result = await createCustomer(formData);
+        const result = await createCustomerAction(formData);
         
-        if (result && result.status === 'blocked') {
-            setErrorMessage(result.error);
-            setLoading(false);
-            return;
+        if (result.status === 'blocked') {
+          setErrorMessage(result.error || "Action blocked");
+          setLoading(false);
+          return;
         }
 
-        if (result && result.status === 'warning') {
-            setPendingFormData(formData);
-            setShowDuplicateModal(true);
-            setLoading(false);
-            return;
+        if (result.status === 'warning') {
+          setPendingFormData(formData);
+          setShowDuplicateModal(true);
+          setLoading(false);
+          return;
         }
         
-        if (result && (result.status === 'exists' || result.status === 'conflict')) {
-            console.log("Setting error message:", result.error);
-            setErrorMessage(result.error);
-            setLoading(false);
-            return;
+        if (!result.success) {
+          setErrorMessage(result.error || "Failed to create customer");
+          setLoading(false);
+          return;
         }
       }
 
@@ -294,8 +261,9 @@ export const RegisterCustomerForm = ({
       reset();
       setCompressedFiles([]);
       onSuccess();
-    } catch (error) {
-      console.error(initialData ? "Update failed:" : "Registration failed:", error);
+    } catch (error: any) {
+      console.error("Submission failed:", error);
+      setErrorMessage(error.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -307,10 +275,10 @@ export const RegisterCustomerForm = ({
     setLoading(true);
     try {
       pendingFormData.append('confirmed', 'true');
-      const result = await createCustomer(pendingFormData);
+      const result = await createCustomerAction(pendingFormData);
 
-      if (result && result.status === 'blocked') {
-        setErrorMessage(result.error);
+      if (!result.success) {
+        setErrorMessage(result.error || "Failed to create duplicate customer.");
         setLoading(false);
         setShowDuplicateModal(false);
         return;
@@ -322,8 +290,7 @@ export const RegisterCustomerForm = ({
       setPendingFormData(null);
       setShowDuplicateModal(false);
       onSuccess();
-    } catch (error) {
-      console.error("Duplicate confirmation failed:", error);
+    } catch (error: any) {
       setErrorMessage("Failed to create duplicate customer.");
     } finally {
       setLoading(false);
@@ -336,14 +303,15 @@ export const RegisterCustomerForm = ({
         message={errorMessage} 
         onClose={() => setErrorMessage(null)} 
       />
-      <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+      
+      <div className="flex-1 p-6 overflow-y-auto custom-scrollbar bg-background">
         <ViewSwitcher view={view} setView={setView} />
 
         {view === "manual" ? (
           <form
             id="customer-form"
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
+            className="space-y-6 mt-4"
           >
             <ManualForm 
               register={register} 
@@ -375,36 +343,35 @@ export const RegisterCustomerForm = ({
       {/* Duplicate Warning Modal */}
       {showDuplicateModal && (
         <div className="z-50 fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Customer Already Exists</h3>
-              <p className="text-muted-foreground mb-6">
-                A customer with similar details was found. Do you want to create a duplicate record anyway?
-              </p>
-              
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowDuplicateModal(false);
-                    setPendingFormData(null);
-                  }}
-                  className="px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors font-medium text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDuplicate}
-                  disabled={loading}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg transition-all font-medium text-sm shadow-lg shadow-cyan-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Creating...' : 'Confirm Duplicate'}
-                </button>
-              </div>
+          <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Customer Already Exists</h3>
+            <p className="text-muted-foreground mb-6">
+              A customer with similar details was found. Do you want to create a duplicate record anyway?
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDuplicateModal(false);
+                  setPendingFormData(null);
+                }}
+                className="px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDuplicate}
+                disabled={loading}
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all font-medium text-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Creating...' : 'Confirm Duplicate'}
+              </button>
             </div>
           </div>
         </div>
       )}
     </>
   );
-};
+}
+
 
