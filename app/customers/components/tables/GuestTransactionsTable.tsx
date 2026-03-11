@@ -1,14 +1,29 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCustomerData } from "../../hooks/useCustomerData";
-import { useCustomerStore } from "../../store/useCustomerStore";
 import { Calendar, User, FileText, Search, ArrowUpDown } from "lucide-react";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
 
+import { useCustomerStore } from "../../store/useCustomerStore";
+
 export const GuestTransactionsTable = () => {
   const { guestTransactions, isLoading, startDate, endDate, handleDateChange } = useCustomerData();
-  const { isTableExpanded } = useCustomerStore();
+  const { isHeaderCollapsed, setHeaderCollapsed } = useCustomerStore();
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScrollY = e.currentTarget.scrollTop;
+    const delta = currentScrollY - lastScrollY.current;
+
+    if (currentScrollY > 60 && delta > 15 && !isHeaderCollapsed) {
+      setHeaderCollapsed(true);
+    } else if ((delta < -15 || currentScrollY <= 30) && isHeaderCollapsed) {
+      setHeaderCollapsed(false);
+    }
+    
+    lastScrollY.current = currentScrollY;
+  };
 
   const pagedTransactions = useMemo(() => {
     return guestTransactions.slice(0, visibleCount);
@@ -66,10 +81,11 @@ export const GuestTransactionsTable = () => {
           <p className="text-muted-foreground/60 text-xs">Adjust the date filter above to expand your search.</p>
         </div>
       ) : (
-        <div className={`flex-1 bg-card transition-all duration-500 border border-border overflow-hidden flex flex-col ${
-          isTableExpanded ? "rounded-none border-x-0 border-b-0" : "shadow-md rounded-2xl"
-        }`}>
-          <div className="flex-1 overflow-auto custom-scrollbar">
+        <div className="flex-1 bg-card shadow-md border border-border rounded-2xl overflow-hidden flex flex-col">
+          <div 
+            onScroll={handleScroll}
+            className="flex-1 overflow-auto custom-scrollbar"
+          >
             <table className="w-full text-left border-collapse">
               <thead className="top-0 z-10 sticky bg-muted/30 backdrop-blur-md font-bold text-muted-foreground text-[10px] uppercase border-b border-border">
                 <tr>

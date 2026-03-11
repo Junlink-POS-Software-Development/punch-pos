@@ -29,24 +29,10 @@ interface CustomerFeatureLayoutProps {
  * Full-width dashboard layout for the customer management feature.
  */
 export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProps) {
-  const { viewMode, isTableExpanded, setIsTableExpanded } = useCustomerStore();
+  const { viewMode, isHeaderCollapsed } = useCustomerStore();
 
   // Initialize data with hydration
   useCustomerData({ initialData });
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (viewMode !== "list") return;
-
-    // Find the scrollable container
-    const scrollable = (e.target as HTMLElement).closest('.custom-scrollbar');
-    const scrollTop = scrollable ? scrollable.scrollTop : 0;
-
-    if (e.deltaY > 10 && !isTableExpanded) {
-      setIsTableExpanded(true);
-    } else if (e.deltaY < -10 && isTableExpanded && scrollTop <= 5) {
-      setIsTableExpanded(false);
-    }
-  };
 
   return (
     <div className="flex flex-col bg-background w-full h-screen overflow-hidden font-sans text-foreground">
@@ -55,13 +41,11 @@ export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProp
         {viewMode === "list" ? (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Collapsible Header/Stats section */}
-            <div 
-              className={`transition-all duration-700 ease-in-out shrink-0 overflow-hidden ${
-                isTableExpanded 
-                  ? "max-h-0 opacity-0 pointer-events-none" 
-                  : "max-h-[800px] opacity-100 p-6 lg:p-8 space-y-6 pb-2"
-              }`}
-            >
+            <div className={`px-6 lg:px-8 space-y-6 shrink-0 transition-all duration-500 ease-in-out overflow-hidden ${
+              isHeaderCollapsed 
+                ? "max-h-0 opacity-0 pt-0 pb-0 scale-95 pointer-events-none" 
+                : "max-h-[500px] opacity-100 pt-6 lg:pt-8 pb-2 scale-100"
+            }`}>
               {/* Page Header */}
               <CustomerHeaderSwitcher />
 
@@ -69,16 +53,13 @@ export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProp
               <CustomerKpiCards />
             </div>
 
-            {/* Toolbar section - stays visible but can be adjusted */}
-            <div className={`transition-all duration-500 px-6 lg:px-8 ${isTableExpanded ? 'py-2 border-b border-border/50 bg-background/50 backdrop-blur-md sticky top-0 z-20' : 'pb-4'}`}>
+            {/* Toolbar section - usually stays visible */}
+            <div className={`px-6 lg:px-8 pb-4 shrink-0 transition-all duration-300 ${isHeaderCollapsed ? "pt-4" : "pt-0"}`}>
               <CustomerToolbar />
             </div>
 
             {/* Table section - flexes to fill remaining space */}
-            <div 
-              onWheel={handleWheel}
-              className={`flex-1 min-h-0 px-6 lg:px-8 pb-6 lg:pb-8 transition-all duration-500 ${isTableExpanded ? 'px-0 pb-0 lg:px-0 lg:pb-0' : ''}`}
-            >
+            <div className="flex-1 min-h-0 px-6 lg:px-8 pb-6 lg:pb-8">
               <CustomerContentSwitcher />
             </div>
           </div>

@@ -62,12 +62,29 @@ const columnHelper = createColumnHelper<Customer>();
 export const CustomerTable = () => {
   const { customers, groups, isLoading } = useCustomerData();
   const { refreshData } = useCustomerMutations();
-  const { setViewMode, setSelectedCustomerId, isTableExpanded } = useCustomerStore();
+  const { setViewMode, setSelectedCustomerId, isHeaderCollapsed, setHeaderCollapsed } = useCustomerStore();
 
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScrollY = e.currentTarget.scrollTop;
+    const delta = currentScrollY - lastScrollY.current;
+
+    // Collapse header if scrolled down > 100px and moving down
+    if (currentScrollY > 60 && delta > 15 && !isHeaderCollapsed) {
+      setHeaderCollapsed(true);
+    } 
+    // Reveal header if moving up significantly or back at top
+    else if ((delta < -15 || currentScrollY <= 30) && isHeaderCollapsed) {
+      setHeaderCollapsed(false);
+    }
+    
+    lastScrollY.current = currentScrollY;
+  };
 
   // Sync sorting with the "Sort by Last Name" preference if needed, 
   // but TanStack handles sorting state natively now.
@@ -345,9 +362,7 @@ export const CustomerTable = () => {
   const selectedCount = Object.keys(rowSelection).length;
 
   return (
-    <div className={`bg-card transition-all duration-500 overflow-hidden flex flex-col h-full ${
-      isTableExpanded ? "rounded-none border-x-0 border-b-0" : "rounded-2xl border border-border shadow-md"
-    }`}>
+    <div className="bg-card rounded-2xl border border-border shadow-md overflow-hidden flex flex-col h-full">
       {selectedCount > 0 && (
         <div className="bg-primary/10 p-2 px-4 flex items-center justify-between border-b border-primary/20 animate-in slide-in-from-top-2 duration-200">
           <span className="text-primary text-xs font-bold">{selectedCount} selected</span>
@@ -373,7 +388,10 @@ export const CustomerTable = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto w-full custom-scrollbar">
+      <div 
+        onScroll={handleScroll}
+        className="flex-1 overflow-auto w-full custom-scrollbar"
+      >
         <table className="w-full text-left min-w-[1100px] border-collapse translate-z-0">
           <thead className="bg-muted/30 text-muted-foreground text-[10px] font-bold uppercase sticky top-0 z-10 backdrop-blur-md border-b border-border">
             {table.getHeaderGroups().map((headerGroup) => (
