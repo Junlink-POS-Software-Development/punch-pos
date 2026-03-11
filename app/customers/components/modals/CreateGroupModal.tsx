@@ -6,7 +6,8 @@ import { useCustomerMutations } from "../../hooks/useCustomerData"; // To refres
 
 export const CreateGroupModal = () => {
   // 1. Connect directly to the store here
-  const { isGroupModalOpen, closeGroupModal } = useCustomerStore();
+  const isGroupModalOpen = useCustomerStore((s) => s.isGroupModalOpen);
+  const closeGroupModal = useCustomerStore((s) => s.closeGroupModal);
   const { refreshData } = useCustomerMutations(); 
   
   const [name, setName] = useState("");

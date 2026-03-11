@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Users, TrendingUp, DollarSign, Award } from "lucide-react";
 import { useCustomerData } from "../../hooks/useCustomerData";
 
@@ -12,26 +12,32 @@ export function CustomerKpiCards() {
   const { rawCustomers } = useCustomerData();
 
   // ─── Compute KPIs ──────────────────────────────────────────────────────────
-  const totalCustomers = rawCustomers.length;
+  const { totalCustomers, activeCustomers, totalValue, avgVisits } = useMemo(() => {
+    const total = rawCustomers.length;
+    
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const active = rawCustomers.filter(
+      (c) => c.last_visit_at && new Date(c.last_visit_at) >= thirtyDaysAgo
+    ).length;
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const activeCustomers = rawCustomers.filter(
-    (c) => c.last_visit_at && new Date(c.last_visit_at) >= thirtyDaysAgo
-  ).length;
+    const value = rawCustomers.reduce(
+      (sum, c) => sum + (c.total_spent || 0),
+      0
+    );
 
-  const totalValue = rawCustomers.reduce(
-    (sum, c) => sum + (c.total_spent || 0),
-    0
-  );
-
-  const avgVisits =
-    totalCustomers > 0
-      ? Math.round(
-          rawCustomers.reduce((sum, c) => sum + (c.visit_count || 0), 0) /
-            totalCustomers
-        )
+    const avg = total > 0
+      ? Math.round(rawCustomers.reduce((sum, c) => sum + (c.visit_count || 0), 0) / total)
       : 0;
+
+    return {
+      totalCustomers: total,
+      activeCustomers: active,
+      totalValue: value,
+      avgVisits: avg
+    };
+  }, [rawCustomers]);
 
   // ─── Card Data ─────────────────────────────────────────────────────────────
   const cards = [

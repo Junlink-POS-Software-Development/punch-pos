@@ -4,7 +4,8 @@ import { useCustomerStore } from "../../store/useCustomerStore";
 import { RegisterCustomerForm } from "../forms/RegisterCustomerForm";
 
 export const RegisterCustomerModal = () => {
-  const { isCustomerModalOpen, closeCustomerModal } = useCustomerStore();
+  const isCustomerModalOpen = useCustomerStore((s) => s.isCustomerModalOpen);
+  const closeCustomerModal = useCustomerStore((s) => s.closeCustomerModal);
 
   if (!isCustomerModalOpen) return null;
 

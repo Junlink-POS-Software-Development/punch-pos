@@ -12,8 +12,10 @@ import { createGroup } from "../../api/services";
  * Full-screen modal for creating, renaming, and deleting customer groups.
  */
 export function ManageGroupsModal() {
-  const { isManageGroupsOpen, setManageGroupsOpen, selectedGroupId, setSelectedGroupId } =
-    useCustomerStore();
+  const isManageGroupsOpen = useCustomerStore((s) => s.isManageGroupsOpen);
+  const setManageGroupsOpen = useCustomerStore((s) => s.setManageGroupsOpen);
+  const selectedGroupId = useCustomerStore((s) => s.selectedGroupId);
+  const setSelectedGroupId = useCustomerStore((s) => s.setSelectedGroupId);
   const { groups, rawCustomers } = useCustomerData();
   const { refreshData } = useCustomerMutations();
 

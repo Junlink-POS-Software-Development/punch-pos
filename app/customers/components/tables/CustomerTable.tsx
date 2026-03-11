@@ -59,10 +59,44 @@ const getLastName = (fullName: string): string => {
 
 const columnHelper = createColumnHelper<Customer>();
 
+// ─── Memoized Row Component ──────────────────────────────────────────────────
+const MemoizedRow = React.memo(({ row, setViewMode, setSelectedCustomerId }: {
+  row: any,
+  setViewMode: (mode: 'list' | 'detail') => void,
+  setSelectedCustomerId: (id: string | null) => void
+}) => {
+  return (
+    <tr
+      key={row.id}
+      onClick={() => {
+        setSelectedCustomerId(row.original.id);
+        setViewMode("detail");
+      }}
+      className={`hover:bg-accent/40 cursor-pointer transition-colors group ${
+        row.getIsSelected() ? "bg-primary/5" : ""
+      }`}
+    >
+      {row.getVisibleCells().map((cell: any) => (
+        <td
+          key={cell.id}
+          className="px-4 py-1.5 align-middle"
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </td>
+      ))}
+    </tr>
+  );
+});
+
+MemoizedRow.displayName = "MemoizedRow";
+
 export const CustomerTable = () => {
   const { customers, groups, isLoading } = useCustomerData();
   const { refreshData } = useCustomerMutations();
-  const { setViewMode, setSelectedCustomerId, isHeaderCollapsed, setHeaderCollapsed } = useCustomerStore();
+  const setViewMode = useCustomerStore((s) => s.setViewMode);
+  const setSelectedCustomerId = useCustomerStore((s) => s.setSelectedCustomerId);
+  const isHeaderCollapsed = useCustomerStore((s) => s.isHeaderCollapsed);
+  const setHeaderCollapsed = useCustomerStore((s) => s.setHeaderCollapsed);
 
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -77,12 +111,12 @@ export const CustomerTable = () => {
 
     // Throttle updates using requestAnimationFrame
     if (frameId.current) cancelAnimationFrame(frameId.current);
-    
+
     frameId.current = requestAnimationFrame(() => {
       // Significant scroll down
       if (currentScrollY > 100 && delta > 30) {
         if (!isHeaderCollapsed) setHeaderCollapsed(true);
-      } 
+      }
       // Scroll up or at top
       else if (currentScrollY < 100 || delta < -30) {
         if (isHeaderCollapsed) setHeaderCollapsed(false);
@@ -98,7 +132,7 @@ export const CustomerTable = () => {
     };
   }, []);
 
-  // Sync sorting with the "Sort by Last Name" preference if needed, 
+  // Sync sorting with the "Sort by Last Name" preference if needed,
   // but TanStack handles sorting state natively now.
   const isSortedByLastName = useMemo(() => {
     return sorting.some(s => s.id === 'name');
@@ -400,7 +434,7 @@ export const CustomerTable = () => {
         </div>
       )}
 
-      <div 
+      <div
         onScroll={handleScroll}
         className="flex-1 overflow-auto w-full custom-scrollbar"
       >
@@ -418,20 +452,14 @@ export const CustomerTable = () => {
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-border/30">
+          <tbody className="divide-y divide-border/30 will-change-transform translate-z-0">
             {pagedRows.map((row) => (
-              <tr
+              <MemoizedRow
                 key={row.id}
-                className={`hover:bg-accent/20 transition-colors group ${
-                  row.getIsSelected() ? "bg-primary/5" : ""
-                }`}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-1.5 align-middle">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
+                row={row}
+                setViewMode={setViewMode}
+                setSelectedCustomerId={setSelectedCustomerId}
+              />
             ))}
           </tbody>
         </table>

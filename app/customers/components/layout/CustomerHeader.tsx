@@ -12,7 +12,7 @@ import { usePermissions } from "@/app/hooks/usePermissions";
  */
 export function CustomerHeader() {
   const { rawCustomers } = useCustomerData();
-  const { openCustomerModal } = useCustomerStore();
+  const openCustomerModal = useCustomerStore((s) => s.openCustomerModal);
   const { can_manage_customers } = usePermissions();
 
   return (

@@ -1,13 +1,67 @@
+"use client";
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCustomerData } from "../../hooks/useCustomerData";
 import { Calendar, User, FileText, Search, ArrowUpDown } from "lucide-react";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
-
 import { useCustomerStore } from "../../store/useCustomerStore";
+
+// ─── Memoized Row Component ──────────────────────────────────────────────────
+const MemoizedTransactionRow = React.memo(({ transaction }: { transaction: any }) => {
+  return (
+    <tr
+      key={transaction.invoice_no}
+      className="group hover:bg-accent/20 transition-colors"
+    >
+      <td className="px-4 py-1.5 font-mono font-bold text-xs text-primary/80">
+        {transaction.invoice_no}
+      </td>
+      <td className="px-4 py-1.5">
+        <div className="flex items-center gap-2">
+          <div className="flex justify-center items-center bg-amber-500/10 rounded-full w-7 h-7 text-amber-500 shrink-0">
+            <User className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-sm truncate max-w-[150px]">{transaction.customer_name}</span>
+        </div>
+      </td>
+      <td className="px-4 py-1.5 text-[11px] text-muted-foreground font-medium">
+        <div className="flex items-center gap-1.5">
+          <Calendar className="opacity-40 w-3 h-3" />
+          <span className="whitespace-nowrap">
+            {new Date(transaction.transaction_time).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      </td>
+      <td className="px-4 py-1.5 text-right">
+        <span className="font-mono font-bold text-xs text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded">
+          ₱{Number(transaction.grand_total).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+          })}
+        </span>
+      </td>
+      <td className="px-4 py-1.5 text-center">
+        <span
+          title={transaction.cashier_id}
+          className="text-[10px] font-bold text-muted-foreground/60 border-b border-dotted border-border cursor-help hover:text-foreground transition-colors"
+        >
+          View ID
+        </span>
+      </td>
+    </tr>
+  );
+});
+
+MemoizedTransactionRow.displayName = "MemoizedTransactionRow";
 
 export const GuestTransactionsTable = () => {
   const { guestTransactions, isLoading, startDate, endDate, handleDateChange } = useCustomerData();
-  const { isHeaderCollapsed, setHeaderCollapsed } = useCustomerStore();
+  const isHeaderCollapsed = useCustomerStore((s) => s.isHeaderCollapsed);
+  const setHeaderCollapsed = useCustomerStore((s) => s.setHeaderCollapsed);
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
@@ -106,52 +160,12 @@ export const GuestTransactionsTable = () => {
                   <th className="px-4 py-2 text-center">Cashier</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/30">
+              <tbody className="divide-y divide-border/30 will-change-transform translate-z-0">
                 {pagedTransactions.map((tx) => (
-                  <tr
-                    key={tx.invoice_no}
-                    className="group hover:bg-accent/20 transition-colors"
-                  >
-                    <td className="px-4 py-1.5 font-mono font-bold text-xs text-primary/80">
-                      {tx.invoice_no}
-                    </td>
-                    <td className="px-4 py-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-amber-500/10 rounded-full w-7 h-7 text-amber-500 shrink-0">
-                          <User className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="font-semibold text-sm truncate max-w-[150px]">{tx.customer_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-1.5 text-[11px] text-muted-foreground font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="opacity-40 w-3 h-3" />
-                        <span className="whitespace-nowrap">
-                          {new Date(tx.transaction_time).toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-1.5 text-right">
-                      <span className="font-mono font-bold text-xs text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded">
-                        ₱{Number(tx.grand_total).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                    </td>
-                    <td className="px-4 py-1.5 text-center">
-                      <span
-                        title={tx.cashier_id}
-                        className="text-[10px] font-bold text-muted-foreground/60 border-b border-dotted border-border cursor-help hover:text-foreground transition-colors"
-                      >
-                        View ID
-                      </span>
-                    </td>
-                  </tr>
+                  <MemoizedTransactionRow 
+                    key={tx.invoice_no} 
+                    transaction={tx} 
+                  />
                 ))}
               </tbody>
             </table>

@@ -10,6 +10,6 @@ import { CustomerDetailHeader } from "../details/CustomerDetailHeader";
  * Switches between the default customer header and the detail view header.
  */
 export function CustomerHeaderSwitcher() {
-  const { viewMode } = useCustomerStore();
+  const viewMode = useCustomerStore((s) => s.viewMode);
   return viewMode === "detail" ? <CustomerDetailHeader /> : <CustomerHeader />;
 }

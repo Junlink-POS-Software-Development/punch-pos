@@ -10,8 +10,11 @@ import { useCustomerData } from "../../hooks/useCustomerData";
  * Search bar, group filter dropdown, and manage groups button.
  */
 export function CustomerToolbar() {
-  const { searchTerm, setSearchTerm, selectedGroupId, setSelectedGroupId, setManageGroupsOpen } =
-    useCustomerStore();
+  const searchTerm = useCustomerStore((s) => s.searchTerm);
+  const setSearchTerm = useCustomerStore((s) => s.setSearchTerm);
+  const selectedGroupId = useCustomerStore((s) => s.selectedGroupId);
+  const setSelectedGroupId = useCustomerStore((s) => s.setSelectedGroupId);
+  const setManageGroupsOpen = useCustomerStore((s) => s.setManageGroupsOpen);
   const { groups } = useCustomerData();
 
   return (

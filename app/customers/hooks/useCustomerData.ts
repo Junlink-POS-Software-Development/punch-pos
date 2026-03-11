@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { fetchCustomerFeatureData } from "../lib/customer.api";
 import { useCustomerStore } from "../store/useCustomerStore";
 import { CustomerGroup, Customer, GuestTransaction } from "../lib/types";
@@ -26,9 +26,14 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
   const queryClient = useQueryClient();
   
   // ─── State ──────────────────────────────────────────────────────────────────
+  // ─── State ──────────────────────────────────────────────────────────────────
   const [startDate, setStartDate] = useState<string>(getTodayDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
-  const { searchTerm, selectedGroupId, selectedCustomerId } = useCustomerStore();
+  
+  // Use specific selectors to prevent unnecessary re-renders
+  const searchTerm = useCustomerStore((s) => s.searchTerm);
+  const selectedGroupId = useCustomerStore((s) => s.selectedGroupId);
+  const selectedCustomerId = useCustomerStore((s) => s.selectedCustomerId);
 
   // ─── Data Fetching ──────────────────────────────────────────────────────────
   const queryKey = [QUERY_KEY_PREFIX, startDate, endDate];
@@ -45,35 +50,41 @@ export function useCustomerData({ initialData }: UseCustomerDataProps = {}) {
   const rawCustomers = data?.customers || [];
   const guestTransactions = data?.guestTransactions || [];
 
-  const filteredCustomers = rawCustomers.filter((c) => {
-    const matchesSearch =
-      (c.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (c.phone_number?.includes(searchTerm) || false);
+  const filteredCustomers = useMemo(() => {
+    return rawCustomers.filter((c) => {
+      const matchesSearch =
+        (c.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (c.phone_number?.includes(searchTerm) || false);
 
-    if (!matchesSearch) return false;
-    if (selectedGroupId === "all") return true;
-    if (selectedGroupId === "ungrouped") return c.group_id === null;
-    return c.group_id === selectedGroupId;
-  });
+      if (!matchesSearch) return false;
+      if (selectedGroupId === "all") return true;
+      if (selectedGroupId === "ungrouped") return c.group_id === null;
+      return c.group_id === selectedGroupId;
+    });
+  }, [rawCustomers, searchTerm, selectedGroupId]);
 
-  const filteredGuestTransactions = guestTransactions.filter(
-    (g) =>
-      g.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      g.invoice_no.toLowerCase().includes(searchTerm)
-  );
+  const filteredGuestTransactions = useMemo(() => {
+    return guestTransactions.filter(
+      (g) =>
+        g.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        g.invoice_no.toLowerCase().includes(searchTerm)
+    );
+  }, [guestTransactions, searchTerm]);
 
-  const currentGroupName =
-    selectedGroupId === "all"
-      ? "Grouped Customers"
-      : selectedGroupId === "ungrouped"
-      ? "Ungrouped Customers"
-      : groups.find((g) => g.id === selectedGroupId)?.name || "Unknown";
+  const currentGroupName = useMemo(() => {
+    if (selectedGroupId === "all") return "Grouped Customers";
+    if (selectedGroupId === "ungrouped") return "Ungrouped Customers";
+    return groups.find((g) => g.id === selectedGroupId)?.name || "Unknown";
+  }, [selectedGroupId, groups]);
 
-  const selectedCustomer = rawCustomers.find(c => c.id === selectedCustomerId) || null;
+  const selectedCustomer = useMemo(() => {
+    return rawCustomers.find(c => c.id === selectedCustomerId) || null;
+  }, [rawCustomers, selectedCustomerId]);
   
-  const selectedCustomerGroupName = selectedCustomer?.group_id 
-    ? groups.find(g => g.id === selectedCustomer.group_id)?.name 
-    : "Ungrouped";
+  const selectedCustomerGroupName = useMemo(() => {
+    if (!selectedCustomer?.group_id) return "Ungrouped";
+    return groups.find(g => g.id === selectedCustomer.group_id)?.name || "Ungrouped";
+  }, [selectedCustomer, groups]);
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleDateChange = (start: string, end: string) => {

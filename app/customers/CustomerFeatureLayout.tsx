@@ -29,7 +29,8 @@ interface CustomerFeatureLayoutProps {
  * Full-width dashboard layout for the customer management feature.
  */
 export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProps) {
-  const { viewMode, isHeaderCollapsed } = useCustomerStore();
+  const viewMode = useCustomerStore((s) => s.viewMode);
+  const isHeaderCollapsed = useCustomerStore((s) => s.isHeaderCollapsed);
 
   // Initialize data with hydration
   useCustomerData({ initialData });
