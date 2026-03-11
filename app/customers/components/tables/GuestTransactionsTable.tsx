@@ -11,19 +11,29 @@ export const GuestTransactionsTable = () => {
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const frameId = useRef<number | null>(null);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollY = e.currentTarget.scrollTop;
     const delta = currentScrollY - lastScrollY.current;
 
-    if (currentScrollY > 60 && delta > 15 && !isHeaderCollapsed) {
-      setHeaderCollapsed(true);
-    } else if ((delta < -15 || currentScrollY <= 30) && isHeaderCollapsed) {
-      setHeaderCollapsed(false);
-    }
+    if (frameId.current) cancelAnimationFrame(frameId.current);
     
-    lastScrollY.current = currentScrollY;
+    frameId.current = requestAnimationFrame(() => {
+      if (currentScrollY > 100 && delta > 30) {
+        if (!isHeaderCollapsed) setHeaderCollapsed(true);
+      } else if (currentScrollY < 100 || delta < -30) {
+        if (isHeaderCollapsed) setHeaderCollapsed(false);
+      }
+      lastScrollY.current = currentScrollY;
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      if (frameId.current) cancelAnimationFrame(frameId.current);
+    };
+  }, []);
 
   const pagedTransactions = useMemo(() => {
     return guestTransactions.slice(0, visibleCount);

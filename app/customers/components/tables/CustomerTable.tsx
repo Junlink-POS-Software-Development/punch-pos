@@ -69,22 +69,34 @@ export const CustomerTable = () => {
   const [visibleCount, setVisibleCount] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const frameId = useRef<number | null>(null);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollY = e.currentTarget.scrollTop;
     const delta = currentScrollY - lastScrollY.current;
 
-    // Collapse header if scrolled down > 100px and moving down
-    if (currentScrollY > 60 && delta > 15 && !isHeaderCollapsed) {
-      setHeaderCollapsed(true);
-    } 
-    // Reveal header if moving up significantly or back at top
-    else if ((delta < -15 || currentScrollY <= 30) && isHeaderCollapsed) {
-      setHeaderCollapsed(false);
-    }
+    // Throttle updates using requestAnimationFrame
+    if (frameId.current) cancelAnimationFrame(frameId.current);
     
-    lastScrollY.current = currentScrollY;
+    frameId.current = requestAnimationFrame(() => {
+      // Significant scroll down
+      if (currentScrollY > 100 && delta > 30) {
+        if (!isHeaderCollapsed) setHeaderCollapsed(true);
+      } 
+      // Scroll up or at top
+      else if (currentScrollY < 100 || delta < -30) {
+        if (isHeaderCollapsed) setHeaderCollapsed(false);
+      }
+      lastScrollY.current = currentScrollY;
+    });
   };
+
+  // Cleanup frame on unmount
+  useEffect(() => {
+    return () => {
+      if (frameId.current) cancelAnimationFrame(frameId.current);
+    };
+  }, []);
 
   // Sync sorting with the "Sort by Last Name" preference if needed, 
   // but TanStack handles sorting state natively now.
