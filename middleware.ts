@@ -70,7 +70,14 @@ export default async function proxy(request: NextRequest) {
   // 1. Authenticate User
   const {
     data: { user },
+    error: authError
   } = await supabase.auth.getUser();
+
+  // If there's an error and it's a network error/offline, we might want to bypass strict redirect
+  // But on edge runtime, it's safer to check if the session cookie exists
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
+  
+  const isLikelyOffline = authError?.message?.includes("fetch") || authError?.message?.includes("network") || authError?.message?.includes("fetch failed");
 
   // ============================================
   // AUTHENTICATION GUARD
@@ -90,7 +97,8 @@ export default async function proxy(request: NextRequest) {
   const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP || isPwaAsset;
 
   // If user is not logged in and trying to access a protected route
-  if (!user && !isPublicRoute) {
+  // [NEW] If we are offline but have an auth cookie, we assume they are logged in to allow PWA to work
+  if (!user && !isPublicRoute && !(isLikelyOffline && hasAuthCookie)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -102,7 +110,7 @@ export default async function proxy(request: NextRequest) {
   // ============================================
   // ACCOUNT STATUS GUARD
   // ============================================
-  if (user && !isApiRoute) {
+  if (user && !isApiRoute && !isLikelyOffline) {
     const { data: statusData, error: statusError } = await supabase.rpc(
       "check_account_status"
     );
@@ -143,7 +151,7 @@ export default async function proxy(request: NextRequest) {
   // ============================================
   // SUBSCRIPTION GUARD LOGIC
   // ============================================
-  if (user) {
+  if (user && !isLikelyOffline) {
     // Check if user belongs to a store and has completed profile
     const { data: userData } = await supabase
       .from("users")

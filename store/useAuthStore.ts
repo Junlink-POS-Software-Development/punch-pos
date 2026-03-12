@@ -19,15 +19,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (get().isAuthReady) return;
 
     try {
-      // Use Server Action to check session
-      const { checkSession } = await import('@/app/actions/auth');
-      const result = await checkSession();
+      let isSuccess = false;
+      let loggedInUser = null;
 
-      if (result.success && result.user) {
-        set({ user: result.user as User, isAuthenticated: true });
-      } else {
-        set({ user: null, isAuthenticated: false });
+      // 1. Try hitting the server if online
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        try {
+          const { checkSession } = await import('@/app/actions/auth');
+          const result = await checkSession();
+          
+          if (result.success && result.user) {
+            isSuccess = true;
+            loggedInUser = result.user;
+          }
+        } catch (err) {
+          console.warn('[Auth] Server checkSession failed, trying local fallback...', err);
+        }
       }
+
+      // 2. If server fetch failed or device is offline, check local browser cookie session
+      if (!isSuccess) {
+        console.log('[Auth] Using offline/local session fallback.');
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          isSuccess = true;
+          loggedInUser = session.user;
+          // Decode JWT payload for app_metadata if you need permissions to map identically here
+          // We can just rely on the existing permissions token hook to parse it later.
+        }
+      }
+
+      set({ user: loggedInUser as User, isAuthenticated: isSuccess });
     } catch (error) {
       console.error('Auth Init Error:', error);
       set({ user: null, isAuthenticated: false });

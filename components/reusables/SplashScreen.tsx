@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePrefetchAll } from "@/app/hooks/usePrefetchAll";
 
 // ─── Splash Screen ──────────────────────────────────────────────────────────
-// Shows the PUNCH branding on initial PWA load, then fades out  smoothly.
+// Shows the PUNCH branding on initial PWA load, then fades out smoothly.
+// It actively prefetches all core data needed for offline mode.
 // Only renders once per session (uses sessionStorage to avoid repeat flashes).
 
 export function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
+  const { prefetchAll, progress } = usePrefetchAll();
 
   useEffect(() => {
     // Skip splash if already shown this session
@@ -17,19 +20,19 @@ export function SplashScreen() {
       return;
     }
 
-    // Begin fade-out after a brief moment
-    const fadeTimer = setTimeout(() => setIsFading(true), 1800);
-    // Remove from DOM after fade animation completes
-    const removeTimer = setTimeout(() => {
-      setIsVisible(false);
-      sessionStorage.setItem("splash-shown", "1");
-    }, 2500);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
+    const init = async () => {
+      // Begin prefetching all offline data
+      await prefetchAll();
+      // After reaching 100%, wait briefly to show "Welcome!" before fading
+      setTimeout(() => setIsFading(true), 800);
+      setTimeout(() => {
+        setIsVisible(false);
+        sessionStorage.setItem("splash-shown", "1");
+      }, 1500);
     };
-  }, []);
+
+    init();
+  }, [prefetchAll]);
 
   if (!isVisible) return null;
 
@@ -51,18 +54,21 @@ export function SplashScreen() {
       </div>
 
       {/* Text */}
-      <div className="mt-6 text-center animate-[splash-text_0.8s_ease-out_0.3s_both]">
+      <div className={`mt-6 text-center transition-all duration-500 ease-in-out ${progress === 100 ? "scale-110" : ""}`}>
         <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100">
           PUNCH
         </h1>
-        <p className="text-sm font-semibold tracking-[0.25em] text-slate-500 dark:text-slate-400 mt-1 uppercase">
-          Point of Sale
+        <p className="text-sm font-semibold tracking-[0.25em] text-slate-500 dark:text-slate-400 mt-1 uppercase transition-opacity duration-300">
+          {progress === 100 ? "Welcome!" : "Point of Sale"}
         </p>
       </div>
 
-      {/* Loading bar */}
-      <div className="mt-10 w-40 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden animate-[splash-text_0.8s_ease-out_0.5s_both]">
-        <div className="h-full bg-primary rounded-full animate-[splash-bar_2s_ease-in-out_both]" />
+      {/* Loading bar tied to fetch progress */}
+      <div className="mt-10 w-40 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden animate-[splash-text_0.8s_ease-out_0.5s_both] relative">
+        <div 
+          className="h-full bg-primary rounded-full transition-all duration-300 ease-out absolute left-0 top-0" 
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   );

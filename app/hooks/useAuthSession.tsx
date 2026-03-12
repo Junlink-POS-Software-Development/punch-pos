@@ -9,10 +9,41 @@ export function useAuthSession() {
 
   useEffect(() => {
     const check = async () => {
-      const { checkSession } = await import("@/app/actions/auth");
-      const result = await checkSession();
-      if (result.success && result.user) {
-        setUser(result.user as User);
+      let isSuccess = false;
+      let loggedInUser = null;
+
+      // 1. Try hitting the server if online
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        try {
+          const { checkSession } = await import("@/app/actions/auth");
+          const result = await checkSession();
+          if (result.success && result.user) {
+            isSuccess = true;
+            loggedInUser = result.user;
+          }
+        } catch (error) {
+           console.warn("[AuthSession] Server checkSession failed, trying local fallback...");
+        }
+      }
+
+      // 2. If server fetch failed or device is offline, check local browser cookie session
+      if (!isSuccess) {
+        try {
+          const { createClient } = await import('@/utils/supabase/client');
+          const supabase = createClient();
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session?.user) {
+            isSuccess = true;
+            loggedInUser = session.user;
+          }
+        } catch (err) {
+            console.error("[AuthSession] Local session fallback failed", err);
+        }
+      }
+
+      if (isSuccess && loggedInUser) {
+        setUser(loggedInUser as User);
         setIsAuthenticated(true);
       } else {
         setUser(null);

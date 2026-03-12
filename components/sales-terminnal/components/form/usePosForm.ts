@@ -279,7 +279,8 @@ export const usePosForm = (): UsePosFormReturn => {
         cartItems,
         user.id,
         effectiveDate,
-        customerId
+        customerId,
+        queryClient
       );
 
       console.log("📝 [Form] handleDone result:", result);

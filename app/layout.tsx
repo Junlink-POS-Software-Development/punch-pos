@@ -74,11 +74,10 @@ export default function RootLayout({
       >
         {/* ✅ ADD THE MONITOR HERE. It will run silently in the background. */}
         <SessionMonitor />
-        <SplashScreen />
-
         <ThemeProvider>
           <AuthInit>
             <QueryProvider>
+              <SplashScreen />
               <OfflineSyncManager />
               <OfflineIndicator />
               <MainWindow>{children}</MainWindow>

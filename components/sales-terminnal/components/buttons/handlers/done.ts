@@ -3,6 +3,9 @@
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { CartItem } from "../../terminal-cart/types";
 import { processTransaction } from "@/app/actions/transactions";
+import { useOfflineQueueStore } from "@/store/useOfflineQueueStore";
+import { QueryClient } from "@tanstack/react-query";
+import { DashboardStats } from "@/app/dashboard/lib/dashboardMockData";
 
 // 1. Define the structure of the Server Action response
 interface TransactionActionResponse {
@@ -46,8 +49,9 @@ export const handleDone = async (
   data: PosFormValues,
   cartItems: CartItem[],
   cashierId: string,
-  customDate: Date | null, // <--- [NEW] Accept the custom date
-  customerId: string | null
+  customDate: Date | null,
+  customerId: string | null,
+  queryClient?: QueryClient // <--- [NEW] Optional queryClient for optimistic updates
 ): Promise<TransactionResult> => {
   console.log("--- 🛠 [Server Action] handleDone started ---");
 
@@ -87,6 +91,52 @@ export const handleDone = async (
       "3️⃣ [Logic] Sending RPC request to Supabase (via Server Action)..."
     );
 
+    // [OFFLINE MODE INTERCEPT]
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      console.log("📶 [Offline Mode] Device is offline. Queueing transaction.");
+      
+      const tempInvoiceNo = `OFF-${Date.now().toString().slice(-6)}`;
+      
+      // Enqueue the transaction
+      useOfflineQueueStore.getState().enqueue({
+        type: "transaction",
+        payload: { headerPayload, itemsPayload }
+      });
+
+      // [OPTIMISTIC DASHBOARD UPDATE]
+      if (queryClient) {
+        const todayStr = (customDate || new Date()).toISOString().split("T")[0];
+        queryClient.setQueryData<DashboardStats>(["dashboard-stats", todayStr], (old) => {
+          if (!old) return old;
+          
+          return {
+            ...old,
+            grossSales: old.grossSales + headerPayload.grand_total,
+            netSales: old.netSales + headerPayload.grand_total,
+            cashInDrawer: old.cashInDrawer + headerPayload.amount_rendered, // Simplified assumption
+            netProfit: old.netProfit + headerPayload.grand_total, // Simplified, missing real COGS offline
+          };
+        });
+        
+        // Optimistic refresh for transaction list if looking at it
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      }
+
+      console.log("✅ [Logic] Transaction queued offline successfully!");
+
+      return {
+        invoice_no: tempInvoiceNo,
+        customer_name: headerPayload.customer_name,
+        amount_rendered: headerPayload.amount_rendered,
+        voucher: headerPayload.voucher,
+        grand_total: headerPayload.grand_total,
+        change: headerPayload.change,
+        transaction_no: tempInvoiceNo,
+        transaction_time: transactionTime || new Date().toISOString(),
+        cashier_name: headerPayload.cashier_name,
+      } as TransactionResult;
+    }
+
     // 2. Replace 'any' with the specific interface
     let rpcResult: TransactionActionResponse | null = null;
 
@@ -111,9 +161,42 @@ export const handleDone = async (
         console.warn(`⚠️ [Logic] Attempt ${attempt} failed:`, err);
 
         if (attempt === 3) {
-          // Re-throw safely
-          if (err instanceof Error) throw err;
-          throw new Error("Transaction failed with unknown error");
+          // [OFFLINE FALLBACK] If all 3 attempts fail, assume offline/network issue
+          console.log("📶 [Offline Mode] Network failed after 3 attempts. Queueing transaction.");
+          const tempInvoiceNo = `OFF-${Date.now().toString().slice(-6)}`;
+          
+          useOfflineQueueStore.getState().enqueue({
+            type: "transaction",
+            payload: { headerPayload, itemsPayload }
+          });
+
+          // [OPTIMISTIC DASHBOARD UPDATE - FALLBACK]
+          if (queryClient) {
+            const todayStr = (customDate || new Date()).toISOString().split("T")[0];
+            queryClient.setQueryData<DashboardStats>(["dashboard-stats", todayStr], (old) => {
+              if (!old) return old;
+              return {
+                ...old,
+                grossSales: old.grossSales + headerPayload.grand_total,
+                netSales: old.netSales + headerPayload.grand_total,
+                cashInDrawer: old.cashInDrawer + headerPayload.amount_rendered, 
+                netProfit: old.netProfit + headerPayload.grand_total, 
+              };
+            });
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          }
+
+          return {
+            invoice_no: tempInvoiceNo,
+            customer_name: headerPayload.customer_name,
+            amount_rendered: headerPayload.amount_rendered,
+            voucher: headerPayload.voucher,
+            grand_total: headerPayload.grand_total,
+            change: headerPayload.change,
+            transaction_no: tempInvoiceNo,
+            transaction_time: transactionTime || new Date().toISOString(),
+            cashier_name: headerPayload.cashier_name,
+          } as TransactionResult;
         }
         await new Promise((res) => setTimeout(res, 1000));
       }
