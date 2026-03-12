@@ -168,7 +168,6 @@ export const usePosForm = (): UsePosFormReturn => {
 
   // --- SUBMISSION HANDLER ---
   const onDoneSubmit: SubmitHandler<PosFormValues> = async (data, event) => {
-    console.log("📝 [Form] onDoneSubmit triggered", data);
 
     if (event) {
       const activeElement = document.activeElement as HTMLElement;
@@ -279,16 +278,32 @@ export const usePosForm = (): UsePosFormReturn => {
         cartItems,
         user.id,
         effectiveDate,
-        customerId,
-        queryClient
+        customerId
       );
-
-      console.log("📝 [Form] handleDone result:", result);
 
       if (result) {
         setIsSubmitting(false);
         // [OPTIMISTIC] Update with real data
         setSuccessData(result);
+
+        // [OPTIMISTIC DASHBOARD UPDATE] If the transaction queued offline
+        if (result.isOffline) {
+          const todayStr = effectiveDate ? effectiveDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+          
+          // Lazy import DashboardStats just for type or optionally cast
+          queryClient.setQueryData<any>(["dashboard-stats", todayStr], (old: any) => {
+            if (!old) return old;
+            
+            return {
+              ...old,
+              grossSales: old.grossSales + result.grand_total,
+              netSales: old.netSales + result.grand_total,
+              cashInDrawer: old.cashInDrawer + result.amount_rendered, 
+              netProfit: old.netProfit + result.grand_total, 
+            };
+          });
+          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        }
 
         // [OPTIMISTIC] Update inventory caching immediately to avoid phantom stocks
         queryClient.setQueryData(["inventory-all-pos"], (oldData: any) => {

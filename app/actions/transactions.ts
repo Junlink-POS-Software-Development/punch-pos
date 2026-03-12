@@ -54,9 +54,6 @@ export async function processTransaction(
   if (!user) return { success: false, error: "Not authenticated" };
 
   try {
-    // 1. Call the Database RPC
-    // We do NOT manually insert into 'payments' or 'transactions' anymore.
-    // The RPC handles the transaction, ID generation, and linking.
     const { data, error } = await supabase.rpc(
       "insert_new_payment_and_transaction",
       {
@@ -70,8 +67,7 @@ export async function processTransaction(
       return { success: false, error: error.message };
     }
 
-    // 2. Revalidate Cache
-    // Clear the cache for pages that display sales history
+    // Revalidate Cache
     revalidatePath("/sales");
     revalidatePath("/dashboard");
     revalidatePath("/expenses"); // Because vouchers might affect expenses
