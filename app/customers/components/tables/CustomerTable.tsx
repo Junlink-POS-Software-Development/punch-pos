@@ -65,7 +65,13 @@ const columnHelper = createColumnHelper<Customer>();
 // ─── Table Meta Extension ───────────────────────────────────────────────────
 declare module "@tanstack/react-table" {
   interface TableMeta<TData> {
+    // CustomerTable
     showTopSpendersOnly?: boolean;
+    // CashOutTable
+    editingRowId?: string | null;
+    setEditingRowId?: (id: string | null) => void;
+    updateData?: (id: string, values: any) => Promise<boolean>;
+    isUpdating?: boolean;
   }
 }
 
