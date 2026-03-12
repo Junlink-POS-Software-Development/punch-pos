@@ -11,8 +11,13 @@ export default async function proxy(request: NextRequest) {
 
   // If maintenance mode is enabled
   if (isMaintenanceMode) {
-    // Allow access to the maintenance page itself (to avoid redirect loops)
-    if (isMaintenancePage) {
+    const isPwaAsset = 
+      request.nextUrl.pathname === "/manifest.json" || 
+      request.nextUrl.pathname === "/sw.js" ||
+      request.nextUrl.pathname === "/sw.js.map";
+
+    // Allow access to the maintenance page itself or PWA assets
+    if (isMaintenancePage || isPwaAsset) {
       return NextResponse.next();
     }
 
@@ -75,7 +80,14 @@ export default async function proxy(request: NextRequest) {
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
   const isSelectStorePageP = request.nextUrl.pathname.startsWith("/select-store");
-  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP;
+  
+  // Explicitly allow PWA assets to be passed through without authentication
+  const isPwaAsset = 
+    request.nextUrl.pathname === "/manifest.json" || 
+    request.nextUrl.pathname === "/sw.js" ||
+    request.nextUrl.pathname === "/sw.js.map";
+
+  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP || isPwaAsset;
 
   // If user is not logged in and trying to access a protected route
   if (!user && !isPublicRoute) {
