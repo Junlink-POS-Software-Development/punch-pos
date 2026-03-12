@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  reloadOnOnline: true,
+  disable: process.env.NODE_ENV === "development",
+});
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -23,6 +31,9 @@ const nextConfig: NextConfig = {
   
   // Performance optimizations
   poweredByHeader: false,
+
+  // Silence Turbopack warning when @serwist/next injects webpack config
+  turbopack: {},
   
   // Optimize package imports and configure server actions
   experimental: {
@@ -33,4 +44,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

@@ -108,6 +108,18 @@ const CashOutModal = ({ isOpen, onClose, editData }: CashOutModalProps) => {
         return alert("Please select an expense category");
     }
 
+    // ─── Offline Queue Interception ──────────────────────────────────────────
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      const { useOfflineQueueStore } = await import("@/store/useOfflineQueueStore");
+      useOfflineQueueStore.getState().enqueue({
+        type: "cashout",
+        payload,
+      });
+      handleClose();
+      return;
+    }
+    // ─── End Offline Queue Interception ───────────────────────────────────────
+
     try {
         if (editData?.id) {
           editExpense(editData.id, payload);

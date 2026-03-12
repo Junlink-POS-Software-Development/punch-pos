@@ -2,7 +2,8 @@
 
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import * as idb from "idb-keyval";
 import { useState, useEffect } from "react";
 
 export function QueryProvider({
@@ -21,6 +22,8 @@ export function QueryProvider({
             staleTime: 1000 * 60 * 5,
             refetchOnWindowFocus: true,
             refetchOnMount: true,
+            // Retry a bit more aggressively when offline might transiently toggle
+            retry: 3, 
           },
         },
       })
@@ -31,10 +34,21 @@ export function QueryProvider({
   useEffect(() => {
     // Ensure this only runs on the client
     if (typeof window !== "undefined") {
-      const localStoragePersister = createSyncStoragePersister({
-        storage: window.localStorage,
+      const asyncStoragePersister = createAsyncStoragePersister({
+        storage: {
+          getItem: async (key: string) => await idb.get(key),
+          setItem: async (key: string, value: unknown) => {
+            try {
+              await idb.set(key, value);
+            } catch (err) {
+              console.error("idb-keyval set error:", err);
+            }
+          },
+          removeItem: async (key: string) => await idb.del(key),
+        },
+        key: 'react-query-offline-cache',
       });
-      setPersister(localStoragePersister);
+      setPersister(asyncStoragePersister);
     }
   }, []);
 

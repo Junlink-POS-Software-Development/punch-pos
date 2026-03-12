@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, VT323, Lexend } from "next/font/google";
 import "./globals.css";
 import { MainWindow } from "../components/window-layouts/MainWindow";
@@ -7,6 +7,8 @@ import { SessionMonitor } from "@/components/reusables/SessionMonitor";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
+import { OfflineSyncManager } from "@/components/reusables/OfflineSyncManager";
+import { OfflineIndicator } from "@/components/reusables/OfflineIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +38,26 @@ const lexend = Lexend({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "PUNCH POS by JunLink Software Services",
   description: "Next Gen Point of Sale by JunLink Software Services",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PUNCH POS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -58,6 +77,8 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthInit>
             <QueryProvider>
+              <OfflineSyncManager />
+              <OfflineIndicator />
               <MainWindow>{children}</MainWindow>
             </QueryProvider>
           </AuthInit>

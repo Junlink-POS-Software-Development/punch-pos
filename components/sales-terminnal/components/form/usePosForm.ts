@@ -227,6 +227,53 @@ export const usePosForm = (): UsePosFormReturn => {
         ? new Date(customTransactionDate)
         : null;
 
+      // ─── Offline Queue Interception ──────────────────────────────────────────
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        // Build the same payload that handleDone would send to the RPC
+        const transactionTime = effectiveDate ? effectiveDate.toISOString() : null;
+        const headerPayload = {
+          customer_name: data.customerName,
+          amount_rendered: data.payment || 0,
+          voucher: data.voucher || 0,
+          grand_total: data.grandTotal,
+          change: data.change,
+          transaction_time: transactionTime,
+          customer_id: customerId || null,
+        };
+        const itemsPayload = cartItems.map((item) => ({
+          sku: item.sku,
+          item_name: item.itemName,
+          sales_price: item.unitPrice,
+          total_price: item.total,
+          discount: item.discount || 0,
+          quantity: item.quantity,
+        }));
+
+        // Save to the offline queue (IndexedDB-backed Zustand store)
+        const { useOfflineQueueStore } = await import("@/store/useOfflineQueueStore");
+        useOfflineQueueStore.getState().enqueue({
+          type: "transaction",
+          payload: { headerPayload, itemsPayload },
+        });
+
+        // Show an optimistic receipt marked as offline
+        const offlineResult: TransactionResult = {
+          invoice_no: "OFFLINE-" + Date.now(),
+          customer_name: data.customerName || "WALK-IN",
+          amount_rendered: data.payment || 0,
+          voucher: data.voucher || 0,
+          grand_total: data.grandTotal,
+          change: data.change,
+          transaction_no: "OFFLINE-" + Date.now(),
+          transaction_time: new Date().toISOString(),
+          cashier_name: user.id,
+        };
+        setSuccessData(offlineResult);
+        setIsSubmitting(false);
+        return;
+      }
+      // ─── End Offline Queue Interception ───────────────────────────────────────
+
       const result = await handleDone(
         data,
         cartItems,
