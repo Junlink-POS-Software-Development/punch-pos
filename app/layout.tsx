@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { OfflineSyncManager } from "@/components/reusables/OfflineSyncManager";
 import { OfflineIndicator } from "@/components/reusables/OfflineIndicator";
+import { SplashScreen } from "@/components/reusables/SplashScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,6 +74,7 @@ export default function RootLayout({
       >
         {/* ✅ ADD THE MONITOR HERE. It will run silently in the background. */}
         <SessionMonitor />
+        <SplashScreen />
 
         <ThemeProvider>
           <AuthInit>
