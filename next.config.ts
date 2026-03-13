@@ -4,20 +4,7 @@ import withSerwistInit from "@serwist/next";
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
-  reloadOnOnline: true,
-  cacheOnNavigation: true,
-  maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-  additionalPrecacheEntries: [
-    "/~offline",
-    "/dashboard",
-    "/",
-    "/login",
-    "/cashout",
-    "/customers",
-    "/inventory",
-    "/transactions",
-    "/settings",
-  ],
+  additionalPrecacheEntries: ["/~offline"],
   disable: process.env.NODE_ENV === "development",
 });
 
@@ -44,9 +31,6 @@ const nextConfig: NextConfig = {
   
   // Performance optimizations
   poweredByHeader: false,
-
-  // Silence Turbopack warning when @serwist/next injects webpack config
-  turbopack: {},
   
   // Optimize package imports and configure server actions
   experimental: {
@@ -57,4 +41,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default nextConfig;

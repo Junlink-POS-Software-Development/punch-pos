@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { OfflineSyncManager } from "@/components/reusables/OfflineSyncManager";
 import { OfflineIndicator } from "@/components/reusables/OfflineIndicator";
 import { SplashScreen } from "@/components/reusables/SplashScreen";
+import { SWRegistration } from "@/components/reusables/SWRegistration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,6 +79,7 @@ export default function RootLayout({
           <AuthInit>
             <QueryProvider>
               <SplashScreen />
+              <SWRegistration />
               <OfflineSyncManager />
               <OfflineIndicator />
               <MainWindow>{children}</MainWindow>
