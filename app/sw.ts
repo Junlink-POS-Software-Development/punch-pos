@@ -22,7 +22,7 @@ const customCache = [
     handler: async ({ request, event, url }: { request: Request; event: ExtendableEvent; url: URL }) => {
       const strategy = new NetworkFirst({
         cacheName: "navigations",
-        networkTimeoutSeconds: 5,
+        networkTimeoutSeconds: 3,
       });
       
       try {
@@ -114,7 +114,7 @@ const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
-  navigationPreload: true,
+  navigationPreload: false,
   runtimeCaching: customCache,
   // Offline fallback: when navigation fails offline, serve this precached page
   fallbacks: {

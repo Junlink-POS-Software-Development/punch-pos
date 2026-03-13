@@ -7,6 +7,8 @@ export function SessionMonitor() {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === "visible") {
+        // Skip session check when offline — server actions won't work
+        if (!navigator.onLine) return;
       
         
         const startTime = performance.now();

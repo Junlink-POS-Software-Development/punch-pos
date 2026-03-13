@@ -7,7 +7,17 @@ const withSerwist = withSerwistInit({
   reloadOnOnline: true,
   cacheOnNavigation: true,
   maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-  additionalPrecacheEntries: ["/~offline", "/dashboard"],
+  additionalPrecacheEntries: [
+    "/~offline",
+    "/dashboard",
+    "/",
+    "/login",
+    "/cashout",
+    "/customers",
+    "/inventory",
+    "/transactions",
+    "/settings",
+  ],
   disable: process.env.NODE_ENV === "development",
 });
 
