@@ -14,6 +14,35 @@ declare const self: ServiceWorkerGlobalScope;
 // ─── Custom Runtime Caching ─────────────────────────────────────────────────
 // Extend the default cache with strategies optimized for offline-first POS usage.
 const customCache = [
+  // 0. Main Navigation — NetworkFirst with 500-error fallback
+  // This ensures that even if the server returns a 500 (e.g. because it's offline),
+  // we fallback to the cached shell or the offline page.
+  {
+    matcher: ({ request }: { request: Request }) => request.mode === "navigate",
+    handler: async ({ request, event, url }: { request: Request; event: ExtendableEvent; url: URL }) => {
+      const strategy = new NetworkFirst({
+        cacheName: "navigations",
+        networkTimeoutSeconds: 5,
+      });
+      
+      try {
+        const response = await strategy.handle({ request, event, url });
+        // If we get a valid response (not a server error), return it
+        if (response && response.ok) {
+          return response;
+        }
+        // If it's a server error (5xx), we "fail" so the fallback kicks in
+        if (response && response.status >= 500) {
+          throw new Error("Server error");
+        }
+        return response || fetch(request);
+      } catch (err) {
+        // Fallback logic handled by the Serwist instance 'fallbacks' config
+        // or we can manually return the fallback here if needed.
+        throw err;
+      }
+    },
+  },
   // 1. RSC (React Server Component) payloads — cache-first with network fallback
   {
     matcher: ({ request, url }: { request: Request; url: URL }) => {
@@ -90,6 +119,12 @@ const serwist = new Serwist({
   // Offline fallback: when navigation fails offline, serve this precached page
   fallbacks: {
     entries: [
+      {
+        url: "/dashboard",
+        matcher({ request }) {
+          return request.destination === "document";
+        },
+      },
       {
         url: "/~offline",
         matcher({ request }) {

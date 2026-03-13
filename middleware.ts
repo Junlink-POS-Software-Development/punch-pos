@@ -68,33 +68,46 @@ export default async function proxy(request: NextRequest) {
   );
 
   // 1. Authenticate User
-  const {
-    data: { user },
-    error: authError
-  } = await supabase.auth.getUser();
+  let user = null;
+  let authError = null;
+  let isLikelyOffline = false;
 
-  // If there's an error and it's a network error/offline, we might want to bypass strict redirect
-  // But on edge runtime, it's safer to check if the session cookie exists
+  try {
+    const { data: { user: supabaseUser }, error } = await supabase.auth.getUser();
+    user = supabaseUser;
+    authError = error;
+  } catch (err: any) {
+    console.error("Supabase auth check failed (potential offline state):", err.message);
+    isLikelyOffline = true;
+  }
+
+  // If there's an error and it's a network error/offline
+  if (authError) {
+    isLikelyOffline = isLikelyOffline || 
+      authError.message?.includes("fetch") || 
+      authError.message?.includes("network") || 
+      authError.message?.includes("fetch failed") ||
+      authError.status === 0;
+  }
+
   const hasAuthCookie = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
-  
-  const isLikelyOffline = authError?.message?.includes("fetch") || authError?.message?.includes("network") || authError?.message?.includes("fetch failed");
 
   // ============================================
   // AUTHENTICATION GUARD
   // ============================================
-  // Define public routes that don't require authentication
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
   const isSelectStorePageP = request.nextUrl.pathname.startsWith("/select-store");
+  const isOfflinePage = request.nextUrl.pathname === "/~offline";
   
-  // Explicitly allow PWA assets to be passed through without authentication
   const isPwaAsset = 
     request.nextUrl.pathname === "/manifest.json" || 
     request.nextUrl.pathname === "/sw.js" ||
-    request.nextUrl.pathname === "/sw.js.map";
+    request.nextUrl.pathname === "/sw.js.map" ||
+    request.nextUrl.pathname.startsWith("/punch-icon");
 
-  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP || isPwaAsset;
+  const isPublicRoute = isLoginPage || isApiRoute || isMaintenancePage || isAuthRoute || isSelectStorePageP || isPwaAsset || isOfflinePage;
 
   // If user is not logged in and trying to access a protected route
   // [NEW] If we are offline but have an auth cookie, we assume they are logged in to allow PWA to work
