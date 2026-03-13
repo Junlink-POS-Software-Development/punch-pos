@@ -5,6 +5,8 @@ const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   reloadOnOnline: true,
+  cacheOnNavigation: true,
+  maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
   disable: process.env.NODE_ENV === "development",
 });
 
