@@ -195,17 +195,31 @@ export default async function proxy(request: NextRequest) {
     // 3. Everything complete -> Check Subscription
     else {
       // Check subscription status for that store
-      const { data: sub } = await supabase
+      const { data: sub, error: subError } = await supabase
         .from("store_subscriptions")
         .select("status, end_date")
         .eq("store_id", userData.store_id)
-        .single();
+        .maybeSingle();
 
-      const now = new Date();
-      const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+      // If the query itself failed (e.g. RLS blocking), don't lock the user out
+      if (subError) {
+        console.error("Subscription query failed (allowing access):", subError.message);
+        // Fail-open: allow access when we can't determine subscription status
+        return response;
+      }
 
-      // Consider active if status is PAID and date is in the future
-      const isActive = sub?.status === "PAID" && endDate && endDate > now;
+      // If no subscription record exists, the store has never subscribed -> allow access (trial/free)
+      // Only block if a record EXISTS but is expired or not paid
+      const hasSubscriptionRecord = !!sub;
+
+      let isExpired = false;
+      if (hasSubscriptionRecord) {
+        const now = new Date();
+        const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+        const isPaid = sub?.status === "PAID";
+        // Expired = has a record, but it's not paid OR the end_date is in the past
+        isExpired = !isPaid || !endDate || endDate <= now;
+      }
 
       // Define paths to exempt (so they don't get stuck in a redirect loop)
       const isExemptPage =
@@ -214,10 +228,11 @@ export default async function proxy(request: NextRequest) {
         request.nextUrl.pathname.startsWith("/onboarding") ||
         isSelectStorePage;
 
-      // If inactive and NOT on an exempt page, and NOT a demo user (anonymous), redirect them
+      // Only redirect if a subscription record exists AND is expired/unpaid
+      // Never block stores that haven't subscribed yet (no record)
       const isDemoUser = user?.is_anonymous;
       
-      if (!isActive && !isExemptPage && !isApiRoute && !isDemoUser) {
+      if (hasSubscriptionRecord && isExpired && !isExemptPage && !isApiRoute && !isDemoUser) {
         return NextResponse.redirect(new URL("/subscribe-required", request.url));
       }
     }

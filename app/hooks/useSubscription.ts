@@ -42,7 +42,8 @@ export function useSubscription() {
         return { storeId: null, subscription: null, payments: [] };
       }
     },
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000, // 5 minutes — refetch periodically to pick up DB changes
+    refetchOnWindowFocus: true, // Refetch when user returns to app (e.g. after DB edits)
   });
 
   const subscription = data?.subscription || null;
