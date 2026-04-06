@@ -110,13 +110,32 @@ export function RegisterCustomerForm({
 
           const compressedBlob = await compress(file, options);
           const finalFile = new File([compressedBlob], file.name, {
-            type: file.type,
+            type: compressedBlob.type || file.type,
             lastModified: new Date().getTime(),
           });
           newCompressedFiles.push(finalFile);
         } catch (err) {
-          console.error(`Compression failed for ${file.name}, using original:`, err);
-          newCompressedFiles.push(file);
+          console.warn(`Compression failed for ${file.name}, retrying...`, err);
+          try {
+            const compress = typeof imageCompression === 'function' 
+              ? imageCompression 
+              : (imageCompression as any).default;
+            const fallbackOptions = { ...options, useWebWorker: false };
+            const compressedBlob = await compress(file, fallbackOptions);
+            const finalFile = new File([compressedBlob], file.name, {
+              type: compressedBlob.type || file.type,
+              lastModified: Date.now(),
+            });
+            newCompressedFiles.push(finalFile);
+          } catch (err2) {
+            console.error(`Compression completely failed for ${file.name}:`, err2);
+            if (file.size > 4 * 1024 * 1024) {
+              setErrorMessage(`File ${file.name} is too large (>4MB) and compression failed.`);
+              continue;
+            } else {
+              newCompressedFiles.push(file);
+            }
+          }
         }
       }
 
@@ -161,10 +180,26 @@ export function RegisterCustomerForm({
             ? imageCompression 
             : (imageCompression as any).default;
 
-          const compressedBlob = await compress(file, aiCompressionOptions);
-          fileToUpload = new File([compressedBlob], file.name, { type: file.type });
+          let compressedBlob = await compress(file, aiCompressionOptions);
+          fileToUpload = new File([compressedBlob], file.name, { type: compressedBlob.type || file.type });
         } catch (compErr) {
-          console.warn("AI pre-scan compression failed:", compErr);
+          console.warn("AI pre-scan compression failed, retrying:", compErr);
+          try {
+            const fallbackOptions = { maxSizeMB: 1.5, maxWidthOrHeight: 2048, useWebWorker: false };
+            const compress = typeof imageCompression === 'function' 
+              ? imageCompression 
+              : (imageCompression as any).default;
+            const compressedBlob = await compress(file, fallbackOptions);
+            fileToUpload = new File([compressedBlob], file.name, { type: compressedBlob.type || file.type });
+          } catch (err2) {
+            console.error("AI pre-scan compression completely failed:", err2);
+            if (file.size > 4 * 1024 * 1024) {
+              setErrorMessage(`Document ${file.name} is too large (>4MB) and compression failed.`);
+              event.target.value = "";
+              setIsAiProcessing(false);
+              return;
+            }
+          }
         }
       }
 

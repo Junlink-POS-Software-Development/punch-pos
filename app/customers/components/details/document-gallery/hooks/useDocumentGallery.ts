@@ -184,11 +184,33 @@ export const useDocumentGallery = (customer: Customer) => {
             
           const compressedBlob = await compress(file, options);
           fileToUpload = new File([compressedBlob], file.name, {
-            type: file.type,
+            type: compressedBlob.type || file.type,
             lastModified: new Date().getTime(),
           });
         } catch (compressionError) {
-          console.error("Compression failed in gallery, using original:", compressionError);
+          console.warn("Compression failed with web worker, retrying...", compressionError);
+          try {
+            const compress = typeof imageCompression === 'function' 
+              ? imageCompression 
+              : (imageCompression as any).default;
+            const fallbackOptions = { ...options, useWebWorker: false };
+            const compressedBlob = await compress(file, fallbackOptions);
+            fileToUpload = new File([compressedBlob], file.name, {
+              type: compressedBlob.type || file.type,
+              lastModified: Date.now(),
+            });
+          } catch (err2) {
+            console.error("Compression completely failed:", err2);
+            if (file.size > 4 * 1024 * 1024) {
+              alert(`Image ${file.name} is too large and compression failed. Please select a smaller file.`);
+              setOptimisticFiles(prev => prev.filter(f => f.id !== tempId));
+              URL.revokeObjectURL(tempUrl);
+              e.target.value = "";
+              setIsUploading(false);
+              setIsCompressing(false);
+              return;
+            }
+          }
         } finally {
           setIsCompressing(false);
           setCompressionProgress(0);
