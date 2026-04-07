@@ -1,6 +1,6 @@
 // Mobile Header Component
 import React from "react";
-import { ProductDisplay } from "../terminal-header/components/ProductDisplay";
+import { ProductDisplay } from "../components/terminal-header/components/ProductDisplay";
 import { MobileCustomerInput } from "./MobileCustomerInput";
 
 interface MobileHeaderProps {

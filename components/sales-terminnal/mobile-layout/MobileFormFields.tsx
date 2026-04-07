@@ -1,8 +1,8 @@
 // Mobile Form Fields - Barcode and Quantity on same row with +/- buttons
 import React from "react";
 import { useFormContext, Controller } from "react-hook-form";
-import { PosFormValues } from "../../utils/posSchema";
-import ItemAutocomplete from "../../../../utils/ItemAutoComplete";
+import { PosFormValues } from "../utils/posSchema";
+import ItemAutocomplete from "../../../utils/ItemAutoComplete";
 import { Plus, Minus, ScanBarcode } from "lucide-react";
 
 type MobileFormFieldsProps = {

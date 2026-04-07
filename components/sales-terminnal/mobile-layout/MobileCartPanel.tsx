@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-import { CartItem } from "../terminal-cart/types";
+import { CartItem } from "../components/terminal-cart/types";
 
 interface MobileCartPanelProps {
   cartItems: CartItem[];
@@ -25,7 +25,7 @@ export const MobileCartPanel = ({
       {/* Toggle Button - Fixed on right edge */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="lg:hidden fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-slate-800 border border-r-0 border-slate-700 rounded-l-lg p-2 text-white shadow-lg"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-slate-800 border border-r-0 border-slate-700 rounded-l-lg p-2 text-white shadow-lg"
       >
         {isExpanded ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         {cartItems.length > 0 && !isExpanded && (
@@ -38,7 +38,7 @@ export const MobileCartPanel = ({
       {/* Cart Panel */}
       <div
         className={`
-          lg:hidden fixed top-0 right-0 h-full w-[280px] z-30 
+          fixed top-0 right-0 h-full w-[280px] z-30 
           bg-[#0F172A] border-l border-slate-800 
           transition-transform duration-300 ease-in-out
           ${isExpanded ? "translate-x-0" : "translate-x-full"}
@@ -120,7 +120,7 @@ export const MobileCartPanel = ({
       {/* Backdrop */}
       {isExpanded && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-20"
+          className="fixed inset-0 bg-black/50 z-20"
           onClick={() => setIsExpanded(false)}
         />
       )}

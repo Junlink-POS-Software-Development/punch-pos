@@ -17,7 +17,7 @@ import { FreeItemModal } from "./modals/FreeItemModal";
 import { useState, useEffect } from "react";
 import { ActionPanel } from "./components/ActionPanel";
 
-const SalesTerminal = () => {
+const DesktopSalesTerminal = () => {
   const {
     methods,
     cartItems,
@@ -44,7 +44,7 @@ const SalesTerminal = () => {
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
   const [isFreeModalOpen, setIsFreeModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<"barcode" | "quantity" | null>("barcode");
-  const [isActionPanelOpen, setIsActionPanelOpen] = useState(false);
+  const [isActionPanelOpen, setIsActionPanelOpen] = useState(true); // Default to open on desktop
   const [isAnimating, setIsAnimating] = useState(false); // [NEW] Animation state
 
   // Calculate cart total
@@ -104,7 +104,7 @@ const SalesTerminal = () => {
   };
 
   return (
-    <div className="relative flex flex-col lg:flex-row h-full overflow-hidden">
+    <div className="relative flex flex-row h-full overflow-hidden">
       <FormProvider {...methods}>
         {/* LEFT PANEL: Transaction Details */}
         <div className="flex flex-col flex-1 p-2 h-full min-w-0 overflow-y-auto">
@@ -124,7 +124,7 @@ const SalesTerminal = () => {
               onSubmit={methods.handleSubmit(onDoneSubmit)}
               className={`
                 w-full min-h-full gap-4
-                ${!isActionPanelOpen ? 'flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-[1fr]' : 'flex flex-col'}
+                ${!isActionPanelOpen ? 'grid grid-cols-2 grid-rows-[1fr]' : 'flex flex-col'}
               `}
             >
               {/* Left Column Wrapper: Header + Inputs */}
@@ -140,7 +140,7 @@ const SalesTerminal = () => {
 
                   {/* Inline Shortcuts Guide - Appears when side panel is closed to fill space */}
                   {!isActionPanelOpen && (
-                    <div className="hidden lg:block mt-1">
+                    <div className="mt-1">
                        <ShortcutsGuide isInline />
                     </div>
                   )}
@@ -161,10 +161,10 @@ const SalesTerminal = () => {
             )}
         </div>
 
-        {/* RIGHT PANEL: Action Panel - Desktop Only */}
+        {/* RIGHT PANEL: Action Panel */}
         <div className={`
-          hidden lg:block h-full transition-all duration-300 ease-in-out
-          ${isActionPanelOpen ? "w-[450px]" : "w-0"}
+          h-full transition-all duration-300 ease-in-out
+          ${isActionPanelOpen ? "w-[450px]" : "w-0 overflow-hidden"}
         `}>
           <ActionPanel 
             onAddToCart={onAddToCart}
@@ -206,4 +206,4 @@ const SalesTerminal = () => {
   );
 };
 
-export { SalesTerminal };
+export { DesktopSalesTerminal };

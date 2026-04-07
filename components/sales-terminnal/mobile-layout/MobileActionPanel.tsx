@@ -4,8 +4,8 @@
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import { Tag, Ticket, Eraser } from "lucide-react";
-import { QuickPickGrid } from "../action-panel/quickpick-grid/QuickPickGrid";
-import { PosFormValues } from "../../utils/posSchema";
+import { QuickPickGrid } from "../components/action-panel/quickpick-grid/QuickPickGrid";
+import { PosFormValues } from "../utils/posSchema";
 
 interface MobileActionPanelProps {
   onAddToCart: () => void;
