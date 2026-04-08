@@ -3097,15 +3097,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
 
   // app/sw.ts
   var manualPrecache = [
-    { url: "/~offline", revision: "v1" },
-    { url: "/dashboard", revision: "v1" },
-    { url: "/", revision: "v1" },
-    { url: "/login", revision: "v1" },
-    { url: "/cashout", revision: "v1" },
-    { url: "/customers", revision: "v1" },
-    { url: "/inventory", revision: "v1" },
-    { url: "/transactions", revision: "v1" },
-    { url: "/settings", revision: "v1" }
+    { url: "/~offline", revision: "v1" }
   ];
   var customCache = [
     {
@@ -3169,12 +3161,6 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
     runtimeCaching: customCache,
     fallbacks: {
       entries: [
-        {
-          url: "/dashboard",
-          matcher({ request }) {
-            return request.destination === "document";
-          }
-        },
         {
           url: "/~offline",
           matcher({ request }) {

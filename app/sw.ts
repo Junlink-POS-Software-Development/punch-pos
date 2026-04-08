@@ -13,14 +13,6 @@ declare const self: ServiceWorkerGlobalScope;
 // ─── Manual Precaching ──────────────────────────────────────────────────────
 const manualPrecache: PrecacheEntry[] = [
   { url: "/~offline", revision: "v1" },
-  { url: "/dashboard", revision: "v1" },
-  { url: "/", revision: "v1" },
-  { url: "/login", revision: "v1" },
-  { url: "/cashout", revision: "v1" },
-  { url: "/customers", revision: "v1" },
-  { url: "/inventory", revision: "v1" },
-  { url: "/transactions", revision: "v1" },
-  { url: "/settings", revision: "v1" },
 ];
 
 // ─── Custom Runtime Caching ─────────────────────────────────────────────────
@@ -91,10 +83,6 @@ const serwist = new Serwist({
   runtimeCaching: customCache,
   fallbacks: {
     entries: [
-      {
-        url: "/dashboard",
-        matcher({ request }) { return request.destination === "document"; },
-      },
       {
         url: "/~offline",
         matcher({ request }) { return request.destination === "document"; },
