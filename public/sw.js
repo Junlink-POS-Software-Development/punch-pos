@@ -3102,16 +3102,13 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
   var customCache = [
     {
       matcher: ({ request }) => request.mode === "navigate",
-      handler: async ({ request, event, url }) => {
-        const strategy = new NetworkFirst({
-          cacheName: "navigations",
-          networkTimeoutSeconds: 3
-        });
+      handler: async ({ request }) => {
         try {
-          const response = await strategy.handle({ request, event, url });
-          if (response && response.ok) return response;
-          if (response && response.status >= 500) throw new Error("Server error");
-          return response || fetch(request);
+          const response = await fetch(request);
+          if (response.redirected) {
+            return Response.redirect(response.url, 302);
+          }
+          return response;
         } catch (err) {
           throw err;
         }
@@ -3121,11 +3118,17 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
       matcher: ({ request, url }) => {
         return url.searchParams.has("_rsc") || request.headers.get("RSC") === "1" || request.headers.get("Next-Router-State-Tree") !== null;
       },
-      handler: new NetworkFirst({
-        cacheName: "rsc-payloads",
-        networkTimeoutSeconds: 5,
-        matchOptions: { ignoreSearch: false }
-      })
+      handler: async ({ request }) => {
+        try {
+          const response = await fetch(request);
+          if (response.redirected) {
+            return Response.redirect(response.url, 302);
+          }
+          return response;
+        } catch (err) {
+          throw err;
+        }
+      }
     },
     {
       matcher: ({ url }) => url.pathname.startsWith("/_next/data/"),

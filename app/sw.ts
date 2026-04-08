@@ -19,19 +19,20 @@ const manualPrecache: PrecacheEntry[] = [
 const customCache = [
   {
     matcher: ({ request }: { request: Request }) => request.mode === "navigate",
-    handler: async ({ request, event, url }: { request: Request; event: ExtendableEvent; url: URL }) => {
-      const strategy = new NetworkFirst({
-        cacheName: "navigations",
-        networkTimeoutSeconds: 3,
-      });
-      
+    handler: async ({ request }: { request: Request }) => {
       try {
-        const response = await strategy.handle({ request, event, url });
-        if (response && response.ok) return response;
-        if (response && response.status >= 500) throw new Error("Server error");
-        return response || fetch(request);
+        const response = await fetch(request);
+        
+        // [FIX]: Prevent Service Worker from swallowing middleware redirects.
+        // fetch() follows redirects automatically. If we return the 200 OK directly, 
+        // the browser URL doesn't change, causing Next.js App Router layout glitches.
+        if (response.redirected) {
+          return Response.redirect(response.url, 302);
+        }
+        
+        return response;
       } catch (err) {
-        throw err;
+        throw err; // Throws to Serwist fallback
       }
     },
   },
@@ -41,11 +42,20 @@ const customCache = [
              request.headers.get("RSC") === "1" ||
              request.headers.get("Next-Router-State-Tree") !== null;
     },
-    handler: new NetworkFirst({
-      cacheName: "rsc-payloads",
-      networkTimeoutSeconds: 5,
-      matchOptions: { ignoreSearch: false },
-    }),
+    handler: async ({ request }: { request: Request }) => {
+      try {
+        // Bypassing cache for RSC payloads avoids state desyncs in App Router
+        const response = await fetch(request);
+        
+        if (response.redirected) {
+          return Response.redirect(response.url, 302);
+        }
+        
+        return response;
+      } catch (err) {
+        throw err;
+      }
+    },
   },
   {
     matcher: ({ url }: { url: URL }) => url.pathname.startsWith("/_next/data/"),
