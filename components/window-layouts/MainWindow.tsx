@@ -74,7 +74,7 @@ export function MainWindow({
 
   // --- DESKTOP LAYOUT ---
   return (
-    <div className="flex bg-background h-screen overflow-hidden text-foreground font-lexend pl-20">
+    <div className="flex bg-background h-screen overflow-hidden text-foreground font-lexend lg:pl-20">
       {/* Sidebar */}
       <Navigation variant="sidebar" />
 

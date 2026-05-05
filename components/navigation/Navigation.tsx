@@ -266,26 +266,57 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   }
 
   // --- SIDEBAR VARIANT (Desktop) ---
+  const isFullyExpanded = !isCollapsed || isMobileMenuOpen;
+
   return (
-    <aside
-      onMouseEnter={handleSidebarEnter}
-      onMouseLeave={handleSidebarLeave}
-      className={`
-        fixed left-0 top-0 z-100 h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl flex flex-col
-        ${isCollapsed ? "w-20" : "w-64"}
-      `}
-    >
-      {/* Toggle Button - Optional/Hidden in hover mode */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors lg:hidden"
+    <>
+      {/* Mobile Hamburger Button */}
+      <button 
+        onClick={() => setIsMobileMenuOpen(true)}
+        className={`
+          fixed top-4 left-6 z-40 p-2 bg-background border border-border rounded-md shadow-sm lg:hidden
+          transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-0 pointer-events-none" : "opacity-100"}
+        `}
       >
-        {isCollapsed ? (
-          <ChevronRight className="w-4 h-4" />
-        ) : (
-          <ChevronLeft className="w-4 h-4" />
-        )}
+        <Menu className="w-5 h-5 text-foreground" />
       </button>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <aside
+        onMouseEnter={handleSidebarEnter}
+        onMouseLeave={handleSidebarLeave}
+        className={`
+          fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl flex flex-col
+          ${isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0"}
+          ${!isMobileMenuOpen ? (isCollapsed ? "lg:w-20" : "lg:w-64") : ""}
+        `}
+      >
+        {/* Toggle Button - Optional/Hidden in hover mode (Desktop only) */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors hidden lg:block"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="lg:hidden absolute top-4 right-4 z-[70] p-2 bg-background border border-border shadow-md rounded-full text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
 
       {/* Header / Logo Area */}
       <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden">
@@ -307,7 +338,12 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               className="object-contain min-w-[40px]"
             />
           )}
-          {!isCollapsed && (
+          {!isFullyExpanded ? (
+            <div className="w-10 h-10 min-w-[40px] flex items-center justify-center">
+              {/* Collapsed Logo (Empty placeholder so width match) */}
+            </div>
+          ) : null}
+          {isFullyExpanded && (
             <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
               <h1 className="text-base font-bold tracking-tight text-foreground leading-none truncate max-w-[160px]">
                 {storeInfo.name || (<>PUNCH<span className="font-light text-muted-foreground ml-1">POS</span></>)}
@@ -342,6 +378,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
             >
               <Link
                 href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`
                   flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                   ${
@@ -349,9 +386,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                       ? "bg-primary/10 text-primary border border-primary/20"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                   }
-                  ${isCollapsed ? "justify-center" : ""}
+                  ${!isFullyExpanded ? "justify-center" : ""}
                   /* Use blue accent (primary) when expanded and hovered for specific items */
-                  ${!isCollapsed && isExpandable && (hoveredItemId === item.id) ? "bg-primary text-white" : ""}
+                  ${isFullyExpanded && isExpandable && (hoveredItemId === item.id) ? "bg-primary text-white" : ""}
                 `}
               >
                 <div className="relative">
@@ -366,14 +403,14 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                   )}
                 </div>
 
-                {!isCollapsed && (
+                {isFullyExpanded && (
                   <span className="font-semibold text-base tracking-wide whitespace-nowrap">
                     {item.text}
                   </span>
                 )}
 
                 {/* Tooltip for collapsed state */}
-                {isCollapsed && (
+                {!isFullyExpanded && (
                   <div className="left-full z-50 absolute ml-4 bg-popover px-3 py-1.5 border border-border rounded-md text-popover-foreground text-xs whitespace-nowrap opacity-0 group-hover/nav-item:opacity-100 pointer-events-none transition-opacity">
                     {item.text}
                   </div>
@@ -381,7 +418,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               </Link>
 
               {/* Sub-items list - smoother slide-down reveal using CSS grid row transition */}
-              {!isCollapsed && isExpandable && hasShortcuts && (
+              {isFullyExpanded && isExpandable && hasShortcuts && (
                 <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${hoveredItemId === item.id ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                   <div className="overflow-hidden">
                     <div className="flex flex-col ml-6 pl-4 border-l border-border/50 py-1 space-y-0.5">
@@ -392,6 +429,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                           <Link
                             key={idx}
                             href={shortcut.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
                             className={`
                               py-2 px-3 rounded-lg text-sm transition-all duration-200
                               ${isShortcutActive 
@@ -421,6 +459,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
           {/* Could put user profile here if not in top header */}
       </div>
     </aside>
+    </>
   );
 });
 
