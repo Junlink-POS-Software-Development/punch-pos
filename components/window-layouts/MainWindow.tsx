@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useMediaQuery } from "../../app/hooks/useMediaQuery";
 import { useViewStore } from "./store/useViewStore";
 import { Navigation } from "../navigation/Navigation";
+import { MobileBottomNav } from "../navigation/MobileBottomNav";
 import { Header } from "../Header";
 import { SubscriptionExpiryBanner } from "../subscription/SubscriptionExpiryBanner";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -74,10 +75,12 @@ export function MainWindow({
     return <>{children}</>;
   }
 
-  // --- DESKTOP LAYOUT ---
+  const isTerminal = pathname === "/";
+
+  // --- MAIN LAYOUT ---
   return (
     <div className={`flex bg-background h-screen overflow-hidden text-foreground font-lexend ${isTabletMode || isFullscreen ? "" : "lg:pl-20"}`}>
-      {/* Sidebar - hidden in fullscreen */}
+      {/* Sidebar - hidden in fullscreen and hidden on mobile (< lg) */}
       {!isFullscreen && <Navigation variant="sidebar" />}
 
       {/* Main Content */}
@@ -92,10 +95,13 @@ export function MainWindow({
           </>
         )}
         
-        <main className={`flex-1 overflow-y-auto flex flex-col ${isFullscreen ? "p-2" : "p-2 pt-0"}`}>
+        <main className={`flex-1 flex flex-col ${isTerminal ? "overflow-hidden" : "overflow-y-auto"} ${isFullscreen ? "p-2" : `p-2 pt-0 ${isTerminal ? "pb-16 lg:pb-0" : "pb-20 lg:pb-0"}`}`}>
             {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Hidden in fullscreen & desktop) */}
+      {!isFullscreen && <MobileBottomNav />}
 
       {/* Floating Exit Fullscreen Button */}
       {isFullscreen && (

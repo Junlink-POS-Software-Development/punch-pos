@@ -39,7 +39,6 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setViewState, posMode } = useViewStore();
   const isTabletMode = posMode === 'tablet';
 
@@ -257,36 +256,16 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   }
 
   // --- SIDEBAR VARIANT (Desktop) ---
-  const isFullyExpanded = !isCollapsed || isMobileMenuOpen;
+  const isFullyExpanded = !isCollapsed;
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
-      <button 
-        onClick={() => setIsMobileMenuOpen(true)}
-        className={`
-          fixed top-4 left-6 z-40 p-2 bg-background border border-border rounded-md shadow-sm ${isTabletMode ? "block" : "lg:hidden"}
-          transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-0 pointer-events-none" : "opacity-100"}
-        `}
-      >
-        <Menu className="w-5 h-5 text-foreground" />
-      </button>
-
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className={`fixed inset-0 bg-background/80 backdrop-blur-sm z-50 ${isTabletMode ? "" : "lg:hidden"}`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
       <aside
         onMouseEnter={handleSidebarEnter}
         onMouseLeave={handleSidebarLeave}
         className={`
-          fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl flex flex-col
-          ${isMobileMenuOpen ? "translate-x-0 w-64" : (isTabletMode ? "-translate-x-full" : "-translate-x-full lg:translate-x-0")}
-          ${!isMobileMenuOpen ? (isTabletMode ? "" : (isCollapsed ? "lg:w-20" : "lg:w-64")) : ""}
+          fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl hidden lg:flex flex-col
+          ${isTabletMode ? "-translate-x-full" : (isCollapsed ? "lg:w-20" : "lg:w-64")}
         `}
       >
         {/* Toggle Button - Optional/Hidden in hover mode (Desktop only) */}
@@ -302,14 +281,6 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
             )}
           </button>
         )}
-
-        {/* Mobile Close Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(false)}
-          className={`absolute top-4 right-4 z-[70] p-2 bg-background border border-border shadow-md rounded-full text-muted-foreground hover:text-foreground transition-colors ${isTabletMode ? "block" : "lg:hidden"}`}
-        >
-          <X className="w-4 h-4" />
-        </button>
 
       {/* Header / Logo Area */}
       <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden">
@@ -375,8 +346,6 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                   if (isTabletMode && isExpandable) {
                     e.preventDefault();
                     setHoveredItemId(hoveredItemId === item.id ? null : item.id);
-                  } else {
-                    setIsMobileMenuOpen(false);
                   }
                 }}
                 className={`
@@ -429,7 +398,6 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                           <Link
                             key={idx}
                             href={shortcut.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
                             className={`
                               py-2 px-3 rounded-lg text-sm transition-all duration-200
                               ${isShortcutActive 

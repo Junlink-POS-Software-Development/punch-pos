@@ -58,7 +58,7 @@ export const MobileSalesTerminal = () => {
   };
 
   return (
-    <PosThemeWrapper className="flex flex-col h-screen overflow-hidden relative">
+    <PosThemeWrapper className="flex flex-col h-full flex-1 overflow-hidden relative">
       <div className="flex flex-col h-full bg-background overflow-hidden relative">
         <FormProvider {...methods}>
           {/* Header - Fixed Top */}

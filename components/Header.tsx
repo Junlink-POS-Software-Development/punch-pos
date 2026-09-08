@@ -93,9 +93,32 @@ export function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
           </button>
         </div>
       )}
-      <header className="flex items-center justify-between gap-6 px-6 pt-4 h-[calc(4rem-2px)] min-h-[64px]">
-        {/* Container that occupies the whole span between logo area and right actions */}
-      <div className="flex-1 hidden lg:flex items-center overflow-hidden h-10 bg-muted/20 border border-border/50 rounded-full px-4 relative group">
+      <header className="flex items-center justify-between gap-3 sm:gap-6 px-3 sm:px-6 pt-2 sm:pt-4 h-14 sm:h-[calc(4rem-2px)] min-h-[56px] sm:min-h-[64px]">
+        {/* Mobile Branding (Visible on mobile/tablet, hidden on desktop) */}
+        <div className="flex lg:hidden items-center gap-2.5 min-w-0">
+          {storeInfo.img ? (
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0 bg-muted">
+              <img src={storeInfo.img} alt="Logo" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Store className="w-4 h-4 text-primary" />
+            </div>
+          )}
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-sm tracking-tight text-foreground truncate max-w-[130px] sm:max-w-[200px]">
+              {storeInfo.name || "PUNCH POS"}
+            </span>
+            {activeTitle && (
+              <span className="text-[10px] text-muted-foreground font-medium truncate">
+                {activeTitle}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Container that occupies the whole span between logo area and right actions (Desktop only) */}
+        <div className="flex-1 hidden lg:flex items-center overflow-hidden h-10 bg-muted/20 border border-border/50 rounded-full px-4 relative group">
         {/* Gradient Masks for premium look */}
         <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background/20 to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background/20 to-transparent z-10 pointer-events-none" />
@@ -125,7 +148,7 @@ export function Header({ onSignInClick, onSignOutClick }: HeaderProps) {
       </div>
 
       {/* RIGHT: User Actions */}
-      <div className="flex items-center gap-4 shrink-0 ml-auto relative z-20">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-auto relative z-20">
         {/* Welcome Text - Subtle */}
         <p className="hidden lg:block text-xs text-muted-foreground text-right">
           {isAuthReady 
