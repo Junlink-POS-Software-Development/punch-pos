@@ -16,6 +16,7 @@ import {
   fetchFlowCategories,
 } from "@/app/cashout/lib/cashflow.api";
 import { CashFlowEntry } from "../../lib/types";
+import { TableSkeletonRows } from "./TableSkeletonRows";
 
 interface CashFlowProps {
   startDate: string;
@@ -195,11 +196,7 @@ export function CashFlow({ startDate, endDate }: CashFlowProps) {
             {/* Body */}
             <tbody className="bg-card/30 text-foreground">
               {isLoading ? (
-                <tr>
-                  <td colSpan={columns.length} className="h-32 text-center">
-                    <Loader2 className="mx-auto w-6 h-6 text-emerald-500 animate-spin" />
-                  </td>
-                </tr>
+                <TableSkeletonRows columnsCount={columns.length} rowsCount={6} />
               ) : table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => (
                   <tr

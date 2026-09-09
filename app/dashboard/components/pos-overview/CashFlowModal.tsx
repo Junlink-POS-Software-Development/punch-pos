@@ -17,6 +17,7 @@ import {
 } from "@/app/cashout/lib/cashflow.api";
 import { CashFlowEntry } from "../../lib/types";
 import { DateColumnFilter } from "@/app/cashout/components/shared/DateColumnFilter";
+import { TableSkeletonRows } from "../financial-report/TableSkeletonRows";
 
 interface CashFlowModalProps {
   isOpen: boolean;
@@ -304,11 +305,7 @@ export function CashFlowModal({ isOpen, onClose, isMultiDrawer = false }: CashFl
             {/* Body */}
             <tbody className="text-foreground">
               {isLoading ? (
-                <tr>
-                  <td colSpan={columns.length} className="h-32 text-center">
-                    <Loader2 className="mx-auto w-6 h-6 text-emerald-500 animate-spin" />
-                  </td>
-                </tr>
+                <TableSkeletonRows columnsCount={columns.length} rowsCount={5} />
               ) : table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => (
                   <tr

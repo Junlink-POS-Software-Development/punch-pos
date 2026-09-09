@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { AlertTriangle, ChevronDown } from "lucide-react";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
+import { AlertListSkeleton } from "./AlertListSkeleton";
 
 interface LowStockAlertCardProps {
   query: any; // Result from useInfiniteQuery
@@ -64,9 +65,7 @@ export function LowStockAlertCard({ query }: LowStockAlertCardProps) {
         className="space-y-2 grow overflow-y-auto pr-2 custom-scrollbar"
       >
         {isLoading ? (
-          <div className="h-full flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-            Loading...
-          </div>
+          <AlertListSkeleton rows={4} />
         ) : lowStock.length > 0 ? (
           <>
             {lowStock.map((item: any, idx: number) => (
@@ -91,8 +90,12 @@ export function LowStockAlertCard({ query }: LowStockAlertCardProps) {
               </div>
             ))}
             {isFetchingNextPage && (
-              <div className="text-center py-2 text-xs text-muted-foreground animate-pulse mt-2">
-                Loading more...
+              <div className="flex justify-between items-center p-2 rounded bg-muted/20 border border-border/40 animate-pulse mt-1">
+                <div className="flex flex-col gap-1 flex-1 pr-2">
+                  <div className="h-3 w-28 bg-muted rounded" />
+                  <div className="h-2 w-16 bg-muted/60 rounded" />
+                </div>
+                <div className="h-4 w-12 bg-muted/70 rounded-md" />
               </div>
             )}
           </>

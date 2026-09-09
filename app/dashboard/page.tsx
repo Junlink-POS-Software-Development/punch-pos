@@ -69,11 +69,7 @@ function DashboardContent() {
 
         {/* SECTION 1: THE VITALS */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5 animate-pulse">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-40 bg-card/50 rounded-xl border border-border" />
-            ))}
-          </div>
+          <VitalsSkeleton />
         ) : (
           <VitalsGrid
             stats={stats}
@@ -117,11 +113,55 @@ function DashboardContent() {
   );
 }
 
+import { VitalsSkeleton } from "./components/pos-overview/VitalsSkeleton";
+
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-muted/20 p-4 md:p-6 pb-24 font-sans text-foreground">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Skeleton */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-end mb-6 animate-pulse">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="h-[38px] w-36 bg-card border border-border rounded-lg" />
+            <div className="h-[38px] w-28 bg-card border border-border rounded-lg" />
+            <div className="h-[38px] w-48 bg-card border border-border rounded-lg" />
+            <div className="h-[38px] w-[38px] bg-card border border-border rounded-lg" />
+          </div>
+        </div>
+
+        {/* Vitals Skeleton */}
+        <VitalsSkeleton />
+
+        {/* Alert Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-card p-4 rounded-xl border border-border shadow-sm h-[300px] flex flex-col animate-pulse"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-md bg-muted" />
+                <div className="h-4 w-28 bg-muted rounded" />
+              </div>
+              <div className="space-y-2 flex-1 pt-2">
+                {[1, 2, 3, 4].map((j) => (
+                  <div
+                    key={j}
+                    className="h-11 bg-muted/30 rounded-lg border border-border/40"
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   return (
-    <Suspense
-      fallback={<div className="p-6 text-foreground">Loading...</div>}
-    >
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
   );

@@ -3,6 +3,7 @@
 import { Clock } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { AlertListSkeleton } from "./AlertListSkeleton";
 
 dayjs.extend(relativeTime);
 
@@ -25,9 +26,7 @@ export function ExpiringSoonCard({ query }: ExpiringSoonCardProps) {
       </div>
       <div className="space-y-2 grow overflow-y-auto pr-2 custom-scrollbar">
         {isLoading ? (
-          <div className="h-full flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-            Loading...
-          </div>
+          <AlertListSkeleton rows={4} />
         ) : liveExpiringSoon.length > 0 ? (
           liveExpiringSoon.map((item: any) => (
             <div

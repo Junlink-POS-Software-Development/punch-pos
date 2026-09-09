@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, RefreshCcw, ChevronDown } from "lucide-react";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
+import { AlertListSkeleton } from "./AlertListSkeleton";
 
 interface PerformanceCardProps {
   bestSellersQuery: any;
@@ -51,9 +52,7 @@ export function PerformanceCard({ bestSellersQuery, worstSellersQuery }: Perform
 
       <div className="space-y-2 grow overflow-y-auto pr-2 custom-scrollbar">
         {isLoading ? (
-          <div className="h-full flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-            Loading...
-          </div>
+          <AlertListSkeleton rows={4} />
         ) : items.length > 0 ? (
           items.map((item: any, idx: number) => (
             <div

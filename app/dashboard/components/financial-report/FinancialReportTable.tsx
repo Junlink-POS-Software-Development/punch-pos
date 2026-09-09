@@ -1,9 +1,9 @@
 "use client";
 
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Loader2 } from "lucide-react";
 import { FinancialReportItem } from "../../lib/types";
 import { financialReportColumns } from "./FinancialReportColumns";
+import { TableSkeletonRows } from "./TableSkeletonRows";
 
 interface FinancialReportTableProps {
   data: FinancialReportItem[];
@@ -39,11 +39,7 @@ export const FinancialReportTable = ({ data, isLoading }: FinancialReportTablePr
           {/* Body */}
           <tbody className="bg-slate-900/50 text-slate-200">
             {isLoading ? (
-              <tr>
-                <td colSpan={financialReportColumns.length} className="h-32 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-500" />
-                </td>
-              </tr>
+              <TableSkeletonRows columnsCount={financialReportColumns.length} rowsCount={6} />
             ) : table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <tr
