@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { TransactionFilters } from '../hooks/useTransactionQueries';
+import { DEFAULT_PAYMENT_PAGE_SIZE } from '../lib/paymentCache';
 
 interface PaymentState {
   currentPage: number;
@@ -12,7 +13,7 @@ interface PaymentState {
 
 export const usePaymentStore = create<PaymentState>((set) => ({
   currentPage: 1,
-  rowsPerPage: 10,
+  rowsPerPage: DEFAULT_PAYMENT_PAGE_SIZE,
   filters: { startDate: "", endDate: "" },
   setCurrentPage: (page) => set({ currentPage: page }),
   setRowsPerPage: (size) => set({ rowsPerPage: size }),

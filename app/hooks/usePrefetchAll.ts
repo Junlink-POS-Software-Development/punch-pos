@@ -10,6 +10,17 @@ import { fetchItems } from "@/app/inventory/components/item-registration/lib/ite
 import { fetchExpensesSummary, fetchCurrentBalance, fetchExpensesPaginated } from "@/app/cashout/lib/cashout.api";
 import { fetchFlowCategories, fetchCashFlowLedger } from "@/app/cashout/lib/cashflow.api";
 import { fetchCustomerFeatureData } from "@/app/customers/lib/customer.api";
+import { getPaymentHistory } from "@/app/actions/transactions";
+import {
+  formatPaymentRecord,
+  DEFAULT_PAYMENT_PAGE_SIZE,
+} from "@/app/transactions/lib/paymentCache";
+
+interface PrefetchTask {
+  key: readonly unknown[];
+  fn: () => Promise<unknown>;
+  isInfinite?: boolean;
+}
 
 export function usePrefetchAll() {
   const queryClient = useQueryClient();
@@ -23,7 +34,7 @@ export function usePrefetchAll() {
     const todayRange = { start: todayStr, end: todayStr };
     const monthRange = { start: monthStart, end: monthEnd };
 
-    const tasks = [
+    const tasks: PrefetchTask[] = [
       // 1. Dashboard Stats
       {
         key: ["dashboard-stats", todayStr],
@@ -75,6 +86,27 @@ export function usePrefetchAll() {
         key: ["customer-feature-data", todayStr, todayStr, false],
         fn: () => fetchCustomerFeatureData(todayStr, todayStr),
       },
+      // 8. Payment Transactions (initial 50 records)
+      {
+        key: ["payments", DEFAULT_PAYMENT_PAGE_SIZE, { startDate: "", endDate: "" }],
+        fn: async () => {
+          const res = await getPaymentHistory(1, DEFAULT_PAYMENT_PAGE_SIZE, {});
+          if (!res.success) throw new Error(res.error);
+          const rows = res.data || [];
+          const formattedData = rows.map((p) => formatPaymentRecord(p));
+          return {
+            pages: [
+              {
+                data: formattedData,
+                count: res.count || 0,
+                nextPage: rows.length === DEFAULT_PAYMENT_PAGE_SIZE ? 2 : undefined,
+              },
+            ],
+            pageParams: [1],
+          };
+        },
+        isInfinite: true,
+      },
     ];
 
     let completed = 0;
@@ -84,7 +116,7 @@ export function usePrefetchAll() {
     await Promise.allSettled(
       tasks.map(async (task) => {
         try {
-          if ((task as any).isInfinite) {
+          if (task.isInfinite) {
             const data = await task.fn();
             queryClient.setQueryData(task.key, data);
           } else {

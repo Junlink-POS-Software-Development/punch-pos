@@ -6,6 +6,11 @@ import { createClient } from "@/utils/supabase/client";
 import dayjs from "dayjs";
 import { fetchDashboardStats, fetchLatestCategorySales } from "@/app/dashboard/lib/dashboard.api";
 import { fetchExpensesSummary, fetchCurrentBalance } from "@/app/cashout/lib/cashout.api";
+import {
+  formatPaymentRecord,
+  prependPaymentToQueryCache,
+  removePaymentFromQueryCache,
+} from "@/app/transactions/lib/paymentCache";
 
 /**
  * GlobalCashflowSync
@@ -42,6 +47,8 @@ export function GlobalCashflowSync() {
           queryClient.invalidateQueries({ queryKey: ["daily-cash-flow"] }),
           queryClient.invalidateQueries({ queryKey: ["stocks"] }),
           queryClient.invalidateQueries({ queryKey: ["inventory"] }),
+          queryClient.invalidateQueries({ queryKey: ["payments"] }),
+          queryClient.invalidateQueries({ queryKey: ["transaction-items"] }),
         ]);
 
         // 2. Actively pre-warm / refetch core today's datasets in the background
@@ -67,6 +74,8 @@ export function GlobalCashflowSync() {
               queryFn: () => fetchCurrentBalance(todayStr),
               staleTime: 1000 * 60 * 5,
             }),
+            queryClient.refetchQueries({ queryKey: ["payments"], type: "all" }),
+            queryClient.refetchQueries({ queryKey: ["transaction-items"], type: "all" }),
           ]);
         } catch (error) {
           console.error("[GlobalCashflowSync] Background prefetch error:", error);
@@ -79,7 +88,15 @@ export function GlobalCashflowSync() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "payments" },
-        () => triggerDebouncedSync()
+        (payload) => {
+          if (payload.eventType === "INSERT" && payload.new) {
+            const formatted = formatPaymentRecord(payload.new as Record<string, unknown>);
+            prependPaymentToQueryCache(queryClient, formatted);
+          } else if (payload.eventType === "DELETE" && payload.old && (payload.old as { id?: string }).id) {
+            removePaymentFromQueryCache(queryClient, (payload.old as { id: string }).id);
+          }
+          triggerDebouncedSync();
+        }
       )
       .on(
         "postgres_changes",

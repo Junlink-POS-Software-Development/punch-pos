@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useViewStore } from "../window-layouts/store/useViewStore";
 import { getStoreInfo } from "@/app/actions/store";
+import { DEFAULT_PAYMENT_PAGE_SIZE, formatPaymentRecord } from "@/app/transactions/lib/paymentCache";
 
 // Mock data for the specific page shortcuts/dropdowns
 const MOCK_SHORTCUTS = [
@@ -37,6 +39,7 @@ interface NavigationProps {
 
 const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const { setViewState, posMode } = useViewStore();
@@ -44,6 +47,25 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
 
   const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const itemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const prewarmPayments = () => {
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["payments", DEFAULT_PAYMENT_PAGE_SIZE, { startDate: "", endDate: "" }],
+      queryFn: async () => {
+        const { getPaymentHistory } = await import("@/app/actions/transactions");
+        const res = await getPaymentHistory(1, DEFAULT_PAYMENT_PAGE_SIZE, {});
+        if (!res.success) throw new Error(res.error);
+        const rows = res.data || [];
+        return {
+          data: rows.map(formatPaymentRecord),
+          count: res.count || 0,
+          nextPage: rows.length === DEFAULT_PAYMENT_PAGE_SIZE ? 2 : undefined,
+        };
+      },
+      initialPageParam: 1,
+      staleTime: 1000 * 60 * 5,
+    }).catch(() => {});
+  };
 
   const handleSidebarEnter = () => {
     if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
@@ -58,6 +80,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   };
 
   const handleItemEnter = (id: string) => {
+    if (id === "transactions") {
+      prewarmPayments();
+    }
     if (isTabletMode) return;
     if (itemTimeoutRef.current) clearTimeout(itemTimeoutRef.current);
     

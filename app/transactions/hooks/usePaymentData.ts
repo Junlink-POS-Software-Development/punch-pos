@@ -6,6 +6,7 @@ export function usePaymentData() {
   const { 
     data, 
     isLoading, 
+    isFetching,
     error, 
     refetch,
     fetchNextPage,
@@ -13,13 +14,14 @@ export function usePaymentData() {
     isFetchingNextPage
   } = usePaymentHistory(rowsPerPage, filters);
 
-  const payments = data?.pages.flatMap((page) => page.data) || [];
-  const totalRows = data?.pages[0]?.count || 0;
+  const payments = data?.pages ? data.pages.flatMap((page) => page.data) : [];
+  const totalRows = data?.pages?.[0]?.count ? Math.max(data.pages[0].count, payments.length) : payments.length;
 
   return {
     payments,
     totalRows,
     isLoading,
+    isFetching,
     isError: !!error,
     error,
     rowsPerPage,

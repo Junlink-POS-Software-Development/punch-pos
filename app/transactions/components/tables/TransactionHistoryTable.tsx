@@ -23,11 +23,15 @@ export const TransactionHistoryTable = () => {
   const [searchTerm, setSearchTerm] = useState(filters.transactionNo || "");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  const handleApplyFilter = useCallback((key: string, value: string) => {
+    setFilters({ ...filters, [key]: value });
+  }, [filters, setFilters]);
+
   useEffect(() => {
     if (debouncedSearchTerm !== (filters.transactionNo || "")) {
       handleApplyFilter("transactionNo", debouncedSearchTerm);
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, filters.transactionNo, handleApplyFilter]);
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -60,10 +64,6 @@ export const TransactionHistoryTable = () => {
 
   const handleDateChange = (start: string, end: string) => {
     setFilters({ ...filters, startDate: start, endDate: end });
-  };
-
-  const handleApplyFilter = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value });
   };
 
   const handleClearAllFilters = () => {

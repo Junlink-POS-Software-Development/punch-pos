@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useOfflineQueueStore } from "@/store/useOfflineQueueStore";
 import { processTransaction, TransactionHeader, TransactionItem } from "@/app/actions/transactions";
 import { createExpense, CashoutInput } from "@/app/cashout/lib/cashout.api";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 export function OfflineSyncManager() {
+  const queryClient = useQueryClient();
   const { queue, isSyncing, setSyncing, dequeue } = useOfflineQueueStore();
 
   useEffect(() => {
@@ -40,6 +41,13 @@ export function OfflineSyncManager() {
       }
 
       setSyncing(false);
+
+      // Invalidate and refetch payments, line items, and dashboard
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.refetchQueries({ queryKey: ["payments"], type: "all" });
+      queryClient.refetchQueries({ queryKey: ["transaction-items"], type: "all" });
     };
 
     window.addEventListener("online", handleOnline);
@@ -52,7 +60,7 @@ export function OfflineSyncManager() {
     return () => {
       window.removeEventListener("online", handleOnline);
     };
-  }, [queue, isSyncing, setSyncing, dequeue]);
+  }, [queue, isSyncing, setSyncing, dequeue, queryClient]);
 
   return null; // Headless component
 }

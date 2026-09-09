@@ -17,7 +17,6 @@ export const PaymentHistoryTable = () => {
   const {
     payments,
     totalRows,
-    isLoading,
     isError,
     error,
     filters,
@@ -31,11 +30,15 @@ export const PaymentHistoryTable = () => {
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  const handleApplyFilter = useCallback((key: string, value: string) => {
+    setFilters({ ...filters, [key]: value });
+  }, [filters, setFilters]);
+
   useEffect(() => {
     if (debouncedSearchTerm !== (filters.search || "")) {
       handleApplyFilter("search", debouncedSearchTerm);
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, filters.search, handleApplyFilter]);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedInvoiceNo, setSelectedInvoiceNo] = useState<string | null>(null);
@@ -74,10 +77,6 @@ export const PaymentHistoryTable = () => {
     setFilters({ ...filters, startDate: start, endDate: end });
   };
 
-  const handleApplyFilter = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value });
-  };
-
   const handleClearAllFilters = () => {
     setFilters({ startDate: "", endDate: "" });
     setSearchTerm("");
@@ -104,38 +103,28 @@ export const PaymentHistoryTable = () => {
     await queryClient.cancelQueries({ queryKey: ["payments"] });
     await queryClient.cancelQueries({ queryKey: ["transaction-items"] });
 
-    // 2. Snapshot current data (for cleanup if needed, but invalidation is simpler for rollback)
-    
-    // 3. Update Payments cache
-    queryClient.setQueriesData({ queryKey: ["payments"] }, (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        pages: old.pages.map((page: any) => ({
-          ...page,
-          data: page.data.filter((p: any) => p.id !== id),
-          count: Math.max(0, (page.count || 0) - 1)
-        })),
-      };
-    });
+    // 2. Optimistically remove from Payments cache using helper
+    const { removePaymentFromQueryCache } = await import("../../lib/paymentCache");
+    removePaymentFromQueryCache(queryClient, id);
 
-    // 4. Update Transaction Items cache
-    queryClient.setQueriesData({ queryKey: ["transaction-items"] }, (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        pages: old.pages.map((page: any) => ({
-          ...page,
-          data: page.data.filter((item: any) => item.transactionNo !== transactionNo),
-        })),
-      };
-    });
+    // 3. Update Transaction Items cache
+    queryClient.setQueriesData<{ pages: Array<{ data: Array<{ transactionNo?: string }> }> }>(
+      { queryKey: ["transaction-items"] },
+      (old) => {
+        if (!old || !old.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.filter((item) => item.transactionNo !== transactionNo),
+          })),
+        };
+      }
+    );
 
     try {
       const result = await deletePayment(id);
       if (result.success) {
-        // On success, we don't strictly NEED to invalidade if our optimistic math is perfect,
-        // but it's safer to ensure consistency.
         refresh();
         queryClient.invalidateQueries({ queryKey: ["transaction-items"] });
       } else {
@@ -222,16 +211,7 @@ export const PaymentHistoryTable = () => {
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={can_delete_transaction ? 8 : 7} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-muted-foreground text-xs">Loading payments...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : payments.length === 0 ? (
+            {payments.length === 0 ? (
               <tr>
                 <td
                   colSpan={can_delete_transaction ? 8 : 7}

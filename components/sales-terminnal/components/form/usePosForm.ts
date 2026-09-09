@@ -21,6 +21,7 @@ import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers";
 import { TransactionResult } from "../buttons/handlers/done";
 import { useTransactionStore } from "@/app/settings/backdating/stores/useTransactionStore";
 import { broadcastStoreEvent } from "@/lib/realtimeBroadcast";
+import { prependPaymentToQueryCache } from "@/app/transactions/lib/paymentCache";
 
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
@@ -304,6 +305,19 @@ export const usePosForm = (): UsePosFormReturn => {
           cashier_name: user.id,
         };
         setSuccessData(offlineResult);
+
+        // Optimistically insert offline payment to cache so it appears in Payments table immediately
+        prependPaymentToQueryCache(queryClient, {
+          id: offlineResult.invoice_no,
+          transactionNo: offlineResult.invoice_no,
+          transactionTime: new Date(offlineResult.transaction_time).toLocaleString(),
+          customerName: offlineResult.customer_name || "",
+          amountRendered: offlineResult.amount_rendered,
+          voucher: offlineResult.voucher,
+          grandTotal: offlineResult.grand_total,
+          change: offlineResult.change,
+        });
+
         setIsSubmitting(false);
         return;
       }
@@ -321,6 +335,20 @@ export const usePosForm = (): UsePosFormReturn => {
         setIsSubmitting(false);
         // [OPTIMISTIC] Update with real data
         setSuccessData(result);
+
+        // [OPTIMISTIC PAYMENTS] Instantly prepend the new transaction into the payments cache
+        prependPaymentToQueryCache(queryClient, {
+          id: result.payment_id || result.invoice_no,
+          transactionNo: result.invoice_no,
+          transactionTime: result.transaction_time
+            ? new Date(result.transaction_time).toLocaleString()
+            : new Date().toLocaleString(),
+          customerName: result.customer_name || "",
+          amountRendered: result.amount_rendered ?? 0,
+          voucher: result.voucher ?? 0,
+          grandTotal: result.grand_total ?? 0,
+          change: result.change ?? 0,
+        });
 
         // Broadcast to other computers (e.g. Dashboard) instantly over Realtime WebSocket
         broadcastStoreEvent("TRANSACTION_COMPLETED", {
@@ -372,6 +400,8 @@ export const usePosForm = (): UsePosFormReturn => {
         queryClient.invalidateQueries({ queryKey: ["inventory-infinite"] });
         queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "payments" });
         queryClient.invalidateQueries({ predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "transaction-items" });
+        queryClient.refetchQueries({ queryKey: ["payments"], type: "all" });
+        queryClient.refetchQueries({ queryKey: ["transaction-items"], type: "all" });
         queryClient.invalidateQueries({ queryKey: ["dashboard-financial-report"] });
       } else {
         setIsSubmitting(false);
