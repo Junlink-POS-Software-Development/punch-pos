@@ -1,5 +1,3 @@
-"use server";
-
 import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { CartItem } from "../../terminal-cart/types";
 import { processTransaction } from "@/app/actions/transactions";
