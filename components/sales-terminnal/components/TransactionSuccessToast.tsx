@@ -33,7 +33,7 @@ export const TransactionSuccessToast: React.FC<TransactionSuccessToastProps> = (
   if (!toast) return null;
 
   return (
-    <div className="fixed bottom-20 sm:bottom-4 left-4 z-50 pointer-events-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-20 sm:bottom-4 right-4 z-50 pointer-events-auto max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-center gap-3 bg-card/95 backdrop-blur-md border border-emerald-500/40 shadow-xl shadow-black/10 text-card-foreground px-3.5 py-2.5 rounded-xl">
         {/* Animated Icon */}
         <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-500/30">
