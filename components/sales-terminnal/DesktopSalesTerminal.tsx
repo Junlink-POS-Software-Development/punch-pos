@@ -19,6 +19,7 @@ import { PosThemeWrapper } from "./components/PosThemeWrapper";
 import { PosThemeCustomizerModal } from "./modals/PosThemeCustomizerModal";
 import { CartItem, DiscountType } from "./components/terminal-cart/types";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
+import { TransactionSuccessToast } from "./components/TransactionSuccessToast";
 
 const DesktopSalesTerminal = () => {
   const {
@@ -35,6 +36,8 @@ const DesktopSalesTerminal = () => {
     closeSuccessModal,
     errorMessage,
     clearErrorMessage,
+    transactionToast,
+    clearTransactionToast,
     setCustomerId,
   } = usePosForm();
 
@@ -284,6 +287,7 @@ const DesktopSalesTerminal = () => {
         )}
 
         <ErrorMessage message={errorMessage} onClose={clearErrorMessage} />
+        <TransactionSuccessToast toast={transactionToast} onClose={clearTransactionToast} />
 
         {/* Discount Modal — inline for tablet, popup for desktop */}
         {isTabletMode && isDiscountModalOpen ? null : (

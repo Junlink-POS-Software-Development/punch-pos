@@ -13,6 +13,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { useTerminalShortcuts } from "../hooks/useTerminalShortcuts";
 import { PosThemeWrapper } from "../components/PosThemeWrapper";
 import { PosThemeCustomizerModal } from "../modals/PosThemeCustomizerModal";
+import { TransactionSuccessToast } from "../components/TransactionSuccessToast";
 
 export const MobileSalesTerminal = () => {
   const {
@@ -26,6 +27,8 @@ export const MobileSalesTerminal = () => {
     closeSuccessModal,
     errorMessage,
     clearErrorMessage,
+    transactionToast,
+    clearTransactionToast,
     setCustomerId,
     customerId,
   } = usePosForm();
@@ -134,6 +137,7 @@ export const MobileSalesTerminal = () => {
           )}
 
           <ErrorMessage message={errorMessage} onClose={clearErrorMessage} />
+          <TransactionSuccessToast toast={transactionToast} onClose={clearTransactionToast} />
 
           <PosThemeCustomizerModal
             isOpen={isThemeModalOpen}

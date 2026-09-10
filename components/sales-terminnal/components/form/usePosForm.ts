@@ -25,6 +25,7 @@ import {
   prependPaymentToQueryCache,
   generateInvoiceNo,
 } from "@/app/transactions/lib/paymentCache";
+import { TransactionToastData } from "../TransactionSuccessToast";
 
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
@@ -41,6 +42,9 @@ interface UsePosFormReturn {
   closeSuccessModal: () => void;
   errorMessage: string | null;
   clearErrorMessage: () => void;
+  // [NEW] Bottom-left Visual Cue Toast
+  transactionToast: TransactionToastData | null;
+  clearTransactionToast: () => void;
   // [NEW] Export Customer State
   customerId: string | null;
   setCustomerId: (id: string | null) => void;
@@ -65,6 +69,10 @@ export const usePosForm = (): UsePosFormReturn => {
   const [isFreeMode, setIsFreeMode] = useState(false); // [NEW] Free Mode state
 
   const [successData, setSuccessData] = useState<TransactionResult | null>(null);
+  const [transactionToast, setTransactionToast] = useState<TransactionToastData | null>(null);
+  const clearTransactionToast = useCallback(() => {
+    setTransactionToast(null);
+  }, []);
   const isSuccessModalOpenRef = useRef(false);
   const presetInvoiceNoRef = useRef<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -274,6 +282,14 @@ export const usePosForm = (): UsePosFormReturn => {
     isSuccessModalOpenRef.current = true;
     setSuccessData(initialResult);
 
+    // [VISUAL CUE] Trigger bottom-left success toast
+    setTransactionToast({
+      invoiceNo: finalInvoiceNo,
+      total: data.grandTotal,
+      customerName: data.customerName,
+      isOffline: false,
+    });
+
     // [OPTIMISTIC PAYMENTS] Instantly prepend the new transaction into the payments cache
     prependPaymentToQueryCache(queryClient, {
       id: finalInvoiceNo,
@@ -326,6 +342,12 @@ export const usePosForm = (): UsePosFormReturn => {
         if (isSuccessModalOpenRef.current) {
           setSuccessData((prev) => (prev ? { ...prev, isOffline: true } : null));
         }
+        setTransactionToast({
+          invoiceNo: finalInvoiceNo,
+          total: data.grandTotal,
+          customerName: data.customerName,
+          isOffline: true,
+        });
 
         setIsSubmitting(false);
         return;
@@ -349,6 +371,14 @@ export const usePosForm = (): UsePosFormReturn => {
         if (isSuccessModalOpenRef.current) {
           setSuccessData((prev) => (prev ? { ...prev, ...result } : null));
         }
+
+        // [VISUAL CUE] Refresh toast with finalized server result
+        setTransactionToast({
+          invoiceNo: result.invoice_no || finalInvoiceNo,
+          total: result.grand_total ?? data.grandTotal,
+          customerName: result.customer_name ?? data.customerName,
+          isOffline: result.isOffline ?? false,
+        });
 
         // [OPTIMISTIC PAYMENTS] Update payments cache with confirmed payment_id
         if (result.payment_id) {
@@ -425,6 +455,7 @@ export const usePosForm = (): UsePosFormReturn => {
         setIsSubmitting(false);
       }
     } catch (error: unknown) {
+      setTransactionToast(null);
       if (isSuccessModalOpenRef.current) {
         setSuccessData(null); // Clear optimistic data if it failed
       }
@@ -478,6 +509,8 @@ export const usePosForm = (): UsePosFormReturn => {
     closeSuccessModal,
     errorMessage,
     clearErrorMessage,
+    transactionToast,
+    clearTransactionToast,
     customerId, // [NEW]
     setCustomerId, // [NEW]
     isFreeMode, // [NEW]
