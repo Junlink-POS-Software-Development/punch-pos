@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { usePosForm } from "../components/form/usePosForm";
 import { MobileHeader } from "./MobileHeader";
@@ -20,8 +20,6 @@ export const MobileSalesTerminal = () => {
     cartItems,
     onAddToCart,
     onRemoveItem,
-    onUpdateItem,
-    onDoneSubmit,
     triggerDoneSubmit,
     onClear,
     successData,
@@ -48,12 +46,25 @@ export const MobileSalesTerminal = () => {
     hasItems: cartItems.length > 0,
   });
 
-  const handlePaymentComplete = (payment: number, voucher: number) => {
+  const handlePaymentComplete = (
+    payment: number,
+    voucher: number,
+    voucherData?: { id: string; code: string; amount: number } | null,
+    invoiceNo?: string
+  ) => {
+    if (invoiceNo) {
+      methods.setValue("transactionNo", invoiceNo);
+    }
     methods.setValue("payment", payment);
     methods.setValue("voucher", voucher);
+    methods.setValue("voucherAmount", voucher);
+    if (voucherData) {
+      methods.setValue("voucherCode", voucherData.code);
+      methods.setValue("voucherId", voucherData.id || null);
+    }
     methods.setValue("grandTotal", cartTotal - voucher);
     // Trigger submission
-    triggerDoneSubmit();
+    triggerDoneSubmit(invoiceNo);
     setIsPaymentPopupOpen(false);
   };
 

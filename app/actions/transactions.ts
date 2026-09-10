@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 // --- 1. Domain Interfaces ---
 
 export interface TransactionHeader {
+  invoice_no?: string | null;
   customer_name: string | null;
   amount_rendered: number;
   voucher: number; // Legacy
@@ -76,6 +77,7 @@ export async function processTransaction(
     revalidatePath("/sales");
     revalidatePath("/dashboard");
     revalidatePath("/expenses"); // Because vouchers might affect expenses
+    revalidatePath("/transactions");
 
     // 3. Return the generated data (Invoice # and UUID)
     // The RPC returns { "payment_id": "...", "invoice_no": "..." }

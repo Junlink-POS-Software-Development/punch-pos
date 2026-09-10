@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import dayjs from "dayjs";
 import { Ticket, X, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import { lookupVoucher, Voucher } from "@/app/actions/vouchers";
+import { generateInvoiceNo } from "@/app/transactions/lib/paymentCache";
 
 interface PaymentPopupProps {
   isOpen: boolean;
@@ -9,11 +9,16 @@ interface PaymentPopupProps {
   totalAmount: number; // grandTotal (after discounts)
   orderDiscountAmount?: number;
   subtotal?: number; // cart total before order discount
-  onConfirm: (payment: number, voucher: number, voucherData?: {
-    id: string;
-    code: string;
-    amount: number;
-  } | null) => void;
+  onConfirm: (
+    payment: number,
+    voucher: number,
+    voucherData?: {
+      id: string;
+      code: string;
+      amount: number;
+    } | null,
+    invoiceNo?: string
+  ) => void;
 }
 
 export const PaymentPopup: React.FC<PaymentPopupProps> = ({
@@ -41,9 +46,8 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const dateStr = dayjs().format("YYYYMMDD");
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      setTransactionNo(`TRX-${dateStr}-${randomSuffix}`);
+      const invNo = generateInvoiceNo();
+      setTransactionNo(invNo);
       
       setPayment("");
       setVoucherCode("");
@@ -87,7 +91,7 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
       } else {
         setVoucherError(result.error || "Could not apply voucher.");
       }
-    } catch (err) {
+    } catch {
       setVoucherError("Failed to validate voucher. Please try again.");
     } finally {
       setVoucherLoading(false);
@@ -119,7 +123,7 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
           }
         : null;
 
-    onConfirm(paymentValue, effectiveVoucherAmount, voucherData);
+    onConfirm(paymentValue, effectiveVoucherAmount, voucherData, transactionNo);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -148,7 +152,7 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
         {/* Header */}
         <div className="bg-muted/30 p-4 border-b border-border shrink-0">
           <h2 className="font-bold text-foreground text-xl">Payment</h2>
-          <p className="text-muted-foreground text-sm">Transaction No: <span className="font-mono text-primary">{transactionNo}</span></p>
+          <p className="text-muted-foreground text-sm">Invoice No: <span className="font-mono text-primary">{transactionNo}</span></p>
         </div>
 
         {/* Body — scrollable */}

@@ -13,7 +13,8 @@ const SuccessReceiptModal: React.FC<SuccessReceiptModalProps> = ({
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
         onClose();
       }
     };

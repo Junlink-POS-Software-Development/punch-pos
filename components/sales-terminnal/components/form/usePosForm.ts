@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   useForm,
   SubmitHandler,
@@ -21,7 +21,10 @@ import { handleAddToCart, handleClear, handleDone } from "../buttons/handlers";
 import { TransactionResult } from "../buttons/handlers/done";
 import { useTransactionStore } from "@/app/settings/backdating/stores/useTransactionStore";
 import { broadcastStoreEvent } from "@/lib/realtimeBroadcast";
-import { prependPaymentToQueryCache } from "@/app/transactions/lib/paymentCache";
+import {
+  prependPaymentToQueryCache,
+  generateInvoiceNo,
+} from "@/app/transactions/lib/paymentCache";
 
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
@@ -31,7 +34,7 @@ interface UsePosFormReturn {
   onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
   onClear: () => void;
   onDoneSubmit: SubmitHandler<PosFormValues>;
-  triggerDoneSubmit: () => void;
+  triggerDoneSubmit: (invoiceNo?: string) => void;
 
   isSubmitting: boolean;
   successData: TransactionResult | null;
@@ -62,6 +65,8 @@ export const usePosForm = (): UsePosFormReturn => {
   const [isFreeMode, setIsFreeMode] = useState(false); // [NEW] Free Mode state
 
   const [successData, setSuccessData] = useState<TransactionResult | null>(null);
+  const isSuccessModalOpenRef = useRef(false);
+  const presetInvoiceNoRef = useRef<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // [NEW] Load Cart from LocalStorage on Mount
@@ -242,32 +247,52 @@ export const usePosForm = (): UsePosFormReturn => {
 
     setIsSubmitting(true);
 
-    // [OPTIMISTIC] Show modal immediately with temporary data
-    const optimisticResult: TransactionResult = {
-      invoice_no: "PENDING...",
+    const effectiveDate = customTransactionDate
+      ? new Date(customTransactionDate)
+      : null;
+
+    const finalInvoiceNo =
+      presetInvoiceNoRef.current || data.transactionNo || generateInvoiceNo();
+    presetInvoiceNoRef.current = null;
+
+    // [UPFRONT INVOICE] Show modal immediately with unique invoice number
+    const initialResult: TransactionResult = {
+      invoice_no: finalInvoiceNo,
       customer_name: data.customerName || "WALK-IN",
       amount_rendered: data.payment || 0,
       voucher: data.voucher || 0,
+      voucher_code: data.voucherCode || null,
+      voucher_amount: data.voucherAmount || 0,
+      order_discount_amount: data.orderDiscountAmount || 0,
       grand_total: data.grandTotal,
       change: data.change,
-      transaction_no: "PENDING...",
-      transaction_time: new Date().toISOString(),
-      cashier_name: user.id, // Will be replaced by real name if available, but ID is fine for optimistic
+      transaction_no: finalInvoiceNo,
+      transaction_time: effectiveDate ? effectiveDate.toISOString() : new Date().toISOString(),
+      cashier_name: user.id,
     };
     
-    setSuccessData(optimisticResult);
+    isSuccessModalOpenRef.current = true;
+    setSuccessData(initialResult);
+
+    // [OPTIMISTIC PAYMENTS] Instantly prepend the new transaction into the payments cache
+    prependPaymentToQueryCache(queryClient, {
+      id: finalInvoiceNo,
+      transactionNo: finalInvoiceNo,
+      transactionTime: new Date(initialResult.transaction_time).toLocaleString(),
+      customerName: initialResult.customer_name || "",
+      amountRendered: initialResult.amount_rendered,
+      voucher: initialResult.voucher,
+      grandTotal: initialResult.grand_total,
+      change: initialResult.change,
+    });
 
     try {
-      // [NEW] Pass customerId and customTransactionDate
-      const effectiveDate = customTransactionDate
-        ? new Date(customTransactionDate)
-        : null;
-
       // ─── Offline Queue Interception ──────────────────────────────────────────
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         // Build the same payload that handleDone would send to the RPC
         const transactionTime = effectiveDate ? effectiveDate.toISOString() : null;
         const headerPayload = {
+          invoice_no: finalInvoiceNo,
           customer_name: data.customerName,
           amount_rendered: data.payment || 0,
           voucher: data.voucher || 0,
@@ -275,6 +300,12 @@ export const usePosForm = (): UsePosFormReturn => {
           change: data.change,
           transaction_time: transactionTime,
           customer_id: customerId || null,
+          order_discount_type: data.orderDiscountType,
+          order_discount_value: data.orderDiscountValue,
+          order_discount_amount: data.orderDiscountAmount,
+          voucher_id: data.voucherId,
+          voucher_code: data.voucherCode,
+          cashier_name: user.id,
         };
         const itemsPayload = cartItems.map((item) => ({
           sku: item.sku,
@@ -292,31 +323,9 @@ export const usePosForm = (): UsePosFormReturn => {
           payload: { headerPayload, itemsPayload },
         });
 
-        // Show an optimistic receipt marked as offline
-        const offlineResult: TransactionResult = {
-          invoice_no: "OFFLINE-" + Date.now(),
-          customer_name: data.customerName || "WALK-IN",
-          amount_rendered: data.payment || 0,
-          voucher: data.voucher || 0,
-          grand_total: data.grandTotal,
-          change: data.change,
-          transaction_no: "OFFLINE-" + Date.now(),
-          transaction_time: new Date().toISOString(),
-          cashier_name: user.id,
-        };
-        setSuccessData(offlineResult);
-
-        // Optimistically insert offline payment to cache so it appears in Payments table immediately
-        prependPaymentToQueryCache(queryClient, {
-          id: offlineResult.invoice_no,
-          transactionNo: offlineResult.invoice_no,
-          transactionTime: new Date(offlineResult.transaction_time).toLocaleString(),
-          customerName: offlineResult.customer_name || "",
-          amountRendered: offlineResult.amount_rendered,
-          voucher: offlineResult.voucher,
-          grandTotal: offlineResult.grand_total,
-          change: offlineResult.change,
-        });
+        if (isSuccessModalOpenRef.current) {
+          setSuccessData((prev) => (prev ? { ...prev, isOffline: true } : null));
+        }
 
         setIsSubmitting(false);
         return;
@@ -328,27 +337,34 @@ export const usePosForm = (): UsePosFormReturn => {
         cartItems,
         user.id,
         effectiveDate,
-        customerId
+        customerId,
+        finalInvoiceNo
       );
 
       if (result) {
         setIsSubmitting(false);
-        // [OPTIMISTIC] Update with real data
-        setSuccessData(result);
+        // [CRITICAL FIX]: Only update successData if the modal is STILL open!
+        // If the cashier already closed the modal (pressed Enter, Escape, OK),
+        // we DO NOT call setSuccessData(result) because that would cause the modal to appear a second time!
+        if (isSuccessModalOpenRef.current) {
+          setSuccessData((prev) => (prev ? { ...prev, ...result } : null));
+        }
 
-        // [OPTIMISTIC PAYMENTS] Instantly prepend the new transaction into the payments cache
-        prependPaymentToQueryCache(queryClient, {
-          id: result.payment_id || result.invoice_no,
-          transactionNo: result.invoice_no,
-          transactionTime: result.transaction_time
-            ? new Date(result.transaction_time).toLocaleString()
-            : new Date().toLocaleString(),
-          customerName: result.customer_name || "",
-          amountRendered: result.amount_rendered ?? 0,
-          voucher: result.voucher ?? 0,
-          grandTotal: result.grand_total ?? 0,
-          change: result.change ?? 0,
-        });
+        // [OPTIMISTIC PAYMENTS] Update payments cache with confirmed payment_id
+        if (result.payment_id) {
+          prependPaymentToQueryCache(queryClient, {
+            id: result.payment_id,
+            transactionNo: result.invoice_no || finalInvoiceNo,
+            transactionTime: result.transaction_time
+              ? new Date(result.transaction_time).toLocaleString()
+              : new Date().toLocaleString(),
+            customerName: result.customer_name || "",
+            amountRendered: result.amount_rendered ?? 0,
+            voucher: result.voucher ?? 0,
+            grandTotal: result.grand_total ?? 0,
+            change: result.change ?? 0,
+          });
+        }
 
         // Broadcast to other computers (e.g. Dashboard) instantly over Realtime WebSocket
         broadcastStoreEvent("TRANSACTION_COMPLETED", {
@@ -360,41 +376,43 @@ export const usePosForm = (): UsePosFormReturn => {
         if (result.isOffline) {
           const todayStr = effectiveDate ? effectiveDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
           
-          // Lazy import DashboardStats just for type or optionally cast
-          queryClient.setQueryData<any>(["dashboard-stats", todayStr], (old: any) => {
+          queryClient.setQueryData<Record<string, number>>(["dashboard-stats", todayStr], (old) => {
             if (!old) return old;
             
             return {
               ...old,
-              grossSales: old.grossSales + result.grand_total,
-              netSales: old.netSales + result.grand_total,
-              cashInDrawer: old.cashInDrawer + result.amount_rendered, 
-              netProfit: old.netProfit + result.grand_total, 
+              grossSales: (old.grossSales || 0) + result.grand_total,
+              netSales: (old.netSales || 0) + result.grand_total,
+              cashInDrawer: (old.cashInDrawer || 0) + result.amount_rendered, 
+              netProfit: (old.netProfit || 0) + result.grand_total, 
             };
           });
           queryClient.invalidateQueries({ queryKey: ["transactions"] });
         }
 
         // [OPTIMISTIC] Update inventory caching immediately to avoid phantom stocks
-        queryClient.setQueryData(["inventory-all-pos"], (oldData: any) => {
-          if (!oldData || !oldData.data) return oldData;
-          return {
-            ...oldData,
-            data: oldData.data.map((inv: any) => {
-              const cartItemQuantity = cartItems
-                .filter(item => item.sku === inv.sku)
-                .reduce((sum, item) => sum + item.quantity, 0);
+        queryClient.setQueryData<{ data?: Array<{ sku: string; current_stock: number; [key: string]: unknown }> }>(
+          ["inventory-all-pos"],
+          (oldData) => {
+            if (!oldData || !oldData.data) return oldData;
+            return {
+              ...oldData,
+              data: oldData.data.map((inv) => {
+                const cartItemQuantity = cartItems
+                  .filter((item) => item.sku === inv.sku)
+                  .reduce((sum, item) => sum + item.quantity, 0);
 
-              if (cartItemQuantity > 0) {
-                return {
-                  ...inv,
-                  current_stock: inv.current_stock - cartItemQuantity
-                };
-              }
-              return inv;
-            })
-          };
-        });
+                if (cartItemQuantity > 0) {
+                  return {
+                    ...inv,
+                    current_stock: inv.current_stock - cartItemQuantity,
+                  };
+                }
+                return inv;
+              }),
+            };
+          }
+        );
 
         queryClient.invalidateQueries({ queryKey: ["inventory-all-pos"] });
         queryClient.invalidateQueries({ queryKey: ["inventory-infinite"] });
@@ -407,7 +425,10 @@ export const usePosForm = (): UsePosFormReturn => {
         setIsSubmitting(false);
       }
     } catch (error: unknown) {
-      setSuccessData(null); // Clear optimistic data if it failed
+      if (isSuccessModalOpenRef.current) {
+        setSuccessData(null); // Clear optimistic data if it failed
+      }
+      isSuccessModalOpenRef.current = false;
       if (error instanceof Error) {
         console.error("❌ [UI CRASH] Error in submission flow:", error);
         setErrorMessage(error.message);
@@ -420,6 +441,7 @@ export const usePosForm = (): UsePosFormReturn => {
   };
 
   const closeSuccessModal = () => {
+    isSuccessModalOpenRef.current = false;
     setSuccessData(null);
     onClear();
   };
@@ -428,7 +450,11 @@ export const usePosForm = (): UsePosFormReturn => {
     setErrorMessage(null);
   };
 
-  const triggerDoneSubmit = () => {
+  const triggerDoneSubmit = (invoiceNo?: string) => {
+    if (invoiceNo) {
+      presetInvoiceNoRef.current = invoiceNo;
+      methods.setValue("transactionNo", invoiceNo);
+    }
     handleSubmit(onDoneSubmit, (errors) => {
       console.error("Validation Errors:", JSON.parse(JSON.stringify(errors)));
       setErrorMessage("Please check all fields. Some values are invalid.");

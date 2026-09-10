@@ -50,7 +50,8 @@ export const handleDone = async (
   cartItems: CartItem[],
   cashierId: string,
   customDate: Date | null,
-  customerId: string | null
+  customerId: string | null,
+  customInvoiceNo?: string | null
 ): Promise<TransactionResult> => {
   try {
     if (!cashierId) {
@@ -58,8 +59,10 @@ export const handleDone = async (
     }
 
     const transactionTime = customDate ? customDate.toISOString() : null;
+    const invoiceNoToUse = customInvoiceNo || data.transactionNo || null;
 
     const headerPayload = {
+      invoice_no: invoiceNoToUse,
       customer_name: data.customerName,
       amount_rendered: data.payment || 0,
       voucher: data.voucher || 0, // Legacy
@@ -140,7 +143,7 @@ export const handleDone = async (
        throw new Error("Transaction failed: No result from RPC");
     }
 
-    const invoiceNo = rpcResult?.data?.invoice_no || "UNKNOWN";
+    const invoiceNo = rpcResult?.data?.invoice_no || invoiceNoToUse || "UNKNOWN";
     const paymentId = rpcResult?.data?.payment_id;
 
     // Call redeem voucher if present and successful

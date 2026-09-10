@@ -1,7 +1,18 @@
 import { QueryClient, InfiniteData } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { PaymentRecord as FormattedPaymentRecord } from "../types";
 
 export const DEFAULT_PAYMENT_PAGE_SIZE = 50;
+
+/**
+ * Generates a unique, collision-resistant invoice number on the client.
+ * Matches the format 'INV-YYYYMMDD-HHmmss-XXXX'.
+ */
+export function generateInvoiceNo(): string {
+  const dateStr = dayjs().format("YYYYMMDD-HHmmss");
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `INV-${dateStr}-${randomSuffix}`;
+}
 
 export interface PaymentInfinitePage {
   data: FormattedPaymentRecord[];

@@ -1,7 +1,5 @@
 "use client";
 
-import { FormFields } from "./components/FormFields";
-
 import { TerminalHeader } from "./components/terminal-header/TerminalHeader";
 import { ShortcutsGuide } from "./components/terminal-header/ShortcutsGuide";
 
@@ -20,6 +18,7 @@ import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { PosThemeWrapper } from "./components/PosThemeWrapper";
 import { PosThemeCustomizerModal } from "./modals/PosThemeCustomizerModal";
 import { CartItem, DiscountType } from "./components/terminal-cart/types";
+import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 
 const DesktopSalesTerminal = () => {
   const {
@@ -37,9 +36,6 @@ const DesktopSalesTerminal = () => {
     errorMessage,
     clearErrorMessage,
     setCustomerId,
-    // [NEW]
-    isFreeMode,
-    toggleFreeMode,
   } = usePosForm();
 
   /* State */
@@ -47,7 +43,7 @@ const DesktopSalesTerminal = () => {
   const [isFreeModalOpen, setIsFreeModalOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<"customerName" | "barcode" | "quantity" | "freeSearch" | "freeQty" | null>("barcode");
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating] = useState(false);
   // Discount Modal State
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [discountModalMode, setDiscountModalMode] = useState<'item' | 'transaction'>('transaction');
@@ -72,8 +68,13 @@ const DesktopSalesTerminal = () => {
   const handlePaymentComplete = (
     payment: number,
     voucherAmount: number,
-    voucherData?: { id: string; code: string; amount: number } | null
+    voucherData?: { id: string; code: string; amount: number } | null,
+    invoiceNo?: string
   ) => {
+    if (invoiceNo) {
+      methods.setValue("transactionNo", invoiceNo);
+    }
+
     // legacy voucher field for backward compat, though the true form logic is handled via usePosForm
     methods.setValue("voucher", voucherAmount);
     methods.setValue("voucherAmount", voucherAmount);
@@ -106,11 +107,11 @@ const DesktopSalesTerminal = () => {
     methods.setValue("barcode", "");
 
     // Trigger submission using the helper that handles errors
-    triggerDoneSubmit();
+    triggerDoneSubmit(invoiceNo);
     setIsPaymentPopupOpen(false);
   };
 
-  const handleFreeItemSelect = (item: any, qty: number) => {
+  const handleFreeItemSelect = (item: Item, qty: number) => {
      methods.setValue("barcode", item.sku);
      methods.setValue("quantity", qty);
      onAddToCart(true);
@@ -181,7 +182,7 @@ const DesktopSalesTerminal = () => {
                       subtotal={cartTotal}
                       onApplyTransactionDiscount={handleApplyTransactionDiscount}
                       isTabletMode={true}
-                      currentDiscountType={discountModalMode === 'item' ? discountTargetItem?.discountType : (methods.getValues('orderDiscountType') as any)}
+                      currentDiscountType={discountModalMode === 'item' ? discountTargetItem?.discountType : (methods.getValues('orderDiscountType') as DiscountType | null)}
                       currentDiscountValue={discountModalMode === 'item' ? discountTargetItem?.discountValue : methods.getValues('orderDiscountValue')}
                     />
                   </div>
@@ -295,7 +296,7 @@ const DesktopSalesTerminal = () => {
             subtotal={cartTotal}
             onApplyTransactionDiscount={handleApplyTransactionDiscount}
             isTabletMode={false}
-            currentDiscountType={discountModalMode === 'item' ? discountTargetItem?.discountType : (methods.getValues('orderDiscountType') as any)}
+            currentDiscountType={discountModalMode === 'item' ? discountTargetItem?.discountType : (methods.getValues('orderDiscountType') as DiscountType | null)}
             currentDiscountValue={discountModalMode === 'item' ? discountTargetItem?.discountValue : methods.getValues('orderDiscountValue')}
           />
         )}
