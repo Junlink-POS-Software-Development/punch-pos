@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
 
 /**
  * ─── Customer Groups ─────────────────────────────────────────────────────────
@@ -112,16 +113,34 @@ export async function createCustomerAction(formData: FormData) {
     for (const file of files) {
       if (file instanceof File && file.type.startsWith("image/")) {
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
+        const baseName = safeName.replace(/\.[^/.]+$/, "");
+        const filePath = `customers/${user.id}/${Date.now()}_${baseName}.webp`;
+
+        let uploadPayload: Buffer | File = file;
+        let contentType = "image/webp";
+
+        try {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          uploadPayload = await sharp(buffer)
+            .resize(1280, 1280, { fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 70, effort: 4 })
+            .toBuffer();
+        } catch (compErr) {
+          console.warn(`Server sharp compression fallback for ${file.name}:`, compErr);
+          uploadPayload = file;
+          contentType = file.type || "application/octet-stream";
+        }
         
         const { data, error: uploadError } = await supabase.storage
           .from("customer-documents")
-          .upload(filePath, file, {
+          .upload(filePath, uploadPayload, {
+            contentType,
             cacheControl: '3600',
             upsert: false
           });
 
         if (uploadError) {
+          console.error(`Upload error for ${file.name}:`, uploadError);
           uploadFailures.push(file.name);
           continue;
         }

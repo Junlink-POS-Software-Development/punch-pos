@@ -3141,7 +3141,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
       matcher: ({ request }) => request.destination === "image",
       handler: new CacheFirst({
         cacheName: "images",
-        plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 })]
+        plugins: [new ExpirationPlugin({ maxEntries: 1e3, maxAgeSeconds: 30 * 24 * 60 * 60 })]
       })
     },
     {

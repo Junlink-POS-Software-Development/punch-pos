@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import imageCompression from "browser-image-compression";
+import { compressImageToWebP } from "@/app/file-manager/utils/compression";
 
 import {
   useCustomerData,
@@ -82,13 +83,6 @@ export function RegisterCustomerForm({
     setErrorMessage(null);
     const newCompressedFiles: File[] = [];
 
-    const options = {
-      maxSizeMB: 0.2,
-      maxWidthOrHeight: 1280,
-      useWebWorker: true,
-      initialQuality: 0.6,
-    };
-
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -104,37 +98,15 @@ export function RegisterCustomerForm({
         }
 
         try {
-          const compress = typeof imageCompression === 'function' 
-            ? imageCompression 
-            : (imageCompression as any).default;
-
-          const compressedBlob = await compress(file, options);
-          const finalFile = new File([compressedBlob], file.name, {
-            type: compressedBlob.type || file.type,
-            lastModified: new Date().getTime(),
-          });
-          newCompressedFiles.push(finalFile);
+          const compResult = await compressImageToWebP(file);
+          newCompressedFiles.push(compResult.file);
         } catch (err) {
-          console.warn(`Compression failed for ${file.name}, retrying...`, err);
-          try {
-            const compress = typeof imageCompression === 'function' 
-              ? imageCompression 
-              : (imageCompression as any).default;
-            const fallbackOptions = { ...options, useWebWorker: false };
-            const compressedBlob = await compress(file, fallbackOptions);
-            const finalFile = new File([compressedBlob], file.name, {
-              type: compressedBlob.type || file.type,
-              lastModified: Date.now(),
-            });
-            newCompressedFiles.push(finalFile);
-          } catch (err2) {
-            console.error(`Compression completely failed for ${file.name}:`, err2);
-            if (file.size > 4 * 1024 * 1024) {
-              setErrorMessage(`File ${file.name} is too large (>4MB) and compression failed.`);
-              continue;
-            } else {
-              newCompressedFiles.push(file);
-            }
+          console.warn(`WebP compression failed for ${file.name}:`, err);
+          if (file.size > 4 * 1024 * 1024) {
+            setErrorMessage(`File ${file.name} is too large (>4MB) and compression failed.`);
+            continue;
+          } else {
+            newCompressedFiles.push(file);
           }
         }
       }

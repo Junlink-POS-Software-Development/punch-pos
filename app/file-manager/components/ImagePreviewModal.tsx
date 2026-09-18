@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileItem, FolderItem } from "../types";
 import { formatFileSize } from "../utils/compression";
 import {
@@ -10,7 +10,13 @@ import {
   Trash2,
   FolderInput,
   Check,
-  ExternalLink,
+  RotateCw,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Save,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 
 interface ImagePreviewModalProps {
@@ -19,6 +25,7 @@ interface ImagePreviewModalProps {
   onDelete: (file: FileItem) => void;
   onMoveToFolder: (file: FileItem, targetFolder: string) => void;
   availableFolders: FolderItem[];
+  onRotate?: (file: FileItem, degrees: number) => Promise<void>;
 }
 
 export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
@@ -27,8 +34,21 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   onDelete,
   onMoveToFolder,
   availableFolders,
+  onRotate,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [rotation, setRotation] = useState<number>(0);
+  const [zoom, setZoom] = useState<number>(1);
+  const [isSavingRotation, setIsSavingRotation] = useState(false);
+  const [rotationSaved, setRotationSaved] = useState(false);
+
+  // Reset visual rotation & zoom when opened or when file changes
+  useEffect(() => {
+    setRotation(0);
+    setZoom(1);
+    setIsSavingRotation(false);
+    setRotationSaved(false);
+  }, [file?.id, file?.url]);
 
   if (!file) return null;
 
@@ -60,6 +80,35 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     document.body.removeChild(link);
   };
 
+  const handleRotateLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+    setRotationSaved(false);
+  };
+
+  const handleRotateRight = () => {
+    setRotation((prev) => (prev + 90) % 360);
+    setRotationSaved(false);
+  };
+
+  const handleSavePermanentRotation = async () => {
+    if (!file || rotation === 0 || isSavingRotation || !onRotate) return;
+    setIsSavingRotation(true);
+
+    try {
+      await onRotate(file, rotation);
+      setRotationSaved(true);
+      // Once permanently rotated on disk/storage, reset the CSS rotation
+      setTimeout(() => {
+        setRotation(0);
+        setRotationSaved(false);
+      }, 600);
+    } catch (err: any) {
+      alert(`Failed to save rotation: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsSavingRotation(false);
+    }
+  };
+
   const otherFolders = availableFolders.filter((f) => f.name !== file.folder);
 
   return (
@@ -68,7 +117,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-200"
+        className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-200"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border p-4 px-6">
@@ -95,17 +144,116 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
         {/* Content Body: Image + Sidebar Details */}
         <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
-          {/* Main Image View */}
-          <div className="relative flex flex-1 items-center justify-center bg-muted/40 p-4 min-h-[300px] md:min-h-[450px]">
-            <img
-              src={file.url}
-              alt={displayFileName}
-              className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm"
-            />
+          {/* Main Image View & Interactive Canvas Container */}
+          <div className="relative flex flex-1 items-center justify-center bg-muted/40 p-6 min-h-[350px] md:min-h-[500px] overflow-hidden">
+            {/* Top Image Controls Bar */}
+            <div className="absolute top-4 z-20 flex items-center gap-1.5 rounded-2xl border border-border/80 bg-background/90 p-1.5 shadow-xl backdrop-blur-md">
+              <button
+                type="button"
+                onClick={handleRotateLeft}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-foreground hover:bg-muted hover:text-primary transition-all active:scale-95"
+                title="Rotate Left 90° (Counter-Clockwise)"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRotateRight}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-foreground hover:bg-muted hover:text-primary transition-all active:scale-95"
+                title="Rotate Right 90° (Clockwise)"
+              >
+                <RotateCw className="w-4 h-4" />
+              </button>
+
+              <div className="h-4 w-[1px] bg-border mx-0.5" />
+
+              <button
+                type="button"
+                onClick={() => setZoom((prev) => Math.min(Number((prev + 0.25).toFixed(2)), 2.5))}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-foreground hover:bg-muted transition-all active:scale-95"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setZoom((prev) => Math.max(Number((prev - 0.25).toFixed(2)), 0.5))}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-foreground hover:bg-muted transition-all active:scale-95"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+
+              {(rotation !== 0 || zoom !== 1) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRotation(0);
+                    setZoom(1);
+                  }}
+                  className="flex h-8 px-2 items-center justify-center rounded-xl text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Reset Orientation & Zoom"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            {/* Main Interactive Displayed Image */}
+            <div className="relative flex items-center justify-center w-full h-full overflow-hidden">
+              <img
+                src={file.url}
+                alt={displayFileName}
+                style={{
+                  transform: `rotate(${rotation}deg) scale(${zoom})`,
+                  transition: isSavingRotation ? "none" : "transform 0.25s cubic-bezier(0.2, 0, 0, 1)",
+                }}
+                className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-md select-none pointer-events-none"
+              />
+            </div>
+
+            {/* Bottom Permanent Save Notification / Button (appears when rotated) */}
+            {rotation !== 0 && onRotate && (
+              <div className="absolute bottom-4 z-20 flex items-center gap-3 rounded-2xl border border-primary/30 bg-background/95 px-4 py-2 shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-2 duration-150">
+                <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>
+                    Rotated by <span className="text-primary font-bold">+{rotation}°</span>
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isSavingRotation}
+                  onClick={handleSavePermanentRotation}
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50"
+                  title="Save this orientation permanently to storage"
+                >
+                  {isSavingRotation ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving to Storage...</span>
+                    </>
+                  ) : rotationSaved ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>Orientation Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Permanently</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Details & Actions Sidebar */}
-          <div className="w-full md:w-72 border-t md:border-t-0 md:border-l border-border bg-card p-5 space-y-4 flex flex-col justify-between overflow-y-auto">
+          <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-border bg-card p-5 space-y-4 flex flex-col justify-between overflow-y-auto">
             <div className="space-y-4">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -137,13 +285,57 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                 </div>
               </div>
 
+              {/* Rotate Actions in Sidebar */}
+              {onRotate && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    Rotate & Save
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleRotateLeft}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                      title="Rotate 90° Left"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Left 90°</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRotateRight}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                      title="Rotate 90° Right"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>Right 90°</span>
+                    </button>
+                  </div>
+                  {rotation !== 0 && (
+                    <button
+                      type="button"
+                      disabled={isSavingRotation}
+                      onClick={handleSavePermanentRotation}
+                      className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-xs font-bold text-white shadow-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {isSavingRotation ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Save className="w-3.5 h-3.5" />
+                      )}
+                      <span>Save Rotation Permanently</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Move to another folder */}
               {otherFolders.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                     Move Folder
                   </h4>
-                  <div className="space-y-1">
+                  <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
                     {otherFolders.map((folder) => (
                       <button
                         key={folder.id}
@@ -163,7 +355,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
               )}
             </div>
 
-            {/* Action Buttons */}
+            {/* Bottom Action Buttons */}
             <div className="space-y-2 pt-3 border-t border-border">
               <button
                 type="button"

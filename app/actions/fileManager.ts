@@ -3,6 +3,7 @@
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { FolderItem, FileItem, StorageStats } from "@/app/file-manager/types";
+import sharp from "sharp";
 
 const BUCKET_NAME = "file-manager";
 
@@ -659,4 +660,71 @@ export async function getStorageStats(): Promise<{
       formattedTotalSize: formatSize(totalBytes),
     },
   };
+}
+
+/**
+ * Permanently rotates an image in storage by specified degrees (e.g. 90, 180, 270)
+ * and saves it back so it is permanently in that orientation for all future viewings.
+ */
+export async function rotateAndSaveImage(
+  fileName: string,
+  folderName: string,
+  degrees: number
+): Promise<{
+  success: boolean;
+  newSize?: number;
+  timestamp?: number;
+  error?: string;
+}> {
+  const ctx = await getStoreContext();
+  if (!ctx.success || !ctx.storeId) {
+    return { success: false, error: ctx.error };
+  }
+
+  const { storeId } = ctx;
+  const admin = getAdminStorageClient();
+  const filePath = `${storeId}/${folderName}/${fileName}`;
+
+  try {
+    // 1. Download current image buffer from Supabase Storage
+    const { data: fileData, error: downloadError } = await admin.storage
+      .from(BUCKET_NAME)
+      .download(filePath);
+
+    if (downloadError || !fileData) {
+      throw downloadError || new Error("Failed to download image for rotation");
+    }
+
+    const arrayBuffer = await fileData.arrayBuffer();
+    const inputBuffer = Buffer.from(arrayBuffer);
+
+    // Normalize rotation to 0, 90, 180, 270
+    const normalizedDegrees = ((degrees % 360) + 360) % 360;
+
+    // 2. Rotate with sharp and re-compress to WebP
+    const rotatedBuffer = await sharp(inputBuffer)
+      .rotate(normalizedDegrees)
+      .webp({ quality: 75, effort: 4 })
+      .toBuffer();
+
+    // 3. Overwrite in storage with upsert: true
+    const { error: uploadError } = await admin.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, rotatedBuffer, {
+        contentType: "image/webp",
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    return {
+      success: true,
+      newSize: rotatedBuffer.length,
+      timestamp: Date.now(),
+    };
+  } catch (err: any) {
+    console.error(`Failed to rotate image ${fileName}:`, err);
+    return { success: false, error: err.message || "Failed to rotate image" };
+  }
 }

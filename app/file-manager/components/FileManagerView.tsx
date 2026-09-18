@@ -1,45 +1,46 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { FolderItem, FileItem, StorageStats } from "../types";
-import {
-  listFolders,
-  listFolderFiles,
-  createFolder,
-  renameFolder,
-  deleteFolder,
-  moveFile,
-  moveMultipleFiles,
-  deleteFiles,
-  getStorageStats,
-  uploadFiles,
-} from "@/app/actions/fileManager";
+import React, { useState } from "react";
+import { FolderItem, FileItem } from "../types";
+import { useFileManagerData } from "../hooks/useFileManagerData";
 import { FolderList } from "./FolderList";
 import { FileList } from "./FileList";
 import { UploadModal } from "./UploadModal";
 import { CreateFolderModal } from "./CreateFolderModal";
 import { ImagePreviewModal } from "./ImagePreviewModal";
 import { compressImageToWebP } from "../utils/compression";
+import { uploadFiles } from "@/app/actions/fileManager";
 import {
   FolderArchive,
   HardDrive,
   Sparkles,
   Files,
   Loader2,
-  AlertTriangle,
 } from "lucide-react";
 
 export const FileManagerView: React.FC = () => {
-  // Navigation & folders state
-  const [folders, setFolders] = useState<FolderItem[]>([]);
-  const [activeFolderName, setActiveFolderName] = useState<string>("public");
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [stats, setStats] = useState<StorageStats | null>(null);
-
-  // Loading states
-  const [isLoadingFolders, setIsLoadingFolders] = useState(true);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // TanStack Query cached data & optimistic mutations
+  const {
+    folders,
+    isLoadingFolders,
+    isFetchingFolders,
+    files,
+    isLoadingFiles,
+    isFetchingFiles,
+    stats,
+    activeFolderName,
+    setActiveFolderName,
+    refreshAll,
+    moveFileOptimistic,
+    moveMultipleOptimistic,
+    deleteFileOptimistic,
+    deleteMultipleOptimistic,
+    createFolderOptimistic,
+    renameFolderOptimistic,
+    deleteFolderOptimistic,
+    handleUploadCompleted,
+    rotateImageOptimistic,
+  } = useFileManagerData();
 
   // Drag and drop state
   const [draggedFile, setDraggedFile] = useState<FileItem | null>(null);
@@ -59,58 +60,6 @@ export const FileManagerView: React.FC = () => {
       setToastMessage(null);
     }, 3500);
   };
-
-  // 1. Fetch folders and initial stats
-  const fetchFoldersAndStats = useCallback(async () => {
-    try {
-      setIsLoadingFolders(true);
-      const [fRes, sRes] = await Promise.all([listFolders(), getStorageStats()]);
-
-      if (fRes.success) {
-        setFolders(fRes.folders);
-      } else {
-        setErrorMessage(fRes.error || "Failed to load folders");
-      }
-
-      if (sRes.success && sRes.stats) {
-        setStats(sRes.stats);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setErrorMessage(err.message || "An unexpected error occurred");
-    } finally {
-      setIsLoadingFolders(false);
-    }
-  }, []);
-
-  // 2. Fetch files for active folder
-  const fetchActiveFiles = useCallback(async (folderName: string) => {
-    try {
-      setIsLoadingFiles(true);
-      const res = await listFolderFiles(folderName);
-      if (res.success) {
-        setFiles(res.files);
-      } else {
-        console.error(res.error);
-        setFiles([]);
-      }
-    } catch (err) {
-      console.error(err);
-      setFiles([]);
-    } finally {
-      setIsLoadingFiles(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchFoldersAndStats();
-  }, [fetchFoldersAndStats]);
-
-  useEffect(() => {
-    if (activeFolderName) {
-      fetchActiveFiles(activeFolderName);
-    }
-  }, [activeFolderName, fetchActiveFiles]);
 
   const activeFolderItem = folders.find((f) => f.name === activeFolderName);
 
@@ -132,39 +81,14 @@ export const FileManagerView: React.FC = () => {
     const fileToMove = draggedFile;
     setDraggedFile(null);
 
-    // Optimistic UI updates:
-    // Remove from current files list
-    setFiles((prev) => prev.filter((f) => f.id !== fileToMove.id));
-
-    // Update folder counts
-    setFolders((prev) =>
-      prev.map((f) => {
-        if (f.name === fileToMove.folder) {
-          return { ...f, fileCount: Math.max(0, f.fileCount - 1) };
-        }
-        if (f.name === targetFolder) {
-          return { ...f, fileCount: f.fileCount + 1 };
-        }
-        return f;
-      })
-    );
-
     showToast(`Moving "${fileToMove.name}" to ${targetFolder}...`);
 
     try {
-      const res = await moveFile(fileToMove.name, fileToMove.folder, targetFolder);
-      if (!res.success) {
-        throw new Error(res.error || "Failed to move file");
-      }
+      await moveFileOptimistic(fileToMove, targetFolder);
       showToast(`Moved to "${targetFolder}" successfully!`);
-      // Background re-fetch to ensure sync
-      fetchFoldersAndStats();
     } catch (err: any) {
       console.error("Move error:", err);
       showToast(`Failed to move: ${err.message}`);
-      // Revert files
-      fetchActiveFiles(activeFolderName);
-      fetchFoldersAndStats();
     }
   };
 
@@ -172,101 +96,88 @@ export const FileManagerView: React.FC = () => {
   const handleMoveFile = async (file: FileItem, targetFolder: string) => {
     if (file.folder === targetFolder) return;
 
-    setFiles((prev) => prev.filter((f) => f.id !== file.id));
-    setFolders((prev) =>
-      prev.map((f) => {
-        if (f.name === file.folder) return { ...f, fileCount: Math.max(0, f.fileCount - 1) };
-        if (f.name === targetFolder) return { ...f, fileCount: f.fileCount + 1 };
-        return f;
-      })
-    );
-
     showToast(`Moved to ${targetFolder}`);
-    const res = await moveFile(file.name, file.folder, targetFolder);
-    if (!res.success) {
-      showToast(`Failed to move: ${res.error}`);
-      fetchActiveFiles(activeFolderName);
+    try {
+      await moveFileOptimistic(file, targetFolder);
+    } catch (err: any) {
+      showToast(`Failed to move: ${err.message}`);
     }
-    fetchFoldersAndStats();
   };
 
   // Handle bulk move
   const handleMoveMultiple = async (fileNames: string[], targetFolder: string) => {
-    setFiles((prev) => prev.filter((f) => !fileNames.includes(f.name)));
     showToast(`Moving ${fileNames.length} images to ${targetFolder}...`);
-
-    const res = await moveMultipleFiles(fileNames, activeFolderName, targetFolder);
-    if (res.success) {
-      showToast(`Moved ${res.movedCount} images to ${targetFolder}`);
-    } else {
-      showToast(`Failed to move files: ${res.error}`);
+    try {
+      const res = await moveMultipleOptimistic(fileNames, targetFolder);
+      showToast(`Moved ${res.count ?? fileNames.length} images to ${targetFolder}`);
+    } catch (err: any) {
+      showToast(`Failed to move files: ${err.message}`);
     }
-    fetchFoldersAndStats();
-    fetchActiveFiles(activeFolderName);
   };
 
   // Handle single delete
   const handleDeleteFile = async (file: FileItem) => {
     if (!confirm(`Delete image "${file.name}" permanently?`)) return;
 
-    setFiles((prev) => prev.filter((f) => f.id !== file.id));
-    setFolders((prev) =>
-      prev.map((f) =>
-        f.name === file.folder
-          ? { ...f, fileCount: Math.max(0, f.fileCount - 1) }
-          : f
-      )
-    );
-
-    const res = await deleteFiles(file.folder, [file.name]);
-    if (res.success) {
+    try {
+      await deleteFileOptimistic(file);
       showToast("File deleted");
-    } else {
-      showToast(`Failed to delete: ${res.error}`);
-      fetchActiveFiles(activeFolderName);
+    } catch (err: any) {
+      showToast(`Failed to delete: ${err.message}`);
     }
-    fetchFoldersAndStats();
   };
 
   // Handle bulk delete
   const handleDeleteMultiple = async (fileNames: string[]) => {
-    setFiles((prev) => prev.filter((f) => !fileNames.includes(f.name)));
     showToast(`Deleting ${fileNames.length} images...`);
-
-    const res = await deleteFiles(activeFolderName, fileNames);
-    if (res.success) {
-      showToast(`Deleted ${res.deletedCount} images`);
-    } else {
-      showToast(`Failed to delete files: ${res.error}`);
+    try {
+      const res = await deleteMultipleOptimistic(fileNames);
+      showToast(`Deleted ${res.count ?? fileNames.length} images`);
+    } catch (err: any) {
+      showToast(`Failed to delete files: ${err.message}`);
     }
-    fetchFoldersAndStats();
-    fetchActiveFiles(activeFolderName);
+  };
+
+  // Handle permanent image rotation
+  const handleRotateFile = async (file: FileItem, degrees: number) => {
+    showToast(`Saving rotation (${degrees}°) for "${file.name}"...`);
+    try {
+      const res = await rotateImageOptimistic(file, degrees);
+      // If currently previewing this file in modal, update its URL with the cache-busting timestamp
+      if (previewFile && (previewFile.id === file.id || previewFile.name === file.name)) {
+        setPreviewFile((prev) =>
+          prev ? { ...prev, url: res.updatedUrl } : null
+        );
+      }
+      showToast(`Saved rotation for "${file.name}"!`);
+    } catch (err: any) {
+      console.error("Rotation error:", err);
+      showToast(`Failed to rotate: ${err.message}`);
+      throw err;
+    }
   };
 
   // Folder modal submit (Create or Rename)
   const handleFolderModalSubmit = async (folderName: string): Promise<boolean> => {
     if (folderToRename) {
-      // Rename
-      const res = await renameFolder(folderToRename.name, folderName);
-      if (!res.success) {
-        throw new Error(res.error || "Failed to rename folder");
+      try {
+        await renameFolderOptimistic(folderToRename.name, folderName);
+        showToast(`Renamed folder to "${folderName}"`);
+        setFolderToRename(null);
+        return true;
+      } catch (err: any) {
+        showToast(`Failed to rename: ${err.message}`);
+        return false;
       }
-      showToast(`Renamed folder to "${folderName}"`);
-      if (activeFolderName === folderToRename.name) {
-        setActiveFolderName(folderName);
-      }
-      setFolderToRename(null);
-      await fetchFoldersAndStats();
-      return true;
     } else {
-      // Create
-      const res = await createFolder(folderName);
-      if (!res.success) {
-        throw new Error(res.error || "Failed to create folder");
+      try {
+        await createFolderOptimistic(folderName);
+        showToast(`Folder "${folderName}" created`);
+        return true;
+      } catch (err: any) {
+        showToast(`Failed to create folder: ${err.message}`);
+        return false;
       }
-      showToast(`Folder "${folderName}" created`);
-      await fetchFoldersAndStats();
-      return true;
     }
   };
 
@@ -280,15 +191,11 @@ export const FileManagerView: React.FC = () => {
       return;
     }
 
-    const res = await deleteFolder(folder.name, true);
-    if (res.success) {
+    try {
+      await deleteFolderOptimistic(folder.name);
       showToast(`Folder "${folder.displayName}" deleted`);
-      if (activeFolderName === folder.name) {
-        setActiveFolderName("public");
-      }
-      fetchFoldersAndStats();
-    } else {
-      alert(res.error || "Failed to delete folder");
+    } catch (err: any) {
+      alert(err.message || "Failed to delete folder");
     }
   };
 
@@ -313,8 +220,7 @@ export const FileManagerView: React.FC = () => {
       const res = await uploadFiles(activeFolderName, fd);
       if (res.success) {
         showToast(`Uploaded ${res.uploadedFiles.length} images to ${activeFolderName}!`);
-        fetchActiveFiles(activeFolderName);
-        fetchFoldersAndStats();
+        handleUploadCompleted(res.uploadedFiles, activeFolderName);
       } else {
         showToast(`Upload failed: ${res.error}`);
       }
@@ -338,27 +244,36 @@ export const FileManagerView: React.FC = () => {
               <span>Organize store media & images</span>
               <span className="hidden sm:inline">•</span>
               <span className="hidden sm:inline text-emerald-500 font-medium">
-                High-efficiency WebP storage
+                Locally cached • Fast instant loading
               </span>
             </p>
           </div>
         </div>
 
-        {/* Quick Stats Pill */}
-        {stats && (
-          <div className="hidden md:flex items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
-              <Files className="w-3.5 h-3.5 text-primary" />
-              <span className="text-muted-foreground">Files:</span>
-              <span className="text-foreground">{stats.totalFiles}</span>
+        {/* Quick Stats Pill & Background Sync Indicator */}
+        <div className="flex items-center gap-3 text-xs font-semibold">
+          {(isFetchingFiles || isFetchingFolders) && (
+            <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-1 text-[11px] font-semibold text-primary animate-pulse">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span className="hidden sm:inline">Quietly checking for updates...</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
-              <HardDrive className="w-3.5 h-3.5 text-primary" />
-              <span className="text-muted-foreground">Storage Used:</span>
-              <span className="text-foreground">{stats.formattedTotalSize}</span>
+          )}
+
+          {stats && (
+            <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
+                <Files className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Files:</span>
+                <span className="text-foreground">{stats.totalFiles}</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Storage Used:</span>
+                <span className="text-foreground">{stats.formattedTotalSize}</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Split Window: Left Folders (User + Public) | Right Files (Public Unsorted default) */}
@@ -389,11 +304,9 @@ export const FileManagerView: React.FC = () => {
             currentFolder={activeFolderItem}
             currentFolderName={activeFolderName}
             files={files}
-            isLoading={isLoadingFiles}
-            onRefresh={() => {
-              fetchActiveFiles(activeFolderName);
-              fetchFoldersAndStats();
-            }}
+            isLoading={isLoadingFiles && files.length === 0}
+            isFetching={isFetchingFiles}
+            onRefresh={refreshAll}
             onUploadClick={() => setIsUploadOpen(true)}
             onDropFromDesktop={handleDropFromDesktop}
             onBackToPublicClick={() => setActiveFolderName("public")}
@@ -404,6 +317,7 @@ export const FileManagerView: React.FC = () => {
             onDeleteMultiple={handleDeleteMultiple}
             onPreviewFile={(f) => setPreviewFile(f)}
             onDragStart={handleDragStart}
+            onRotateFile={handleRotateFile}
           />
         </div>
       </div>
@@ -414,9 +328,12 @@ export const FileManagerView: React.FC = () => {
         onClose={() => setIsUploadOpen(false)}
         targetFolder={activeFolderName}
         availableFolders={folders}
-        onUploadComplete={() => {
-          fetchActiveFiles(activeFolderName);
-          fetchFoldersAndStats();
+        onUploadComplete={(newFiles, folder) => {
+          if (newFiles && folder) {
+            handleUploadCompleted(newFiles, folder);
+          } else {
+            refreshAll();
+          }
         }}
       />
 
@@ -437,6 +354,7 @@ export const FileManagerView: React.FC = () => {
         onDelete={handleDeleteFile}
         onMoveToFolder={handleMoveFile}
         availableFolders={folders}
+        onRotate={handleRotateFile}
       />
 
       {/* Floating Toast Notification */}

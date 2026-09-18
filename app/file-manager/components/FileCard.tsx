@@ -15,6 +15,7 @@ import {
   Trash2,
   Check,
   GripVertical,
+  RotateCw,
 } from "lucide-react";
 
 interface FileCardProps {
@@ -26,6 +27,7 @@ interface FileCardProps {
   onMoveToFolder: (file: FileItem, targetFolder: string) => void;
   availableFolders: FolderItem[];
   onDragStart: (e: React.DragEvent, file: FileItem) => void;
+  onRotate?: (file: FileItem, degrees: number) => void;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -37,6 +39,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   onMoveToFolder,
   availableFolders,
   onDragStart,
+  onRotate,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -186,6 +189,20 @@ export const FileCard: React.FC<FileCardProps> = ({
                   <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Preview Full</span>
                 </button>
+
+                {onRotate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      onRotate(file, 90);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors text-left"
+                  >
+                    <RotateCw className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>Rotate 90° CW</span>
+                  </button>
+                )}
 
                 {otherFolders.length > 0 && (
                   <div className="relative">

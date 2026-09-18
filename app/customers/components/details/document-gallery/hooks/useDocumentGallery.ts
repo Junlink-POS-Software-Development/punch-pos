@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import imageCompression from "browser-image-compression";
+import { compressImageToWebP } from "@/app/file-manager/utils/compression";
 import {
   uploadCustomerDocument,
   updateCustomerDocumentMetadata,
@@ -170,46 +170,19 @@ export const useDocumentGallery = (customer: Customer) => {
       if (file.type.startsWith("image/")) {
         setIsCompressing(true);
         setCompressionProgress(0);
-        const options = {
-          maxSizeMB: 0.5, // Faster target
-          maxWidthOrHeight: 1600, // Faster resolution
-          useWebWorker: true,
-          initialQuality: 0.7, // Slightly lower for speed
-          onProgress: (p: number) => setCompressionProgress(Math.round(p)),
-        };
         try {
-          const compress = typeof imageCompression === 'function' 
-            ? imageCompression 
-            : (imageCompression as any).default;
-            
-          const compressedBlob = await compress(file, options);
-          fileToUpload = new File([compressedBlob], file.name, {
-            type: compressedBlob.type || file.type,
-            lastModified: new Date().getTime(),
-          });
-        } catch (compressionError) {
-          console.warn("Compression failed with web worker, retrying...", compressionError);
-          try {
-            const compress = typeof imageCompression === 'function' 
-              ? imageCompression 
-              : (imageCompression as any).default;
-            const fallbackOptions = { ...options, useWebWorker: false };
-            const compressedBlob = await compress(file, fallbackOptions);
-            fileToUpload = new File([compressedBlob], file.name, {
-              type: compressedBlob.type || file.type,
-              lastModified: Date.now(),
-            });
-          } catch (err2) {
-            console.error("Compression completely failed:", err2);
-            if (file.size > 4 * 1024 * 1024) {
-              alert(`Image ${file.name} is too large and compression failed. Please select a smaller file.`);
-              setOptimisticFiles(prev => prev.filter(f => f.id !== tempId));
-              URL.revokeObjectURL(tempUrl);
-              e.target.value = "";
-              setIsUploading(false);
-              setIsCompressing(false);
-              return;
-            }
+          const compResult = await compressImageToWebP(file, (p) => setCompressionProgress(p));
+          fileToUpload = compResult.file;
+        } catch (err) {
+          console.warn("WebP compression failed, using fallback:", err);
+          if (file.size > 4 * 1024 * 1024) {
+            alert(`Image ${file.name} is too large and compression failed. Please select a smaller file.`);
+            setOptimisticFiles(prev => prev.filter(f => f.id !== tempId));
+            URL.revokeObjectURL(tempUrl);
+            e.target.value = "";
+            setIsUploading(false);
+            setIsCompressing(false);
+            return;
           }
         } finally {
           setIsCompressing(false);

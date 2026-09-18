@@ -23,7 +23,7 @@ interface UploadModalProps {
   onClose: () => void;
   targetFolder: string;
   availableFolders: FolderItem[];
-  onUploadComplete: () => void;
+  onUploadComplete: (uploadedFiles?: any[], folder?: string) => void;
 }
 
 export const UploadModal: React.FC<UploadModalProps> = ({
@@ -135,7 +135,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       );
 
       setTimeout(() => {
-        onUploadComplete();
+        onUploadComplete(res.uploadedFiles, selectedFolder);
         onClose();
       }, 1000);
     } catch (uploadErr: any) {

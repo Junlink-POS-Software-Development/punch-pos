@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "@/lib/types";
+import sharp from "sharp";
 
 export const fetchCustomerFeatureData = async (
   startDate?: string,
@@ -103,12 +104,29 @@ export const createCustomer = async (formData: FormData) => {
   for (const file of files) {
     if (file instanceof File && file.type.startsWith("image/")) {
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-      const filePath = `customers/${user.id}/${Date.now()}_${safeName}`;
+      const baseName = safeName.replace(/\.[^/.]+$/, "");
+      const filePath = `customers/${user.id}/${Date.now()}_${baseName}.webp`;
+
+      let uploadPayload: Buffer | File = file;
+      let contentType = "image/webp";
+
+      try {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        uploadPayload = await sharp(buffer)
+          .resize(1280, 1280, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 70, effort: 4 })
+          .toBuffer();
+      } catch (e) {
+        console.warn(`Server-side sharp compression fallback for ${file.name}:`, e);
+        uploadPayload = file;
+        contentType = file.type || "application/octet-stream";
+      }
       
       try {
         const { data, error: uploadError } = await supabase.storage
           .from("customer-documents")
-          .upload(filePath, file, {
+          .upload(filePath, uploadPayload, {
+            contentType,
             cacheControl: '3600',
             upsert: false
           });
@@ -199,11 +217,30 @@ export const uploadCustomerDocument = async (
 ) => {
   const supabase = await createClient();
   const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const filePath = `customers/${customerId}/${Date.now()}_${safeName}`;
+  const baseName = safeName.replace(/\.[^/.]+$/, "");
+  const filePath = `customers/${customerId}/${Date.now()}_${baseName}.webp`;
+
+  let uploadPayload: Buffer | File = file;
+  let contentType = "image/webp";
+
+  if (file.type && file.type.startsWith("image/")) {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      uploadPayload = await sharp(buffer)
+        .resize(1280, 1280, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 70, effort: 4 })
+        .toBuffer();
+    } catch (err) {
+      console.warn("Server-side Sharp compression fallback to original:", err);
+      uploadPayload = file;
+      contentType = file.type || "application/octet-stream";
+    }
+  }
 
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from("customer-documents")
-    .upload(filePath, file, {
+    .upload(filePath, uploadPayload, {
+      contentType,
       cacheControl: "3600",
       upsert: false,
     });

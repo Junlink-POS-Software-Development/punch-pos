@@ -68,7 +68,7 @@ const customCache = [
     matcher: ({ request }: { request: Request }) => request.destination === "image",
     handler: new CacheFirst({
       cacheName: "images",
-      plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 })],
+      plugins: [new ExpirationPlugin({ maxEntries: 1000, maxAgeSeconds: 30 * 24 * 60 * 60 })],
     }),
   },
   {

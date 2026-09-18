@@ -13,6 +13,7 @@ import {
   CheckSquare,
   Square,
   RefreshCw,
+  RotateCw,
   FolderOpen,
   Image as ImageIcon,
   ArrowLeft,
@@ -24,6 +25,7 @@ interface FileListProps {
   currentFolderName: string;
   files: FileItem[];
   isLoading: boolean;
+  isFetching?: boolean;
   onRefresh: () => void;
   onUploadClick: () => void;
   onDropFromDesktop: (files: FileList) => void;
@@ -35,6 +37,7 @@ interface FileListProps {
   onDeleteMultiple: (fileNames: string[]) => void;
   onPreviewFile: (file: FileItem) => void;
   onDragStart: (e: React.DragEvent, file: FileItem) => void;
+  onRotateFile?: (file: FileItem, degrees: number) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -42,6 +45,7 @@ export const FileList: React.FC<FileListProps> = ({
   currentFolderName,
   files,
   isLoading,
+  isFetching = false,
   onRefresh,
   onUploadClick,
   onDropFromDesktop,
@@ -53,6 +57,7 @@ export const FileList: React.FC<FileListProps> = ({
   onDeleteMultiple,
   onPreviewFile,
   onDragStart,
+  onRotateFile,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -178,6 +183,12 @@ export const FileList: React.FC<FileListProps> = ({
               {isPublic && (
                 <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[11px] font-semibold text-primary">
                   Unsorted Pool
+                </span>
+              )}
+              {isFetching && !isLoading && (
+                <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground animate-pulse font-medium">
+                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-primary" />
+                  <span className="hidden sm:inline">Syncing...</span>
                 </span>
               )}
             </div>
@@ -327,6 +338,7 @@ export const FileList: React.FC<FileListProps> = ({
                 onMoveToFolder={onMoveFile}
                 availableFolders={availableFolders}
                 onDragStart={onDragStart}
+                onRotate={onRotateFile}
               />
             ))}
           </div>
@@ -381,6 +393,19 @@ export const FileList: React.FC<FileListProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {onRotateFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRotateFile(file, 90);
+                      }}
+                      title="Rotate 90° CW"
+                      className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={(e) => {
