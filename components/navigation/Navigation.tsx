@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Store,
+  FolderArchive,
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
@@ -239,7 +240,15 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         { label: "Shared", href: "/notes" },
       ],
     },
-
+    {
+      id: "file-manager",
+      text: "File Manager",
+      Icon: FolderArchive,
+      href: "/file-manager",
+      shortcuts: [
+        { label: "Public (Unsorted)", href: "/file-manager" },
+      ],
+    },
   ];
 
   // Filter items for Grid view (exclude Terminal)

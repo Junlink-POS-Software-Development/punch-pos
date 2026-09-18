@@ -19,6 +19,7 @@ import {
   Settings,
   ChevronRight,
   Sparkles,
+  FolderArchive,
 } from "lucide-react";
 import { getStoreInfo } from "@/app/actions/store";
 
@@ -119,6 +120,13 @@ export function MobileBottomNav() {
       href: "/notes",
       icon: StickyNote,
       hasNotification: true,
+    },
+    {
+      id: "file-manager",
+      label: "File Manager",
+      desc: "Organize images & media",
+      href: "/file-manager",
+      icon: FolderArchive,
     },
     {
       id: "settings",
