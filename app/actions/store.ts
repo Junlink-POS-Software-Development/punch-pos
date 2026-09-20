@@ -2,6 +2,13 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import {
+  BusinessMode,
+  ModulesConfig,
+  IndustryConfig,
+  DEFAULT_MODULES_CONFIG,
+  BUSINESS_MODE_PRESETS,
+} from "@/lib/types/businessMode";
 
 export async function getStoreEnrollmentId() {
   const supabase = await createClient();
@@ -165,11 +172,14 @@ export async function uploadStoreLogo(formData: FormData) {
 }
 
 /**
- * Updates store_name and optionally store_img for the current user's store.
+ * Updates store_name, store_img, business_mode, modules_enabled, and industry_config for the current user's store.
  */
 export async function updateStoreInfo(data: {
   storeName?: string;
   storeImg?: string;
+  businessMode?: BusinessMode;
+  modulesEnabled?: ModulesConfig;
+  industryConfig?: IndustryConfig;
 }) {
   const supabase = await createClient();
 
@@ -198,6 +208,9 @@ export async function updateStoreInfo(data: {
     const updatePayload: Record<string, any> = {};
     if (data.storeName !== undefined) updatePayload.store_name = data.storeName;
     if (data.storeImg !== undefined) updatePayload.store_img = data.storeImg;
+    if (data.businessMode !== undefined) updatePayload.business_mode = data.businessMode;
+    if (data.modulesEnabled !== undefined) updatePayload.modules_enabled = data.modulesEnabled;
+    if (data.industryConfig !== undefined) updatePayload.industry_config = data.industryConfig;
 
     if (Object.keys(updatePayload).length === 0) {
       return { success: true };
@@ -207,7 +220,7 @@ export async function updateStoreInfo(data: {
       .from("stores")
       .update(updatePayload)
       .eq("store_id", userData.store_id)
-      .select(); // Added select() to see what was updated
+      .select();
 
     console.log("Update payload:", updatePayload);
     console.log("Update result:", { data: updateResult, error: updateError });
@@ -225,9 +238,38 @@ export async function updateStoreInfo(data: {
 }
 
 /**
- * Fetches the store_name and store_img for the current user's store.
+ * Convenience helper to switch business mode and optionally apply module presets.
  */
-export async function getStoreInfo() {
+export async function updateStoreBusinessMode(
+  businessMode: BusinessMode,
+  customModules?: Partial<ModulesConfig>,
+  industryConfig?: IndustryConfig
+) {
+  const preset = BUSINESS_MODE_PRESETS[businessMode];
+  const modulesToSave: ModulesConfig = {
+    ...(preset?.defaultModules || DEFAULT_MODULES_CONFIG),
+    ...(customModules || {}),
+  };
+
+  return updateStoreInfo({
+    businessMode,
+    modulesEnabled: modulesToSave,
+    industryConfig,
+  });
+}
+
+/**
+ * Fetches store_name, store_img, business_mode, modules_enabled, and industry_config for the current store.
+ */
+export async function getStoreInfo(): Promise<{
+  success: boolean;
+  error?: string;
+  storeName?: string;
+  storeImg?: string | null;
+  businessMode?: BusinessMode;
+  modulesEnabled?: ModulesConfig;
+  industryConfig?: IndustryConfig;
+}> {
   const supabase = await createClient();
 
   try {
@@ -246,7 +288,7 @@ export async function getStoreInfo() {
 
     const { data: storeData, error: storeError } = await supabase
       .from("stores")
-      .select("store_name, store_img")
+      .select("store_name, store_img, business_mode, modules_enabled, industry_config")
       .eq("store_id", userData.store_id)
       .single();
 
@@ -258,6 +300,9 @@ export async function getStoreInfo() {
       success: true,
       storeName: storeData.store_name,
       storeImg: storeData.store_img,
+      businessMode: (storeData.business_mode as BusinessMode) || "retail",
+      modulesEnabled: (storeData.modules_enabled as ModulesConfig) || DEFAULT_MODULES_CONFIG,
+      industryConfig: (storeData.industry_config as IndustryConfig) || {},
     };
   } catch (error: any) {
     return { success: false, error: error.message };

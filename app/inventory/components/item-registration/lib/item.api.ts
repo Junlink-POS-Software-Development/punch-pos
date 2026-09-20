@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { Item } from "../utils/itemTypes";
+import { embedPharmacyMetaInDescription, extractPharmacyMeta, stripPharmacyMetaFromDescription } from "@/lib/utils/pharmacyMeta";
 
 const getSupabase = async () => {
   return createClient();
@@ -17,6 +18,11 @@ interface ItemDbRow {
   description: string | null;
   image_url: string | null;
   low_stock_threshold: number | null;
+  // Pharmacy extensions
+  generic_name?: string | null;
+  dosage?: string | null;
+  formulation?: string | null;
+  is_rx?: boolean;
 }
 
 // ... (DbItemObject and toDatabaseObject remain UNCHANGED) ...
@@ -31,9 +37,30 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
   if (item.sellingPrice !== undefined) dbItem.sales_price = item.sellingPrice ?? null;
   // Map JS 'category' (UUID) -> DB 'category_id'
   if (item.category !== undefined) dbItem.category_id = item.category ?? null;
-  if (item.description !== undefined) dbItem.description = item.description ?? null;
   if (item.imageUrl !== undefined) dbItem.image_url = item.imageUrl ?? null;
   if (item.lowStockThreshold !== undefined) dbItem.low_stock_threshold = item.lowStockThreshold ?? null;
+
+  // Pharmacy & Medical fields
+  if (item.genericName !== undefined) dbItem.generic_name = item.genericName ?? null;
+  if (item.dosage !== undefined) dbItem.dosage = item.dosage ?? null;
+  if (item.formulation !== undefined) dbItem.formulation = item.formulation ?? null;
+  if (item.isRx !== undefined) dbItem.is_rx = item.isRx ?? false;
+
+  // Embed pharmacy meta in description so it's queryable & persistent immediately
+  if (item.genericName || item.dosage || item.formulation || item.isRx !== undefined || item.brandType) {
+    dbItem.description = embedPharmacyMetaInDescription(item.description || "", {
+      genericName: item.genericName || undefined,
+      dosage: item.dosage || undefined,
+      formulation: item.formulation || undefined,
+      isRx: item.isRx,
+      brandType: item.brandType,
+      batchNumber: item.batchNumber || undefined,
+      expiryDate: item.expiryDate || undefined,
+    });
+  } else if (item.description !== undefined) {
+    dbItem.description = item.description ?? null;
+  }
+
   return dbItem;
 };
 
@@ -49,8 +76,14 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
     image_url,
     low_stock_threshold,
     id, 
-    sku 
+    sku,
+    generic_name,
+    dosage,
+    formulation,
+    is_rx,
   } = dbItem;
+
+  const meta = extractPharmacyMeta(dbItem);
 
   return {
     id,
@@ -60,9 +93,16 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
     categoryName: category_name ?? undefined,
     salesPrice: unit_cost,
     sellingPrice: sales_price ?? null,
-    description: description ?? undefined,
+    description: stripPharmacyMetaFromDescription(description) || undefined,
     imageUrl: image_url ?? null,
     lowStockThreshold: low_stock_threshold ?? null,
+    genericName: meta.genericName ?? generic_name ?? undefined,
+    dosage: meta.dosage ?? dosage ?? undefined,
+    formulation: meta.formulation ?? formulation ?? undefined,
+    isRx: meta.isRx ?? is_rx ?? false,
+    brandType: meta.brandType ?? "branded",
+    batchNumber: meta.batchNumber ?? undefined,
+    expiryDate: meta.expiryDate ?? undefined,
   };
 };
 
@@ -135,7 +175,6 @@ export const fetchItemsPaginated = async (
 export const insertItem = async (item: Item): Promise<Item> => {
   const supabase = await getSupabase();
 
-  
   const dbItem = toDatabaseObject(item);
   
   // Fetch current user's store_id to ensure RLS 'WITH CHECK' passes
@@ -151,15 +190,34 @@ export const insertItem = async (item: Item): Promise<Item> => {
     (dbItem as ItemDbRow & { store_id: string }).store_id = userData.store_id;
   }
   
-  const { data: insertedData, error } = await supabase
+  let { data: insertedData, error } = await supabase
     .from("items")
     .insert(dbItem)
     .select()
     .single();
 
   if (error) {
-    console.error("Supabase insert error:", error);
-    throw new Error(error.message);
+    // Graceful fallback if database migration hasn't been applied yet
+    if (error.message?.includes("generic_name") || error.message?.includes("is_rx") || error.code === "PGRST204") {
+      console.warn("Pharmacy columns missing in Supabase schema cache. Retrying base insert. Run migration 20260920010000_add_pharmacy_fields_and_item_batches.sql.");
+      const fallbackItem = { ...dbItem };
+      delete fallbackItem.generic_name;
+      delete fallbackItem.dosage;
+      delete fallbackItem.formulation;
+      delete fallbackItem.is_rx;
+      const retry = await supabase
+        .from("items")
+        .insert(fallbackItem)
+        .select()
+        .single();
+      if (retry.error) {
+        throw new Error(retry.error.message);
+      }
+      insertedData = retry.data;
+    } else {
+      console.error("Supabase insert error:", error);
+      throw new Error(error.message);
+    }
   }
 
   return fromDatabaseObject(insertedData);
@@ -174,7 +232,7 @@ export const updateItem = async (item: Item): Promise<Item> => {
   const { id: _, ...updateData } = dbItem;
 
   const supabase = await getSupabase();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("items")
     .update(updateData)
     .eq("id", item.id)
@@ -182,8 +240,27 @@ export const updateItem = async (item: Item): Promise<Item> => {
     .single();
 
   if (error) {
-    console.error("Supabase update error detail:", JSON.stringify(error, null, 2));
-    throw new Error(error.message);
+    if (error.message?.includes("generic_name") || error.message?.includes("is_rx") || error.code === "PGRST204") {
+      console.warn("Pharmacy columns missing in Supabase schema cache. Retrying base update.");
+      const fallbackData = { ...updateData };
+      delete fallbackData.generic_name;
+      delete fallbackData.dosage;
+      delete fallbackData.formulation;
+      delete fallbackData.is_rx;
+      const retry = await supabase
+        .from("items")
+        .update(fallbackData)
+        .eq("id", item.id)
+        .select()
+        .single();
+      if (retry.error) {
+        throw new Error(retry.error.message);
+      }
+      data = retry.data;
+    } else {
+      console.error("Supabase update error detail:", JSON.stringify(error, null, 2));
+      throw new Error(error.message);
+    }
   }
   
  

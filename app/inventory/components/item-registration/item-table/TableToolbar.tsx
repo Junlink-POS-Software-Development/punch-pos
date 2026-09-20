@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { Search, Plus, Trash2, Edit, ScanBarcode, X, ListTree } from "lucide-react";
 import { useItemTable } from "../hooks/useItemTable";
 import { usePermissions } from "@/app/hooks/usePermissions";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { CategoryManagerModal } from "../utils/CategoryManagerModal";
+import { Pill } from "lucide-react";
 
 interface TableToolbarProps {
   onAddClick: () => void;
@@ -26,10 +28,27 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
     editingCount,
   } = useItemTable();
 
+  const { isPharmacy, isRestaurant, isGrocery } = useBusinessMode();
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const { can_manage_items, can_manage_categories } = usePermissions();
 
   const selectedCount = selectedItems.length;
+
+  const searchPlaceholder = isPharmacy
+    ? "Search brand, generic molecule, dosage, or SKU..."
+    : isRestaurant
+    ? "Search dishes, menu items, or SKU..."
+    : isGrocery
+    ? "Search products, barcodes, or categories..."
+    : "Search items, SKU, or category...";
+
+  const addItemLabel = isPharmacy
+    ? "Add Medicine"
+    : isRestaurant
+    ? "Add Menu Item"
+    : isGrocery
+    ? "Add Product"
+    : "Add Item";
 
   return (
     <>
@@ -43,10 +62,10 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
             />
             <input
               type="text"
-              placeholder="Search items, SKU, or category..."
+              placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-input rounded-lg focus:ring-2 focus:ring-ring outline-none text-sm text-foreground"
+              className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-input rounded-lg focus:ring-2 focus:ring-ring outline-none text-sm text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
           {!batchEditMode && (
@@ -64,7 +83,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                   onClick={onAddClick}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap"
                   >
-                  <Plus size={18} /> Add Item
+                  {isPharmacy ? <Pill size={16} /> : <Plus size={18} />} {addItemLabel}
                   </button>
                 )}
             </div>

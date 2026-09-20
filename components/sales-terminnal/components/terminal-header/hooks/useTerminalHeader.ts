@@ -8,6 +8,8 @@ import { useTransactionStore } from "@/app/settings/backdating/stores/useTransac
 import { usePermissions } from "@/app/hooks/usePermissions";
 import { CustomerResult } from "../../../modals/CustomerSearchModal";
 
+import { extractPharmacyMeta } from "@/lib/utils/pharmacyMeta";
+
 export const useTerminalHeader = (setCustomerId: (id: string | null) => void) => {
   const { watch, setValue } = useFormContext<PosFormValues>();
   const { items: allItems } = useItems();
@@ -79,10 +81,19 @@ export const useTerminalHeader = (setCustomerId: (id: string | null) => void) =>
     const item = allItems.find((item) => item.sku === currentBarcode);
     if (!item) return { name: "NOT FOUND", price: "₱0.00", stock: 0 };
     const stockInfo = inventoryData?.find((inv) => inv.sku === currentBarcode);
+    const meta = extractPharmacyMeta(item);
     return {
       name: (item.itemName || "UNKNOWN").toUpperCase(),
       price: `₱${(item.sellingPrice ?? item.salesPrice ?? 0).toFixed(2)}`,
       stock: stockInfo?.current_stock ?? 0,
+      sku: item.sku,
+      genericName: meta.genericName || item.genericName || undefined,
+      dosage: meta.dosage || item.dosage || undefined,
+      formulation: meta.formulation || item.formulation || undefined,
+      isRx: meta.isRx !== undefined ? meta.isRx : (item.isRx ?? undefined),
+      brandType: meta.brandType || item.brandType || undefined,
+      batchNumber: meta.batchNumber || item.batchNumber || undefined,
+      expiryDate: meta.expiryDate || item.expiryDate || undefined,
     };
   }, [currentBarcode, allItems, inventoryData]);
 

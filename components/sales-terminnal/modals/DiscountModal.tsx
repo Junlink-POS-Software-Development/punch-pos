@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Tag, Percent, DollarSign } from "lucide-react";
+import { X, Tag, Percent, DollarSign, ShieldCheck } from "lucide-react";
 import { CartItem, DiscountType } from "../components/terminal-cart/types";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface DiscountModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const DiscountModal = ({
   currentDiscountType,
   currentDiscountValue,
 }: DiscountModalProps) => {
+  const { modules, isPharmacy } = useBusinessMode();
   const [discountType, setDiscountType] = useState<DiscountType>('flat');
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -176,6 +178,38 @@ export const DiscountModal = ({
           </p>
         </div>
 
+        {/* Statutory Senior / PWD Banner (Prominently visible when active) */}
+        {(modules.statutory_sc_pwd || isPharmacy) && (
+          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5 text-emerald-600">
+              <ShieldCheck className="w-5 h-5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold leading-tight text-foreground">
+                  Senior Citizen & PWD Statutory Discount
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Official 20% statutory deduction on medicines & items
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setDiscountType('percent');
+                setInputValue("20");
+                setError(null);
+              }}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer ${
+                discountType === 'percent' && inputValue === '20'
+                  ? 'bg-emerald-600 text-white ring-2 ring-emerald-600/40'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              }`}
+            >
+              Apply 20%
+            </button>
+          </div>
+        )}
+
         {/* Type Toggle */}
         <div className="flex gap-2 p-1 bg-muted/30 rounded-xl">
           <button
@@ -237,6 +271,86 @@ export const DiscountModal = ({
               placeholder="0.00"
               inputMode={isTabletMode ? "none" : "decimal"}
             />
+          </div>
+
+          {/* Quick Preset Buttons (Always Visible) */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+            <span className="text-xs text-muted-foreground mr-1">Quick Presets:</span>
+            {discountType === 'percent' ? (
+              <>
+                {[5, 10, 15, 20].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => {
+                      setInputValue(pct.toString());
+                      setError(null);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      inputValue === pct.toString()
+                        ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                        : "bg-muted/30 hover:bg-muted border-border text-foreground"
+                    }`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+
+                {(modules.statutory_sc_pwd || isPharmacy) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDiscountType('percent');
+                      setInputValue("20");
+                      setError(null);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      inputValue === "20" && discountType === 'percent'
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                        : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Senior / PWD (20%)</span>
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {[10, 20, 50, 100].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => {
+                      setInputValue(amt.toString());
+                      setError(null);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      inputValue === amt.toString()
+                        ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                        : "bg-muted/30 hover:bg-muted border-border text-foreground"
+                    }`}
+                  >
+                    ₱{amt}
+                  </button>
+                ))}
+
+                {(modules.statutory_sc_pwd || isPharmacy) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDiscountType('percent');
+                      setInputValue("20");
+                      setError(null);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Senior / PWD (20%)</span>
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 

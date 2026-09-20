@@ -1,7 +1,8 @@
 import React, { useRef } from "react";
-import { ImageIcon, ChevronDown } from "lucide-react";
+import { ImageIcon, ChevronDown, Pill, Calendar, Hash, ShieldAlert } from "lucide-react";
 import { Category } from "../../../hooks/useCategories";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface SingleItemFormProps {
   formData: {
@@ -14,18 +15,15 @@ interface SingleItemFormProps {
     minStock: string;
     imageUrl: string | null;
     imageSize: string | null;
+    genericName?: string;
+    dosage?: string;
+    formulation?: string;
+    isRx?: boolean;
+    brandType?: "branded" | "generic";
+    batchNumber?: string;
+    expiryDate?: string;
   };
-  setFormData: React.Dispatch<React.SetStateAction<{
-    name: string;
-    description: string;
-    category: string;
-    sku: string;
-    sellingPrice: string;
-    stock: string;
-    minStock: string;
-    imageUrl: string | null;
-    imageSize: string | null;
-  }>>;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   categories: Category[];
   isProcessing: boolean;
   isUploading: boolean;
@@ -46,6 +44,8 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   onReset,
   onCancel,
 }) => {
+  const { isPharmacy, modules } = useBusinessMode();
+  const showPharmacyFields = isPharmacy || modules.prescription_rx || modules.batch_expiry;
   // Refs for focus management
   const nameRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLSelectElement>(null);
@@ -227,6 +227,160 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Pharmacy & Drug Formulation Section (Conditioned on Business Mode) */}
+      {showPharmacyFields && (
+        <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/20 space-y-6 shadow-inner backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-500/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-500 shrink-0">
+                <Pill className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  Drug Formulation & Regulatory Info
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    Pharmacy
+                  </span>
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Generics Act (RA 6675) & FDA compliance metadata
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Medicine Type: Branded vs Generic */}
+              <div className="flex items-center p-1 bg-background/80 rounded-xl border border-emerald-500/20 shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, brandType: "branded" })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    (formData.brandType || "branded") === "branded"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  🏷️ Branded
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, brandType: "generic" })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    formData.brandType === "generic"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  💊 Generic
+                </button>
+              </div>
+
+              {/* Prescription (Rx) Toggle */}
+              <label className="flex items-center gap-3 cursor-pointer select-none bg-background/80 hover:bg-background px-3.5 py-2 rounded-xl border border-emerald-500/30 transition-colors shadow-sm shrink-0">
+                <div className="text-right">
+                  <span className="text-xs font-bold block text-foreground">Prescription (Rx)</span>
+                  <span className="text-[10px] text-muted-foreground">Requires MD license</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isRx || false}
+                  onChange={(e) => setFormData({ ...formData, isRx: e.target.checked })}
+                  className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 accent-emerald-500 cursor-pointer"
+                />
+                {formData.isRx && (
+                  <span className="text-[10px] font-black bg-red-500/10 text-red-500 px-2 py-0.5 rounded border border-red-500/20 tracking-wider">
+                    Rx
+                  </span>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Molecule, Strength & Formulation */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1">
+                Generic Molecule Name
+              </label>
+              <input
+                type="text"
+                value={formData.genericName || ""}
+                onChange={(e) => setFormData({ ...formData, genericName: e.target.value })}
+                className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-foreground placeholder:text-muted-foreground/40 shadow-inner text-sm transition-all"
+                placeholder="e.g. Paracetamol, Amoxicillin"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1">
+                Dosage / Strength
+              </label>
+              <input
+                type="text"
+                value={formData.dosage || ""}
+                onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-foreground placeholder:text-muted-foreground/40 shadow-inner text-sm transition-all"
+                placeholder="e.g. 500mg, 125mg/5mL"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1">
+                Dosage Form / Formulation
+              </label>
+              <select
+                value={formData.formulation || ""}
+                onChange={(e) => setFormData({ ...formData, formulation: e.target.value })}
+                className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-foreground shadow-inner text-sm transition-all cursor-pointer"
+              >
+                <option value="" className="bg-background">Select Form</option>
+                <option value="Tablet" className="bg-background">Tablet</option>
+                <option value="Capsule" className="bg-background">Capsule</option>
+                <option value="Syrup" className="bg-background">Syrup</option>
+                <option value="Suspension" className="bg-background">Suspension</option>
+                <option value="Oral Drops" className="bg-background">Oral Drops</option>
+                <option value="Cream / Ointment" className="bg-background">Cream / Ointment</option>
+                <option value="Vial / Injection" className="bg-background">Vial / Injection</option>
+                <option value="Inhaler / Nebule" className="bg-background">Inhaler / Nebule</option>
+                <option value="Suppository" className="bg-background">Suppository</option>
+                <option value="Medical Supply" className="bg-background">Medical Supply / Device</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Batch / Expiry Date (FEFO) */}
+          {(isPharmacy || modules.batch_expiry) && (
+            <div className="pt-2 border-t border-emerald-500/10 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1 flex items-center gap-1.5">
+                  <Hash className="w-3.5 h-3.5 text-emerald-500" />
+                  Initial Batch / Lot Number (FEFO)
+                </label>
+                <input
+                  type="text"
+                  value={formData.batchNumber || ""}
+                  onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
+                  className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-foreground placeholder:text-muted-foreground/40 shadow-inner text-sm transition-all"
+                  placeholder="e.g. LOT-2026-08A"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 ml-1 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                  Expiration Date (FEFO)
+                </label>
+                <input
+                  type="date"
+                  value={formData.expiryDate || ""}
+                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                  className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-foreground shadow-inner text-sm transition-all cursor-pointer"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bottom Row: Inventory */}
       <div className="p-6 bg-foreground/5 rounded-2xl border border-foreground/5 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-inner backdrop-blur-sm">

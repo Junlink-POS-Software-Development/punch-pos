@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Ticket, X, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import { lookupVoucher, Voucher } from "@/app/actions/vouchers";
 import { generateInvoiceNo } from "@/app/transactions/lib/paymentCache";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface PaymentPopupProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
   subtotal = 0,
   onConfirm,
 }) => {
+  const { modules } = useBusinessMode();
   const [payment, setPayment] = useState<string>("");
   const [transactionNo, setTransactionNo] = useState<string>("");
   const paymentInputRef = useRef<HTMLInputElement>(null);
@@ -273,7 +275,18 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
 
           {/* Cash Payment */}
           <div>
-            <label className="block mb-1 text-muted-foreground text-sm">Cash Payment</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-muted-foreground text-sm font-medium">Cash Payment</label>
+              {modules.fast_cash_tender && amountDue > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPayment(amountDue.toFixed(2))}
+                  className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                >
+                  Exact (₱{amountDue.toFixed(2)})
+                </button>
+              )}
+            </div>
             <input
               ref={paymentInputRef}
               type="number"
@@ -283,6 +296,26 @@ export const PaymentPopup: React.FC<PaymentPopupProps> = ({
               className="bg-muted/20 focus:ring-2 focus:ring-primary/50 border border-input rounded-lg w-full px-4 py-3 font-bold text-foreground text-xl outline-none transition-all"
               placeholder="0.00"
             />
+
+            {/* Fast Tender Quick Bills */}
+            {modules.fast_cash_tender && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {[100, 200, 500, 1000].map((bill) => (
+                  <button
+                    key={bill}
+                    type="button"
+                    onClick={() => setPayment(bill.toString())}
+                    className={`flex-1 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                      paymentValue === bill
+                        ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                        : "bg-muted/40 hover:bg-muted border-border text-foreground"
+                    }`}
+                  >
+                    ₱{bill}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Summary */}

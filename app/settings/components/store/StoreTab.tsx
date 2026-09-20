@@ -4,6 +4,7 @@ import React from "react";
 import { StoreDetailsSection } from "./StoreDetailsSection";
 import { StoreAccessSection } from "./StoreAccessSection";
 import { StoreSwitcher } from "./StoreSwitcher";
+import { BusinessModeSection } from "./BusinessModeSection";
 import { usePermissions } from "@/app/hooks/usePermissions";
 
 export const StoreTab = () => {
@@ -18,7 +19,12 @@ export const StoreTab = () => {
 
       <StoreSwitcher />
 
-      {can_manage_store && <StoreDetailsSection />}
+      {can_manage_store && (
+        <>
+          <BusinessModeSection />
+          <StoreDetailsSection />
+        </>
+      )}
       
       <StoreAccessSection />
     </div>

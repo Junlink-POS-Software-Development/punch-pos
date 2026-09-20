@@ -6,6 +6,7 @@ import { TableToolbar } from "./TableToolbar";
 import { ItemTableRow } from "./ItemTableRow";
 import { useItemTable, SortKey } from "../hooks/useItemTable";
 import { useBarcode } from "../hooks/useBarcode";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface ItemTableProps {
   onAddClick: () => void;
@@ -40,6 +41,31 @@ const ItemTable: React.FC<ItemTableProps> = ({
   } = useItemTable();
 
   const { handleSingleBarcodeGeneration } = useBarcode();
+  const { isPharmacy, isRestaurant, isGrocery } = useBusinessMode();
+
+  const columns = isPharmacy
+    ? [
+        { label: "Medicine / Brand", key: "item_name", width: "w-[24%] min-w-[180px]" },
+        { label: "Generic Molecule", key: "generic_name", width: "w-[19%] min-w-[150px]" },
+        { label: "Dosage", key: "dosage", width: "w-[12%] min-w-[95px]" },
+        { label: "SKU / Code", key: "sku", width: "w-[10%] min-w-[85px]" },
+        { label: "Category", key: null, width: "w-[10%] min-w-[85px]" },
+        { label: "Unit Price", key: "sales_price", width: "w-[10%] min-w-[85px]" },
+        { label: "Lot / Details", key: "description", width: "grow min-w-[110px]" },
+      ]
+    : [
+        {
+          label: isRestaurant ? "Menu Item" : isGrocery ? "Product Name" : "Item Group",
+          key: "item_name",
+          width: "w-[30%] min-w-[180px]",
+        },
+        { label: "SKU", key: "sku", width: "w-[12%] min-w-[90px]" },
+        { label: "Category", key: null, width: "w-[12%] min-w-[100px]" },
+        { label: "Unit Price", key: "sales_price", width: "w-[12%] min-w-[90px]" },
+        { label: "Description", key: "description", width: "grow min-w-[150px]" },
+      ];
+
+  const totalColumns = columns.length + 2; // +1 checkbox, +1 actions
 
   return (
     <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border border-border overflow-hidden">
@@ -50,7 +76,7 @@ const ItemTable: React.FC<ItemTableProps> = ({
 
       {/* Table Header (Fixed) */}
       <div className="overflow-x-auto grow" onScroll={handleTableScroll}>
-        <table className="w-full text-left border-collapse min-w-[800px]">
+        <table className={`w-full text-left border-collapse ${isPharmacy ? "min-w-[950px]" : "min-w-[800px]"}`}>
           <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10 shadow-sm">
             <tr>
               <th className="px-4 py-2 border-b border-border w-10">
@@ -64,13 +90,7 @@ const ItemTable: React.FC<ItemTableProps> = ({
                   className="rounded border-input text-primary focus:ring-primary size-4"
                 />
               </th>
-              {[
-                { label: "Item Group", key: "item_name", width: "w-[30%] min-w-[180px]" },
-                { label: "SKU", key: "sku", width: "w-[12%] min-w-[90px]" },
-                { label: "Category", key: null, width: "w-[12%] min-w-[100px]" },
-                { label: "Unit Price", key: "sales_price", width: "w-[12%] min-w-[90px]" },
-                { label: "Description", key: "description", width: "grow min-w-[150px]" },
-              ].map((col) => (
+              {columns.map((col) => (
                 <th
                   key={col.label}
                   className={`px-4 py-2 border-b border-border text-[10px] font-bold uppercase tracking-wider text-muted-foreground ${
@@ -106,6 +126,7 @@ const ItemTable: React.FC<ItemTableProps> = ({
                 <ItemTableRow
                   key={item.item_id}
                   item={item}
+                  isPharmacy={isPharmacy}
                   isSelected={selectedItems.includes(item.item_id)}
                   onToggleSelect={toggleSelectItem}
                   editingData={editingRows[item.item_id] || null}
@@ -119,14 +140,14 @@ const ItemTable: React.FC<ItemTableProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={totalColumns} className="px-4 py-12 text-center text-muted-foreground">
                   {isLoading ? "Loading items..." : "No items found matching your search."}
                 </td>
               </tr>
             )}
             {isFetchingNextPage && (
               <tr>
-                <td colSpan={8} className="px-4 py-4 text-center text-sm text-muted-foreground italic">
+                <td colSpan={totalColumns} className="px-4 py-4 text-center text-sm text-muted-foreground italic">
                   Loading more items...
                 </td>
               </tr>

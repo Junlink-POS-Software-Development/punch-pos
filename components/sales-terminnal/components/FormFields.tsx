@@ -4,6 +4,7 @@ import React from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
 import ItemAutocomplete from "../../../utils/ItemAutoComplete";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 type FormFieldsProps = {
   onAddToCartClick: () => void; // Back to sync
@@ -15,6 +16,7 @@ type FormFieldsProps = {
 
 export const FormFields = React.memo<FormFieldsProps>(
   ({ onAddToCartClick, onDoneSubmitTrigger, setActiveField, activeField, isTabletMode }) => {
+    const { isPharmacy } = useBusinessMode();
     const { register, control, setValue, setFocus } =
       useFormContext<PosFormValues>();
     
@@ -88,7 +90,12 @@ export const FormFields = React.memo<FormFieldsProps>(
         type: "text",
         noAutoComplete: true,
       },
-      { title: "Barcode", id: "barcode", label: "Barcode:", type: "text" },
+      { 
+        title: isPharmacy ? "Medicine / Barcode" : "Barcode", 
+        id: "barcode", 
+        label: isPharmacy ? "Medicine / Barcode:" : "Barcode:", 
+        type: "text" 
+      },
       { title: "Quantity", id: "quantity", label: "Quantity:", type: "number" },
     ];
 
@@ -142,6 +149,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                           }}
                           className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary transition-colors focus:outline-none"
                           inputMode={isTabletMode ? "none" : undefined}
+                          disableDropdown={isPharmacy}
                         />
                       </div>
                     )}

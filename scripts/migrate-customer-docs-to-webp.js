@@ -34,28 +34,41 @@ async function migrate() {
   if (customerLimit) console.log(`  Customer Limit: ${customerLimit}`);
   console.log('=====================================================\n');
 
-  // 1. Fetch customers with documents
+  // 1. Fetch customers with documents (with pagination to handle > 1,000 rows)
   console.log('Fetching customers with documents from database...');
-  let query = supabase
-    .from('customers')
-    .select('id, full_name, documents, document_metadata')
-    .not('documents', 'is', null);
+  let allCustomers = [];
+  let page = 0;
+  const pageSize = 1000;
 
-  if (customerLimit) {
-    query = query.limit(customerLimit);
+  while (true) {
+    let query = supabase
+      .from('customers')
+      .select('id, full_name, documents, document_metadata')
+      .not('documents', 'is', null)
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+
+    if (customerLimit) {
+      query = query.limit(customerLimit);
+    }
+
+    const { data: pageData, error: fetchErr } = await query;
+    if (fetchErr) {
+      console.error('Failed to fetch customers:', fetchErr.message);
+      process.exit(1);
+    }
+
+    if (!pageData || pageData.length === 0) break;
+    allCustomers = allCustomers.concat(pageData);
+
+    if (customerLimit || pageData.length < pageSize) break;
+    page++;
   }
 
-  const { data: customers, error: fetchErr } = await query;
-  if (fetchErr) {
-    console.error('Failed to fetch customers:', fetchErr.message);
-    process.exit(1);
-  }
-
-  const eligibleCustomers = (customers || []).filter(
+  const eligibleCustomers = allCustomers.filter(
     c => Array.isArray(c.documents) && c.documents.length > 0
   );
 
-  console.log(`Found ${eligibleCustomers.length} customers with documents to check.\n`);
+  console.log(`Found ${eligibleCustomers.length} total customers with documents across all pages.\n`);
 
   let totalDocsProcessed = 0;
   let totalDocsConverted = 0;

@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useEffect, useRef, forwardRef } from "react";
 import { useInventory } from "@/app/dashboard/hooks/useInventory";
 import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
+import { extractPharmacyMeta } from "@/lib/utils/pharmacyMeta";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 export interface ItemAutocompleteProps {
   value: string;
@@ -13,10 +15,12 @@ export interface ItemAutocompleteProps {
   onItemSelect?: (item: InventoryItem) => void;
   className?: string;
   id?: string;
+  placeholder?: string;
   // 1. FIX: Add onKeyDown to the interface
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  disableDropdown?: boolean;
 }
 
 const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
@@ -30,24 +34,45 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
       error,
       onItemSelect,
       id,
+      placeholder,
       onKeyDown, // 2. FIX: Destructure onKeyDown from props
       onFocus,
       inputMode,
+      disableDropdown = false,
     },
     ref
   ) => {
     const { inventory: items } = useInventory();
+    const { isPharmacy } = useBusinessMode();
+    const shouldDisableDropdown = disableDropdown || isPharmacy;
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const listRef = useRef<HTMLUListElement>(null);
 
     const suggestions = useMemo(() => {
       if (!value) return [];
+      const query = value.toLowerCase().trim();
       return items
-        .filter((item) =>
-          item.item_name.toLowerCase().includes(value.toLowerCase()) ||
-          item.sku.toLowerCase().includes(value.toLowerCase())
-        )
+        .map((item) => {
+          const meta = extractPharmacyMeta(item);
+          return {
+            ...item,
+            generic_name: meta.genericName || item.generic_name,
+            dosage: meta.dosage || item.dosage,
+            formulation: meta.formulation || item.formulation,
+            is_rx: meta.isRx !== undefined ? meta.isRx : item.is_rx,
+            brand_type: meta.brandType || item.brand_type,
+          };
+        })
+        .filter((item) => {
+          const nameMatch = item.item_name.toLowerCase().includes(query);
+          const skuMatch = item.sku.toLowerCase().includes(query);
+          const genericMatch = item.generic_name ? item.generic_name.toLowerCase().includes(query) : false;
+          const dosageMatch = item.dosage ? item.dosage.toLowerCase().includes(query) : false;
+          const formulationMatch = item.formulation ? item.formulation.toLowerCase().includes(query) : false;
+          const descMatch = item.description ? item.description.toLowerCase().includes(query) : false;
+          return nameMatch || skuMatch || genericMatch || dosageMatch || formulationMatch || descMatch;
+        })
         .slice(0, 10);
     }, [items, value]);
 
@@ -61,45 +86,80 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
       }
     };
 
-    const handleInternalKeyDown = (
-      e: React.KeyboardEvent<HTMLInputElement>
-    ) => {
-      // --- Internal Dropdown Navigation Logic ---
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (suggestions.length === 0) return;
-        setActiveIndex((prev) => (prev + 1) % suggestions.length);
-        setIsOpen(true);
-        return;
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (suggestions.length === 0) return;
-        setActiveIndex(
-          (prev) => (prev - 1 + suggestions.length) % suggestions.length
-        );
-        setIsOpen(true);
-        return;
-      } else if (e.key === "Escape") {
-        setIsOpen(false);
-        setActiveIndex(-1);
-        return;
-      } else if (e.key === "Enter") {
-        if (activeIndex >= 0 && suggestions[activeIndex]) {
-          // Case 1: Selecting from dropdown
+    const handleInternalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (shouldDisableDropdown) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
-          handleSelect(suggestions[activeIndex]);
-          return; // Stop here, don't trigger external Enter logic
+          window.dispatchEvent(
+            new CustomEvent("pharmacy-search-nav", { detail: { key: e.key } })
+          );
+          return;
         }
-        // Case 2: Just hitting Enter (submit/next field)
-        // Fall through to external handler below
+        if (e.key === "Enter") {
+          const customEvent = new CustomEvent("pharmacy-search-nav", {
+            detail: { key: "Enter" },
+            cancelable: true,
+          });
+          window.dispatchEvent(customEvent);
+          if (customEvent.defaultPrevented) {
+            e.preventDefault();
+            return;
+          }
+        }
+        if (onKeyDown) onKeyDown(e);
+        return;
       }
 
-      // 3. FIX: Call the external handler if it exists
-      // This allows FormFields.tsx to catch 'Enter' and move focus to Quantity
-      if (onKeyDown) {
-        onKeyDown(e);
+      if (!isOpen || suggestions.length === 0) {
+        if (onKeyDown) onKeyDown(e);
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) =>
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+      } else if (e.key === "Enter") {
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+          e.preventDefault();
+          handleSelect(suggestions[activeIndex]);
+        } else {
+          setIsOpen(false);
+          if (onKeyDown) onKeyDown(e);
+        }
+      } else if (e.key === "Escape") {
+        setIsOpen(false);
+      } else {
+        if (onKeyDown) onKeyDown(e);
       }
     };
+
+    const defaultPlaceholder = isPharmacy
+      ? "Scan barcode, search brand, generic molecule, or dosage..."
+      : "Scan barcode or search item...";
+
+    // Handle clicks outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          innerRef.current &&
+          !innerRef.current.contains(event.target as Node) &&
+          listRef.current &&
+          !listRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const innerRef = useRef<HTMLInputElement>(null);
 
@@ -139,6 +199,7 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
           id={id || "itemName"}
           type="text"
           value={value}
+          placeholder={placeholder || defaultPlaceholder}
           onChange={(e) => {
             onChange(e.target.value);
             setIsOpen(true);
@@ -160,17 +221,17 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
           } ${error ? "border-red-500" : ""}`}
           autoComplete="off"
         />
-        {isOpen && suggestions.length > 0 && (
+        {!shouldDisableDropdown && isOpen && suggestions.length > 0 && (
           <ul
             ref={listRef}
-            className="z-50 absolute top-full left-0 bg-card/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] mt-2 border border-border/50 rounded-xl w-full max-h-60 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-200"
+            className="z-50 absolute top-full left-0 bg-card/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] mt-2 border border-border/50 rounded-xl w-full max-h-72 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-200"
           >
             {suggestions.map((item, index) => (
               <li
                 key={item.item_id}
-                className={`px-4 py-3 cursor-pointer transition-all duration-150 flex flex-col gap-0.5 ${
+                className={`px-4 py-2.5 cursor-pointer transition-all duration-150 flex flex-col gap-1.5 ${
                   index === activeIndex
-                    ? "bg-primary text-primary-foreground shadow-md scale-[1.01] z-10 mx-1 rounded-lg"
+                    ? "bg-primary text-primary-foreground shadow-md scale-[1.005] z-10 mx-1 rounded-xl"
                     : "text-foreground hover:bg-muted/80"
                 }`}
                 onMouseDown={(e) => {
@@ -178,18 +239,84 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
                   handleSelect(item);
                 }}
               >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-bold tracking-tight text-sm sm:text-base">
-                    {item.item_name}
-                  </span>
-                  <div className={`flex flex-col items-end gap-0 ${index === activeIndex ? 'text-primary-foreground' : 'text-primary'}`}>
-                    <span className="text-[10px] font-black tracking-widest uppercase opacity-70">
-                       Stocks
+                {/* Top Row: Name, Brand/Generic Badge, Rx, Price, Stocks */}
+                <div className="flex justify-between items-center w-full gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
+                    <span className="font-bold tracking-tight text-sm sm:text-base truncate">
+                      {item.item_name}
                     </span>
-                    <span className="text-sm font-bold leading-tight">
-                       {item.current_stock || 0}
-                    </span>
+                    {item.brand_type && (
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold tracking-wider uppercase ${
+                        item.brand_type === 'generic'
+                          ? (index === activeIndex ? 'bg-white text-emerald-800 font-black' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30')
+                          : (index === activeIndex ? 'bg-white text-blue-800 font-black' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30')
+                      }`}>
+                        {item.brand_type === 'generic' ? '💊 Generic' : '🏷️ Branded'}
+                      </span>
+                    )}
+                    {item.is_rx && (
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-black tracking-wider ${
+                        index === activeIndex
+                          ? 'bg-red-500 text-white'
+                          : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+                      }`}>
+                        Rx
+                      </span>
+                    )}
                   </div>
+
+                  {/* Right side: Price & Stock */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`font-mono font-bold text-sm ${index === activeIndex ? 'text-primary-foreground' : 'text-primary font-black'}`}>
+                      ₱{(item.sales_price || 0).toFixed(2)}
+                    </span>
+                    <div className={`flex flex-col items-end shrink-0 ${index === activeIndex ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                      <span className="text-[9px] font-bold tracking-wider uppercase opacity-75">
+                        Stocks
+                      </span>
+                      <span className="text-xs font-bold font-mono leading-none">
+                        {item.current_stock || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Generic Molecule, Dosage Chip, Formulation/Form Chip */}
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  {item.generic_name && (
+                    <span className={`truncate ${index === activeIndex ? 'text-primary-foreground/90 font-medium' : 'text-muted-foreground'}`}>
+                      <span className="opacity-75 font-normal">Molecule:</span> <strong className="font-semibold">{item.generic_name}</strong>
+                    </span>
+                  )}
+
+                  {/* Highlighted Dosage Badge */}
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold flex items-center gap-0.5 ${
+                    index === activeIndex
+                      ? 'bg-white/20 text-white border border-white/30'
+                      : item.dosage
+                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                        : 'bg-muted/50 text-muted-foreground border border-border/50 opacity-60'
+                  }`}>
+                    <span>Dosage:</span> {item.dosage || "—"}
+                  </span>
+
+                  {/* Highlighted Form / Formulation Badge */}
+                  {item.formulation && (
+                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold flex items-center gap-0.5 ${
+                      index === activeIndex
+                        ? 'bg-white/20 text-white border border-white/30'
+                        : 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30'
+                    }`}>
+                      <span>Form:</span> {item.formulation}
+                    </span>
+                  )}
+
+                  {/* Fallback to SKU if no molecule, dosage, or formulation */}
+                  {!(item.generic_name || item.dosage || item.formulation) && (
+                    <span className={`text-[11px] font-mono ${index === activeIndex ? 'text-primary-foreground/75' : 'text-muted-foreground/75'}`}>
+                      SKU: {item.sku}
+                    </span>
+                  )}
                 </div>
               </li>
             ))}

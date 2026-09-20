@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Loader2, ArrowUpDown } from "lucide-react";
+import { Loader2, ArrowUpDown, Pill } from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,6 +9,8 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { InventoryItem } from "../lib/inventory.api";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { extractPharmacyMeta } from "@/lib/utils/pharmacyMeta";
 
 interface StocksDataGridProps {
   inventory: InventoryItem[];
@@ -26,6 +28,7 @@ export function StocksDataGrid({
   isError,
 }: StocksDataGridProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { isPharmacy } = useBusinessMode();
 
   const columnHelper = createColumnHelper<InventoryItem>();
 
@@ -38,17 +41,58 @@ export function StocksDataGrid({
         ),
       }),
       columnHelper.accessor("item_name", {
-        header: "Item Name",
-        cell: (info) => (
-          <div className="flex items-center gap-2">
-             <div className="h-6 w-6 shrink-0 bg-muted rounded border border-border flex items-center justify-center overflow-hidden">
-                {info.row.original.image_url && (
+        header: isPharmacy ? "Medicine / Product" : "Item Name",
+        cell: (info) => {
+          const meta = extractPharmacyMeta(info.row.original);
+          const brandType = info.row.original.brand_type || meta.brandType || "branded";
+          const genericName = info.row.original.generic_name || meta.genericName;
+          const dosage = info.row.original.dosage || meta.dosage;
+
+          return (
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 shrink-0 bg-muted rounded border border-border flex items-center justify-center overflow-hidden">
+                {info.row.original.image_url ? (
                   <img src={info.row.original.image_url} alt="" className="h-full w-full object-cover" />
+                ) : isPharmacy ? (
+                  <Pill className="w-3.5 h-3.5 text-emerald-500/60" />
+                ) : null}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium text-foreground text-sm truncate">{info.getValue()}</span>
+                  {isPharmacy && (
+                    <>
+                      <span
+                        className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
+                          brandType === "generic"
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                            : "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                        }`}
+                      >
+                        {brandType === "generic" ? "Generic" : "Branded"}
+                      </span>
+                      {(info.row.original.is_rx || meta.isRx) && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                          Rx
+                        </span>
+                      )}
+                      {dosage && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+                          Dosage: {dosage}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+                {isPharmacy && genericName && (
+                  <span className="text-xs text-muted-foreground truncate">
+                    <strong className="font-medium opacity-80">Molecule:</strong> {genericName} {dosage ? `• ${dosage}` : ""}
+                  </span>
                 )}
-             </div>
-            <span className="font-medium text-foreground">{info.getValue()}</span>
-          </div>
-        ),
+              </div>
+            </div>
+          );
+        },
       }),
       columnHelper.accessor("quantity_in", {
         header: "Total In",
@@ -95,7 +139,7 @@ export function StocksDataGrid({
         },
       }),
     ],
-    []
+    [isPharmacy]
   );
 
   const table = useReactTable({

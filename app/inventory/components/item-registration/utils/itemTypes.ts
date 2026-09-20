@@ -34,6 +34,17 @@ export const itemSchema = z.object({
     .optional()
     .nullable(),
   categoryName: z.string().optional(),
+
+  // --- Pharmacy & Medical Vertical Extensions ---
+  genericName: z.string().optional().nullable(),
+  dosage: z.string().optional().nullable(),
+  formulation: z.string().optional().nullable(),
+  isRx: z.boolean().optional(),
+  brandType: z.enum(['branded', 'generic']).optional(),
+
+  // Initial Batch Tracking (FEFO)
+  batchNumber: z.string().optional().nullable(),
+  expiryDate: z.string().optional().nullable(),
 });
 
 // 2. Export the inferred Item type
@@ -53,4 +64,13 @@ export const defaultItemValues: Item = {
   imageUrl: null,
   lowStockThreshold: null,
   categoryName: "",
+
+  // Pharmacy defaults
+  genericName: "",
+  dosage: "",
+  formulation: "",
+  isRx: false,
+  brandType: "branded",
+  batchNumber: "",
+  expiryDate: "",
 };

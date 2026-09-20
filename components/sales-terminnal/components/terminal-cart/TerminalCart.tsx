@@ -9,23 +9,34 @@ import {
   ColumnDef,
   ColumnSizingState,
 } from "@tanstack/react-table";
-import { XCircle, Lock, Unlock } from "lucide-react";
+import { Lock, Unlock, XCircle, Tag, ShieldCheck, X, CreditCard } from "lucide-react";
+import { EditablePriceCell } from "./EditablePriceCell";
+import { CartItem, TerminalCartProps } from "./types";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { usePermissions } from "@/app/hooks/usePermissions";
-import { CartItem, TerminalCartProps } from "./types";
-import { EditablePriceCell } from "./EditablePriceCell";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 export const TerminalCart = ({
   rows,
   onRemoveItem,
   onUpdateItem,
   onItemDiscountClick,
+  onOrderDiscountClick,
+  orderDiscountAmount,
+  orderDiscountValue,
+  orderDiscountType,
+  onRemoveOrderDiscount,
+  onCharge,
 }: TerminalCartProps) => {
   const { isPriceEditingEnabled } = useSettingsStore();
   const { can_edit_price } = usePermissions();
+  const { modules, isPharmacy } = useBusinessMode();
   const canEditPrice = isPriceEditingEnabled && can_edit_price;
   const [isEditingActive, setIsEditingActive] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
+
+  const subtotal = useMemo(() => rows.reduce((acc, r) => acc + (r.total || 0), 0), [rows]);
+  const hasStatutory = modules.statutory_sc_pwd || isPharmacy;
 
   // Load persistence
   useEffect(() => {
@@ -60,6 +71,33 @@ export const TerminalCart = ({
       }),
       columnHelper.accessor("itemName", {
         header: "Item Name",
+        cell: ({ row, getValue }) => {
+          const item = row.original;
+          return (
+            <div className="flex flex-col py-0.5 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-semibold text-foreground truncate">
+                  {getValue()}
+                </span>
+                {item.isRx && (
+                  <span className="px-1 py-0.2 rounded text-[9px] font-black bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 tracking-wider">
+                    Rx
+                  </span>
+                )}
+              </div>
+              {item.genericName && (
+                <span className="text-[11px] text-muted-foreground/80 italic truncate">
+                  {item.genericName} {item.dosage ? `• ${item.dosage}` : ''}
+                </span>
+              )}
+              {item.batchNumber && (
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  Lot: {item.batchNumber} {item.expiryDate ? `• Exp: ${item.expiryDate}` : ''}
+                </span>
+              )}
+            </div>
+          );
+        },
         size: 250, // Generous default
         minSize: 100,
       }),
@@ -240,6 +278,86 @@ export const TerminalCart = ({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Cart Summary & Action Footer Bar */}
+      <div className="p-3 bg-muted/40 border-t border-border flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-2">
+          {/* Order Discount Button */}
+          {onOrderDiscountClick && (
+            <button
+              type="button"
+              onClick={onOrderDiscountClick}
+              disabled={rows.length === 0}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shadow-xs disabled:opacity-40 cursor-pointer ${
+                orderDiscountValue
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card hover:bg-muted border-border text-foreground"
+              }`}
+            >
+              <Tag className="w-3.5 h-3.5" />
+              <span>
+                {orderDiscountValue
+                  ? `Disc: ${orderDiscountType === 'percent' ? `${orderDiscountValue}%` : `₱${orderDiscountValue}`}`
+                  : "Add Discount"}
+              </span>
+            </button>
+          )}
+
+          {/* Senior / PWD Statutory 20% Button */}
+          {hasStatutory && onOrderDiscountClick && (
+            <button
+              type="button"
+              onClick={onOrderDiscountClick}
+              disabled={rows.length === 0}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shadow-xs disabled:opacity-40 cursor-pointer ${
+                orderDiscountType === 'percent' && orderDiscountValue === 20
+                  ? "bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-600/30"
+                  : "bg-emerald-500/10 text-emerald-600 border-emerald-500/25 hover:bg-emerald-500/20"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Senior / PWD (20%)</span>
+            </button>
+          )}
+
+          {/* Remove Discount Button */}
+          {orderDiscountValue && onRemoveOrderDiscount && (
+            <button
+              type="button"
+              onClick={onRemoveOrderDiscount}
+              className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Remove discount"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Cart Total Display & Checkout Button */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
+              {rows.length} {rows.length === 1 ? "item" : "items"}
+            </span>
+            <span className="font-mono text-base font-bold text-foreground">
+              ₱{subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+
+          {onCharge && (
+            <button
+              type="button"
+              onClick={onCharge}
+              disabled={rows.length === 0}
+              className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-40 cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+              title="Charge / Process Payment (F2)"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Charge</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

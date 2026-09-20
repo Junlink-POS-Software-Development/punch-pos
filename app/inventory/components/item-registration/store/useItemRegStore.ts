@@ -2,10 +2,11 @@
 
 import { create } from "zustand";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
+import { BrandType } from "@/lib/utils/pharmacyMeta";
 
 export type ViewMode = "list" | "add";
 export type AddTab = "single" | "batch";
-export type SortKey = "item_name" | "sales_price" | "current_stock";
+export type SortKey = "item_name" | "sales_price" | "current_stock" | "sku" | "generic_name" | "dosage";
 
 export interface SortConfig {
   key: SortKey;
@@ -28,6 +29,9 @@ interface ItemRegState {
     sales_price: string;
     description: string;
     image_url: string | null;
+    generic_name?: string;
+    dosage?: string;
+    brand_type?: BrandType;
   }>;
 
   // Barcode State

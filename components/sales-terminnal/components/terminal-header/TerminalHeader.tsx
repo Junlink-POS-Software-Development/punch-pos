@@ -61,9 +61,9 @@ export const TerminalHeader = ({
       />
 
       <div
-        className={`relative z-20 flex flex-col mb-4 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border/50" : borderColor} bg-card/50`}
+        className={`relative z-20 flex flex-col mb-2 shrink-0 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border/50" : borderColor} bg-card/50`}
       >
-        <div className="flex flex-row items-stretch w-full min-h-[280px]">
+        <div className="flex flex-row items-stretch w-full min-h-[240px]">
           {/* LEFT SECTION: Cashier, Customer, Tools */}
           <div className="flex flex-col justify-between p-6 w-[35%] border-r border-border bg-muted/20">
             <div className="space-y-6">

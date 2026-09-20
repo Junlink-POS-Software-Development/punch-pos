@@ -145,6 +145,12 @@ export const handleAddToCart = ({
       discount: discountValue,        // Computed flat amount
       quantity: quantity,
       total: total,
+      genericName: itemDetails.genericName || (stockInfo as any).generic_name || undefined,
+      dosage: itemDetails.dosage || (stockInfo as any).dosage || undefined,
+      formulation: itemDetails.formulation || (stockInfo as any).formulation || undefined,
+      isRx: itemDetails.isRx || (stockInfo as any).is_rx || false,
+      batchNumber: itemDetails.batchNumber || (stockInfo as any).batch_number || undefined,
+      expiryDate: itemDetails.expiryDate || (stockInfo as any).expiry_date || undefined,
     };
     setCartItems((prevCart) => [...prevCart, newCartItem]);
   }

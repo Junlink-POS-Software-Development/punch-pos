@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
-import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart } from "lucide-react";
+import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart, ShieldCheck } from "lucide-react";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface ActionButtonsProps {
   onAdd: () => void;
@@ -29,6 +30,7 @@ export const ActionButtons = ({
   isFreeMode,
   onToggleFreeMode,
 }: ActionButtonsProps) => {
+  const { modules, isPharmacy } = useBusinessMode();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
 
@@ -81,6 +83,18 @@ export const ActionButtons = ({
           <Tag className="w-4 h-4" />
           DISC
         </button>
+        {(modules.statutory_sc_pwd || isPharmacy) && (
+          <button
+            type="button"
+            onClick={onDiscount}
+            onMouseDown={(e) => e.preventDefault()}
+            className="col-span-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 cursor-pointer"
+            title="Senior Citizen & PWD Statutory 20% Discount"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            SC/PWD
+          </button>
+        )}
         <button
           type="button"
           onClick={onVoucher}

@@ -32,6 +32,14 @@ export const useItemReg = () => {
     minStock: "",
     imageUrl: null as string | null,
     imageSize: null as string | null,
+    // Pharmacy extensions
+    genericName: "",
+    dosage: "",
+    formulation: "",
+    isRx: false,
+    brandType: "branded" as "branded" | "generic",
+    batchNumber: "",
+    expiryDate: "",
   });
 
   const [batchRawText, setBatchRawText] = useState("");
@@ -57,6 +65,14 @@ export const useItemReg = () => {
       lowStockThreshold: parseInt(formData.minStock) || null,
       imageUrl: formData.imageUrl,
       categoryName: selectedCat?.category,
+      // Pharmacy fields
+      genericName: formData.genericName.trim() || undefined,
+      dosage: formData.dosage.trim() || undefined,
+      formulation: formData.formulation.trim() || undefined,
+      isRx: formData.isRx,
+      brandType: formData.brandType,
+      batchNumber: formData.batchNumber.trim() || undefined,
+      expiryDate: formData.expiryDate.trim() || undefined,
     };
 
     addItem(newItem, {
@@ -95,6 +111,13 @@ export const useItemReg = () => {
       minStock: "",
       imageUrl: null,
       imageSize: null,
+      genericName: "",
+      dosage: "",
+      formulation: "",
+      isRx: false,
+      brandType: "branded",
+      batchNumber: "",
+      expiryDate: "",
     });
   };
 

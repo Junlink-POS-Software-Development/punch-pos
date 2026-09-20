@@ -5,6 +5,8 @@ import { X, Search, Package } from "lucide-react";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 import { useItems } from "@/app/inventory/hooks/useItems";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { extractPharmacyMeta } from "@/lib/utils/pharmacyMeta";
 
 interface FreeItemModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface FreeItemModalProps {
 
 export const FreeItemModal = ({ isOpen, onClose, onSelect, isTabletMode }: FreeItemModalProps) => {
   const { items, isLoading } = useItems();
+  const { isPharmacy } = useBusinessMode();
   const [searchTerm, setSearchTerm] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -29,11 +32,15 @@ export const FreeItemModal = ({ isOpen, onClose, onSelect, isTabletMode }: FreeI
         return [];
     }
     const lowerSearch = searchTerm.toLowerCase();
-    return items.filter(
-      (item) =>
-        item.itemName.toLowerCase().includes(lowerSearch) ||
-        item.sku.toLowerCase().includes(lowerSearch)
-    );
+    return items.filter((item) => {
+      const meta = extractPharmacyMeta(item);
+      const nameMatch = item.itemName.toLowerCase().includes(lowerSearch);
+      const skuMatch = item.sku.toLowerCase().includes(lowerSearch);
+      const genericMatch = meta.genericName ? meta.genericName.toLowerCase().includes(lowerSearch) : false;
+      const dosageMatch = meta.dosage ? meta.dosage.toLowerCase().includes(lowerSearch) : false;
+      const formMatch = meta.formulation ? meta.formulation.toLowerCase().includes(lowerSearch) : false;
+      return nameMatch || skuMatch || genericMatch || dosageMatch || formMatch;
+    });
   }, [items, searchTerm]);
 
   // Handle Virtual Keyboard Events
@@ -223,28 +230,68 @@ export const FreeItemModal = ({ isOpen, onClose, onSelect, isTabletMode }: FreeI
           {isLoading ? (
             <div className="text-center text-muted-foreground py-8">Loading items...</div>
           ) : filteredItems.length > 0 ? (
-            filteredItems.map((item, index) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                    setSelectedItem(item);
-                    setTimeout(() => qtyInputRef.current?.focus(), 10);
-                }}
-                className={`flex items-center justify-between p-3 border rounded-xl transition-all group text-left
-                  ${highlightedIndex === index 
-                      ? "bg-primary/20 border-primary shadow-sm" 
-                      : "bg-muted/50 border-border hover:bg-primary/10 hover:border-primary/50"}
-                `}
-              >
-                <div>
-                  <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                    {item.itemName}
-                  </div>
-                  <div className="text-xs text-muted-foreground">SKU: {item.sku}</div>
-                </div>
-                <div className="text-primary font-bold">FREE</div>
-              </button>
-            ))
+            filteredItems.map((item, index) => {
+              const meta = isPharmacy ? extractPharmacyMeta(item) : null;
+              return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                        setSelectedItem(item);
+                        setTimeout(() => qtyInputRef.current?.focus(), 10);
+                    }}
+                    className={`flex items-center justify-between p-3 border rounded-xl transition-all group text-left
+                      ${highlightedIndex === index 
+                          ? "bg-primary/20 border-primary shadow-sm" 
+                          : "bg-muted/50 border-border hover:bg-primary/10 hover:border-primary/50"}
+                    `}
+                  >
+                    <div className="flex-1 min-w-0 pr-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-foreground group-hover:text-primary transition-colors">
+                          {item.itemName}
+                        </span>
+                        {meta?.brandType && (
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold tracking-wider uppercase ${
+                            meta.brandType === 'generic'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                              : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30'
+                          }`}>
+                            {meta.brandType === 'generic' ? '💊 Generic' : '🏷️ Branded'}
+                          </span>
+                        )}
+                        {meta?.isRx && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-black tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                            Rx
+                          </span>
+                        )}
+                      </div>
+
+                      {isPharmacy && (meta?.genericName || meta?.dosage || meta?.formulation) ? (
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1 text-xs">
+                          {meta.genericName && (
+                            <span className="text-muted-foreground truncate">
+                              <span className="opacity-75 font-normal">Molecule:</span> <strong className="font-semibold">{meta.genericName}</strong>
+                            </span>
+                          )}
+                          {meta.dosage && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                              <span>Dosage:</span> {meta.dosage}
+                            </span>
+                          )}
+                          {meta.formulation && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                              <span>Form:</span> {meta.formulation}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground mt-0.5">SKU: {item.sku}</div>
+                      )}
+                    </div>
+                    <div className="text-primary font-bold shrink-0">FREE</div>
+                  </button>
+                );
+            })
           ) : (
               searchTerm ? (
                    <div className="text-center text-muted-foreground py-8">No items found.</div>

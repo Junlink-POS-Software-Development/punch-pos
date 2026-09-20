@@ -12,7 +12,8 @@ import { useTerminalShortcuts } from "./hooks/useTerminalShortcuts";
 import { PaymentPopup } from "./modals/PaymentPopup";
 import { FreeItemModal } from "./modals/FreeItemModal";
 import { DiscountModal } from "./modals/DiscountModal";
-import { useState } from "react";
+import { RxValidationModal } from "./modals/RxValidationModal";
+import { useState, useMemo, useCallback } from "react";
 import { ActionPanel } from "./components/ActionPanel";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { PosThemeWrapper } from "./components/PosThemeWrapper";
@@ -20,6 +21,9 @@ import { PosThemeCustomizerModal } from "./modals/PosThemeCustomizerModal";
 import { CartItem, DiscountType } from "./components/terminal-cart/types";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 import { TransactionSuccessToast } from "./components/TransactionSuccessToast";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { PharmacyEquivalentsHub } from "./components/pharmacy/PharmacyEquivalentsHub";
+import { Pill } from "lucide-react";
 
 const DesktopSalesTerminal = () => {
   const {
@@ -56,13 +60,40 @@ const DesktopSalesTerminal = () => {
   const { posMode } = useViewStore();
   const isTabletMode = posMode === "tablet";
 
+  // Business Mode & Pharmacy Rx State
+  const { isPharmacy, modules } = useBusinessMode();
+  const [isRxModalOpen, setIsRxModalOpen] = useState(false);
+  const [isRxVerified, setIsRxVerified] = useState(false);
+  const rxCartItems = useMemo(() => cartItems.filter((item) => item.isRx), [cartItems]);
+  const [showShortcutsInPharmacy, setShowShortcutsInPharmacy] = useState(false);
+
   // Calculate cart total
   const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
 
+  const handleInitiateCharge = useCallback(() => {
+    if (cartItems.length === 0) return;
+    if ((isPharmacy || modules.prescription_rx) && rxCartItems.length > 0 && !isRxVerified) {
+      setIsRxModalOpen(true);
+    } else {
+      setIsPaymentPopupOpen(true);
+    }
+  }, [cartItems.length, isPharmacy, modules.prescription_rx, rxCartItems.length, isRxVerified]);
+
+  const handleRxValidated = () => {
+    setIsRxVerified(true);
+    setIsRxModalOpen(false);
+    setIsPaymentPopupOpen(true);
+  };
+
+  const handleClearTerminal = () => {
+    setIsRxVerified(false);
+    onClear();
+  };
+
   // 2. Call the hook and pass the triggers
   useTerminalShortcuts({ 
-    onClear, 
-    onCharge: () => setIsPaymentPopupOpen(true),
+    onClear: handleClearTerminal, 
+    onCharge: handleInitiateCharge,
     onToggleFreeMode: () => setIsFreeModalOpen(true),
     onOpenThemeModal: () => setIsThemeModalOpen(true),
     hasItems: cartItems.length > 0
@@ -74,6 +105,7 @@ const DesktopSalesTerminal = () => {
     voucherData?: { id: string; code: string; amount: number } | null,
     invoiceNo?: string
   ) => {
+    setIsRxVerified(false);
     if (invoiceNo) {
       methods.setValue("transactionNo", invoiceNo);
     }
@@ -154,7 +186,7 @@ const DesktopSalesTerminal = () => {
       <div className="relative flex flex-row h-full overflow-hidden">
         <FormProvider {...methods}>
           {/* LEFT PANEL: Transaction Details */}
-          <div className="flex flex-col flex-1 p-2 h-full min-w-0 overflow-y-auto">
+          <div className={`flex flex-col flex-1 p-2 h-full min-w-0 ${!isTabletMode ? 'overflow-hidden' : 'overflow-y-auto'}`}>
               {isAnimating ? (
                  <div className="w-full h-full flex items-center justify-center bg-card rounded-2xl border border-border shadow-sm">
                     <div className="flex flex-col items-center gap-4">
@@ -194,12 +226,12 @@ const DesktopSalesTerminal = () => {
                 id="sales-form"
                 onSubmit={methods.handleSubmit(onDoneSubmit)}
                 className={`
-                  w-full min-h-full gap-4
-                  ${!isTabletMode ? 'grid grid-cols-2 grid-rows-[1fr]' : 'flex flex-col'}
+                  w-full h-full gap-4
+                  ${!isTabletMode ? 'grid grid-cols-2 grid-rows-[minmax(0,1fr)] min-h-0 overflow-hidden' : 'flex flex-col min-h-full'}
                 `}
               >
                 {/* Left Column Wrapper: Header + Inputs */}
-                <div className={`flex flex-col ${!isTabletMode ? 'h-full' : ''}`}>
+                <div className={`flex flex-col ${!isTabletMode ? 'h-full min-h-0 overflow-hidden' : ''}`}>
                     <TerminalHeader 
                       isTabletMode={isTabletMode}
                       setCustomerId={setCustomerId} 
@@ -211,10 +243,42 @@ const DesktopSalesTerminal = () => {
                       onOpenThemeModal={() => setIsThemeModalOpen(true)}
                     />
 
-                    {/* Inline Shortcuts Guide - Appears when in desktop mode to fill space */}
-                    {!isTabletMode && (
-                      <div className="mt-1">
-                         <ShortcutsGuide isInline />
+                    {/* Inline Shortcuts Guide or Pharmacy Equivalents Hub - Fills space in desktop mode or renders scrollable list in tablet mode */}
+                    {(!isTabletMode || isPharmacy) && (
+                      <div className={`mt-2 ${!isTabletMode ? 'flex-1 min-h-0' : 'h-72 shrink-0 overflow-hidden mb-2'}`}>
+                        {isPharmacy ? (
+                          !showShortcutsInPharmacy ? (
+                            <PharmacyEquivalentsHub
+                              onSelectItem={(item) => {
+                                methods.setValue("barcode", item.sku);
+                                setActiveField("quantity");
+                              }}
+                              onAddToCartDirect={(item) => {
+                                methods.setValue("barcode", item.sku);
+                                methods.setValue("quantity", 1);
+                                onAddToCart();
+                              }}
+                              onToggleShortcuts={() => setShowShortcutsInPharmacy(true)}
+                              showShortcutsToggle={true}
+                            />
+                          ) : (
+                            <div className="flex flex-col gap-1.5 h-full">
+                              <div className="flex items-center justify-between px-1">
+                                <span className="text-xs text-muted-foreground font-medium">Keyboard Shortcuts</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowShortcutsInPharmacy(false)}
+                                  className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                                >
+                                  <Pill className="w-3 h-3" /> Back to Generic Equivalents
+                                </button>
+                              </div>
+                              <ShortcutsGuide isInline />
+                            </div>
+                          )
+                        ) : (
+                          <ShortcutsGuide isInline />
+                        )}
                       </div>
                     )}
                 </div>
@@ -228,6 +292,16 @@ const DesktopSalesTerminal = () => {
                       onRemoveItem={onRemoveItem}
                       onUpdateItem={onUpdateItem}
                       onItemDiscountClick={handleOpenItemDiscount}
+                      onOrderDiscountClick={handleOpenTransactionDiscount}
+                      orderDiscountAmount={methods.watch("orderDiscountAmount")}
+                      orderDiscountValue={methods.watch("orderDiscountValue")}
+                      orderDiscountType={methods.watch("orderDiscountType") as DiscountType | null}
+                      onRemoveOrderDiscount={() => {
+                        methods.setValue("orderDiscountType", null);
+                        methods.setValue("orderDiscountValue", null);
+                        methods.setValue("orderDiscountAmount", null);
+                      }}
+                      onCharge={handleInitiateCharge}
                     />
                   </div>
                 </div>
@@ -243,18 +317,10 @@ const DesktopSalesTerminal = () => {
             {isTabletMode && (
               <ActionPanel 
                 onAddToCart={onAddToCart}
-                onClearAll={onClear}
-                onCharge={() => {
-                  if (cartItems.length > 0) {
-                    setIsPaymentPopupOpen(true);
-                  }
-                }}
+                onClearAll={handleClearTerminal}
+                onCharge={handleInitiateCharge}
                 onDiscount={handleOpenTransactionDiscount}
-                onVoucher={() => {
-                  if (cartItems.length > 0) {
-                    setIsPaymentPopupOpen(true);
-                  }
-                }}
+                onVoucher={handleInitiateCharge}
                 activeField={activeField}
                 setActiveField={setActiveField}
                 isFreeMode={false}
@@ -267,6 +333,15 @@ const DesktopSalesTerminal = () => {
         {successData && (
           <SuccessReceiptModal data={successData} onClose={closeSuccessModal} />
         )}
+
+        {/* Prescription (Rx) Verification Modal for Pharmacy Mode */}
+        <RxValidationModal
+          isOpen={isRxModalOpen}
+          onClose={() => setIsRxModalOpen(false)}
+          rxItems={rxCartItems}
+          defaultPatientName={methods.getValues("customerName") || ""}
+          onValidated={handleRxValidated}
+        />
 
         <PaymentPopup
           isOpen={isPaymentPopupOpen}

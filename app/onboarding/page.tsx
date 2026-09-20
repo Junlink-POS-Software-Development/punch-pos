@@ -116,7 +116,7 @@ export default function OnboardingPage() {
         />
       )}
 
-      <div className="w-full max-w-md bg-card p-8 rounded-xl border border-border shadow-md">
+      <div className={`w-full ${hasStore ? "max-w-xl" : "max-w-md"} bg-card p-8 rounded-2xl border border-border shadow-lg transition-all duration-300`}>
         <h2 className="mb-2 font-bold text-3xl text-center">
           {hasStore ? "Set Up Your Store 🏪" : "Welcome! 👋"}
         </h2>

@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
+import { extractPharmacyMeta, stripPharmacyMetaFromDescription, BrandType } from "@/lib/utils/pharmacyMeta";
 
 const getSupabase = async () => {
   return createClient();
@@ -18,6 +19,14 @@ export interface InventoryItem {
   current_stock: number;
   low_stock_threshold: number | null;
   description: string | null;
+  // Pharmacy & Medical fields
+  generic_name?: string | null;
+  dosage?: string | null;
+  formulation?: string | null;
+  is_rx?: boolean | null;
+  brand_type?: BrandType | null;
+  batch_number?: string | null;
+  expiry_date?: string | null;
 }
 
 // Pagination Params
@@ -55,8 +64,11 @@ export const fetchInventory = async (
 
   // 2. Apply Search
   if (params.search) {
-    const term = params.search;
-    query = query.or(`item_name.ilike.%${term}%,sku.ilike.%${term}%`);
+    // Sanitize search term to prevent PostgREST grammar parser errors (strip commas, parens)
+    const cleanTerm = params.search.replace(/[,()]/g, " ").trim();
+    if (cleanTerm) {
+      query = query.or(`item_name.ilike.%${cleanTerm}%,sku.ilike.%${cleanTerm}%,description.ilike.%${cleanTerm}%`);
+    }
   }
 
   // 3. Apply Sort
@@ -77,17 +89,34 @@ export const fetchInventory = async (
   const { data, error, count } = await query;
 
   if (error) {
-    console.error("Inventory Fetch Error:", error);
-    throw new Error(error.message);
+    console.warn("Inventory Fetch Warning:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+    // Return empty results gracefully instead of crashing the UI
+    return { data: [], count: 0 };
   }
 
-  // 5. Map data to handle potential field name discrepancies in the view
-  const mappedData = (data as any[] || []).map((item) => ({
-    ...item,
-    // Fallback to cost_price if sales_price is missing (old view definition habit)
-    sales_price: item.sales_price ?? item.cost_price ?? 0,
-    unit_cost: item.unit_cost ?? 0,
-  }));
+  // 5. Map data and enrich with Pharmacy Metadata (from columns, description tag, or heuristics)
+  const mappedData = (data as any[] || []).map((item) => {
+    const meta = extractPharmacyMeta(item);
+    return {
+      ...item,
+      description: stripPharmacyMetaFromDescription(item.description),
+      // Fallback to cost_price if sales_price is missing
+      sales_price: item.sales_price ?? item.cost_price ?? 0,
+      unit_cost: item.unit_cost ?? 0,
+      generic_name: meta.genericName ?? item.generic_name ?? null,
+      dosage: meta.dosage ?? item.dosage ?? null,
+      formulation: meta.formulation ?? item.formulation ?? null,
+      is_rx: meta.isRx ?? item.is_rx ?? false,
+      brand_type: meta.brandType ?? null,
+      batch_number: meta.batchNumber ?? item.batch_number ?? null,
+      expiry_date: meta.expiryDate ?? item.expiry_date ?? null,
+    };
+  });
 
   return { data: mappedData, count: count || 0 };
 };

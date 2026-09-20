@@ -6,6 +6,12 @@ import { useInventoryInfinite } from "../../../../dashboard/hooks/useInventory";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
 import { useItemRegStore } from "../store/useItemRegStore";
 
+import {
+  extractPharmacyMeta,
+  stripPharmacyMetaFromDescription,
+  embedPharmacyMetaInDescription,
+} from "@/lib/utils/pharmacyMeta";
+
 export type { SortKey, SortConfig } from "../store/useItemRegStore";
 
 export const useItemTable = () => {
@@ -49,13 +55,26 @@ export const useItemTable = () => {
         (item) =>
           item.item_name.toLowerCase().includes(lowerQ) ||
           item.sku.toLowerCase().includes(lowerQ) ||
-          (item.category && item.category.toLowerCase().includes(lowerQ))
+          (item.category && item.category.toLowerCase().includes(lowerQ)) ||
+          (item.generic_name && item.generic_name.toLowerCase().includes(lowerQ)) ||
+          (item.dosage && item.dosage.toLowerCase().includes(lowerQ)) ||
+          (item.description && item.description.toLowerCase().includes(lowerQ))
       );
     }
     if (sortConfig.key) {
       result.sort((a, b) => {
-        const valA = (a as any)[sortConfig.key] ?? "";
-        const valB = (b as any)[sortConfig.key] ?? "";
+        let valA = (a as any)[sortConfig.key];
+        let valB = (b as any)[sortConfig.key];
+        if (!valA && (sortConfig.key === "generic_name" || sortConfig.key === "dosage")) {
+          const metaA = extractPharmacyMeta(a);
+          valA = sortConfig.key === "generic_name" ? metaA.genericName : metaA.dosage;
+        }
+        if (!valB && (sortConfig.key === "generic_name" || sortConfig.key === "dosage")) {
+          const metaB = extractPharmacyMeta(b);
+          valB = sortConfig.key === "generic_name" ? metaB.genericName : metaB.dosage;
+        }
+        valA = valA ?? "";
+        valB = valB ?? "";
         if (typeof valA === "string" && typeof valB === "string") {
           return sortConfig.direction === "asc"
             ? valA.toLowerCase().localeCompare(valB.toLowerCase())
@@ -115,14 +134,18 @@ export const useItemTable = () => {
   };
 
   const handleEdit = (item: InventoryItem) => {
+    const meta = extractPharmacyMeta(item);
     setEditingRows((prev) => ({
       ...prev,
       [item.item_id]: {
         item_name: item.item_name,
         sku: item.sku,
         sales_price: item.sales_price != null ? String(item.sales_price) : "",
-        description: item.description || "",
+        description: stripPharmacyMetaFromDescription(item.description) || "",
         image_url: item.image_url || null,
+        generic_name: item.generic_name || meta.genericName || "",
+        dosage: item.dosage || meta.dosage || "",
+        brand_type: item.brand_type || meta.brandType || "branded",
       },
     }));
   };
@@ -142,6 +165,16 @@ export const useItemTable = () => {
     const edits = editingRows[item.item_id];
     if (!edits) return;
     handleCancelInlineEdit(item.item_id);
+
+    const cleanDesc = stripPharmacyMetaFromDescription(edits.description || "");
+    const finalDescription = (edits.generic_name || edits.brand_type || edits.dosage)
+      ? embedPharmacyMetaInDescription(cleanDesc, {
+          genericName: edits.generic_name,
+          dosage: edits.dosage,
+          brandType: edits.brand_type,
+        })
+      : cleanDesc;
+
     editItem(
       {
         id: item.item_id,
@@ -149,8 +182,11 @@ export const useItemTable = () => {
         sku: edits.sku,
         salesPrice: 0,
         sellingPrice: parseFloat(edits.sales_price) || 0,
-        description: edits.description,
+        description: finalDescription,
         imageUrl: edits.image_url,
+        genericName: edits.generic_name || undefined,
+        dosage: edits.dosage || undefined,
+        brandType: edits.brand_type,
       }
     );
   };
@@ -160,12 +196,16 @@ export const useItemTable = () => {
     filteredItems
       .filter((i) => selectedItems.includes(i.item_id))
       .forEach((item) => {
+        const meta = extractPharmacyMeta(item);
         newEditing[item.item_id] = {
           item_name: item.item_name,
           sku: item.sku,
           sales_price: item.sales_price != null ? String(item.sales_price) : "",
-          description: item.description || "",
+          description: stripPharmacyMetaFromDescription(item.description) || "",
           image_url: item.image_url || null,
+          generic_name: item.generic_name || meta.genericName || "",
+          dosage: item.dosage || meta.dosage || "",
+          brand_type: item.brand_type || meta.brandType || "branded",
         };
       });
     setEditingRows((prev) => ({ ...prev, ...newEditing }));

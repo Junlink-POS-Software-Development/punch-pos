@@ -11,6 +11,13 @@ export type CartItem = {
   discountValue: number;        // Raw input (e.g. 10 for 10% or ₱10)
   discount: number;             // Computed flat amount (backward compat with DB)
   total: number;
+  // Pharmacy & FEFO vertical extensions
+  genericName?: string;
+  dosage?: string;
+  formulation?: string;
+  isRx?: boolean;
+  batchNumber?: string;
+  expiryDate?: string;
 };
 
 export type TerminalCartProps = {
@@ -18,4 +25,10 @@ export type TerminalCartProps = {
   onRemoveItem: (id: string) => void;
   onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
   onItemDiscountClick?: (item: CartItem) => void;
+  onOrderDiscountClick?: () => void;
+  orderDiscountAmount?: number | null;
+  orderDiscountValue?: number | null;
+  orderDiscountType?: DiscountType | null;
+  onRemoveOrderDiscount?: () => void;
+  onCharge?: () => void;
 };

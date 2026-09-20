@@ -1,14 +1,20 @@
 // app/inventory/components/item-registration/item-table/ItemTableRow.tsx
 
 import React, { useState, useRef } from "react";
-import { Trash2, Edit2, Check, X, Barcode, Package, Loader2, Camera } from "lucide-react";
+import { Trash2, Edit2, Check, X, Barcode, Package, Loader2, Camera, Pill } from "lucide-react";
 import { InventoryItem } from "../../stocks-monitor/lib/inventory.api";
 import { usePermissions } from "@/app/hooks/usePermissions";
 import imageCompression from "browser-image-compression";
 import { uploadItemImage } from "../lib/image.api";
+import {
+  extractPharmacyMeta,
+  stripPharmacyMetaFromDescription,
+  BrandType,
+} from "@/lib/utils/pharmacyMeta";
 
 interface ItemTableRowProps {
   item: InventoryItem;
+  isPharmacy?: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
   editingData: {
@@ -17,8 +23,11 @@ interface ItemTableRowProps {
     sales_price: string;
     description: string;
     image_url: string | null;
+    generic_name?: string;
+    dosage?: string;
+    brand_type?: BrandType;
   } | null;
-  onUpdateField: (field: "item_name" | "sku" | "sales_price" | "description" | "image_url", value: string | null) => void;
+  onUpdateField: (field: string, value: any) => void;
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
@@ -28,6 +37,7 @@ interface ItemTableRowProps {
 
 const ItemTableRow: React.FC<ItemTableRowProps> = ({
   item,
+  isPharmacy = false,
   isSelected,
   onToggleSelect,
   editingData,
@@ -42,6 +52,16 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
   const { can_manage_items } = usePermissions();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const meta = extractPharmacyMeta(item);
+  const cleanDescription = stripPharmacyMetaFromDescription(item.description);
+  const brandType = item.brand_type || meta.brandType || "branded";
+  const genericName = item.generic_name || meta.genericName || "";
+  const dosage = item.dosage || meta.dosage || "";
+  const formulation = item.formulation || meta.formulation || "";
+  const isRx = item.is_rx !== undefined ? item.is_rx : (meta.isRx || false);
+  const batchNumber = item.batch_number || meta.batchNumber || "";
+  const expiryDate = item.expiry_date || meta.expiryDate || "";
 
   const handleImageClick = () => {
     if (isEditing && can_manage_items) {
@@ -93,6 +113,8 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
           className="rounded border-input text-primary focus:ring-primary size-4"
         />
       </td>
+
+      {/* Item / Medicine Name Column */}
       <td className="px-4 py-1.5 border-b border-border">
         <div className="flex items-center gap-3">
           <div 
@@ -105,6 +127,8 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
               <Loader2 size={18} className="text-primary animate-spin" />
             ) : currentImageUrl ? (
               <img src={currentImageUrl} alt={item.item_name} className="h-full w-full object-cover" />
+            ) : isPharmacy ? (
+              <Pill size={18} className="text-emerald-500/60" />
             ) : (
               <Package size={18} className="text-muted-foreground/30" />
             )}
@@ -125,23 +149,101 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
               />
             )}
           </div>
-          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
             {isEditing ? (
               <input
                 type="text"
                 value={editingData.item_name}
                 onChange={(e) => onUpdateField("item_name", e.target.value)}
                 className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-sm font-medium"
-                placeholder="Item Name"
+                placeholder={isPharmacy ? "Medicine Name" : "Item Name"}
               />
             ) : (
-              <div className="font-medium text-foreground text-sm truncate">
+              <div className="font-semibold text-foreground text-sm truncate">
                 {item.item_name}
+              </div>
+            )}
+
+            {/* Badges for Pharmacy mode */}
+            {isPharmacy && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {isEditing ? (
+                  <select
+                    value={editingData.brand_type ?? brandType}
+                    onChange={(e) => onUpdateField("brand_type", e.target.value as BrandType)}
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-background border border-orange-500/50 outline-none"
+                  >
+                    <option value="branded">🏷️ Branded</option>
+                    <option value="generic">💊 Generic</option>
+                  </select>
+                ) : (
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
+                      brandType === "generic"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                        : "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                    }`}
+                  >
+                    {brandType === "generic" ? "💊 Generic" : "🏷️ Branded"}
+                  </span>
+                )}
+                {isRx && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                    Rx
+                  </span>
+                )}
               </div>
             )}
           </div>
         </div>
       </td>
+
+      {/* Generic Molecule Column (Pharmacy Mode) */}
+      {isPharmacy && (
+        <td className="px-4 py-1.5 border-b border-border">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editingData.generic_name ?? genericName}
+              onChange={(e) => onUpdateField("generic_name", e.target.value)}
+              className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs font-semibold text-primary"
+              placeholder="Generic Molecule"
+            />
+          ) : (
+            <span className="font-semibold text-xs text-foreground truncate block">
+              {genericName || "—"}
+            </span>
+          )}
+        </td>
+      )}
+
+      {/* Dedicated Dosage Column (Pharmacy Mode) */}
+      {isPharmacy && (
+        <td className="px-4 py-1.5 border-b border-border">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editingData.dosage ?? dosage}
+              onChange={(e) => onUpdateField("dosage", e.target.value)}
+              className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs font-bold text-amber-700 dark:text-amber-300"
+              placeholder="e.g. 500mg"
+            />
+          ) : (
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30 inline-flex items-center w-fit">
+                {dosage || "—"}
+              </span>
+              {formulation && (
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {formulation}
+                </span>
+              )}
+            </div>
+          )}
+        </td>
+      )}
+
+      {/* SKU / Code Column */}
       <td className="px-4 py-1.5 border-b border-border">
         {isEditing ? (
           <input
@@ -152,14 +254,18 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
             placeholder="SKU"
           />
         ) : (
-          <span className="font-mono text-xs">{item.sku}</span>
+          <span className="font-mono text-xs text-foreground/80">{item.sku}</span>
         )}
       </td>
+
+      {/* Category Column */}
       <td className="px-4 py-1.5 border-b border-border">
-        <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
+        <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded border border-border/40">
           {item.category || "General"}
         </span>
       </td>
+
+      {/* Sales Price Column */}
       <td className="px-4 py-1.5 border-b border-border text-right">
         {isEditing ? (
           <input
@@ -171,11 +277,13 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
             placeholder="0.00"
           />
         ) : (
-          <div className="font-medium text-sm text-foreground">
-            ₱{(item.sales_price || 0).toLocaleString()}
+          <div className="font-semibold text-sm text-foreground">
+            ₱{(item.sales_price || 0).toFixed(2)}
           </div>
         )}
       </td>
+
+      {/* Description / Lot & Expiry Column */}
       <td className="px-4 py-1.5 border-b border-border">
         {isEditing ? (
           <input
@@ -185,12 +293,39 @@ const ItemTableRow: React.FC<ItemTableRowProps> = ({
             className="w-full px-2 py-0.5 bg-background border border-orange-500/50 rounded outline-none text-xs"
             placeholder="Description..."
           />
+        ) : isPharmacy ? (
+          <div className="flex flex-col gap-0.5 min-w-0">
+            {(batchNumber || expiryDate) ? (
+              <div className="flex items-center gap-1.5 text-[11px] flex-wrap">
+                {batchNumber && (
+                  <span className="font-mono text-muted-foreground text-[10px]">
+                    <strong className="text-foreground font-semibold">Lot:</strong> {batchNumber}
+                  </span>
+                )}
+                {expiryDate && (
+                  <span className="text-muted-foreground text-[10px]">
+                    <strong className="text-foreground font-semibold">Exp:</strong> {expiryDate}
+                  </span>
+                )}
+              </div>
+            ) : null}
+            {cleanDescription && (
+              <span className="text-xs text-muted-foreground line-clamp-1" title={cleanDescription}>
+                {cleanDescription}
+              </span>
+            )}
+            {!(batchNumber || expiryDate || cleanDescription) && (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
+          </div>
         ) : (
-          <span className="text-xs text-muted-foreground line-clamp-1" title={item.description || ""}>
-            {item.description || "—"}
+          <span className="text-xs text-muted-foreground line-clamp-1" title={cleanDescription || ""}>
+            {cleanDescription || "—"}
           </span>
         )}
       </td>
+
+      {/* Actions Column */}
       <td className="px-4 py-1.5 border-b border-border text-right">
         {isEditing ? (
           <div className="flex justify-end gap-1">
