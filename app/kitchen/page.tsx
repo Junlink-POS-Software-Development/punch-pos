@@ -17,11 +17,16 @@ import {
   Flame,
   Coffee,
   RotateCcw,
+  Settings,
 } from "lucide-react";
 import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
 import { KitchenTicket, KitchenStatus } from "@/lib/types/restaurant";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 export default function KitchenDisplayPage() {
+  const { isRestaurant, modules, isLoading: isModeLoading, businessMode } = useBusinessMode();
+  const showKitchenKds = isRestaurant || modules.kitchen_display;
+
   const {
     kitchenTickets,
     updateTicketStatus,
@@ -91,6 +96,40 @@ export default function KitchenDisplayPage() {
   const handlePrintChit = (ticket: KitchenTicket) => {
     window.print();
   };
+
+  if (!isModeLoading && !showKitchenKds) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen w-full bg-background text-foreground p-6">
+        <div className="max-w-md w-full p-8 rounded-2xl border border-border bg-card shadow-lg text-center flex flex-col items-center gap-5">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+            <ChefHat className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Kitchen KDS Disabled</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The Kitchen Display System (KDS) is not active for the current business mode ({businessMode.toUpperCase()}). You can switch to Restaurant & Dining mode or enable the Kitchen Display module in Store Settings.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
+            <Link
+              href="/"
+              className="w-full py-2.5 px-4 rounded-xl border border-border bg-muted/60 hover:bg-muted text-foreground text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to POS
+            </Link>
+            <Link
+              href="/settings"
+              className="w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Store Settings
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">

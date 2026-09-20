@@ -20,12 +20,16 @@ import {
   ChevronRight,
   Sparkles,
   FolderArchive,
+  ChefHat,
 } from "lucide-react";
 import { getStoreInfo } from "@/app/actions/store";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { isRestaurant, modules } = useBusinessMode();
+  const showKitchenKds = isRestaurant || modules.kitchen_display;
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [storeInfo, setStoreInfo] = useState<{ name: string; img: string | null }>({
     name: "",
@@ -85,6 +89,17 @@ export function MobileBottomNav() {
 
   // Secondary items accessed through "More"
   const secondaryItems = [
+    ...(showKitchenKds
+      ? [
+          {
+            id: "kitchen",
+            label: "Kitchen KDS",
+            desc: "Active orders & cook line",
+            href: "/kitchen",
+            icon: ChefHat,
+          },
+        ]
+      : []),
     {
       id: "cashout",
       label: "Cash Out",

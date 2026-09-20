@@ -46,6 +46,7 @@ This document tracks the phased implementation of making `pos-next` a universal 
 | 6.2 | Kitchen Display System (KDS) & Chit / Ticket routing (`/kitchen`, `KitchenTicketModal.tsx`, `Navigation.tsx`) | 🟢 Completed | 2026-09-20 |
 | 6.3 | Menu Modifiers & Split Check dialog (`ModifierModal.tsx`, `SplitCheckModal.tsx`, `TerminalCart.tsx`, `ActionButtons.tsx`) | 🟢 Completed | 2026-09-20 |
 | 6.4 | Touch-First Dining Terminal Layout: Menu Catalog, Course Grouped Guest Check, Embedded Floor Plan & Control Header (`RestaurantDiningLayout.tsx`, `RestaurantDiningHeader.tsx`, `RestaurantMenuCatalog.tsx`, `RestaurantGuestCheck.tsx`, `DesktopSalesTerminal.tsx`) | 🟢 Completed | 2026-09-20 |
+| 6.5 | Dynamic Mode-Guarded Kitchen KDS Visibility: Automatically hide Kitchen KDS navigation links, mobile drawer items, cart modifier buttons, and display a disabled-guard page in non-restaurant/non-kitchen modes (`Navigation.tsx`, `MobileBottomNav.tsx`, `TerminalCart.tsx`, `app/kitchen/page.tsx`) | 🟢 Completed | 2026-09-20 |
 | **Phase 7** | **Grocery & Supermarket Vertical Pack** | ⚪ Next | - |
 | 7.1 | Scale Barcode Parser & Weighed Item PLU Entry | ⚪ Next | - |
 | 7.2 | High-Speed Continuous Laser Scanning & Multi-Pack Barcodes | ⚪ Next | - |

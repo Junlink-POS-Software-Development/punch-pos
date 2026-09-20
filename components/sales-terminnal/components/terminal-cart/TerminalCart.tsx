@@ -87,17 +87,17 @@ export const TerminalCart = ({
                     Rx
                   </span>
                 )}
-                {item.course && (
+                {(isRestaurant || modules.kitchen_display) && item.course && (
                   <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
                     {item.course}
                   </span>
                 )}
-                {item.kitchenStatus === "sent" && (
+                {(isRestaurant || modules.kitchen_display) && item.kitchenStatus === "sent" && (
                   <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
                     Sent to Kitchen
                   </span>
                 )}
-                {onItemModifierClick && (
+                {(isRestaurant || modules.menu_modifiers) && onItemModifierClick && (
                   <button
                     type="button"
                     onClick={() => onItemModifierClick(item)}

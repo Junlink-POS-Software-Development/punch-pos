@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useViewStore } from "../window-layouts/store/useViewStore";
 import { getStoreInfo } from "@/app/actions/store";
 import { DEFAULT_PAYMENT_PAGE_SIZE, formatPaymentRecord } from "@/app/transactions/lib/paymentCache";
+import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 // Mock data for the specific page shortcuts/dropdowns
 const MOCK_SHORTCUTS = [
@@ -46,6 +47,8 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const { setViewState, posMode, recordSidebarInteraction } = useViewStore();
   const isTabletMode = posMode === 'tablet';
+  const { isRestaurant, modules } = useBusinessMode();
+  const showKitchenKds = isRestaurant || modules.kitchen_display;
 
   const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const itemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -219,15 +222,19 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         { label: "Feedback", href: "/customers" },
       ],
     },
-    {
-      id: "kitchen",
-      text: "Kitchen KDS",
-      Icon: ChefHat,
-      href: "/kitchen",
-      shortcuts: [
-        { label: "Active Orders", href: "/kitchen" },
-      ],
-    },
+    ...(showKitchenKds
+      ? [
+          {
+            id: "kitchen",
+            text: "Kitchen KDS",
+            Icon: ChefHat,
+            href: "/kitchen",
+            shortcuts: [
+              { label: "Active Orders", href: "/kitchen" },
+            ],
+          },
+        ]
+      : []),
     {
       id: "inbox",
       text: "Inbox",
