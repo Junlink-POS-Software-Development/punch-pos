@@ -1,3 +1,5 @@
+import type { SelectedModifier, CourseType, KitchenStatus } from "@/lib/types/restaurant";
+
 export type DiscountType = 'flat' | 'percent';
 
 export type CartItem = {
@@ -18,6 +20,11 @@ export type CartItem = {
   isRx?: boolean;
   batchNumber?: string;
   expiryDate?: string;
+  // Restaurant & F&B vertical extensions
+  modifiers?: SelectedModifier[];
+  course?: CourseType;
+  kitchenStatus?: KitchenStatus;
+  notes?: string;
 };
 
 export type TerminalCartProps = {
@@ -25,10 +32,13 @@ export type TerminalCartProps = {
   onRemoveItem: (id: string) => void;
   onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
   onItemDiscountClick?: (item: CartItem) => void;
+  onItemModifierClick?: (item: CartItem) => void;
   onOrderDiscountClick?: () => void;
   orderDiscountAmount?: number | null;
   orderDiscountValue?: number | null;
   orderDiscountType?: DiscountType | null;
   onRemoveOrderDiscount?: () => void;
   onCharge?: () => void;
+  onSendKitchen?: () => void;
+  onSplitCheck?: () => void;
 };

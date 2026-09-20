@@ -1,11 +1,18 @@
 "use client";
 
 import React from "react";
-import { Monitor, Tablet, Check, Sparkles } from "lucide-react";
+import { Monitor, Tablet, Check, Sparkles, Maximize, Clock } from "lucide-react";
 import { useViewStore, PosMode } from "@/components/window-layouts/store/useViewStore";
 
 export function PosLayoutSettings() {
-  const { posMode, setPosMode } = useViewStore();
+  const { 
+    posMode, 
+    setPosMode,
+    autoFullscreenEnabled,
+    setAutoFullscreenEnabled,
+    autoFullscreenMinutes,
+    setAutoFullscreenMinutes
+  } = useViewStore();
 
   const options: {
     id: PosMode;
@@ -129,6 +136,61 @@ export function PosLayoutSettings() {
             </button>
           );
         })}
+      </div>
+
+      {/* Auto-Fullscreen Settings Card */}
+      <div className="p-5 rounded-2xl border border-border bg-card/60 shadow-xs space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Maximize className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-foreground">
+                Auto-Fullscreen on Sidebar Inactivity
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Automatically enter distraction-free fullscreen mode when working on the terminal without accessing the sidebar navigation.
+              </p>
+            </div>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={autoFullscreenEnabled}
+              onChange={(e) => setAutoFullscreenEnabled(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        {autoFullscreenEnabled && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border/50 text-xs">
+            <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              Inactivity delay before entering fullscreen:
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 5].map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  onClick={() => setAutoFullscreenMinutes(mins)}
+                  className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                    autoFullscreenMinutes === mins
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/50"
+                  }`}
+                >
+                  {mins} {mins === 1 ? "min" : "mins"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

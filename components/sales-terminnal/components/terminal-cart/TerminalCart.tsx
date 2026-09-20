@@ -9,7 +9,7 @@ import {
   ColumnDef,
   ColumnSizingState,
 } from "@tanstack/react-table";
-import { Lock, Unlock, XCircle, Tag, ShieldCheck, X, CreditCard } from "lucide-react";
+import { Lock, Unlock, XCircle, Tag, ShieldCheck, X, CreditCard, ChefHat, Utensils, Divide } from "lucide-react";
 import { EditablePriceCell } from "./EditablePriceCell";
 import { CartItem, TerminalCartProps } from "./types";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -21,16 +21,19 @@ export const TerminalCart = ({
   onRemoveItem,
   onUpdateItem,
   onItemDiscountClick,
+  onItemModifierClick,
   onOrderDiscountClick,
   orderDiscountAmount,
   orderDiscountValue,
   orderDiscountType,
   onRemoveOrderDiscount,
   onCharge,
+  onSendKitchen,
+  onSplitCheck,
 }: TerminalCartProps) => {
   const { isPriceEditingEnabled } = useSettingsStore();
   const { can_edit_price } = usePermissions();
-  const { modules, isPharmacy } = useBusinessMode();
+  const { modules, isPharmacy, isRestaurant } = useBusinessMode();
   const canEditPrice = isPriceEditingEnabled && can_edit_price;
   const [isEditingActive, setIsEditingActive] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
@@ -84,7 +87,52 @@ export const TerminalCart = ({
                     Rx
                   </span>
                 )}
+                {item.course && (
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                    {item.course}
+                  </span>
+                )}
+                {item.kitchenStatus === "sent" && (
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                    Sent to Kitchen
+                  </span>
+                )}
+                {onItemModifierClick && (
+                  <button
+                    type="button"
+                    onClick={() => onItemModifierClick(item)}
+                    className="p-0.5 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                    title="Customize item / modifiers"
+                  >
+                    <ChefHat className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
+
+              {/* Modifiers List */}
+              {item.modifiers && item.modifiers.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {item.modifiers.map((mod, idx) => (
+                    <span
+                      key={idx}
+                      className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
+                    >
+                      {mod.optionName}
+                      {mod.priceAdjustment > 0
+                        ? ` (+₱${mod.priceAdjustment.toFixed(2)})`
+                        : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Special Prep Notes */}
+              {item.notes && (
+                <span className="text-[10px] text-red-600 dark:text-red-400 italic mt-0.5">
+                  Note: {item.notes}
+                </span>
+              )}
+
               {item.genericName && (
                 <span className="text-[11px] text-muted-foreground/80 italic truncate">
                   {item.genericName} {item.dosage ? `• ${item.dosage}` : ''}
@@ -318,6 +366,34 @@ export const TerminalCart = ({
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Senior / PWD (20%)</span>
+            </button>
+          )}
+
+          {/* Restaurant: Send to Kitchen Button */}
+          {(isRestaurant || modules.kitchen_display) && onSendKitchen && (
+            <button
+              type="button"
+              onClick={onSendKitchen}
+              disabled={rows.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold transition-all shadow-xs disabled:opacity-40 cursor-pointer"
+              title="Send Open Order to Kitchen / KDS"
+            >
+              <ChefHat className="w-3.5 h-3.5" />
+              <span>Send Kitchen</span>
+            </button>
+          )}
+
+          {/* Restaurant: Split Check Button */}
+          {(isRestaurant || modules.split_check) && onSplitCheck && (
+            <button
+              type="button"
+              onClick={onSplitCheck}
+              disabled={rows.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-all shadow-xs disabled:opacity-40 cursor-pointer"
+              title="Split check equally or by items"
+            >
+              <Divide className="w-3.5 h-3.5" />
+              <span>Split Bill</span>
             </button>
           )}
 

@@ -13,7 +13,7 @@ import { PaymentPopup } from "./modals/PaymentPopup";
 import { FreeItemModal } from "./modals/FreeItemModal";
 import { DiscountModal } from "./modals/DiscountModal";
 import { RxValidationModal } from "./modals/RxValidationModal";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ActionPanel } from "./components/ActionPanel";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { PosThemeWrapper } from "./components/PosThemeWrapper";
@@ -23,7 +23,21 @@ import { Item } from "@/app/inventory/components/item-registration/utils/itemTyp
 import { TransactionSuccessToast } from "./components/TransactionSuccessToast";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { PharmacyEquivalentsHub } from "./components/pharmacy/PharmacyEquivalentsHub";
-import { Pill } from "lucide-react";
+import { Pill, ChefHat, UtensilsCrossed, Divide } from "lucide-react";
+import { TableSelectorModal } from "./modals/TableSelectorModal";
+import { ModifierModal } from "./modals/ModifierModal";
+import { SplitCheckModal } from "./modals/SplitCheckModal";
+import { KitchenTicketModal } from "./modals/KitchenTicketModal";
+import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
+import { RestaurantDiningLayout } from "./components/restaurant/RestaurantDiningLayout";
+import { useItems } from "@/app/inventory/hooks/useItems";
+import { useAuthStore } from "@/store/useAuthStore";
+import {
+  KitchenTicket,
+  SelectedModifier,
+  CourseType,
+  RestaurantTable,
+} from "@/lib/types/restaurant";
 
 const DesktopSalesTerminal = () => {
   const {
@@ -43,6 +57,7 @@ const DesktopSalesTerminal = () => {
     transactionToast,
     clearTransactionToast,
     setCustomerId,
+    setCartItems,
   } = usePosForm();
 
   /* State */
@@ -61,11 +76,176 @@ const DesktopSalesTerminal = () => {
   const isTabletMode = posMode === "tablet";
 
   // Business Mode & Pharmacy Rx State
-  const { isPharmacy, modules } = useBusinessMode();
+  const { isPharmacy, isRestaurant, modules } = useBusinessMode();
+  const isRestaurantActive = isRestaurant || modules.table_management;
+
   const [isRxModalOpen, setIsRxModalOpen] = useState(false);
   const [isRxVerified, setIsRxVerified] = useState(false);
   const rxCartItems = useMemo(() => cartItems.filter((item) => item.isRx), [cartItems]);
   const [showShortcutsInPharmacy, setShowShortcutsInPharmacy] = useState(false);
+
+  // Restaurant State & Modals
+  const {
+    tables,
+    activeTableId,
+    setActiveTable,
+    sendOrderToKitchen,
+    updateTableOrder,
+    clearTable,
+  } = useRestaurantStore();
+
+  const [isTableModalOpen, setIsTableModalOpen] = useState(false);
+  const [isModifierModalOpen, setIsModifierModalOpen] = useState(false);
+  const [activeModifierItem, setActiveModifierItem] = useState<CartItem | null>(null);
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [isKitchenTicketModalOpen, setIsKitchenTicketModalOpen] = useState(false);
+  const [lastKitchenTicket, setLastKitchenTicket] = useState<KitchenTicket | null>(null);
+
+  // Items and user data for restaurant mode
+  const { items: allItems } = useItems();
+  const { user } = useAuthStore();
+  const cashierName =
+    user?.user_metadata?.first_name ||
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "Server";
+
+  // Track previous active table ID to prevent cross-table cart contamination during table switching
+  const prevTableIdRef = useRef<string | null>(activeTableId);
+
+  // Sync cartItems changes to active restaurant table
+  useEffect(() => {
+    if (isRestaurantActive && activeTableId) {
+      if (prevTableIdRef.current === activeTableId) {
+        updateTableOrder(activeTableId, cartItems);
+      } else {
+        prevTableIdRef.current = activeTableId;
+      }
+    }
+  }, [cartItems, isRestaurantActive, activeTableId, updateTableOrder]);
+
+  const handleSelectTable = (table: RestaurantTable) => {
+    if (activeTableId) {
+      updateTableOrder(activeTableId, cartItems);
+    }
+    prevTableIdRef.current = table.id;
+    setActiveTable(table.id);
+    const tableCart = table.currentSession?.cartItems || [];
+    setCartItems(tableCart);
+  };
+
+  const handleAddItemDirect = (item: Item, course?: CourseType) => {
+    const targetCourse: CourseType = course || "main";
+    const price = item.sellingPrice ?? item.salesPrice ?? 0;
+
+    setCartItems((prevCart) => {
+      const existingIndex = prevCart.findIndex(
+        (c) =>
+          c.sku === item.sku &&
+          (c.course || "main") === targetCourse &&
+          (!c.modifiers || c.modifiers.length === 0)
+      );
+
+      if (existingIndex !== -1) {
+        return prevCart.map((c, idx) => {
+          if (idx === existingIndex) {
+            const newQty = c.quantity + 1;
+            const lineSubtotal = newQty * c.unitPrice;
+            let newDiscount = c.discount || 0;
+            if (c.discountType === "percent") {
+              newDiscount = Math.round(lineSubtotal * ((c.discountValue || 0) / 100) * 100) / 100;
+            }
+            newDiscount = Math.min(newDiscount, lineSubtotal);
+            const newTotal = lineSubtotal - newDiscount;
+            return { ...c, quantity: newQty, discount: newDiscount, total: newTotal };
+          }
+          return c;
+        });
+      }
+
+      const newCartItem: CartItem = {
+        id: `${item.sku}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        sku: item.sku,
+        itemName: item.itemName,
+        unitPrice: price,
+        discountType: "flat",
+        discountValue: 0,
+        discount: 0,
+        quantity: 1,
+        total: price,
+        course: targetCourse,
+        kitchenStatus: "unsent",
+        genericName: item.genericName || undefined,
+        dosage: item.dosage || undefined,
+        formulation: item.formulation || undefined,
+        isRx: item.isRx || false,
+      };
+      return [...prevCart, newCartItem];
+    });
+  };
+
+  const handleOpenModifier = (item: CartItem) => {
+    setActiveModifierItem(item);
+    setIsModifierModalOpen(true);
+  };
+
+  const handleApplyModifiers = (
+    itemId: string,
+    modifiers: SelectedModifier[],
+    course?: CourseType,
+    notes?: string
+  ) => {
+    const target = cartItems.find((i) => i.id === itemId);
+    if (!target) return;
+    const totalModPrice = modifiers.reduce((sum, m) => sum + m.priceAdjustment, 0);
+    const prevModPrice = (target.modifiers || []).reduce((sum, m) => sum + m.priceAdjustment, 0);
+    const basePrice = target.unitPrice - prevModPrice;
+    const newUnitPrice = basePrice + totalModPrice;
+
+    onUpdateItem(itemId, {
+      modifiers,
+      course,
+      notes,
+      unitPrice: newUnitPrice,
+    });
+  };
+
+  const handleSendKitchen = () => {
+    if (!activeTableId || cartItems.length === 0) return;
+    const ticket = sendOrderToKitchen(activeTableId);
+    if (ticket) {
+      setLastKitchenTicket(ticket);
+      setIsKitchenTicketModalOpen(true);
+      // Mark local cart items as sent to sync immediately
+      setCartItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          kitchenStatus: "sent" as const,
+        }))
+      );
+    }
+  };
+
+  const handlePrintBill = () => {
+    if (!activeTableId) return;
+    const ticket = sendOrderToKitchen(activeTableId);
+    if (ticket) {
+      setLastKitchenTicket(ticket);
+      setIsKitchenTicketModalOpen(true);
+    }
+  };
+
+  const handleSettleBill = (total?: number) => {
+    if (total !== undefined) {
+      methods.setValue("grandTotal", total);
+    }
+    handleInitiateCharge();
+  };
+
+  const handleTenderSplitShare = (amount: number, label: string) => {
+    methods.setValue("grandTotal", amount);
+    setIsPaymentPopupOpen(true);
+  };
 
   // Calculate cart total
   const cartTotal = cartItems.reduce((sum, item) => sum + item.total, 0);
@@ -143,6 +323,9 @@ const DesktopSalesTerminal = () => {
 
     // Trigger submission using the helper that handles errors
     triggerDoneSubmit(invoiceNo);
+    if (isRestaurantActive && activeTableId) {
+      clearTable(activeTableId);
+    }
     setIsPaymentPopupOpen(false);
   };
 
@@ -197,7 +380,7 @@ const DesktopSalesTerminal = () => {
                       <p className="text-muted-foreground animate-pulse font-medium">Adjusting Layout...</p>
                     </div>
                  </div>
-              ) : isTabletMode && isFreeModalOpen ? (
+              ) : isTabletMode && !isRestaurantActive && isFreeModalOpen ? (
                   <div className="h-full w-full">
                     <FreeItemModal
                       isOpen={isFreeModalOpen}
@@ -206,7 +389,7 @@ const DesktopSalesTerminal = () => {
                       isTabletMode={true}
                     />
                   </div>
-              ) : isTabletMode && isDiscountModalOpen ? (
+              ) : isTabletMode && !isRestaurantActive && isDiscountModalOpen ? (
                   <div className="h-full w-full">
                     <DiscountModal
                       isOpen={isDiscountModalOpen}
@@ -221,6 +404,25 @@ const DesktopSalesTerminal = () => {
                       currentDiscountValue={discountModalMode === 'item' ? discountTargetItem?.discountValue : methods.getValues('orderDiscountValue')}
                     />
                   </div>
+              ) : isRestaurantActive ? (
+                <div className="w-full h-full overflow-hidden">
+                  <RestaurantDiningLayout
+                    items={allItems}
+                    cartItems={cartItems}
+                    onAddItemDirect={handleAddItemDirect}
+                    onRemoveItem={onRemoveItem}
+                    onUpdateItem={onUpdateItem}
+                    onOpenTableModal={() => setIsTableModalOpen(true)}
+                    onSelectTable={handleSelectTable}
+                    onOpenModifier={handleOpenModifier}
+                    onSendKitchen={handleSendKitchen}
+                    onPrintBill={handlePrintBill}
+                    onSplitCheck={() => setIsSplitModalOpen(true)}
+                    onSettleBill={handleSettleBill}
+                    onDiscountClick={handleOpenTransactionDiscount}
+                    cashierName={cashierName}
+                  />
+                </div>
               ) : (
               <form
                 id="sales-form"
@@ -241,6 +443,7 @@ const DesktopSalesTerminal = () => {
                       setActiveField={setActiveField}
                       activeField={activeField}
                       onOpenThemeModal={() => setIsThemeModalOpen(true)}
+                      onOpenTableModal={() => setIsTableModalOpen(true)}
                     />
 
                     {/* Inline Shortcuts Guide or Pharmacy Equivalents Hub - Fills space in desktop mode or renders scrollable list in tablet mode */}
@@ -292,6 +495,9 @@ const DesktopSalesTerminal = () => {
                       onRemoveItem={onRemoveItem}
                       onUpdateItem={onUpdateItem}
                       onItemDiscountClick={handleOpenItemDiscount}
+                      onItemModifierClick={handleOpenModifier}
+                      onSendKitchen={handleSendKitchen}
+                      onSplitCheck={() => setIsSplitModalOpen(true)}
                       onOrderDiscountClick={handleOpenTransactionDiscount}
                       orderDiscountAmount={methods.watch("orderDiscountAmount")}
                       orderDiscountValue={methods.watch("orderDiscountValue")}
@@ -309,12 +515,12 @@ const DesktopSalesTerminal = () => {
               )}
           </div>
 
-          {/* RIGHT PANEL: Action Panel — only visible in tablet mode */}
+          {/* RIGHT PANEL: Action Panel — only visible in tablet mode when not in restaurant mode */}
           <div className={`
             h-full transition-all duration-300 ease-in-out
-            ${isTabletMode ? "w-[650px] xl:w-[700px]" : "w-0 overflow-hidden"}
+            ${isTabletMode && !isRestaurantActive ? "w-[650px] xl:w-[700px]" : "w-0 overflow-hidden"}
           `}>
-            {isTabletMode && (
+            {isTabletMode && !isRestaurantActive && (
               <ActionPanel 
                 onAddToCart={onAddToCart}
                 onClearAll={handleClearTerminal}
@@ -325,6 +531,9 @@ const DesktopSalesTerminal = () => {
                 setActiveField={setActiveField}
                 isFreeMode={false}
                 onToggleFreeMode={() => setIsFreeModalOpen(true)}
+                onSendKitchen={handleSendKitchen}
+                onSplitCheck={() => setIsSplitModalOpen(true)}
+                onOpenTableModal={() => setIsTableModalOpen(true)}
               />
             )}
           </div>
@@ -352,7 +561,7 @@ const DesktopSalesTerminal = () => {
           onConfirm={handlePaymentComplete}
         />
 
-        {!isTabletMode && (
+        {(!isTabletMode || isRestaurantActive) && (
           <FreeItemModal
             isOpen={isFreeModalOpen}
             onClose={() => setIsFreeModalOpen(false)}
@@ -364,8 +573,8 @@ const DesktopSalesTerminal = () => {
         <ErrorMessage message={errorMessage} onClose={clearErrorMessage} />
         <TransactionSuccessToast toast={transactionToast} onClose={clearTransactionToast} />
 
-        {/* Discount Modal — inline for tablet, popup for desktop */}
-        {isTabletMode && isDiscountModalOpen ? null : (
+        {/* Discount Modal — inline for tablet (non-restaurant), popup for desktop / restaurant */}
+        {isTabletMode && !isRestaurantActive && isDiscountModalOpen ? null : (
           <DiscountModal
             isOpen={isDiscountModalOpen}
             onClose={() => setIsDiscountModalOpen(false)}
@@ -384,6 +593,34 @@ const DesktopSalesTerminal = () => {
         <PosThemeCustomizerModal
           isOpen={isThemeModalOpen}
           onClose={() => setIsThemeModalOpen(false)}
+        />
+
+        {/* Restaurant Modals */}
+        <TableSelectorModal
+          isOpen={isTableModalOpen}
+          onClose={() => setIsTableModalOpen(false)}
+          onSelectTable={handleSelectTable}
+        />
+
+        <ModifierModal
+          isOpen={isModifierModalOpen}
+          onClose={() => setIsModifierModalOpen(false)}
+          item={activeModifierItem}
+          onApplyModifiers={handleApplyModifiers}
+        />
+
+        <SplitCheckModal
+          isOpen={isSplitModalOpen}
+          onClose={() => setIsSplitModalOpen(false)}
+          cartItems={cartItems}
+          grandTotal={cartTotal}
+          onTenderSplitShare={handleTenderSplitShare}
+        />
+
+        <KitchenTicketModal
+          isOpen={isKitchenTicketModalOpen}
+          onClose={() => setIsKitchenTicketModalOpen(false)}
+          ticket={lastKitchenTicket}
         />
       </div>
     </PosThemeWrapper>

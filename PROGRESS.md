@@ -41,14 +41,62 @@ This document tracks the phased implementation of making `pos-next` a universal 
 | 5.13 | Pharmacy Mode List-Based Item Search & Inline Selector: Suppressed floating barcode dropdown, added dedicated search results list with explicit `[✓ Select]` and `[+ Add]` actions, filter tabs, and keyboard navigation (`ItemAutoComplete.tsx`, `FormFields.tsx`, `PharmacyEquivalentsHub.tsx`, `DesktopSalesTerminal.tsx`) | 🟢 Completed | 2026-09-20 |
 | 5.14 | Universal Dosage Display in Search Results & Inventory Tables: Dedicated Dosage column in Item Registration table, sortable dosage key, enhanced dosage regex extraction, and persistent dosage badges in terminal search and stocks data grid (`ItemTable.tsx`, `ItemTableRow.tsx`, `useItemRegStore.ts`, `useItemTable.ts`, `StocksDataGrid.tsx`, `pharmacyMeta.ts`, `PharmacyEquivalentsHub.tsx`) | 🟢 Completed | 2026-09-20 |
 | 5.15 | Streamlined Idle Medicine Directory: Removed quick molecule exploration chips section to give 100% vertical viewport to direct medicine selection (`PharmacyEquivalentsHub.tsx`) | 🟢 Completed | 2026-09-20 |
-| **Phase 6** | **Restaurant, Cafe & Dining Vertical Pack** | ⚪ Next | - |
-| 6.1 | Restaurant: Table / Floor Selection & Order Course Management | ⚪ Next | - |
-| 6.2 | Kitchen Display System (KDS) & Chit / Ticket routing | ⚪ Next | - |
-| 6.3 | Menu Modifiers & Split Check dialog | ⚪ Next | - |
+| **Phase 6** | **Restaurant, Cafe & Dining Vertical Pack** | 🟢 Completed | 2026-09-20 |
+| 6.1 | Restaurant: Table / Floor Selection & Order Course Management (`TableSelectorModal.tsx`, `useRestaurantStore.ts`, `TerminalHeader.tsx`) | 🟢 Completed | 2026-09-20 |
+| 6.2 | Kitchen Display System (KDS) & Chit / Ticket routing (`/kitchen`, `KitchenTicketModal.tsx`, `Navigation.tsx`) | 🟢 Completed | 2026-09-20 |
+| 6.3 | Menu Modifiers & Split Check dialog (`ModifierModal.tsx`, `SplitCheckModal.tsx`, `TerminalCart.tsx`, `ActionButtons.tsx`) | 🟢 Completed | 2026-09-20 |
+| 6.4 | Touch-First Dining Terminal Layout: Menu Catalog, Course Grouped Guest Check, Embedded Floor Plan & Control Header (`RestaurantDiningLayout.tsx`, `RestaurantDiningHeader.tsx`, `RestaurantMenuCatalog.tsx`, `RestaurantGuestCheck.tsx`, `DesktopSalesTerminal.tsx`) | 🟢 Completed | 2026-09-20 |
+| **Phase 7** | **Grocery & Supermarket Vertical Pack** | ⚪ Next | - |
+| 7.1 | Scale Barcode Parser & Weighed Item PLU Entry | ⚪ Next | - |
+| 7.2 | High-Speed Continuous Laser Scanning & Multi-Pack Barcodes | ⚪ Next | - |
+| 7.3 | Bulk Low-Stock Alerts & Perishable Expiry Tracking | ⚪ Next | - |
 
 ---
 
 ## 📝 Activity Log & Progress Notes
+
+### [2026-09-20] - Phase 6 Restaurant, Cafe & Dining Vertical Pack Complete
+- **Core Domain Types & State Management** (`lib/types/restaurant.ts` & `app/restaurant/stores/useRestaurantStore.ts`):
+  - Defined TypeScript contracts for `RestaurantTable`, `DiningSession`, `CourseType`, `ModifierGroup`, `ModifierOption`, `SelectedModifier`, `KitchenTicket`, and `KitchenTicketItem`.
+  - Extended `CartItem` in `types.ts` with restaurant metadata: `modifiers`, `course`, `kitchenStatus`, and `notes`.
+  - Created persistent Zustand store `useRestaurantStore` supporting floor plan tables, active table dining sessions, KDS ticket queue, and KOT sequence tracking (`#KOT-101`).
+  - Pre-seeded starter tables across four zones: Main Dining (T-1 to T-8), Patio (P-1 to P-4), Bar Lounge (B-1 to B-4), and Takeout (TO-1).
+- **Interactive Floor Plan & Table Management** (`TableSelectorModal.tsx` & `TerminalHeader.tsx`):
+  - Created `TableSelectorModal.tsx` with zone filter tabs (`All`, `Main Dining`, `Patio`, `Bar`, `Takeout`) and live status counters (`Vacant`, `Occupied`, `Billing`, `Reserved`).
+  - Table cards display seating capacity, party size, elapsed dining timer (`35m ago`), active check total, server name, and status switcher.
+  - Integrated active table indicator into `TerminalHeader.tsx` (`🍽️ Table: T-4 (Dine-In • 4 Guests • Occupied)`) with 1-click modal opener.
+  - Connected POS terminal cart to auto-sync with active table sessions, ensuring cashiers can switch tables without losing cart items.
+- **Dedicated Kitchen Display System (KDS)** (`app/kitchen/page.tsx` & `Navigation.tsx`):
+  - Built full-screen live kitchen order dispatcher at `/kitchen` with real-time clock, audio alert toggle, and station filters (`All Stations`, `Kitchen / Grill`, `Bar`).
+  - Implemented color-coded urgency tracking: Green (< 10 mins), Amber (10-20 mins), and Red (> 20 mins critical alert).
+  - Added interactive items checklist with strike-through completion, ticket bump progression (`Pending` $\rightarrow$ `Preparing` $\rightarrow$ `Ready` $\rightarrow$ `Bump / Complete`), and 80mm thermal kitchen slip printing.
+  - Added "Kitchen KDS" direct link with `ChefHat` icon into the main app `Navigation.tsx`.
+- **"Send to Kitchen" (KOT) & Kitchen Slip Modal** (`KitchenTicketModal.tsx`, `ActionButtons.tsx`, `TerminalCart.tsx`):
+  - Added **"Send Kitchen"** button directly to `TerminalCart` footer and `ActionButtons` grid.
+  - Dispatches orders to KDS without collecting immediate payment, marking line items as `[Sent to Kitchen]`.
+  - Created `KitchenTicketModal.tsx` with high-contrast 80mm thermal ticket preview and direct browser printing.
+- **Item Customization & Cooking Modifiers Modal** (`ModifierModal.tsx`):
+  - Customization dialog supporting:
+    - Cooking Doneness: `Rare`, `Medium Rare`, `Medium`, `Medium Well`, `Well Done`.
+    - Beverage Preferences: Sweetness (0% to 100%) and Ice Level (No Ice to Extra Ice).
+    - Upgrades & Add-ons: Extra Cheese (+₱30), Crispy Bacon (+₱50), Fried Egg (+₱25), Mushroom Gravy (+₱35), Side Salad (+₱60), Extra Rice (+₱25), Oat Milk (+₱30), Extra Espresso (+₱40).
+    - Course sequencing (`Beverage`, `Appetizer`, `Main`, `Dessert`, `Side`).
+    - Freeform special prep notes & allergy instructions.
+  - Dynamic unit price recalculation and modifier tags in `TerminalCart`.
+- **Split Bill & Check Separation Engine** (`SplitCheckModal.tsx`):
+  - **Split Equally (By Headcount)**: Divides total bill evenly across 2 to 6+ diners, showing per-person share with 1-click tender buttons.
+  - **Split by Items (Separate Checks)**: Multi-column check segregation allowing items to be moved between Check 1, Check 2, etc., with independent subtotals and separate payments.
+- **Touch-First Restaurant Dining Terminal Overhaul** (`RestaurantDiningLayout.tsx`, `RestaurantDiningHeader.tsx`, `RestaurantMenuCatalog.tsx`, `RestaurantGuestCheck.tsx`, `DesktopSalesTerminal.tsx`):
+  - **Dining Control Header Bar**: Quick-switch active table pill with status badge, order mode switcher (`Dine-In`, `Takeout`, `Bar Tab`, `Delivery`), interactive guest count adjuster (`[-] 4 Pax [+]`), food & beverage search bar, live KDS status pill (`3 Active Orders`), and view switcher (`Menu Grid` vs `Floor Plan`).
+  - **Touch-Friendly Visual Menu Catalog**: Responsive dish and beverage cards with high-contrast prices, category filtering tabs (`All`, `Appetizers`, `Mains`, `Beverages`, etc.), and quick modifier trigger (`Customize`).
+  - **Course Sequencing Selector Bar**: Dedicated touch buttons for assigning dishes to courses (`Beverages 🍹`, `Appetizers 🥗`, `Main Courses 🥩`, `Desserts 🍰`, `Side Dishes 🍟`).
+  - **Embedded Floor Plan View**: Toggle between menu grid and visual floor map right inside the catalog pane for 1-click table transfers and visual status inspections.
+  - **Professional Course-Grouped Guest Check**: Grouped table bill segregated by dining courses, line item quantity adjusters, selected modifier pills, prep notes, kitchen transmission indicators (`Unsent` vs `Sent`), 10% Philippine dining service charge toggle, order discount trigger, and high-impact action buttons (`Send KOT`, `Print Bill`, `Split Check`, `Pay Bill`).
+  - **Cross-Table Cart Isolation & Seamless Settle Flow**: Protected against cross-table cart contamination with active table tracking ref, auto-syncing table bills to Zustand store, and directly firing payment popup with service charge calculation upon checkout.
+  - **Category ID to Human-Readable Name Resolution**: Integrated `useCategories` lookup dictionary in `RestaurantMenuCatalog.tsx` to automatically translate internal UUID `category_id` keys into clean, human-friendly category names on both filter tabs and dish card badges.
+  - **Automatic Fullscreen on Sidebar Inactivity**: Added idle watcher in `useViewStore.ts` and `MainWindow.tsx` that automatically expands the terminal into fullscreen mode after a configurable period (default 2 minutes) of not accessing the sidebar navigation. Includes interaction reset listeners, exit button delay protection, floating entry toast, and duration settings in `PosLayoutSettings.tsx`.
+- **Type Check Verification**:
+  - Verified `npm run type-check` (`tsc --noEmit`) passes with exit code 0 (zero errors).
 
 ### [2026-09-20] - Phase 5 Pharmacy & Healthcare Vertical Pack Complete
 - **Database Migration** (`supabase/migrations/20260920010000_add_pharmacy_fields_and_item_batches.sql`):

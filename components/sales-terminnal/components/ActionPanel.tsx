@@ -16,6 +16,10 @@ interface ActionPanelProps {
   // [NEW] Free Mode
   isFreeMode?: boolean;
   onToggleFreeMode?: () => void;
+  // Restaurant actions
+  onSendKitchen?: () => void;
+  onSplitCheck?: () => void;
+  onOpenTableModal?: () => void;
 }
 
 export function ActionPanel({
@@ -28,6 +32,9 @@ export function ActionPanel({
   setActiveField,
   isFreeMode,
   onToggleFreeMode,
+  onSendKitchen,
+  onSplitCheck,
+  onOpenTableModal,
 }: ActionPanelProps) {
   const { setValue, getValues } = useFormContext<PosFormValues>();
 
@@ -124,6 +131,9 @@ export function ActionPanel({
             onClearAll={onClearAll}
             isFreeMode={isFreeMode}
             onToggleFreeMode={onToggleFreeMode}
+            onSendKitchen={onSendKitchen}
+            onSplitCheck={onSplitCheck}
+            onOpenTableModal={onOpenTableModal}
          />
       </div>
 

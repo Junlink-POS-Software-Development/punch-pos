@@ -38,13 +38,23 @@ export function MainWindow({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { viewState, posMode, isFullscreen } = useViewStore();
+  const { 
+    viewState, 
+    posMode, 
+    isFullscreen, 
+    setIsFullscreen,
+    autoFullscreenEnabled,
+    autoFullscreenMinutes,
+    lastSidebarInteraction,
+    recordSidebarInteraction 
+  } = useViewStore();
   const isTabletMode = posMode === 'tablet';
 
   // Auth State
   const { user, signOut } = useAuthStore();
   const [authModalState, setAuthModalState] = useState<AuthModalState>("hidden");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showAutoFullscreenToast, setShowAutoFullscreenToast] = useState(false);
 
   // Bypass split-screen layout for specific routes (maintenance, login, auth callbacks, etc.)
   const fullScreenRoutes = ["/maintenance", "/login", "/onboarding", "/auth", "/api"];
@@ -71,17 +81,58 @@ export function MainWindow({
     }
   };
 
+  const isTerminal = pathname === "/";
+
+  // Reset timer on arrival at the terminal from another route
+  useEffect(() => {
+    if (isTerminal) {
+      recordSidebarInteraction();
+    }
+  }, [pathname, isTerminal, recordSidebarInteraction]);
+
+  // Auto-fullscreen watcher:
+  // Automatically enters fullscreen on the terminal after few minutes of not accessing the sidebar navigation
+  useEffect(() => {
+    if (!isTerminal || !autoFullscreenEnabled || isFullscreen) {
+      return;
+    }
+
+    const timeoutMs = Math.max(1, autoFullscreenMinutes) * 60 * 1000;
+
+    const checkTimer = () => {
+      const state = useViewStore.getState();
+      if (!state.autoFullscreenEnabled || state.isFullscreen) return;
+
+      const elapsed = Date.now() - state.lastSidebarInteraction;
+      if (elapsed >= timeoutMs) {
+        setIsFullscreen(true);
+        setShowAutoFullscreenToast(true);
+        setTimeout(() => setShowAutoFullscreenToast(false), 4500);
+      }
+    };
+
+    const intervalId = setInterval(checkTimer, 2000);
+    return () => clearInterval(intervalId);
+  }, [isTerminal, autoFullscreenEnabled, isFullscreen, autoFullscreenMinutes, setIsFullscreen]);
+
   if (isFullScreenRoute) {
     return <>{children}</>;
   }
-
-  const isTerminal = pathname === "/";
 
   // --- MAIN LAYOUT ---
   return (
     <div className={`flex bg-background h-screen overflow-hidden text-foreground font-lexend ${isTabletMode || isFullscreen ? "" : "lg:pl-20"}`}>
       {/* Sidebar - hidden in fullscreen and hidden on mobile (< lg) */}
-      {!isFullscreen && <Navigation variant="sidebar" />}
+      {!isFullscreen && (
+        <div
+          onMouseEnter={recordSidebarInteraction}
+          onMouseMove={recordSidebarInteraction}
+          onClick={recordSidebarInteraction}
+          onTouchStart={recordSidebarInteraction}
+        >
+          <Navigation variant="sidebar" />
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 h-screen overflow-hidden">
@@ -117,6 +168,15 @@ export function MainWindow({
             Tab
           </kbd>
         </button>
+      )}
+
+      {/* Auto-Fullscreen Notification Toast */}
+      {showAutoFullscreenToast && isFullscreen && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/95 text-foreground border border-primary/40 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300 text-xs font-semibold select-none">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span>Terminal entered fullscreen (sidebar idle for {autoFullscreenMinutes}m)</span>
+          <span className="text-muted-foreground hidden sm:inline">• Press <kbd className="px-1 py-0.5 rounded bg-muted border font-mono text-[10px]">Tab</kbd> or click Exit to restore</span>
+        </div>
       )}
 
       {/* Auth Modals & Overlays */}

@@ -19,6 +19,7 @@ import {
   X,
   Store,
   FolderArchive,
+  ChefHat,
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
@@ -43,7 +44,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const { setViewState, posMode } = useViewStore();
+  const { setViewState, posMode, recordSidebarInteraction } = useViewStore();
   const isTabletMode = posMode === 'tablet';
 
   const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -69,6 +70,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   };
 
   const handleSidebarEnter = () => {
+    recordSidebarInteraction();
     if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
     setIsCollapsed(false);
   };
@@ -81,6 +83,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   };
 
   const handleItemEnter = (id: string) => {
+    recordSidebarInteraction();
     if (id === "transactions") {
       prewarmPayments();
     }
@@ -217,6 +220,15 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       ],
     },
     {
+      id: "kitchen",
+      text: "Kitchen KDS",
+      Icon: ChefHat,
+      href: "/kitchen",
+      shortcuts: [
+        { label: "Active Orders", href: "/kitchen" },
+      ],
+    },
+    {
       id: "inbox",
       text: "Inbox",
       Icon: Inbox,
@@ -297,6 +309,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
       <aside
         onMouseEnter={handleSidebarEnter}
         onMouseLeave={handleSidebarLeave}
+        onMouseMove={recordSidebarInteraction}
+        onClick={recordSidebarInteraction}
+        onTouchStart={recordSidebarInteraction}
         className={`
           fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl hidden lg:flex flex-col
           ${isTabletMode ? "-translate-x-full" : (isCollapsed ? "lg:w-20" : "lg:w-64")}

@@ -11,10 +11,16 @@ interface ViewState {
   isSplit: boolean;
   posMode: PosMode;
   isFullscreen: boolean;
+  autoFullscreenEnabled: boolean;
+  autoFullscreenMinutes: number;
+  lastSidebarInteraction: number;
   setPosMode: (mode: PosMode) => void;
   cyclePosMode: () => void;
   setIsFullscreen: (isFullscreen: boolean) => void;
   toggleFullscreen: () => void;
+  setAutoFullscreenEnabled: (enabled: boolean) => void;
+  setAutoFullscreenMinutes: (minutes: number) => void;
+  recordSidebarInteraction: () => void;
   setViewState: (viewState: number | ((prev: number) => number)) => void;
   setIsSplit: (isSplit: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -26,6 +32,9 @@ export const useViewStore = create<ViewState>()(
       isSplit: true,
       posMode: 'desktop',
       isFullscreen: false,
+      autoFullscreenEnabled: true,
+      autoFullscreenMinutes: 2, // 2 minutes default
+      lastSidebarInteraction: Date.now(),
       setPosMode: (mode) => set({ posMode: mode }),
       cyclePosMode: () =>
         set((state) => {
@@ -33,11 +42,23 @@ export const useViewStore = create<ViewState>()(
           const nextIndex = (currentIndex + 1) % POS_MODES.length;
           return { posMode: POS_MODES[nextIndex] };
         }),
-      setIsFullscreen: (isFullscreen) => set({ isFullscreen }),
-      toggleFullscreen: () =>
+      setIsFullscreen: (isFullscreen) =>
         set((state) => ({
-          isFullscreen: !state.isFullscreen,
+          isFullscreen,
+          // When exiting fullscreen, reset the sidebar interaction timer so it doesn't immediately re-fullscreen
+          lastSidebarInteraction: !isFullscreen ? Date.now() : state.lastSidebarInteraction,
         })),
+      toggleFullscreen: () =>
+        set((state) => {
+          const next = !state.isFullscreen;
+          return {
+            isFullscreen: next,
+            lastSidebarInteraction: !next ? Date.now() : state.lastSidebarInteraction,
+          };
+        }),
+      setAutoFullscreenEnabled: (enabled) => set({ autoFullscreenEnabled: enabled }),
+      setAutoFullscreenMinutes: (minutes) => set({ autoFullscreenMinutes: minutes }),
+      recordSidebarInteraction: () => set({ lastSidebarInteraction: Date.now() }),
       setViewState: (viewState) =>
         set((state) => ({
           viewState: typeof viewState === 'function' ? viewState(state.viewState) : viewState,
@@ -50,7 +71,11 @@ export const useViewStore = create<ViewState>()(
     {
       name: 'pos-view-mode-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ posMode: state.posMode }),
+      partialize: (state) => ({
+        posMode: state.posMode,
+        autoFullscreenEnabled: state.autoFullscreenEnabled,
+        autoFullscreenMinutes: state.autoFullscreenMinutes,
+      }),
     }
   )
 );

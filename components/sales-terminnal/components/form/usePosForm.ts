@@ -30,6 +30,7 @@ import { TransactionToastData } from "../TransactionSuccessToast";
 interface UsePosFormReturn {
   methods: UseFormReturn<PosFormValues>;
   cartItems: CartItem[];
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   onAddToCart: (overrideFreeMode?: boolean) => void;
   onRemoveItem: (id: string) => void;
   onUpdateItem: (id: string, updates: Partial<CartItem>) => void;
@@ -497,6 +498,7 @@ export const usePosForm = (): UsePosFormReturn => {
   return {
     methods,
     cartItems,
+    setCartItems,
     onAddToCart,
     onRemoveItem,
     onUpdateItem,

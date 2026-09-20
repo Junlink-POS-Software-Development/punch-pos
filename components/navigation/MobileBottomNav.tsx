@@ -22,6 +22,7 @@ import {
   FolderArchive,
 } from "lucide-react";
 import { getStoreInfo } from "@/app/actions/store";
+import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -243,6 +244,8 @@ export function MobileBottomNav() {
 
       {/* Mobile Bottom Navigation Bar */}
       <nav
+        onClick={() => useViewStore.getState().recordSidebarInteraction()}
+        onTouchStart={() => useViewStore.getState().recordSidebarInteraction()}
         className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border bg-card/95 px-2 backdrop-blur-md shadow-lg lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >

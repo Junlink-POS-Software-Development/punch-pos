@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart, ShieldCheck } from "lucide-react";
+import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart, ShieldCheck, ChefHat, UtensilsCrossed, Divide } from "lucide-react";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface ActionButtonsProps {
@@ -15,6 +15,10 @@ interface ActionButtonsProps {
   // [NEW]
   isFreeMode?: boolean;
   onToggleFreeMode?: () => void;
+  // Restaurant actions
+  onSendKitchen?: () => void;
+  onSplitCheck?: () => void;
+  onOpenTableModal?: () => void;
 }
 
 export const ActionButtons = ({
@@ -29,8 +33,11 @@ export const ActionButtons = ({
   onClearAll,
   isFreeMode,
   onToggleFreeMode,
+  onSendKitchen,
+  onSplitCheck,
+  onOpenTableModal,
 }: ActionButtonsProps) => {
-  const { modules, isPharmacy } = useBusinessMode();
+  const { modules, isPharmacy, isRestaurant } = useBusinessMode();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
 
@@ -93,6 +100,42 @@ export const ActionButtons = ({
           >
             <ShieldCheck className="w-4 h-4" />
             SC/PWD
+          </button>
+        )}
+        {(modules.table_management || isRestaurant) && onOpenTableModal && (
+          <button
+            type="button"
+            onClick={onOpenTableModal}
+            onMouseDown={(e) => e.preventDefault()}
+            className="col-span-1 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 cursor-pointer"
+            title="Floor Plan & Tables"
+          >
+            <UtensilsCrossed className="w-4 h-4" />
+            TABLE
+          </button>
+        )}
+        {(modules.kitchen_display || isRestaurant) && onSendKitchen && (
+          <button
+            type="button"
+            onClick={onSendKitchen}
+            onMouseDown={(e) => e.preventDefault()}
+            className="col-span-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 cursor-pointer"
+            title="Send Order to Kitchen (KOT)"
+          >
+            <ChefHat className="w-4 h-4" />
+            KITCHEN
+          </button>
+        )}
+        {(modules.split_check || isRestaurant) && onSplitCheck && (
+          <button
+            type="button"
+            onClick={onSplitCheck}
+            onMouseDown={(e) => e.preventDefault()}
+            className="col-span-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 cursor-pointer"
+            title="Split Bill"
+          >
+            <Divide className="w-4 h-4" />
+            SPLIT
           </button>
         )}
         <button
