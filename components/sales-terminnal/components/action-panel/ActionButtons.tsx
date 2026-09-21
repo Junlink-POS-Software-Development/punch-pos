@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart, ShieldCheck, ChefHat, UtensilsCrossed, Divide } from "lucide-react";
+import { Plus, Minus, CreditCard, Tag, Ticket, Archive, Eraser, Gift, ShoppingCart, ShieldCheck, ChefHat, UtensilsCrossed, Divide, Scale } from "lucide-react";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
 interface ActionButtonsProps {
@@ -19,6 +19,8 @@ interface ActionButtonsProps {
   onSendKitchen?: () => void;
   onSplitCheck?: () => void;
   onOpenTableModal?: () => void;
+  // Grocery actions
+  onOpenScaleModal?: () => void;
 }
 
 export const ActionButtons = ({
@@ -36,8 +38,9 @@ export const ActionButtons = ({
   onSendKitchen,
   onSplitCheck,
   onOpenTableModal,
+  onOpenScaleModal,
 }: ActionButtonsProps) => {
-  const { modules, isPharmacy, isRestaurant } = useBusinessMode();
+  const { modules, isPharmacy, isRestaurant, isGrocery } = useBusinessMode();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
 
@@ -136,6 +139,18 @@ export const ActionButtons = ({
           >
             <Divide className="w-4 h-4" />
             SPLIT
+          </button>
+        )}
+        {(modules.weighed_items || isGrocery) && onOpenScaleModal && (
+          <button
+            type="button"
+            onClick={onOpenScaleModal}
+            onMouseDown={(e) => e.preventDefault()}
+            className="col-span-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold py-2 sm:py-3 rounded-lg transition-colors text-xs flex flex-col items-center justify-center gap-1 cursor-pointer"
+            title="Weighing Scale & Produce PLU Lookup [F4]"
+          >
+            <Scale className="w-4 h-4" />
+            SCALE/PLU
           </button>
         )}
         <button

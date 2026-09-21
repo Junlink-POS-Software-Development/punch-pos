@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Tag, Percent, DollarSign, ShieldCheck } from "lucide-react";
+import { X, Tag, Percent, DollarSign, ShieldCheck, Flame } from "lucide-react";
 import { CartItem, DiscountType } from "../components/terminal-cart/types";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 
@@ -34,7 +34,7 @@ export const DiscountModal = ({
   currentDiscountType,
   currentDiscountValue,
 }: DiscountModalProps) => {
-  const { modules, isPharmacy } = useBusinessMode();
+  const { modules, isPharmacy, isGrocery } = useBusinessMode();
   const [discountType, setDiscountType] = useState<DiscountType>('flat');
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -313,6 +313,44 @@ export const DiscountModal = ({
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Senior / PWD (20%)</span>
                   </button>
+                )}
+
+                {(isGrocery || targetItem?.isPerishable) && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDiscountType('percent');
+                        setInputValue("20");
+                        setError(null);
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                        inputValue === "20" && discountType === 'percent'
+                          ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                          : "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20"
+                      }`}
+                      title="20% Fresh Food Markdown"
+                    >
+                      <span>Fresh Markdown (20%)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDiscountType('percent');
+                        setInputValue("50");
+                        setError(null);
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                        inputValue === "50" && discountType === 'percent'
+                          ? "bg-red-600 text-white border-red-600 shadow-xs"
+                          : "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20"
+                      }`}
+                      title="50% End-of-Day Perishable Clearance"
+                    >
+                      <Flame className="w-3.5 h-3.5" />
+                      <span>Evening Clearance (50%)</span>
+                    </button>
+                  </>
                 )}
               </>
             ) : (

@@ -8,6 +8,9 @@ import { PosFormValues } from "@/components/sales-terminnal/utils/posSchema";
 import { Item } from "@/app/inventory/components/item-registration/utils/itemTypes";
 import { CartItem } from "../../terminal-cart/types";
 import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
+import { parseScaleBarcode } from "@/lib/utils/scaleBarcode";
+import { playScanSuccess, playScanError } from "@/lib/utils/scanSounds";
+import { extractGroceryMeta } from "@/lib/utils/groceryMeta";
 
 // 22: Added isFreeMode to type
 type AddToCartParams = {
@@ -35,32 +38,102 @@ export const handleAddToCart = ({
   console.log("--- [addToCart.ts] Executing Add to Cart Logic ---");
 
   // 1. Get values
-  const { barcode, quantity, discount } = getValues();
+  const { barcode: rawBarcode, quantity: rawQuantity, discount } = getValues();
   const discountValue = discount || 0; // Ensure 0 if undefined/null
 
   // 2. Validation
-  if (!barcode) {
+  if (!rawBarcode) {
+    playScanError();
     onError?.("Please select an item first.");
     return;
   }
-  if (!quantity || quantity <= 0) {
-    onError?.("Please enter a valid quantity.");
-    return;
+
+  // Check for quantity multiplier prefix (e.g. "12*480001" or "6x480001")
+  let barcode = rawBarcode.trim();
+  let quantityMultiplier = 1;
+  const multiplierMatch = barcode.match(/^(\d+)[\*xX](.+)$/);
+  if (multiplierMatch) {
+    quantityMultiplier = parseInt(multiplierMatch[1], 10) || 1;
+    barcode = multiplierMatch[2].trim();
   }
 
-  const itemDetails = allItems.find((item) => item.sku === barcode);
+  const effectiveQuantity = (rawQuantity && rawQuantity > 0 ? rawQuantity : 1) * quantityMultiplier;
+
+  // Check if barcode is a GS1 Price-Embedded or Weight-Embedded scale barcode (e.g. 2004011015507)
+  const scaleBarcode = parseScaleBarcode(barcode);
+  let itemDetails: Item | undefined = undefined;
+  let isWeighedScaleScan = false;
+  let scaleCalculatedQty = effectiveQuantity;
+  let scaleCalculatedTotal: number | null = null;
+  let isMultiPackScan = false;
+  let multiPackQty = 1;
+  let multiPackPrice: number | null = null;
+
+  if (scaleBarcode) {
+    // Find item matching PLU or SKU
+    itemDetails = allItems.find((item) => {
+      const gMeta = extractGroceryMeta(item);
+      const plu = item.pluCode || gMeta.pluCode || item.sku;
+      return (
+        plu === scaleBarcode.pluCode ||
+        item.sku === scaleBarcode.pluCode ||
+        item.sku.replace(/^0+/, "") === scaleBarcode.pluCode
+      );
+    });
+
+    if (itemDetails) {
+      isWeighedScaleScan = true;
+      const basePrice = itemDetails.sellingPrice ?? itemDetails.salesPrice ?? 0;
+      if (scaleBarcode.embeddedType === "price") {
+        scaleCalculatedTotal = scaleBarcode.embeddedValue;
+        scaleCalculatedQty = basePrice > 0 ? Math.round((scaleBarcode.embeddedValue / basePrice) * 1000) / 1000 : 1;
+      } else {
+        scaleCalculatedQty = scaleBarcode.embeddedValue;
+        scaleCalculatedTotal = Math.round(scaleCalculatedQty * basePrice * 100) / 100;
+      }
+    }
+  }
+
+  // If not scale barcode, check standard SKU match or multi-pack barcode
+  if (!itemDetails) {
+    // Direct SKU match
+    itemDetails = allItems.find((item) => item.sku === barcode);
+
+    // If not direct SKU, check multi-pack barcode
+    if (!itemDetails) {
+      itemDetails = allItems.find((item) => {
+        const gMeta = extractGroceryMeta(item);
+        return (
+          (item.packBarcode && item.packBarcode === barcode) ||
+          (gMeta.packBarcode && gMeta.packBarcode === barcode)
+        );
+      });
+
+      if (itemDetails) {
+        isMultiPackScan = true;
+        const gMeta = extractGroceryMeta(itemDetails);
+        multiPackQty = itemDetails.packQuantity || gMeta.packQuantity || 1;
+        multiPackPrice =
+          itemDetails.packSellingPrice ??
+          gMeta.packSellingPrice ??
+          (itemDetails.sellingPrice ?? itemDetails.salesPrice ?? 0) * multiPackQty;
+      }
+    }
+  }
 
   if (!itemDetails) {
+    playScanError();
     onError?.("Item not found. Please check the SKU/Barcode.");
     return;
   }
 
-  // 3. STOCK VALIDATION - Use inventory data from context (no fetch!)
-  const stockInfo = inventoryData.find((inv) => inv.sku === barcode);
+  // 3. STOCK VALIDATION - Use target SKU from itemDetails
+  const targetSku = itemDetails.sku;
+  const stockInfo = inventoryData.find((inv) => inv.sku === targetSku);
 
   if (!stockInfo) {
+    playScanError();
     onError?.("Stock information not available for this item.");
-    // Clear fields on error
     resetField("barcode");
     resetField("quantity");
     resetField("discount");
@@ -69,59 +142,78 @@ export const handleAddToCart = ({
 
   // Check if item is out of stock
   if (stockInfo.current_stock <= 0) {
+    playScanError();
     onError?.(`OUT OF STOCK: ${itemDetails.itemName} has no available stock.`);
-    // Clear fields on error
     resetField("barcode");
     resetField("quantity");
     resetField("discount");
     return;
   }
 
-  // Calculate total quantity (existing in cart + new quantity)
-  // [FIX] STOCK CHECK: Sum quantity of ALL rows with this SKU (Free + Paid)
+  // Calculate stock requirement (multi-pack consumes N units, weighed consumes by unit or fractional kg)
+  const requiredStockUnits = isMultiPackScan ? effectiveQuantity * multiPackQty : effectiveQuantity;
+
   const quantityInCart = cartItems
-    .filter((item) => item.sku === barcode)
-    .reduce((sum, item) => sum + item.quantity, 0);
+    .filter((item) => item.sku === targetSku)
+    .reduce((sum, item) => sum + (item.packQuantity ? item.quantity * item.packQuantity : item.quantity), 0);
 
-  const totalQuantity = quantityInCart + quantity;
+  const totalStockRequired = quantityInCart + requiredStockUnits;
 
-  // Check if total quantity exceeds available stock
-  if (totalQuantity > stockInfo.current_stock) {
+  if (totalStockRequired > stockInfo.current_stock) {
+    playScanError();
     const remainingStock = stockInfo.current_stock - quantityInCart;
     if (remainingStock <= 0) {
       onError?.(`INSUFFICIENT STOCK: ${itemDetails.itemName} has ${stockInfo.current_stock} units available, but you already have ${quantityInCart} in the cart.`);
     } else {
       onError?.(`INSUFFICIENT STOCK: ${itemDetails.itemName} has only ${stockInfo.current_stock} units available. You have ${quantityInCart} in cart. You can add ${remainingStock} more.`);
     }
-    // Clear fields on error
     resetField("barcode");
     resetField("quantity");
     resetField("discount");
     return;
   }
 
-  console.log(`✅ Stock check passed: ${itemDetails.itemName} - Requested: ${totalQuantity}, Available: ${stockInfo.current_stock}`);
+  console.log(`✅ Stock check passed: ${itemDetails.itemName} - Requested: ${totalStockRequired}, Available: ${stockInfo.current_stock}`);
 
-  // 4. Calculate Costs
-  // [NEW] If Free Mode, price is 0
-  const unitPrice = isFreeMode ? 0 : (itemDetails.sellingPrice ?? itemDetails.salesPrice ?? 0);
-  const total = quantity * unitPrice - discountValue;
+  // 4. Calculate Costs & Line Properties
+  let finalItemName = itemDetails.itemName;
+  let finalQuantity = effectiveQuantity;
+  let finalUnitPrice = isFreeMode ? 0 : (itemDetails.sellingPrice ?? itemDetails.salesPrice ?? 0);
+  let finalTotal = finalQuantity * finalUnitPrice - discountValue;
+  const gMeta = extractGroceryMeta(itemDetails);
+
+  if (isWeighedScaleScan) {
+    finalQuantity = scaleCalculatedQty;
+    finalTotal = scaleCalculatedTotal !== null
+      ? Math.max(0, scaleCalculatedTotal - discountValue)
+      : Math.round(finalQuantity * finalUnitPrice * 100) / 100 - discountValue;
+  } else if (isMultiPackScan) {
+    finalItemName = `${itemDetails.itemName} (${multiPackQty}-Pack)`;
+    finalUnitPrice = isFreeMode ? 0 : (multiPackPrice !== null ? multiPackPrice : finalUnitPrice * multiPackQty);
+    finalTotal = finalQuantity * finalUnitPrice - discountValue;
+  }
 
   // 5. Update Cart State
-  // [FIX] MERGING: Find item by SKU *AND* Unit Price to separate Free vs Paid rows
-  const existingItemIndex = cartItems.findIndex(
-    (item) => item.sku === barcode && item.unitPrice === unitPrice
-  );
+  const cartRowId = isWeighedScaleScan
+    ? `${targetSku}-weighed-${Date.now()}`
+    : isMultiPackScan
+    ? `${targetSku}-pack-${multiPackQty}-${finalUnitPrice}`
+    : `${targetSku}-${finalUnitPrice}`;
+
+  const existingItemIndex = isWeighedScaleScan
+    ? -1 // Don't merge distinct weighed items, keep separate weighed line entries
+    : cartItems.findIndex(
+        (item) => item.sku === targetSku && item.unitPrice === finalUnitPrice && (item.packQuantity || 1) === (isMultiPackScan ? multiPackQty : 1)
+      );
 
   if (existingItemIndex !== -1) {
     // Update existing item
     setCartItems((prevCart) =>
       prevCart.map((item, index) => {
         if (index === existingItemIndex) {
-          const newQuantity = item.quantity + quantity;
-          // Request 1: Accumulate discount properly
+          const newQuantity = item.quantity + finalQuantity;
           const newDiscount = (item.discount || 0) + discountValue;
-          const newTotal = item.total + total;
+          const newTotal = item.total + finalTotal;
 
           return {
             ...item,
@@ -136,29 +228,39 @@ export const handleAddToCart = ({
   } else {
     // Add new item
     const newCartItem: CartItem = {
-      id: `${barcode}-${unitPrice}`, // [FIX] Unique ID based on SKU + Price (to ensure Free/Paid separation)
-      sku: barcode,
-      itemName: itemDetails.itemName,
-      unitPrice: unitPrice,
-      discountType: 'flat',           // Default — can be changed via DiscountModal later
+      id: cartRowId,
+      sku: targetSku,
+      itemName: finalItemName,
+      unitPrice: finalUnitPrice,
+      discountType: 'flat',
       discountValue: discountValue,
-      discount: discountValue,        // Computed flat amount
-      quantity: quantity,
-      total: total,
+      discount: discountValue,
+      quantity: finalQuantity,
+      total: finalTotal,
+      // Pharmacy fields
       genericName: itemDetails.genericName || (stockInfo as any).generic_name || undefined,
       dosage: itemDetails.dosage || (stockInfo as any).dosage || undefined,
       formulation: itemDetails.formulation || (stockInfo as any).formulation || undefined,
       isRx: itemDetails.isRx || (stockInfo as any).is_rx || false,
       batchNumber: itemDetails.batchNumber || (stockInfo as any).batch_number || undefined,
       expiryDate: itemDetails.expiryDate || (stockInfo as any).expiry_date || undefined,
+      // Grocery fields
+      isWeighed: isWeighedScaleScan || itemDetails.isWeighed || gMeta.isWeighed || false,
+      unitOfMeasure: itemDetails.unitOfMeasure || gMeta.unitOfMeasure || (isWeighedScaleScan ? "kg" : "pc"),
+      tareWeight: itemDetails.tareWeight || gMeta.tareWeight || 0,
+      packQuantity: isMultiPackScan ? multiPackQty : undefined,
+      isPerishable: itemDetails.isPerishable || gMeta.isPerishable || false,
     };
     setCartItems((prevCart) => [...prevCart, newCartItem]);
   }
 
+  // Play scanner chime
+  playScanSuccess();
+
   // 6. Reset Fields
   resetField("barcode");
   resetField("quantity");
-  resetField("discount"); // Request 2: Clear discount field
+  resetField("discount");
 
   console.log("--- [addToCart.ts] Item added successfully ---");
 };

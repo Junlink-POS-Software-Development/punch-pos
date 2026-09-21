@@ -40,6 +40,15 @@ export const useItemReg = () => {
     brandType: "branded" as "branded" | "generic",
     batchNumber: "",
     expiryDate: "",
+    // Grocery extensions
+    isWeighed: false,
+    unitOfMeasure: "pc",
+    pluCode: "",
+    tareWeight: 0,
+    packBarcode: "",
+    packQuantity: 1,
+    packSellingPrice: "",
+    isPerishable: false,
   });
 
   const [batchRawText, setBatchRawText] = useState("");
@@ -73,6 +82,15 @@ export const useItemReg = () => {
       brandType: formData.brandType,
       batchNumber: formData.batchNumber.trim() || undefined,
       expiryDate: formData.expiryDate.trim() || undefined,
+      // Grocery fields
+      isWeighed: formData.isWeighed,
+      unitOfMeasure: formData.unitOfMeasure || "pc",
+      pluCode: formData.pluCode.trim() || undefined,
+      tareWeight: parseFloat(formData.tareWeight as any) || 0,
+      packBarcode: formData.packBarcode.trim() || undefined,
+      packQuantity: parseInt(formData.packQuantity as any) || 1,
+      packSellingPrice: formData.packSellingPrice ? parseFloat(formData.packSellingPrice) : null,
+      isPerishable: formData.isPerishable || false,
     };
 
     addItem(newItem, {
@@ -118,6 +136,14 @@ export const useItemReg = () => {
       brandType: "branded",
       batchNumber: "",
       expiryDate: "",
+      isWeighed: false,
+      unitOfMeasure: "pc",
+      pluCode: "",
+      tareWeight: 0,
+      packBarcode: "",
+      packQuantity: 1,
+      packSellingPrice: "",
+      isPerishable: false,
     });
   };
 

@@ -45,6 +45,16 @@ export const itemSchema = z.object({
   // Initial Batch Tracking (FEFO)
   batchNumber: z.string().optional().nullable(),
   expiryDate: z.string().optional().nullable(),
+
+  // --- Grocery & Supermarket Vertical Extensions ---
+  isWeighed: z.boolean().optional(),
+  unitOfMeasure: z.string().optional(),
+  pluCode: z.string().optional().nullable(),
+  tareWeight: z.number().optional(),
+  packBarcode: z.string().optional().nullable(),
+  packQuantity: z.number().optional(),
+  packSellingPrice: z.number().optional().nullable(),
+  isPerishable: z.boolean().optional(),
 });
 
 // 2. Export the inferred Item type
@@ -73,4 +83,14 @@ export const defaultItemValues: Item = {
   brandType: "branded",
   batchNumber: "",
   expiryDate: "",
+
+  // Grocery defaults
+  isWeighed: false,
+  unitOfMeasure: "pc",
+  pluCode: "",
+  tareWeight: 0,
+  packBarcode: "",
+  packQuantity: 1,
+  packSellingPrice: null,
+  isPerishable: false,
 };

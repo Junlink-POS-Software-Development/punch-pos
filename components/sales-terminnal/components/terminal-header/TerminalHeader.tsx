@@ -10,7 +10,7 @@ import { ProductDisplay } from "./components/ProductDisplay";
 import { FormFields } from "../FormFields";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed, Scale } from "lucide-react";
 
 type TerminalHeaderProps = {
   setCustomerId: (id: string | null) => void;
@@ -23,6 +23,7 @@ type TerminalHeaderProps = {
   isTabletMode?: boolean;
   onOpenThemeModal?: () => void;
   onOpenTableModal?: () => void;
+  onOpenScaleModal?: () => void;
 };
 export const TerminalHeader = ({
   setCustomerId,
@@ -34,8 +35,9 @@ export const TerminalHeader = ({
   isTabletMode,
   onOpenThemeModal,
   onOpenTableModal,
+  onOpenScaleModal,
 }: TerminalHeaderProps) => {
-  const { isRestaurant, modules } = useBusinessMode();
+  const { isRestaurant, isGrocery, modules } = useBusinessMode();
   const { tables, activeTableId } = useRestaurantStore();
   const activeTable = tables.find((t) => t.id === activeTableId);
   const {
@@ -118,6 +120,33 @@ export const TerminalHeader = ({
                   </div>
                   <span className="text-[10px] text-primary font-bold group-hover:underline shrink-0 ml-1">
                     Floor Plan
+                  </span>
+                </button>
+              )}
+
+              {/* Grocery Produce & Scale PLU Shortcut */}
+              {(isGrocery || modules.weighed_items) && onOpenScaleModal && (
+                <button
+                  type="button"
+                  onClick={onOpenScaleModal}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-amber-500/40 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-left shadow-xs cursor-pointer group"
+                  title="Open Weighing Scale & Produce PLU Lookup [F4]"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+                      <Scale className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block leading-tight">
+                        Weighed Goods
+                      </span>
+                      <span className="text-xs font-black text-foreground truncate">
+                        Produce Scale & PLU
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/20">
+                    F4
                   </span>
                 </button>
               )}

@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { ImageIcon, ChevronDown, Pill, Calendar, Hash, ShieldAlert } from "lucide-react";
+import { ImageIcon, ChevronDown, Pill, Calendar, Hash, ShieldAlert, Scale, PackageCheck } from "lucide-react";
 import { Category } from "../../../hooks/useCategories";
 import { StandardSelect } from "@/components/reusables/StandardSelect";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
@@ -22,6 +22,15 @@ interface SingleItemFormProps {
     brandType?: "branded" | "generic";
     batchNumber?: string;
     expiryDate?: string;
+    // Grocery extensions
+    isWeighed?: boolean;
+    unitOfMeasure?: string;
+    pluCode?: string;
+    tareWeight?: number;
+    packBarcode?: string;
+    packQuantity?: number;
+    packSellingPrice?: number | string | null;
+    isPerishable?: boolean;
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   categories: Category[];
@@ -44,8 +53,9 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
   onReset,
   onCancel,
 }) => {
-  const { isPharmacy, modules } = useBusinessMode();
+  const { isPharmacy, isGrocery, modules } = useBusinessMode();
   const showPharmacyFields = isPharmacy || modules.prescription_rx || modules.batch_expiry;
+  const showGroceryFields = isGrocery || modules.weighed_items;
   // Refs for focus management
   const nameRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLSelectElement>(null);
@@ -379,6 +389,162 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Grocery, Produce Scale & Multi-Pack Section (Conditioned on Business Mode) */}
+      {showGroceryFields && (
+        <div className="p-6 bg-amber-500/5 rounded-2xl border border-amber-500/20 space-y-6 shadow-inner backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-500/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+                <Scale className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  Produce, Scale & Multi-Pack Configuration
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    Grocery
+                  </span>
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Weighed goods (PLU, Tare) and Wholesale / Multi-pack barcodes
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Sold by Weight Toggle */}
+              <label className="flex items-center gap-3 cursor-pointer select-none bg-background/80 hover:bg-background px-3.5 py-2 rounded-xl border border-amber-500/30 transition-colors shadow-sm shrink-0">
+                <div className="text-right">
+                  <span className="text-xs font-bold block text-foreground">Sold by Weight</span>
+                  <span className="text-[10px] text-muted-foreground">Scale & PLU item</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isWeighed || false}
+                  onChange={(e) => setFormData({ ...formData, isWeighed: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 accent-amber-500 cursor-pointer"
+                />
+              </label>
+
+              {/* Perishable Fresh Goods Toggle */}
+              <label className="flex items-center gap-3 cursor-pointer select-none bg-background/80 hover:bg-background px-3.5 py-2 rounded-xl border border-border/60 transition-colors shadow-sm shrink-0">
+                <div className="text-right">
+                  <span className="text-xs font-bold block text-foreground">Perishable</span>
+                  <span className="text-[10px] text-muted-foreground">Daily fresh goods</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isPerishable || false}
+                  onChange={(e) => setFormData({ ...formData, isPerishable: e.target.checked })}
+                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary accent-primary cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Scale Specific Fields (if isWeighed) */}
+          {formData.isWeighed && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Unit of Measure
+                </label>
+                <select
+                  value={formData.unitOfMeasure || "kg"}
+                  onChange={(e) => setFormData({ ...formData, unitOfMeasure: e.target.value })}
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/50"
+                >
+                  <option value="kg">Kilogram (kg)</option>
+                  <option value="g">Gram (g)</option>
+                  <option value="lb">Pound (lb)</option>
+                  <option value="pc">Piece (pc)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Produce PLU Code (4 or 5 Digits)
+                </label>
+                <input
+                  type="text"
+                  value={formData.pluCode || ""}
+                  onChange={(e) => setFormData({ ...formData, pluCode: e.target.value })}
+                  placeholder="e.g. 4011 (Bananas), 4046"
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Default Tare Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={formData.tareWeight || 0}
+                  onChange={(e) => setFormData({ ...formData, tareWeight: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.005 (5g bag)"
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Multi-Pack & Wholesale Bundle Settings */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <PackageCheck className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Multi-Pack / Case Bundle (Optional)
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Pack Barcode (e.g. 6-Pack or Case)
+                </label>
+                <input
+                  type="text"
+                  value={formData.packBarcode || ""}
+                  onChange={(e) => setFormData({ ...formData, packBarcode: e.target.value })}
+                  placeholder="Secondary pack barcode"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Units in Pack (Quantity Multiplier)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.packQuantity || 1}
+                  onChange={(e) => setFormData({ ...formData, packQuantity: parseInt(e.target.value) || 1 })}
+                  placeholder="e.g. 6 or 24"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Pack Selling Price (₱)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.packSellingPrice ?? ""}
+                  onChange={(e) => setFormData({ ...formData, packSellingPrice: e.target.value })}
+                  placeholder="Bundle price (optional)"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

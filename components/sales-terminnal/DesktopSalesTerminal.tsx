@@ -23,11 +23,12 @@ import { Item } from "@/app/inventory/components/item-registration/utils/itemTyp
 import { TransactionSuccessToast } from "./components/TransactionSuccessToast";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { PharmacyEquivalentsHub } from "./components/pharmacy/PharmacyEquivalentsHub";
-import { Pill, ChefHat, UtensilsCrossed, Divide } from "lucide-react";
+import { Pill, ChefHat, UtensilsCrossed, Divide, Scale } from "lucide-react";
 import { TableSelectorModal } from "./modals/TableSelectorModal";
 import { ModifierModal } from "./modals/ModifierModal";
 import { SplitCheckModal } from "./modals/SplitCheckModal";
 import { KitchenTicketModal } from "./modals/KitchenTicketModal";
+import { ScaleProduceModal } from "./modals/ScaleProduceModal";
 import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
 import { RestaurantDiningLayout } from "./components/restaurant/RestaurantDiningLayout";
 import { useItems } from "@/app/inventory/hooks/useItems";
@@ -100,6 +101,44 @@ const DesktopSalesTerminal = () => {
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [isKitchenTicketModalOpen, setIsKitchenTicketModalOpen] = useState(false);
   const [lastKitchenTicket, setLastKitchenTicket] = useState<KitchenTicket | null>(null);
+  const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
+
+  // Global F4 shortcut for Weighing Scale / Produce PLU lookup
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F4") {
+        e.preventDefault();
+        setIsScaleModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleAddWeighedItem = (
+    item: Item,
+    netWeightKg: number,
+    totalPrice: number,
+    tareWeightKg: number
+  ) => {
+    const unitPrice = item.sellingPrice ?? item.salesPrice ?? 0;
+    const cartRowId = `${item.sku}-weighed-${Date.now()}`;
+    const newCartItem: CartItem = {
+      id: cartRowId,
+      sku: item.sku,
+      itemName: item.itemName,
+      unitPrice: unitPrice,
+      quantity: netWeightKg,
+      discountType: "flat",
+      discountValue: 0,
+      discount: 0,
+      total: totalPrice,
+      isWeighed: true,
+      unitOfMeasure: item.unitOfMeasure || "kg",
+      tareWeight: tareWeightKg,
+    };
+    setCartItems((prev) => [...prev, newCartItem]);
+  };
 
   // Items and user data for restaurant mode
   const { items: allItems } = useItems();
@@ -444,6 +483,7 @@ const DesktopSalesTerminal = () => {
                       activeField={activeField}
                       onOpenThemeModal={() => setIsThemeModalOpen(true)}
                       onOpenTableModal={() => setIsTableModalOpen(true)}
+                      onOpenScaleModal={() => setIsScaleModalOpen(true)}
                     />
 
                     {/* Inline Shortcuts Guide or Pharmacy Equivalents Hub - Fills space in desktop mode or renders scrollable list in tablet mode */}
@@ -508,6 +548,7 @@ const DesktopSalesTerminal = () => {
                         methods.setValue("orderDiscountAmount", null);
                       }}
                       onCharge={handleInitiateCharge}
+                      onOpenScaleModal={() => setIsScaleModalOpen(true)}
                     />
                   </div>
                 </div>
@@ -534,6 +575,7 @@ const DesktopSalesTerminal = () => {
                 onSendKitchen={handleSendKitchen}
                 onSplitCheck={() => setIsSplitModalOpen(true)}
                 onOpenTableModal={() => setIsTableModalOpen(true)}
+                onOpenScaleModal={() => setIsScaleModalOpen(true)}
               />
             )}
           </div>
@@ -621,6 +663,14 @@ const DesktopSalesTerminal = () => {
           isOpen={isKitchenTicketModalOpen}
           onClose={() => setIsKitchenTicketModalOpen(false)}
           ticket={lastKitchenTicket}
+        />
+
+        {/* Grocery: Scale & Produce PLU Modal */}
+        <ScaleProduceModal
+          isOpen={isScaleModalOpen}
+          onClose={() => setIsScaleModalOpen(false)}
+          allItems={allItems}
+          onAddWeighedItem={handleAddWeighedItem}
         />
       </div>
     </PosThemeWrapper>

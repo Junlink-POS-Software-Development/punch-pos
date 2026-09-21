@@ -20,6 +20,8 @@ interface ActionPanelProps {
   onSendKitchen?: () => void;
   onSplitCheck?: () => void;
   onOpenTableModal?: () => void;
+  // Grocery actions
+  onOpenScaleModal?: () => void;
 }
 
 export function ActionPanel({
@@ -35,6 +37,7 @@ export function ActionPanel({
   onSendKitchen,
   onSplitCheck,
   onOpenTableModal,
+  onOpenScaleModal,
 }: ActionPanelProps) {
   const { setValue, getValues } = useFormContext<PosFormValues>();
 
@@ -134,6 +137,7 @@ export function ActionPanel({
             onSendKitchen={onSendKitchen}
             onSplitCheck={onSplitCheck}
             onOpenTableModal={onOpenTableModal}
+            onOpenScaleModal={onOpenScaleModal}
          />
       </div>
 

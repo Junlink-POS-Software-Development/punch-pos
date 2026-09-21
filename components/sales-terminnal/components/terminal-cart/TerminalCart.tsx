@@ -9,7 +9,7 @@ import {
   ColumnDef,
   ColumnSizingState,
 } from "@tanstack/react-table";
-import { Lock, Unlock, XCircle, Tag, ShieldCheck, X, CreditCard, ChefHat, Utensils, Divide } from "lucide-react";
+import { Lock, Unlock, XCircle, Tag, ShieldCheck, X, CreditCard, ChefHat, Utensils, Divide, Scale } from "lucide-react";
 import { EditablePriceCell } from "./EditablePriceCell";
 import { CartItem, TerminalCartProps } from "./types";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -30,10 +30,11 @@ export const TerminalCart = ({
   onCharge,
   onSendKitchen,
   onSplitCheck,
+  onOpenScaleModal,
 }: TerminalCartProps) => {
   const { isPriceEditingEnabled } = useSettingsStore();
   const { can_edit_price } = usePermissions();
-  const { modules, isPharmacy, isRestaurant } = useBusinessMode();
+  const { modules, isPharmacy, isRestaurant, isGrocery } = useBusinessMode();
   const canEditPrice = isPriceEditingEnabled && can_edit_price;
   const [isEditingActive, setIsEditingActive] = useState(false);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
@@ -95,6 +96,22 @@ export const TerminalCart = ({
                 {(isRestaurant || modules.kitchen_display) && item.kitchenStatus === "sent" && (
                   <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
                     Sent to Kitchen
+                  </span>
+                )}
+                {item.isWeighed && (
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                    <Scale className="w-2.5 h-2.5" />
+                    Scale ({item.unitOfMeasure || "kg"})
+                  </span>
+                )}
+                {item.packQuantity && item.packQuantity > 1 && (
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                    {item.packQuantity} pcs/pack
+                  </span>
+                )}
+                {item.isPerishable && (
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    Fresh
                   </span>
                 )}
                 {(isRestaurant || modules.menu_modifiers) && onItemModifierClick && (
@@ -189,9 +206,21 @@ export const TerminalCart = ({
       }),
       columnHelper.accessor("quantity", {
         header: () => <div className="text-center">Qty</div>,
-        cell: ({ getValue }) => <div className="text-center">{getValue()}</div>,
-        size: 50,
-        minSize: 40,
+        cell: ({ row, getValue }) => {
+          const val = getValue();
+          const item = row.original;
+          if (item.isWeighed) {
+            return (
+              <div className="text-center font-mono font-bold text-amber-600 dark:text-amber-400 text-xs leading-tight" title={`Weighed item: ${val} ${item.unitOfMeasure || 'kg'}`}>
+                {Number(val).toFixed(3)}
+                <span className="text-[9px] text-muted-foreground ml-0.5">{item.unitOfMeasure || 'kg'}</span>
+              </div>
+            );
+          }
+          return <div className="text-center font-medium">{val}</div>;
+        },
+        size: 60,
+        minSize: 45,
       }),
       columnHelper.accessor("discount", {
         header: () => <div className="text-right">Disc</div>,
@@ -394,6 +423,19 @@ export const TerminalCart = ({
             >
               <Divide className="w-3.5 h-3.5" />
               <span>Split Bill</span>
+            </button>
+          )}
+
+          {/* Grocery: Scale & Produce PLU Button */}
+          {(isGrocery || modules.weighed_items) && onOpenScaleModal && (
+            <button
+              type="button"
+              onClick={onOpenScaleModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Weighing Scale & Produce PLU Lookup [F4]"
+            >
+              <Scale className="w-3.5 h-3.5" />
+              <span>Scale / PLU</span>
             </button>
           )}
 

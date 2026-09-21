@@ -25,6 +25,12 @@ export type CartItem = {
   course?: CourseType;
   kitchenStatus?: KitchenStatus;
   notes?: string;
+  // Grocery & Supermarket vertical extensions
+  isWeighed?: boolean;
+  unitOfMeasure?: string;
+  tareWeight?: number;
+  packQuantity?: number;
+  isPerishable?: boolean;
 };
 
 export type TerminalCartProps = {
@@ -41,4 +47,5 @@ export type TerminalCartProps = {
   onCharge?: () => void;
   onSendKitchen?: () => void;
   onSplitCheck?: () => void;
+  onOpenScaleModal?: () => void;
 };

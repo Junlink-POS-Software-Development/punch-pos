@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { Item } from "../utils/itemTypes";
 import { embedPharmacyMetaInDescription, extractPharmacyMeta, stripPharmacyMetaFromDescription } from "@/lib/utils/pharmacyMeta";
+import { embedGroceryMetaInDescription, extractGroceryMeta, stripGroceryMetaFromDescription } from "@/lib/utils/groceryMeta";
 
 const getSupabase = async () => {
   return createClient();
@@ -23,6 +24,15 @@ interface ItemDbRow {
   dosage?: string | null;
   formulation?: string | null;
   is_rx?: boolean;
+  // Grocery extensions
+  is_weighed?: boolean;
+  unit_of_measure?: string;
+  plu_code?: string | null;
+  tare_weight?: number;
+  pack_barcode?: string | null;
+  pack_quantity?: number;
+  pack_selling_price?: number | null;
+  is_perishable?: boolean;
 }
 
 // ... (DbItemObject and toDatabaseObject remain UNCHANGED) ...
@@ -46,9 +56,20 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
   if (item.formulation !== undefined) dbItem.formulation = item.formulation ?? null;
   if (item.isRx !== undefined) dbItem.is_rx = item.isRx ?? false;
 
+  // Grocery & Weighed fields
+  if (item.isWeighed !== undefined) dbItem.is_weighed = item.isWeighed ?? false;
+  if (item.unitOfMeasure !== undefined) dbItem.unit_of_measure = item.unitOfMeasure ?? "pc";
+  if (item.pluCode !== undefined) dbItem.plu_code = item.pluCode ?? null;
+  if (item.tareWeight !== undefined) dbItem.tare_weight = item.tareWeight ?? 0;
+  if (item.packBarcode !== undefined) dbItem.pack_barcode = item.packBarcode ?? null;
+  if (item.packQuantity !== undefined) dbItem.pack_quantity = item.packQuantity ?? 1;
+  if (item.packSellingPrice !== undefined) dbItem.pack_selling_price = item.packSellingPrice ?? null;
+  if (item.isPerishable !== undefined) dbItem.is_perishable = item.isPerishable ?? false;
+
   // Embed pharmacy meta in description so it's queryable & persistent immediately
+  let desc = item.description || "";
   if (item.genericName || item.dosage || item.formulation || item.isRx !== undefined || item.brandType) {
-    dbItem.description = embedPharmacyMetaInDescription(item.description || "", {
+    desc = embedPharmacyMetaInDescription(desc, {
       genericName: item.genericName || undefined,
       dosage: item.dosage || undefined,
       formulation: item.formulation || undefined,
@@ -57,9 +78,23 @@ const toDatabaseObject = (item: Partial<Item>): DbItemObject => {
       batchNumber: item.batchNumber || undefined,
       expiryDate: item.expiryDate || undefined,
     });
-  } else if (item.description !== undefined) {
-    dbItem.description = item.description ?? null;
   }
+
+  // Embed grocery meta in description for guaranteed backward compatibility
+  if (item.isWeighed || item.pluCode || item.packBarcode || item.unitOfMeasure !== "pc" || item.isPerishable) {
+    desc = embedGroceryMetaInDescription(desc, {
+      isWeighed: item.isWeighed,
+      unitOfMeasure: (item.unitOfMeasure as any) || "pc",
+      pluCode: item.pluCode || undefined,
+      tareWeight: item.tareWeight || 0,
+      packBarcode: item.packBarcode || undefined,
+      packQuantity: item.packQuantity || 1,
+      packSellingPrice: item.packSellingPrice || undefined,
+      isPerishable: item.isPerishable || false,
+    });
+  }
+
+  dbItem.description = desc ? desc : (item.description ?? null);
 
   return dbItem;
 };
@@ -81,9 +116,21 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
     dosage,
     formulation,
     is_rx,
+    is_weighed,
+    unit_of_measure,
+    plu_code,
+    tare_weight,
+    pack_barcode,
+    pack_quantity,
+    pack_selling_price,
+    is_perishable,
   } = dbItem;
 
-  const meta = extractPharmacyMeta(dbItem);
+  const pharmacyMeta = extractPharmacyMeta(dbItem);
+  const groceryMeta = extractGroceryMeta(dbItem);
+
+  // Clean description of both metadata tags
+  const cleanDesc = stripGroceryMetaFromDescription(stripPharmacyMetaFromDescription(description));
 
   return {
     id,
@@ -93,16 +140,25 @@ const fromDatabaseObject = (dbItem: ItemDbRow): Item => {
     categoryName: category_name ?? undefined,
     salesPrice: unit_cost,
     sellingPrice: sales_price ?? null,
-    description: stripPharmacyMetaFromDescription(description) || undefined,
+    description: cleanDesc || undefined,
     imageUrl: image_url ?? null,
     lowStockThreshold: low_stock_threshold ?? null,
-    genericName: meta.genericName ?? generic_name ?? undefined,
-    dosage: meta.dosage ?? dosage ?? undefined,
-    formulation: meta.formulation ?? formulation ?? undefined,
-    isRx: meta.isRx ?? is_rx ?? false,
-    brandType: meta.brandType ?? "branded",
-    batchNumber: meta.batchNumber ?? undefined,
-    expiryDate: meta.expiryDate ?? undefined,
+    genericName: pharmacyMeta.genericName ?? generic_name ?? undefined,
+    dosage: pharmacyMeta.dosage ?? dosage ?? undefined,
+    formulation: pharmacyMeta.formulation ?? formulation ?? undefined,
+    isRx: pharmacyMeta.isRx ?? is_rx ?? false,
+    brandType: pharmacyMeta.brandType ?? "branded",
+    batchNumber: pharmacyMeta.batchNumber ?? undefined,
+    expiryDate: pharmacyMeta.expiryDate ?? undefined,
+    // Grocery fields
+    isWeighed: groceryMeta.isWeighed ?? is_weighed ?? false,
+    unitOfMeasure: groceryMeta.unitOfMeasure ?? unit_of_measure ?? "pc",
+    pluCode: groceryMeta.pluCode ?? plu_code ?? undefined,
+    tareWeight: groceryMeta.tareWeight ?? tare_weight ?? 0,
+    packBarcode: groceryMeta.packBarcode ?? pack_barcode ?? undefined,
+    packQuantity: groceryMeta.packQuantity ?? pack_quantity ?? 1,
+    packSellingPrice: groceryMeta.packSellingPrice ?? pack_selling_price ?? null,
+    isPerishable: groceryMeta.isPerishable ?? is_perishable ?? false,
   };
 };
 

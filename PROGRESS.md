@@ -47,14 +47,46 @@ This document tracks the phased implementation of making `pos-next` a universal 
 | 6.3 | Menu Modifiers & Split Check dialog (`ModifierModal.tsx`, `SplitCheckModal.tsx`, `TerminalCart.tsx`, `ActionButtons.tsx`) | 🟢 Completed | 2026-09-20 |
 | 6.4 | Touch-First Dining Terminal Layout: Menu Catalog, Course Grouped Guest Check, Embedded Floor Plan & Control Header (`RestaurantDiningLayout.tsx`, `RestaurantDiningHeader.tsx`, `RestaurantMenuCatalog.tsx`, `RestaurantGuestCheck.tsx`, `DesktopSalesTerminal.tsx`) | 🟢 Completed | 2026-09-20 |
 | 6.5 | Dynamic Mode-Guarded Kitchen KDS Visibility: Automatically hide Kitchen KDS navigation links, mobile drawer items, cart modifier buttons, and display a disabled-guard page in non-restaurant/non-kitchen modes (`Navigation.tsx`, `MobileBottomNav.tsx`, `TerminalCart.tsx`, `app/kitchen/page.tsx`) | 🟢 Completed | 2026-09-20 |
-| **Phase 7** | **Grocery & Supermarket Vertical Pack** | ⚪ Next | - |
-| 7.1 | Scale Barcode Parser & Weighed Item PLU Entry | ⚪ Next | - |
-| 7.2 | High-Speed Continuous Laser Scanning & Multi-Pack Barcodes | ⚪ Next | - |
-| 7.3 | Bulk Low-Stock Alerts & Perishable Expiry Tracking | ⚪ Next | - |
+| **Phase 7** | **Grocery & Supermarket Vertical Pack** | 🟢 Completed | 2026-09-21 |
+| 7.1 | Scale Barcode Parser & Weighed Item PLU Entry (`scaleBarcode.ts`, `ScaleProduceModal.tsx`, `addToCart.ts`, `TerminalCart.tsx`) | 🟢 Completed | 2026-09-21 |
+| 7.2 | High-Speed Continuous Laser Scanning & Multi-Pack Barcodes (`scanSounds.ts`, `addToCart.ts`, `groceryMeta.ts`, `SingleItemForm.tsx`) | 🟢 Completed | 2026-09-21 |
+| 7.3 | Bulk Low-Stock Alerts & Perishable Expiry Tracking (`DiscountModal.tsx`, `SingleItemForm.tsx`, `20260921000000_add_grocery_fields.sql`) | 🟢 Completed | 2026-09-21 |
+| **Phase 8** | **Malls, Department Stores & Concessionaires Vertical Pack** | ⚪ Next | - |
+| 8.1 | Concessionaire / Vendor Assignment & Tenant Revenue Split | ⚪ Next | - |
+| 8.2 | Serial Number / IMEI Tracking at Checkout for Electronics & Appliances | ⚪ Next | - |
+| 8.3 | Product Variants Matrix (Size / Color) for Apparel | ⚪ Next | - |
 
 ---
 
 ## 📝 Activity Log & Progress Notes
+
+### [2026-09-21] - Phase 7 Grocery & Supermarket Vertical Pack Complete
+- **Database Schema & Domain Types** (`20260921000000_add_grocery_fields.sql` & `lib/types/grocery.ts`):
+  - Added `is_weighed`, `unit_of_measure`, `plu_code`, `tare_weight`, `pack_barcode`, `pack_quantity`, `pack_selling_price`, and `is_perishable` columns to `public.items`.
+  - Added indexes for fast PLU, pack barcode, and weighed item querying.
+  - Defined TypeScript contracts for `ScaleBarcodeResult`, `TareOption`, and `ProduceItemPreset` with pre-seeded standard produce items (Bananas 4011, Avocado 4046, Tomatoes 4087, Onions 4082, Garlic 4608, etc.).
+- **GS1 Scale Barcode Parser** (`lib/utils/scaleBarcode.ts`):
+  - Created zero-dependency parser for supermarket price-embedded and weight-embedded barcodes (GS1 prefix `20` or `02`, 12/13 digits).
+  - Automatically unpacks 5-digit PLU code and computes line total or fractional kilograms.
+- **Zero-Latency Web Audio Scanner Feedback** (`lib/utils/scanSounds.ts`):
+  - Synthesized cashier audio chimes via native Web Audio API (`playScanSuccess()` 1400Hz sine beep, `playScanError()` 220Hz double buzz, and `playWeightCaptured()` ascending chime) with zero external asset loading.
+- **Weighing Scale & Produce PLU Keypad Modal** (`ScaleProduceModal.tsx`):
+  - Interactive digital LED scale readout, simulated gross weight controls, tare deduction selector (No Tare, Plastic Bag 5g, Kraft Bag 15g, Deli Tub 25g).
+  - Fast numeric PLU keypad (0–9, ⌫, Clear) and produce search catalog.
+  - Live Net Weight and total computation: `Net Weight = Gross - Tare`.
+  - Global `F4` shortcut and terminal buttons for 1-click access.
+- **High-Speed Scanning & Multi-Pack Barcode Resolution** (`addToCart.ts`):
+  - Automatically identifies GS1 scale barcodes, matches item by PLU, and computes line items with fractional weight.
+  - Detects secondary `pack_barcode` (e.g. 6-pack or case barcode), sets unit price and pack quantity, and decrements bundled stock.
+  - Multiplier shortcut parsing: supports `5*<barcode>` and `12x<barcode>` directly in the barcode input.
+  - Distinct audio feedback triggers on every scan.
+- **Cart & Item Display Enhancements** (`TerminalCart.tsx`, `SingleItemForm.tsx`, `item.api.ts`):
+  - Quantity column formats weighed goods with 3 decimal places and unit (e.g. `1.250 kg`).
+  - Added `Scale (kg)`, `Pack of N`, and `Fresh` badges on line items.
+  - Added dedicated **Produce, Scale & Multi-Pack Configuration** section in Item Registration form.
+- **Perishable Food Clearance Markdown** (`DiscountModal.tsx`):
+  - Added 1-click `Fresh Markdown (20%)` and `Evening Clearance (50%)` discount chips for fresh produce, bakery, and deli goods.
+
 
 ### [2026-09-20] - Phase 6 Restaurant, Cafe & Dining Vertical Pack Complete
 - **Core Domain Types & State Management** (`lib/types/restaurant.ts` & `app/restaurant/stores/useRestaurantStore.ts`):
