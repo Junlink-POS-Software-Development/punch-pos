@@ -60,6 +60,15 @@ This document tracks the phased implementation of making `pos-next` a universal 
 
 ## 📝 Activity Log & Progress Notes
 
+### [2026-09-21] - Stock Management & Item Autocomplete Dropdown Refinement
+- **Decoupled Autocomplete Dropdown Suppression** (`ItemAutoComplete.tsx`):
+  - Fixed hardcoded `disableDropdown || isPharmacy` that inadvertently silenced the autocomplete dropdown in `StockForm.tsx` (Manage Stocks) and `CogsForm.tsx` (Cashout) when in Pharmacy mode.
+  - Restricted dropdown suppression strictly to components explicitly passing `disableDropdown={true}` (Sales Terminal barcode inputs).
+- **Empty-Query Inventory Browsing & Chevron Toggle** (`ItemAutoComplete.tsx`, `StockForm.tsx`, `CogsForm.tsx`):
+  - Displays top available inventory items when focusing or clicking an empty Item Name input, allowing cashiers to select items directly without typing.
+  - Added a tactile `<ChevronDown />` button to toggle the dropdown list open and closed.
+  - Added `relative z-30` stacking context and removed inner form `overflow-y-auto` to prevent popup clipping.
+
 ### [2026-09-21] - Phase 7 Grocery & Supermarket Vertical Pack Complete
 - **Database Schema & Domain Types** (`20260921000000_add_grocery_fields.sql` & `lib/types/grocery.ts`):
   - Added `is_weighed`, `unit_of_measure`, `plu_code`, `tare_weight`, `pack_barcode`, `pack_quantity`, `pack_selling_price`, and `is_perishable` columns to `public.items`.

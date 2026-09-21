@@ -5,6 +5,7 @@ import { useInventory } from "@/app/dashboard/hooks/useInventory";
 import { InventoryItem } from "@/app/inventory/components/stocks-monitor/lib/inventory.api";
 import { extractPharmacyMeta } from "@/lib/utils/pharmacyMeta";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { ChevronDown } from "lucide-react";
 
 export interface ItemAutocompleteProps {
   value: string;
@@ -21,6 +22,7 @@ export interface ItemAutocompleteProps {
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   disableDropdown?: boolean;
+  showChevron?: boolean;
 }
 
 const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
@@ -39,41 +41,48 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
       onFocus,
       inputMode,
       disableDropdown = false,
+      showChevron = false,
     },
     ref
   ) => {
     const { inventory: items } = useInventory();
     const { isPharmacy } = useBusinessMode();
-    const shouldDisableDropdown = disableDropdown || isPharmacy;
+    const shouldDisableDropdown = Boolean(disableDropdown);
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const listRef = useRef<HTMLUListElement>(null);
 
     const suggestions = useMemo(() => {
-      if (!value) return [];
-      const query = value.toLowerCase().trim();
-      return items
-        .map((item) => {
-          const meta = extractPharmacyMeta(item);
-          return {
-            ...item,
-            generic_name: meta.genericName || item.generic_name,
-            dosage: meta.dosage || item.dosage,
-            formulation: meta.formulation || item.formulation,
-            is_rx: meta.isRx !== undefined ? meta.isRx : item.is_rx,
-            brand_type: meta.brandType || item.brand_type,
-          };
-        })
+      if (!items || items.length === 0) return [];
+      const query = value ? value.toLowerCase().trim() : "";
+      
+      const mapped = items.map((item) => {
+        const meta = extractPharmacyMeta(item);
+        return {
+          ...item,
+          generic_name: meta.genericName || item.generic_name,
+          dosage: meta.dosage || item.dosage,
+          formulation: meta.formulation || item.formulation,
+          is_rx: meta.isRx !== undefined ? meta.isRx : item.is_rx,
+          brand_type: meta.brandType || item.brand_type,
+        };
+      });
+
+      if (!query) {
+        return mapped.slice(0, 20);
+      }
+
+      return mapped
         .filter((item) => {
-          const nameMatch = item.item_name.toLowerCase().includes(query);
-          const skuMatch = item.sku.toLowerCase().includes(query);
+          const nameMatch = item.item_name?.toLowerCase().includes(query);
+          const skuMatch = item.sku?.toLowerCase().includes(query);
           const genericMatch = item.generic_name ? item.generic_name.toLowerCase().includes(query) : false;
           const dosageMatch = item.dosage ? item.dosage.toLowerCase().includes(query) : false;
           const formulationMatch = item.formulation ? item.formulation.toLowerCase().includes(query) : false;
           const descMatch = item.description ? item.description.toLowerCase().includes(query) : false;
           return nameMatch || skuMatch || genericMatch || dosageMatch || formulationMatch || descMatch;
         })
-        .slice(0, 10);
+        .slice(0, 20);
     }, [items, value]);
 
     const handleSelect = (item: InventoryItem) => {
@@ -187,13 +196,13 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
 
     // Open dropdown when value changes programmatically (e.g. via virtual keyboard)
     useEffect(() => {
-      if (value && document.activeElement === innerRef.current && suggestions.length > 0) {
+      if (value && document.activeElement === innerRef.current && suggestions.length > 0 && !shouldDisableDropdown) {
         setIsOpen(true);
       }
-    }, [value, suggestions.length]);
+    }, [value, suggestions.length, shouldDisableDropdown]);
 
     return (
-      <div className="relative">
+      <div className="relative w-full">
         <input
           ref={innerRef}
           id={id || "itemName"}
@@ -202,30 +211,60 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
           placeholder={placeholder || defaultPlaceholder}
           onChange={(e) => {
             onChange(e.target.value);
-            setIsOpen(true);
-            setActiveIndex(-1);
+            if (!shouldDisableDropdown) {
+              setIsOpen(true);
+              setActiveIndex(-1);
+            }
           }}
           onBlur={() => {
             onBlur();
-            setTimeout(() => setIsOpen(false), 200);
+            setTimeout(() => setIsOpen(false), 250);
           }}
           onFocus={(e) => {
             if (onFocus) onFocus(e);
-            if (value && suggestions.length > 0) setIsOpen(true);
+            if (!shouldDisableDropdown && suggestions.length > 0) {
+              setIsOpen(true);
+            }
+          }}
+          onClick={() => {
+            if (!shouldDisableDropdown && suggestions.length > 0) {
+              setIsOpen(true);
+            }
           }}
           onKeyDown={handleInternalKeyDown} // Use our wrapper function
           disabled={disabled}
           inputMode={inputMode}
-          className={`${className} ${
+          className={`${className} ${!shouldDisableDropdown && showChevron && !disabled ? "pr-8" : ""} ${
             disabled ? "opacity-50 cursor-not-allowed text-slate-500" : ""
           } ${error ? "border-red-500" : ""}`}
           autoComplete="off"
         />
+        {!shouldDisableDropdown && showChevron && !disabled && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen((prev) => !prev);
+              innerRef.current?.focus();
+            }}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none"
+            aria-label="Toggle item list"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180 text-primary" : ""}`} />
+          </button>
+        )}
         {!shouldDisableDropdown && isOpen && suggestions.length > 0 && (
           <ul
             ref={listRef}
             className="z-50 absolute top-full left-0 bg-card/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] mt-2 border border-border/50 rounded-xl w-full max-h-72 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-200"
           >
+            {!value && items.length > 0 && (
+              <li className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 select-none bg-muted/20">
+                Available Items ({items.length})
+              </li>
+            )}
             {suggestions.map((item, index) => (
               <li
                 key={item.item_id}
@@ -321,6 +360,11 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
               </li>
             ))}
           </ul>
+        )}
+        {!shouldDisableDropdown && isOpen && Boolean(value && value.trim()) && suggestions.length === 0 && (
+          <div className="z-50 absolute top-full left-0 bg-card/95 backdrop-blur-md shadow-xl mt-2 border border-border/50 rounded-xl w-full p-3 text-xs text-muted-foreground animate-in fade-in slide-in-from-top-1 duration-150">
+            No inventory items matching &ldquo;<span className="font-semibold text-foreground">{value}</span>&rdquo;.
+          </div>
         )}
         {error && (
           <div className="absolute top-full left-0 z-10 w-full mb-4">

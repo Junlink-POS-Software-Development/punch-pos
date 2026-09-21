@@ -106,6 +106,7 @@ export const MobileFormFields = React.memo<MobileFormFieldsProps>(
                       setActiveField?.("quantity");
                     }}
                     className="pl-3 pr-10 w-full h-10 text-sm bg-background text-foreground rounded-lg border border-border focus:border-primary transition-colors focus:outline-none"
+                    showChevron={false}
                   />
                 )}
               />

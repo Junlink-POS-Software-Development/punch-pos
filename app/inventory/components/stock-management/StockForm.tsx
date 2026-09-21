@@ -131,7 +131,7 @@ export function StockForm({
       onKeyDown={handleKeyDown}
       onSubmit={handleSubmit(handleFormSubmit)}
       className={`
-        overflow-y-auto w-full
+        w-full
         grid ${gridLayoutClass} 
         gap-4 md:gap-6 
         p-6
@@ -163,7 +163,7 @@ export function StockForm({
       )}
 
       {/* Item Name */}
-      <div>
+      <div className="relative z-30">
         <label
           htmlFor="itemName"
           className="block mb-1 font-medium text-muted-foreground text-sm"
@@ -178,8 +178,10 @@ export function StockForm({
               {...field}
               disabled={!!itemToEdit}
               error={error?.message}
+              showChevron={true}
               className="w-full bg-background border border-input text-foreground rounded-md focus:border-ring focus:ring-1 focus:ring-ring"
-              onItemSelect={() => {
+              onItemSelect={(selectedItem) => {
+                field.onChange(selectedItem.item_name);
                 stockFlowRef.current?.focus();
                 try { stockFlowRef.current?.showPicker(); } catch (e) {}
               }}

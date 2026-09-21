@@ -184,7 +184,7 @@ export const CogsForm = ({ data, onChange }: CogsFormProps) => {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
                 
                 {/* Item Autocomplete Search */}
-                <div className="md:col-span-6">
+                <div className="md:col-span-6 relative z-30">
                   <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
                     Select Item / Product Name *
                   </label>
@@ -193,6 +193,7 @@ export const CogsForm = ({ data, onChange }: CogsFormProps) => {
                     value={item.item_name}
                     onChange={(val) => handleUpdateStockItem(index, { item_name: val })}
                     onBlur={() => {}}
+                    showChevron={true}
                     onItemSelect={(selected: InventoryItem) => {
                       handleUpdateStockItem(index, {
                         item_id: selected.item_id,

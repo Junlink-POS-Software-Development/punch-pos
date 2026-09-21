@@ -150,6 +150,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                           className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary transition-colors focus:outline-none"
                           inputMode={isTabletMode ? "none" : undefined}
                           disableDropdown={isPharmacy}
+                          showChevron={false}
                         />
                       </div>
                     )}
