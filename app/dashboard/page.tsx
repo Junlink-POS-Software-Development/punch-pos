@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useDashboard } from "./hooks/useDashboard";
 import { HistoricalBanner } from "./components/pos-overview/HistoricalBanner";
 import { DashboardHeader } from "./components/pos-overview/DashboardHeader";
@@ -8,6 +9,7 @@ import { VitalsGrid } from "./components/pos-overview/VitalsGrid";
 import { InventoryAlerts } from "./components/pos-overview/InventoryAlerts";
 import { CashoutModal } from "./components/pos-overview/CashoutModal";
 import { CashFlowModal } from "./components/pos-overview/CashFlowModal";
+import { FinancialReportContainer } from "./components/financial-report/FinancialReportContainer";
 
 const STORE_NAME = "Punch POS"; // Or specific store name
 
@@ -20,7 +22,6 @@ function DashboardContent() {
     isHistorical,
     stats,
     inventoryStats,
-    recentActivity,
     flipped,
     toggleFlip,
     isExpenseModalOpen,
@@ -41,11 +42,13 @@ function DashboardContent() {
     handleManualRefresh,
   } = useDashboard();
 
+  const searchParams = useSearchParams();
+  const isReportView = searchParams.get("view") === "report";
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/20 p-4 md:p-6 pb-24 font-sans text-foreground">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* HISTORICAL MODE BANNER */}
         {isHistorical && (
           <HistoricalBanner
@@ -67,26 +70,31 @@ function DashboardContent() {
           onOpenCashFlow={() => setIsCashFlowOpen(true)}
         />
 
-        {/* SECTION 1: THE VITALS */}
-        {isLoading ? (
-          <VitalsSkeleton />
+        {isReportView ? (
+          <FinancialReportContainer />
         ) : (
-          <VitalsGrid
-            stats={stats}
-            flipped={flipped}
-            toggleFlip={toggleFlip}
-            isHighRisk={isHighRisk}
-            isHistorical={isHistorical}
-            isMultiDrawer={isMultiDrawer}
-            categorySales={categorySales}
-            isFetching={isFetching}
-            lastUpdatedAt={lastUpdatedAt}
-          />
+          <>
+            {/* SECTION 1: THE VITALS */}
+            {isLoading ? (
+              <VitalsSkeleton />
+            ) : (
+              <VitalsGrid
+                stats={stats}
+                flipped={flipped}
+                toggleFlip={toggleFlip}
+                isHighRisk={isHighRisk}
+                isHistorical={isHistorical}
+                isMultiDrawer={isMultiDrawer}
+                categorySales={categorySales}
+                isFetching={isFetching}
+                lastUpdatedAt={lastUpdatedAt}
+              />
+            )}
+
+            {/* SECTION 3: INVENTORY ALERTS */}
+            <InventoryAlerts inventoryStats={inventoryStats} />
+          </>
         )}
-
-
-        {/* SECTION 3: INVENTORY ALERTS */}
-        <InventoryAlerts inventoryStats={inventoryStats} />
 
         {/* CASHOUT / EXPENSE MODAL */}
         <CashoutModal

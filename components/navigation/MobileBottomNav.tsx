@@ -3,175 +3,105 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
-  Terminal,
-  LayoutGrid,
-  Archive,
-  ArrowLeftRight,
   Menu,
   X,
-  TrendingDown,
-  Users,
-  Grid,
-  Inbox,
-  StickyNote,
-  Settings,
   ChevronRight,
-  Sparkles,
-  FolderArchive,
-  ChefHat,
+  ChevronDown,
 } from "lucide-react";
 import { getStoreInfo } from "@/app/actions/store";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { getNavItems, isShortcutActive, NavItemConfig } from "./navConfig";
+import { ContextualSubNav } from "./ContextualSubNav";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
+  const { posMode, recordSidebarInteraction } = useViewStore();
+  const isTabletMode = posMode === "tablet";
+
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [expandedDrawerItemIds, setExpandedDrawerItemIds] = useState<Record<string, boolean>>({});
   const [storeInfo, setStoreInfo] = useState<{ name: string; img: string | null }>({
     name: "",
     img: null,
   });
 
-  const fetchStoreInfo = async () => {
-    const result = await getStoreInfo();
-    if (result?.success) {
-      setStoreInfo({ name: result.storeName || "", img: result.storeImg || null });
-    }
-  };
+  // Close drawer during render on route change (recommended React pattern)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setIsMoreOpen(false);
+  }
 
   useEffect(() => {
-    fetchStoreInfo();
-    const handleUpdate = () => fetchStoreInfo();
-    window.addEventListener("store-updated", handleUpdate);
-    return () => window.removeEventListener("store-updated", handleUpdate);
+    let isMounted = true;
+    const loadStore = async () => {
+      const result = await getStoreInfo();
+      if (isMounted && result?.success) {
+        setStoreInfo({ name: result.storeName || "", img: result.storeImg || null });
+      }
+    };
+    void loadStore();
+    window.addEventListener("store-updated", loadStore);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("store-updated", loadStore);
+    };
   }, []);
 
-  // Close drawer on navigation
-  useEffect(() => {
-    setIsMoreOpen(false);
-  }, [pathname]);
+  const navItems = getNavItems(showKitchenKds);
 
-  // Primary 4 tabs on the bottom bar
-  const primaryTabs = [
-    {
-      id: "terminal",
-      label: "Terminal",
-      href: "/",
-      icon: Terminal,
-      isActive: pathname === "/",
-    },
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: LayoutGrid,
-      isActive: pathname.startsWith("/dashboard"),
-    },
-    {
-      id: "inventory",
-      label: "Inventory",
-      href: "/inventory",
-      icon: Archive,
-      isActive: pathname.startsWith("/inventory"),
-    },
-    {
-      id: "transactions",
-      label: "Transactions",
-      href: "/transactions",
-      icon: ArrowLeftRight,
-      isActive: pathname.startsWith("/transactions"),
-    },
-  ];
+  // Primary 4 tabs on the bottom bar: terminal, dashboard, inventory, transactions
+  const primaryTabIds = ["terminal", "dashboard", "inventory", "transactions"];
+  const primaryTabs = primaryTabIds
+    .map((id) => navItems.find((item) => item.id === id))
+    .filter(Boolean) as NavItemConfig[];
 
   // Secondary items accessed through "More"
-  const secondaryItems = [
-    ...(showKitchenKds
-      ? [
-          {
-            id: "kitchen",
-            label: "Kitchen KDS",
-            desc: "Active orders & cook line",
-            href: "/kitchen",
-            icon: ChefHat,
-          },
-        ]
-      : []),
-    {
-      id: "cashout",
-      label: "Cash Out",
-      desc: "Record expenses & cashflow",
-      href: "/cashout",
-      icon: TrendingDown,
-    },
-    {
-      id: "customers",
-      label: "Customers",
-      desc: "Manage customer directory",
-      href: "/customers",
-      icon: Users,
-    },
-    {
-      id: "google-workspace",
-      label: "Workspace",
-      desc: "Gmail, Drive & Calendar",
-      href: "/google-workspace",
-      icon: Grid,
-    },
-    {
-      id: "inbox",
-      label: "Inbox",
-      desc: "Messages and alerts",
-      href: "/inbox",
-      icon: Inbox,
-      hasNotification: true,
-    },
-    {
-      id: "notes",
-      label: "Notes & Tasks",
-      desc: "Quick memos and checklist",
-      href: "/notes",
-      icon: StickyNote,
-      hasNotification: true,
-    },
-    {
-      id: "file-manager",
-      label: "File Manager",
-      desc: "Organize images & media",
-      href: "/file-manager",
-      icon: FolderArchive,
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      desc: "Store profile & preferences",
-      href: "/settings",
-      icon: Settings,
-    },
-  ];
+  const secondaryItems = navItems.filter(
+    (item) => !primaryTabIds.includes(item.id)
+  );
 
   const isMoreActive = secondaryItems.some((item) =>
     pathname.startsWith(item.href)
   );
 
+  const toggleDrawerItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setExpandedDrawerItemIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Visibility class: If in tablet touch mode, show on all screens; otherwise show on < lg only
+  const visibilityClass = isTabletMode ? "" : "lg:hidden";
+
   return (
     <>
+      {/* Contextual Sub-Navigation Bar above Bottom Bar */}
+      <ContextualSubNav />
+
       {/* Slide-up "More" Drawer Backdrop */}
       {isMoreOpen && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-opacity duration-200 lg:hidden"
+          className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-opacity duration-200 ${visibilityClass}`}
           onClick={() => setIsMoreOpen(false)}
         />
       )}
 
       {/* Slide-up "More" Drawer */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border bg-card p-5 shadow-2xl transition-transform duration-300 ease-out lg:hidden max-h-[85vh] overflow-y-auto ${
+        className={`fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border bg-card p-5 shadow-2xl transition-transform duration-300 ease-out max-h-[85vh] overflow-y-auto ${visibilityClass} ${
           isMoreOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
         }`}
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {/* Drag handle */}
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
@@ -200,98 +130,172 @@ export function MobileBottomNav() {
               <h3 className="text-base font-bold text-foreground">
                 {storeInfo.name || "PUNCH POS"}
               </h3>
-              <p className="text-xs text-muted-foreground">More features & tools</p>
+              <p className="text-xs text-muted-foreground">More features & sub-sections</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => setIsMoreOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            aria-label="Close menu"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Navigation Grid / List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {/* Navigation Grid / List with Expandable Sub-Sections */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {secondaryItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
+            const hasShortcuts = Boolean(item.shortcuts && item.shortcuts.length > 0);
+            const isItemExpanded = Boolean(expandedDrawerItemIds[item.id]);
+
             return (
-              <Link
+              <div
                 key={item.id}
-                href={item.href}
-                onClick={() => setIsMoreOpen(false)}
-                className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
+                className={`flex flex-col rounded-xl border transition-colors ${
                   isActive
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "hover:bg-muted/60 text-foreground border border-transparent"
+                    ? "bg-primary/5 border-primary/20"
+                    : "bg-muted/30 border-border/60 hover:bg-muted/50"
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
-                      isActive
-                        ? "bg-primary text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+                <div className="flex items-center justify-between p-3">
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsMoreOpen(false)}
+                    className="flex items-center gap-3 min-w-0 flex-1"
                   >
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-semibold text-sm flex items-center gap-1.5 truncate">
-                      {item.label}
-                      {item.hasNotification && (
-                        <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
-                      )}
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
+                        isActive
+                          ? "bg-primary text-white shadow-sm"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <item.Icon className="h-5 w-5" />
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {item.desc}
+                    <div className="truncate">
+                      <div className="font-semibold text-sm flex items-center gap-1.5 truncate text-foreground">
+                        {item.text}
+                        {item.hasNotification && (
+                          <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {item.desc || (hasShortcuts ? `${item.shortcuts?.length} sections` : item.text)}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
+
+                  {hasShortcuts ? (
+                    <button
+                      type="button"
+                      onClick={(e) => toggleDrawerItem(item.id, e)}
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors ml-2"
+                      title={isItemExpanded ? "Hide sub-sections" : "Show sub-sections"}
+                    >
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          isItemExpanded ? "rotate-180 text-primary" : ""
+                        }`}
+                      />
+                    </button>
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                  )}
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
-              </Link>
+
+                {/* Sub-sections list in More drawer */}
+                {hasShortcuts && isItemExpanded && (
+                  <div className="border-t border-border/50 px-3 py-2 bg-background/60 rounded-b-xl flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 pt-1">
+                      Sub Sections
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {item.shortcuts?.map((shortcut, idx) => {
+                        const active = isShortcutActive(shortcut, pathname, searchParams);
+                        return (
+                          <Link
+                            key={idx}
+                            href={shortcut.href}
+                            target={shortcut.isExternal ? "_blank" : undefined}
+                            rel={shortcut.isExternal ? "noopener noreferrer" : undefined}
+                            onClick={() => setIsMoreOpen(false)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              active
+                                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                                : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {shortcut.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile/Tablet Bottom Navigation Bar */}
       <nav
-        onClick={() => useViewStore.getState().recordSidebarInteraction()}
-        onTouchStart={() => useViewStore.getState().recordSidebarInteraction()}
-        className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border bg-card/95 px-2 backdrop-blur-md shadow-lg lg:hidden"
+        onClick={recordSidebarInteraction}
+        onTouchStart={recordSidebarInteraction}
+        className={`fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border bg-card/95 px-2 backdrop-blur-md shadow-lg ${visibilityClass}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {primaryTabs.map((tab) => (
-          <Link
-            key={tab.id}
-            href={tab.href}
-            className={`flex flex-1 flex-col items-center justify-center py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 ${
-              tab.isActive
-                ? "text-primary font-bold"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                tab.isActive ? "bg-primary/15 scale-110" : ""
+        {primaryTabs.map((tab) => {
+          const isActive =
+            tab.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(tab.href) && tab.href !== "/";
+          const hasShortcuts = Boolean(tab.shortcuts && tab.shortcuts.length > 0);
+
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              className={`flex flex-1 flex-col items-center justify-center py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 relative ${
+                isActive
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <tab.icon className="h-5 w-5" />
-            </div>
-            <span className="mt-0.5 tracking-tight truncate max-w-[64px]">
-              {tab.label}
-            </span>
-          </Link>
-        ))}
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                  isActive ? "bg-primary/15 scale-110" : ""
+                }`}
+              >
+                <tab.Icon className="h-5 w-5" />
+              </div>
+              <span className="mt-0.5 tracking-tight truncate max-w-[64px]">
+                {tab.text}
+              </span>
+
+              {/* Dot indicator if tab has sub-sections */}
+              {hasShortcuts && (
+                <span
+                  className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
+                    isActive ? "bg-primary" : "bg-muted-foreground/40"
+                  }`}
+                />
+              )}
+            </Link>
+          );
+        })}
 
         {/* More Tab */}
         <button
           type="button"
-          onClick={() => setIsMoreOpen(!isMoreOpen)}
-          className={`flex flex-1 flex-col items-center justify-center py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 ${
+          onClick={() => {
+            recordSidebarInteraction();
+            setIsMoreOpen(!isMoreOpen);
+          }}
+          className={`flex flex-1 flex-col items-center justify-center py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 cursor-pointer ${
             isMoreActive || isMoreOpen
               ? "text-primary font-bold"
               : "text-muted-foreground hover:text-foreground"

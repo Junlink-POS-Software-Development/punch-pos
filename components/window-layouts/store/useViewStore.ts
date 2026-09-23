@@ -21,6 +21,9 @@ interface ViewState {
   setAutoFullscreenEnabled: (enabled: boolean) => void;
   setAutoFullscreenMinutes: (minutes: number) => void;
   recordSidebarInteraction: () => void;
+  isSidebarCollapsed: boolean;
+  setSidebarCollapsed: (isSidebarCollapsed: boolean) => void;
+  toggleSidebar: () => void;
   setViewState: (viewState: number | ((prev: number) => number)) => void;
   setIsSplit: (isSplit: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -35,6 +38,9 @@ export const useViewStore = create<ViewState>()(
       autoFullscreenEnabled: true,
       autoFullscreenMinutes: 2, // 2 minutes default
       lastSidebarInteraction: Date.now(),
+      isSidebarCollapsed: false,
+      setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+      toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
       setPosMode: (mode) => set({ posMode: mode }),
       cyclePosMode: () =>
         set((state) => {
@@ -75,6 +81,7 @@ export const useViewStore = create<ViewState>()(
         posMode: state.posMode,
         autoFullscreenEnabled: state.autoFullscreenEnabled,
         autoFullscreenMinutes: state.autoFullscreenMinutes,
+        isSidebarCollapsed: state.isSidebarCollapsed,
       }),
     }
   )

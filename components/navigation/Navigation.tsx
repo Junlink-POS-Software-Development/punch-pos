@@ -1,57 +1,50 @@
 // components/navigation/Navigation.tsx
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Archive,
-  ArrowLeftRight,
-  Inbox,
-  LayoutGrid,
-  Settings,
-  StickyNote,
-  TrendingDown,
-  Users,
   ChevronRight,
-  MoreHorizontal,
-  Grid,
-  Terminal,
   ChevronLeft,
-  Menu,
-  X,
-  Store,
-  FolderArchive,
-  ChefHat,
+  ChevronDown,
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useViewStore } from "../window-layouts/store/useViewStore";
 import { getStoreInfo } from "@/app/actions/store";
 import { DEFAULT_PAYMENT_PAGE_SIZE, formatPaymentRecord } from "@/app/transactions/lib/paymentCache";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
-
-// Mock data for the specific page shortcuts/dropdowns
-const MOCK_SHORTCUTS = [
-  { label: "Quick View", href: "#" },
-  { label: "Export Data", href: "#" },
-  { label: "Manage Settings", href: "#" },
-];
+import { getNavItems, getActiveNavItem, isShortcutActive } from "./navConfig";
 
 interface NavigationProps {
-  variant?: "grid" | "sidebar" | "mobile";
+  variant?: "grid" | "sidebar";
 }
 
 const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const { setViewState, posMode, recordSidebarInteraction } = useViewStore();
-  const isTabletMode = posMode === 'tablet';
+  const { isSidebarCollapsed, toggleSidebar, posMode, recordSidebarInteraction } = useViewStore();
+  const isTabletMode = posMode === "tablet";
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
 
-  const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const itemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Track which sub-sections are open in expanded mode
+  const [openSectionIds, setOpenSectionIds] = useState<Record<string, boolean>>({});
+  // Track which item is hovered in collapsed mode for the floating flyout
+  const [flyoutItemId, setFlyoutItemId] = useState<string | null>(null);
+  const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const navItems = React.useMemo(() => getNavItems(showKitchenKds), [showKitchenKds]);
+
+  // Auto-expand the currently active section on route change
+  useEffect(() => {
+    const active = getActiveNavItem(pathname, navItems);
+    if (active && active.shortcuts && active.shortcuts.length > 0) {
+      setOpenSectionIds((prev) => ({ ...prev, [active.id]: true }));
+    }
+  }, [pathname, navItems]);
 
   const prewarmPayments = () => {
     queryClient.prefetchInfiniteQuery({
@@ -72,47 +65,22 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
     }).catch(() => {});
   };
 
-  const handleSidebarEnter = () => {
-    recordSidebarInteraction();
-    if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
-    setIsCollapsed(false);
-  };
-
-  const handleSidebarLeave = () => {
-    sidebarTimeoutRef.current = setTimeout(() => {
-      setIsCollapsed(true);
-      setHoveredItemId(null);
-    }, 300);
-  };
-
-  const handleItemEnter = (id: string) => {
-    recordSidebarInteraction();
+  // Flyout handlers for collapsed mode only
+  const handleFlyoutEnter = (id: string) => {
+    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+    if (isSidebarCollapsed) {
+      setFlyoutItemId(id);
+    }
     if (id === "transactions") {
       prewarmPayments();
     }
-    if (isTabletMode) return;
-    if (itemTimeoutRef.current) clearTimeout(itemTimeoutRef.current);
-    
-    // If no item is currently hovered, open immediately
-    if (!hoveredItemId) {
-      setHoveredItemId(id);
-      return;
-    }
-
-    // If another item is hovered, wait 200ms (dwell delay) before switching
-    if (hoveredItemId !== id) {
-      itemTimeoutRef.current = setTimeout(() => {
-        setHoveredItemId(id);
-      }, 200);
-    }
   };
 
-  const handleItemLeave = () => {
-    if (isTabletMode) return;
-    if (itemTimeoutRef.current) clearTimeout(itemTimeoutRef.current);
-    itemTimeoutRef.current = setTimeout(() => {
-      setHoveredItemId(null);
-    }, 500);
+  const handleFlyoutLeave = () => {
+    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+    flyoutTimeoutRef.current = setTimeout(() => {
+      setFlyoutItemId(null);
+    }, 150);
   };
 
   // Store logo/name for sidebar
@@ -129,150 +97,15 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
     if (variant === "sidebar") {
       fetchStoreInfo();
 
-      // Listen for store updates to sync across components
       const handleUpdate = () => fetchStoreInfo();
       window.addEventListener("store-updated", handleUpdate);
       return () => window.removeEventListener("store-updated", handleUpdate);
     }
   }, [variant]);
 
-  const nav = [
-    {
-      id: "terminal", // Added Terminal for Sidebar
-      text: "Terminal",
-      Icon: Terminal,
-      href: "/",
-      shortcuts: [],
-      hiddenInGrid: true, // Hide from the main dashboard grid
-    },
-    {
-      id: "dashboard",
-      text: "Dashboard",
-      Icon: LayoutGrid,
-      href: "/dashboard",
-      shortcuts: [
-        { label: "Overview", href: "/dashboard?view=grid" },
-        { label: "Financial Report", href: "/dashboard?view=report" },
-      ],
-    },
-    {
-      id: "cashout",
-      text: "Cash Out",
-      Icon: TrendingDown,
-      href: "/cashout",
-      shortcuts: [
-        { label: "Record Cashout", href: "/cashout?view=cashout" },
-        { label: "Expenses Monitor", href: "/cashout?view=monitor" },
-        { label: "Cash Flow", href: "/cashout?view=cashflow" },
-      ],
-    },
-    {
-      id: "inventory",
-      text: "Inventory",
-      Icon: Archive,
-      href: "/inventory",
-      shortcuts: [
-        { label: "Register Item", href: "/inventory?view=register" },
-        { label: "Manage Stocks", href: "/inventory?view=manage" },
-        { label: "Stocks Monitor", href: "/inventory?view=monitor" },
-      ],
-    },
-    {
-      id: "transactions",
-      text: "Transactions",
-      Icon: ArrowLeftRight,
-      href: "/transactions",
-      shortcuts: [
-        { label: "Transaction History", href: "/transactions?view=history" },
-        { label: "Payments History", href: "/transactions?view=payments" },
-      ],
-    },
-    {
-      id: "settings",
-      text: "Settings",
-      Icon: Settings,
-      href: "/settings",
-      shortcuts: [
-        { label: "Profile", href: "/settings?tab=profile" },
-        { label: "Store", href: "/settings?tab=store" },
-        { label: "Preferences", href: "/settings?tab=preferences" },
-        { label: "Subscription", href: "/settings?tab=subscription" },
-        { label: "Audit Logs", href: "/settings?tab=audit" },
-      ],
-    },
-    {
-      id: "google-workspace",
-      text: "Workspace",
-      Icon: Grid,
-      href: "/google-workspace",
-      shortcuts: [
-        { label: "Gmail", href: "https://mail.google.com" },
-        { label: "Drive", href: "https://drive.google.com" },
-        { label: "Calendar", href: "https://calendar.google.com" },
-      ],
-    },
-    {
-      id: "customers",
-      text: "Customers",
-      Icon: Users,
-      href: "/customers",
-      shortcuts: [
-        { label: "List", href: "/customers" },
-        { label: "Groups", href: "/customers" },
-        { label: "Feedback", href: "/customers" },
-      ],
-    },
-    ...(showKitchenKds
-      ? [
-          {
-            id: "kitchen",
-            text: "Kitchen KDS",
-            Icon: ChefHat,
-            href: "/kitchen",
-            shortcuts: [
-              { label: "Active Orders", href: "/kitchen" },
-            ],
-          },
-        ]
-      : []),
-    {
-      id: "inbox",
-      text: "Inbox",
-      Icon: Inbox,
-      href: "/inbox",
-      hasNotification: true,
-      shortcuts: [
-        { label: "Unread", href: "/inbox" },
-        { label: "Archived", href: "/inbox" },
-        { label: "Compose", href: "/inbox" },
-      ],
-    },
-    {
-      id: "notes",
-      text: "Notes",
-      Icon: StickyNote,
-      href: "/notes",
-      hasNotification: true,
-      shortcuts: [
-        { label: "New Note", href: "/notes" },
-        { label: "To-Do", href: "/notes" },
-        { label: "Shared", href: "/notes" },
-      ],
-    },
-    {
-      id: "file-manager",
-      text: "File Manager",
-      Icon: FolderArchive,
-      href: "/file-manager",
-      shortcuts: [
-        { label: "Public (Unsorted)", href: "/file-manager" },
-      ],
-    },
-  ];
-
   // Filter items for Grid view (exclude Terminal)
   const displayItems =
-    variant === "grid" ? nav.filter((item) => !item.hiddenInGrid) : nav;
+    variant === "grid" ? navItems.filter((item) => !item.hiddenInGrid) : navItems;
 
   if (variant === "grid") {
     return (
@@ -298,7 +131,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
               )}
 
               <item.Icon className="mb-3 w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
-              <span className="font-medium text-base tracking-wide">
+              <span className="font-medium text-base tracking-wide text-center">
                 {item.text}
               </span>
             </Link>
@@ -309,180 +142,271 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   }
 
   // --- SIDEBAR VARIANT (Desktop) ---
-  const isFullyExpanded = !isCollapsed;
+  const isExpanded = !isSidebarCollapsed;
+
+  const toggleSection = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    recordSidebarInteraction();
+    setOpenSectionIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   return (
     <>
       <aside
-        onMouseEnter={handleSidebarEnter}
-        onMouseLeave={handleSidebarLeave}
         onMouseMove={recordSidebarInteraction}
         onClick={recordSidebarInteraction}
         onTouchStart={recordSidebarInteraction}
         className={`
-          fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl hidden lg:flex flex-col
-          ${isTabletMode ? "-translate-x-full" : (isCollapsed ? "lg:w-20" : "lg:w-64")}
+          fixed left-0 top-0 z-[60] h-full bg-background border-r border-border transition-all duration-300 ease-in-out shadow-xl hidden lg:flex flex-col select-none
+          ${isTabletMode ? "-translate-x-full" : (isSidebarCollapsed ? "lg:w-20" : "lg:w-64")}
         `}
       >
-        {/* Toggle Button - Optional/Hidden in hover mode (Desktop only) */}
+        {/* Toggle Button - Desktop only, never overwritten by hover */}
         {!isTabletMode && (
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="top-4 -right-3 z-50 absolute bg-background border border-border shadow-md p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors hidden lg:block"
+            type="button"
+            onClick={() => {
+              recordSidebarInteraction();
+              toggleSidebar();
+            }}
+            className="top-4 -right-3.5 z-50 absolute flex items-center justify-center bg-background border border-border shadow-md p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex cursor-pointer"
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
+            {isSidebarCollapsed ? (
+              <ChevronRight className="w-3.5 h-3.5" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             )}
           </button>
         )}
 
-      {/* Header / Logo Area */}
-      <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden">
-        <div className="flex items-center gap-3 shrink-0">
-          {storeInfo.img ? (
-            <div className="w-10 h-10 min-w-[40px] rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center">
-              <img
-                src={storeInfo.img}
-                alt={storeInfo.name || "Store Logo"}
-                className="w-full h-full object-cover"
+        {/* Header / Logo Area */}
+        <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
+            {storeInfo.img ? (
+              <div className="w-10 h-10 min-w-[40px] rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center">
+                <img
+                  src={storeInfo.img}
+                  alt={storeInfo.name || "Store Logo"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <Image
+                src="/punch-logo.png"
+                alt="PUNCH POS Logo"
+                width={40}
+                height={40}
+                className="object-contain min-w-[40px]"
               />
-            </div>
-          ) : (
-            <Image
-              src="/punch-logo.png"
-              alt="PUNCH POS Logo"
-              width={40}
-              height={40}
-              className="object-contain min-w-[40px]"
-            />
-          )}
-          {!isFullyExpanded ? (
-            <div className="w-10 h-10 min-w-[40px] flex items-center justify-center">
-              {/* Collapsed Logo (Empty placeholder so width match) */}
-            </div>
-          ) : null}
-          {isFullyExpanded && (
-            <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
-              <h1 className="text-base font-bold tracking-tight text-foreground leading-none truncate max-w-[160px]">
-                {storeInfo.name || (<>PUNCH<span className="font-light text-muted-foreground ml-1">POS</span></>)}
-              </h1>
-              {!storeInfo.name && (
-                <p className="text-[8px] text-muted-foreground/70 tracking-wide whitespace-nowrap">
-                  by JunLink Software
-                </p>
-              )}
-            </div>
-          )}
+            )}
+            
+            {isExpanded && (
+              <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
+                <h1 className="text-base font-bold tracking-tight text-foreground leading-none truncate max-w-[160px]">
+                  {storeInfo.name || (<>PUNCH<span className="font-light text-muted-foreground ml-1">POS</span></>)}
+                </h1>
+                {!storeInfo.name && (
+                  <p className="text-[8px] text-muted-foreground/70 tracking-wide whitespace-nowrap mt-0.5">
+                    by JunLink Software
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Nav Items */}
-      <div className="flex-1 space-y-2 overflow-y-auto py-4 px-3 custom-scrollbar">
-        {displayItems.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname?.startsWith(item.href) && item.href !== "/";
+        {/* Nav Items */}
+        <div className="flex-1 space-y-1.5 overflow-y-auto py-3 px-3 custom-scrollbar">
+          {displayItems.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname?.startsWith(item.href) && item.href !== "/";
 
-          const hasShortcuts = item.shortcuts && item.shortcuts.length > 0;
-          const isExpandable = ["inventory", "transactions", "settings"].includes(item.id);
+            const hasShortcuts = Boolean(item.shortcuts && item.shortcuts.length > 0);
+            const isOpen = Boolean(openSectionIds[item.id]);
+            const isFlyoutOpen = isSidebarCollapsed && flyoutItemId === item.id;
 
-          return (
-            <div 
-              key={item.id} 
-              className="group/nav-item flex flex-col gap-1"
-              onMouseEnter={() => handleItemEnter(item.id)}
-              onMouseLeave={handleItemLeave}
-            >
-              <Link
-                href={item.href}
-                onClick={(e) => {
-                  if (isTabletMode && isExpandable) {
-                    e.preventDefault();
-                    setHoveredItemId(hoveredItemId === item.id ? null : item.id);
-                  }
-                }}
-                className={`
-                  flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
-                  ${
-                    isActive
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                  }
-                  ${!isFullyExpanded ? "justify-center" : ""}
-                  /* Use blue accent (primary) when expanded and hovered for specific items */
-                  ${isFullyExpanded && isExpandable && (hoveredItemId === item.id) ? "bg-primary text-white" : ""}
-                `}
+            return (
+              <div 
+                key={item.id} 
+                className="relative flex flex-col gap-0.5"
+                onMouseEnter={() => handleFlyoutEnter(item.id)}
+                onMouseLeave={handleFlyoutLeave}
               >
-                <div className="relative">
-                  <item.Icon
+                <div className="flex items-center w-full">
+                  <Link
+                    href={item.href}
+                    onClick={(e) => {
+                      recordSidebarInteraction();
+                      // If expanded and item has shortcuts, ensure section is opened
+                      if (isExpanded && hasShortcuts) {
+                        if (isActive) {
+                          // Already on section, toggle accordion
+                          toggleSection(item.id, e);
+                        } else {
+                          // Navigating to section, ensure it's open
+                          setOpenSectionIds((prev) => ({ ...prev, [item.id]: true }));
+                        }
+                      }
+                    }}
                     className={`
-                      w-6 h-6 transition-transform duration-300
-                      ${isActive ? "scale-110" : "group-hover/nav-item:scale-110"}
+                      flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 flex-1 min-w-0
+                      ${
+                        isActive
+                          ? "bg-primary/10 text-primary border border-primary/20 font-semibold"
+                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-transparent"
+                      }
+                      ${!isExpanded ? "justify-center" : ""}
                     `}
-                  />
-                  {item.hasNotification && (
-                    <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+                  >
+                    <div className="relative shrink-0">
+                      <item.Icon
+                        className={`
+                          w-5 h-5 transition-transform duration-200
+                          ${isActive ? "scale-105" : ""}
+                        `}
+                      />
+                      {item.hasNotification && (
+                        <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+                      )}
+                    </div>
+
+                    {isExpanded && (
+                      <span className="text-sm font-medium tracking-tight truncate flex-1">
+                        {item.text}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Explicit chevron button when expanded for instant accordion toggle */}
+                  {isExpanded && hasShortcuts && (
+                    <button
+                      type="button"
+                      onClick={(e) => toggleSection(item.id, e)}
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors ml-1"
+                      title={isOpen ? "Collapse sub-sections" : "Expand sub-sections"}
+                      aria-label={isOpen ? "Collapse sub-sections" : "Expand sub-sections"}
+                    >
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isOpen ? "rotate-180 text-primary" : ""
+                        }`}
+                      />
+                    </button>
                   )}
                 </div>
 
-                {isFullyExpanded && (
-                  <span className="font-semibold text-base tracking-wide whitespace-nowrap">
-                    {item.text}
-                  </span>
-                )}
-
-                {/* Tooltip for collapsed state */}
-                {!isFullyExpanded && (
-                  <div className="left-full z-50 absolute ml-4 bg-popover px-3 py-1.5 border border-border rounded-md text-popover-foreground text-xs whitespace-nowrap opacity-0 group-hover/nav-item:opacity-100 pointer-events-none transition-opacity">
-                    {item.text}
-                  </div>
-                )}
-              </Link>
-
-              {/* Sub-items list - smoother slide-down reveal using CSS grid row transition */}
-              {isFullyExpanded && isExpandable && hasShortcuts && (
-                <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${hoveredItemId === item.id ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                  <div className="overflow-hidden">
-                    <div className="flex flex-col ml-6 pl-4 border-l border-border/50 py-1 space-y-0.5">
-                      {item.shortcuts.map((shortcut, idx) => {
-                        const isShortcutActive = pathname === shortcut.href;
-                        const isVisible = hoveredItemId === item.id;
-                        return (
-                          <Link
-                            key={idx}
-                            href={shortcut.href}
-                            className={`
-                              py-2 px-3 rounded-lg text-sm transition-all duration-200
-                              ${isShortcutActive 
-                                ? "text-primary font-semibold bg-primary/10" 
-                                : "text-muted-foreground hover:text-primary hover:bg-primary/5"}
-                              /* Staggered-like entry effect */
-                              ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-[-10px]"}
-                              transition-all duration-300
-                            `}
-                            style={{ transitionDelay: isVisible ? `${idx * 50}ms` : "0ms" }}
-                          >
-                            {shortcut.label}
-                          </Link>
-                        )
-                      })}
+                {/* Sub-items list - Expand on CLICK only, no hover shifting */}
+                {isExpanded && hasShortcuts && (
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="flex flex-col ml-5 pl-3 border-l border-border/60 py-1 space-y-0.5">
+                        {item.shortcuts?.map((shortcut, idx) => {
+                          const isShortcutActiveState = isShortcutActive(
+                            shortcut,
+                            pathname,
+                            searchParams
+                          );
+                          return (
+                            <Link
+                              key={idx}
+                              href={shortcut.href}
+                              target={shortcut.isExternal ? "_blank" : undefined}
+                              rel={shortcut.isExternal ? "noopener noreferrer" : undefined}
+                              onClick={recordSidebarInteraction}
+                              className={`
+                                py-1.5 px-2.5 rounded-lg text-xs transition-colors duration-150 truncate
+                                ${
+                                  isShortcutActiveState
+                                    ? "text-primary font-semibold bg-primary/10"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                }
+                              `}
+                            >
+                              {shortcut.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                )}
 
-      {/* Footer / User (Optional) */}
-      <div className="p-4 border-t border-border">
-          {/* Could put user profile here if not in top header */}
-      </div>
-    </aside>
+                {/* Floating Popover / Flyout for Collapsed Mode (Zero list shifting!) */}
+                {isFlyoutOpen && (
+                  <div
+                    onMouseEnter={() => handleFlyoutEnter(item.id)}
+                    onMouseLeave={handleFlyoutLeave}
+                    className="absolute left-full top-0 ml-3 z-50 min-w-[210px] bg-card border border-border rounded-xl shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="flex items-center gap-2 px-2.5 py-2 border-b border-border/60 mb-1">
+                      <item.Icon className="w-4 h-4 text-primary shrink-0" />
+                      <div className="font-semibold text-xs text-foreground truncate">
+                        {item.text}
+                      </div>
+                    </div>
+
+                    {hasShortcuts ? (
+                      <div className="flex flex-col space-y-0.5">
+                        {item.shortcuts?.map((shortcut, idx) => {
+                          const active = isShortcutActive(shortcut, pathname, searchParams);
+                          return (
+                            <Link
+                              key={idx}
+                              href={shortcut.href}
+                              target={shortcut.isExternal ? "_blank" : undefined}
+                              rel={shortcut.isExternal ? "noopener noreferrer" : undefined}
+                              onClick={() => {
+                                recordSidebarInteraction();
+                                setFlyoutItemId(null);
+                              }}
+                              className={`
+                                py-1.5 px-2.5 rounded-lg text-xs transition-colors truncate
+                                ${
+                                  active
+                                    ? "bg-primary text-primary-foreground font-semibold"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                }
+                              `}
+                            >
+                              {shortcut.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="px-2.5 py-1 text-[11px] text-muted-foreground">
+                        {item.desc || item.text}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 border-t border-border shrink-0 text-center">
+          {isExpanded ? (
+            <p className="text-[10px] text-muted-foreground tracking-tight">
+              PUNCH POS System
+            </p>
+          ) : (
+            <span className="text-[9px] text-muted-foreground font-mono">v2</span>
+          )}
+        </div>
+      </aside>
     </>
   );
 });

@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useMediaQuery } from "../../app/hooks/useMediaQuery";
 import { useViewStore } from "./store/useViewStore";
 import { Navigation } from "../navigation/Navigation";
 import { MobileBottomNav } from "../navigation/MobileBottomNav";
@@ -39,19 +38,18 @@ export function MainWindow({
 }) {
   const pathname = usePathname();
   const { 
-    viewState, 
     posMode, 
     isFullscreen, 
     setIsFullscreen,
     autoFullscreenEnabled,
     autoFullscreenMinutes,
-    lastSidebarInteraction,
-    recordSidebarInteraction 
+    recordSidebarInteraction,
+    isSidebarCollapsed,
   } = useViewStore();
   const isTabletMode = posMode === 'tablet';
 
   // Auth State
-  const { user, signOut } = useAuthStore();
+  const { signOut } = useAuthStore();
   const [authModalState, setAuthModalState] = useState<AuthModalState>("hidden");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showAutoFullscreenToast, setShowAutoFullscreenToast] = useState(false);
@@ -121,17 +119,16 @@ export function MainWindow({
 
   // --- MAIN LAYOUT ---
   return (
-    <div className={`flex bg-background h-screen overflow-hidden text-foreground font-lexend ${isTabletMode || isFullscreen ? "" : "lg:pl-20"}`}>
-      {/* Sidebar - hidden in fullscreen and hidden on mobile (< lg) */}
-      {!isFullscreen && (
-        <div
-          onMouseEnter={recordSidebarInteraction}
-          onMouseMove={recordSidebarInteraction}
-          onClick={recordSidebarInteraction}
-          onTouchStart={recordSidebarInteraction}
-        >
-          <Navigation variant="sidebar" />
-        </div>
+    <div className={`flex bg-background h-screen overflow-hidden text-foreground font-lexend transition-all duration-300 ${
+      isTabletMode || isFullscreen
+        ? ""
+        : isSidebarCollapsed
+        ? "lg:pl-20"
+        : "lg:pl-64"
+    }`}>
+      {/* Sidebar - hidden in fullscreen and hidden in tablet mode or on mobile (< lg) */}
+      {!isFullscreen && !isTabletMode && (
+        <Navigation variant="sidebar" />
       )}
 
       {/* Main Content */}
@@ -146,12 +143,24 @@ export function MainWindow({
           </>
         )}
         
-        <main className={`flex-1 flex flex-col ${isTerminal ? "overflow-hidden" : "overflow-y-auto"} ${isFullscreen ? "p-2" : `p-2 pt-0 ${isTerminal ? "pb-16 lg:pb-0" : "pb-20 lg:pb-0"}`}`}>
+        <main className={`flex-1 flex flex-col ${isTerminal ? "overflow-hidden" : "overflow-y-auto"} ${
+          isFullscreen
+            ? "p-2"
+            : `p-2 pt-0 ${
+                isTerminal
+                  ? isTabletMode
+                    ? "pb-16"
+                    : "pb-16 lg:pb-0"
+                  : isTabletMode
+                  ? "pb-28"
+                  : "pb-28 lg:pb-0"
+              }`
+        }`}>
             {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (Hidden in fullscreen & desktop) */}
+      {/* Mobile/Tablet Bottom Navigation Bar (Hidden in fullscreen) */}
       {!isFullscreen && <MobileBottomNav />}
 
       {/* Floating Exit Fullscreen Button */}
