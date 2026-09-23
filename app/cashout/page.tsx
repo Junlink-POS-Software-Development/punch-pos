@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { DollarSign, Filter, Wallet } from 'lucide-react';
 import { CashOutTable } from "./components/cashout-table/CashOutTable";
 import { getColumns } from './components/cashout-table/columns';
@@ -21,11 +20,9 @@ const CashOutModal = dynamic_next(() => import('./components/cashout-modal/CashO
 });
 
 function CashoutContent() {
-  const searchParams = useSearchParams();
-  const viewParam = searchParams.get("view");
   const [isMounted, setIsMounted] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(viewParam === "cashout");
-  const [isFlipped, setIsFlipped] = useState(viewParam === "cashflow");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CashoutRecord | null>(null);
   const { dateRange, setDateRange } = useFilterStore();
 

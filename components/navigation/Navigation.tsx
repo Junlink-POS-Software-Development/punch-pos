@@ -25,7 +25,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { isSidebarCollapsed, toggleSidebar, posMode, recordSidebarInteraction } = useViewStore();
+  const { isSidebarCollapsed, setSidebarCollapsed, toggleSidebar, posMode, recordSidebarInteraction } = useViewStore();
   const isTabletMode = posMode === "tablet";
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
@@ -35,8 +35,39 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   // Track which item is hovered in collapsed mode for the floating flyout
   const [flyoutItemId, setFlyoutItemId] = useState<string | null>(null);
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sidebarLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const navItems = React.useMemo(() => getNavItems(showKitchenKds), [showKitchenKds]);
+
+  // Handle mouse enter on sidebar: cancel any pending auto-close timer (do NOT auto-open)
+  const handleSidebarEnter = () => {
+    recordSidebarInteraction();
+    if (sidebarLeaveTimeoutRef.current) {
+      clearTimeout(sidebarLeaveTimeoutRef.current);
+      sidebarLeaveTimeoutRef.current = null;
+    }
+  };
+
+  // Handle mouse leave on sidebar: auto-collapse sidebar if currently expanded
+  const handleSidebarLeave = () => {
+    if (sidebarLeaveTimeoutRef.current) {
+      clearTimeout(sidebarLeaveTimeoutRef.current);
+    }
+    if (!isSidebarCollapsed) {
+      sidebarLeaveTimeoutRef.current = setTimeout(() => {
+        setSidebarCollapsed(true);
+        setFlyoutItemId(null);
+      }, 250);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (sidebarLeaveTimeoutRef.current) {
+        clearTimeout(sidebarLeaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Auto-expand the currently active section on route change
   useEffect(() => {
@@ -156,6 +187,8 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   return (
     <>
       <aside
+        onMouseEnter={handleSidebarEnter}
+        onMouseLeave={handleSidebarLeave}
         onMouseMove={recordSidebarInteraction}
         onClick={recordSidebarInteraction}
         onTouchStart={recordSidebarInteraction}
@@ -170,6 +203,10 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
             type="button"
             onClick={() => {
               recordSidebarInteraction();
+              if (sidebarLeaveTimeoutRef.current) {
+                clearTimeout(sidebarLeaveTimeoutRef.current);
+                sidebarLeaveTimeoutRef.current = null;
+              }
               toggleSidebar();
             }}
             className="top-4 -right-3.5 z-50 absolute flex items-center justify-center bg-background border border-border shadow-md p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex cursor-pointer"

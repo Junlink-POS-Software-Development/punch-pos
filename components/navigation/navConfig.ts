@@ -52,10 +52,7 @@ export function getNavItems(showKitchenKds: boolean = false): NavItemConfig[] {
       desc: "Business Overview & Reports",
       Icon: LayoutGrid,
       href: "/dashboard",
-      shortcuts: [
-        { label: "Overview", href: "/dashboard", paramKey: "view", paramValue: "", isDefault: true },
-        { label: "Financial Report", href: "/dashboard?view=report", paramKey: "view", paramValue: "report" },
-      ],
+      shortcuts: [],
     },
     {
       id: "inventory",
@@ -86,11 +83,7 @@ export function getNavItems(showKitchenKds: boolean = false): NavItemConfig[] {
       desc: "Record expenses & cashflow",
       Icon: TrendingDown,
       href: "/cashout",
-      shortcuts: [
-        { label: "Record Cashout", href: "/cashout?view=cashout", paramKey: "view", paramValue: "cashout" },
-        { label: "Expenses Monitor", href: "/cashout?view=monitor", paramKey: "view", paramValue: "monitor", isDefault: true },
-        { label: "Cash Flow", href: "/cashout?view=cashflow", paramKey: "view", paramValue: "cashflow" },
-      ],
+      shortcuts: [],
     },
     {
       id: "settings",
