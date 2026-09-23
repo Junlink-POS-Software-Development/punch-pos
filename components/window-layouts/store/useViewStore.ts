@@ -24,6 +24,10 @@ interface ViewState {
   isSidebarCollapsed: boolean;
   setSidebarCollapsed: (isSidebarCollapsed: boolean) => void;
   toggleSidebar: () => void;
+  isNavigating: boolean;
+  navigatingUrl: string | null;
+  startNavigation: (url?: string) => void;
+  finishNavigation: () => void;
   setViewState: (viewState: number | ((prev: number) => number)) => void;
   setIsSplit: (isSplit: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -41,6 +45,10 @@ export const useViewStore = create<ViewState>()(
       isSidebarCollapsed: false,
       setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+      isNavigating: false,
+      navigatingUrl: null,
+      startNavigation: (url) => set({ isNavigating: true, navigatingUrl: url || null }),
+      finishNavigation: () => set({ isNavigating: false, navigatingUrl: null }),
       setPosMode: (mode) => set({ posMode: mode }),
       cyclePosMode: () =>
         set((state) => {

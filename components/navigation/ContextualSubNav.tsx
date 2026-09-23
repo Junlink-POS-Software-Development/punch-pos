@@ -11,7 +11,7 @@ import { ChevronRight } from "lucide-react";
 export function ContextualSubNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isFullscreen, posMode, recordSidebarInteraction } = useViewStore();
+  const { isFullscreen, posMode, recordSidebarInteraction, startNavigation } = useViewStore();
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
   const isTabletMode = posMode === "tablet";
@@ -52,6 +52,12 @@ export function ContextualSubNav() {
               <Link
                 key={idx}
                 href={shortcut.href}
+                onClick={() => {
+                  recordSidebarInteraction();
+                  if (!active) {
+                    startNavigation(shortcut.href);
+                  }
+                }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 active:scale-95 shrink-0 ${
                   active
                     ? "bg-primary text-primary-foreground font-semibold shadow-sm"

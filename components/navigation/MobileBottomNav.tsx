@@ -21,7 +21,7 @@ export function MobileBottomNav() {
   const searchParams = useSearchParams();
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
-  const { posMode, recordSidebarInteraction } = useViewStore();
+  const { posMode, recordSidebarInteraction, startNavigation } = useViewStore();
   const isTabletMode = posMode === "tablet";
 
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -163,7 +163,12 @@ export function MobileBottomNav() {
                 <div className="flex items-center justify-between p-3">
                   <Link
                     href={item.href}
-                    onClick={() => setIsMoreOpen(false)}
+                    onClick={() => {
+                      setIsMoreOpen(false);
+                      if (!isActive) {
+                        startNavigation(item.href);
+                      }
+                    }}
                     className="flex items-center gap-3 min-w-0 flex-1"
                   >
                     <div
@@ -221,7 +226,12 @@ export function MobileBottomNav() {
                             href={shortcut.href}
                             target={shortcut.isExternal ? "_blank" : undefined}
                             rel={shortcut.isExternal ? "noopener noreferrer" : undefined}
-                            onClick={() => setIsMoreOpen(false)}
+                            onClick={() => {
+                              setIsMoreOpen(false);
+                              if (!shortcut.isExternal && !active) {
+                                startNavigation(shortcut.href);
+                              }
+                            }}
                             className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                               active
                                 ? "bg-primary text-primary-foreground font-semibold shadow-sm"
@@ -259,6 +269,11 @@ export function MobileBottomNav() {
             <Link
               key={tab.id}
               href={tab.href}
+              onClick={() => {
+                if (!isActive) {
+                  startNavigation(tab.href);
+                }
+              }}
               className={`flex flex-1 flex-col items-center justify-center py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 relative ${
                 isActive
                   ? "text-primary font-bold"

@@ -3,6 +3,7 @@
 
 import React from "react";
 import { History, CreditCard } from "lucide-react";
+import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 
 export type TransactionsView = "history" | "payments";
 
@@ -34,7 +35,12 @@ const TransactionsNav: React.FC<TransactionsNavProps> = ({
                 : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/40"
             }
           `}
-          onClick={() => setActiveView(item.id as TransactionsView)}
+          onClick={() => {
+            if (activeView !== item.id) {
+              useViewStore.getState().startNavigation(`/transactions?view=${item.id}`);
+            }
+            setActiveView(item.id as TransactionsView);
+          }}
         >
           <item.Icon className="w-4 h-4" />
           <span>{item.text}</span>

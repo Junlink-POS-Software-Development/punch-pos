@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useViewStore } from "./store/useViewStore";
 import { Navigation } from "../navigation/Navigation";
 import { MobileBottomNav } from "../navigation/MobileBottomNav";
+import { NavigationProgressBar } from "../navigation/NavigationProgressBar";
 import { Header } from "../Header";
 import { SubscriptionExpiryBanner } from "../subscription/SubscriptionExpiryBanner";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -126,6 +127,9 @@ export function MainWindow({
         ? "lg:pl-20"
         : "lg:pl-64"
     }`}>
+      {/* Route Navigation Loading Progress Indicator */}
+      <NavigationProgressBar />
+
       {/* Sidebar - hidden in fullscreen and hidden in tablet mode or on mobile (< lg) */}
       {!isFullscreen && !isTabletMode && (
         <Navigation variant="sidebar" />

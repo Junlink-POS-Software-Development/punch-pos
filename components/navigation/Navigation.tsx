@@ -25,7 +25,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { isSidebarCollapsed, setSidebarCollapsed, toggleSidebar, posMode, recordSidebarInteraction } = useViewStore();
+  const { isSidebarCollapsed, setSidebarCollapsed, toggleSidebar, posMode, recordSidebarInteraction, startNavigation } = useViewStore();
   const isTabletMode = posMode === "tablet";
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
@@ -281,6 +281,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                     href={item.href}
                     onClick={(e) => {
                       recordSidebarInteraction();
+                      if (!isActive) {
+                        startNavigation(item.href);
+                      }
                       // If expanded and item has shortcuts, ensure section is opened
                       if (isExpanded && hasShortcuts) {
                         if (isActive) {
@@ -360,7 +363,12 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                               href={shortcut.href}
                               target={shortcut.isExternal ? "_blank" : undefined}
                               rel={shortcut.isExternal ? "noopener noreferrer" : undefined}
-                              onClick={recordSidebarInteraction}
+                              onClick={() => {
+                                recordSidebarInteraction();
+                                if (!shortcut.isExternal && !isShortcutActiveState) {
+                                  startNavigation(shortcut.href);
+                                }
+                              }}
                               className={`
                                 py-1.5 px-2.5 rounded-lg text-xs transition-colors duration-150 truncate
                                 ${
@@ -406,6 +414,9 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                               onClick={() => {
                                 recordSidebarInteraction();
                                 setFlyoutItemId(null);
+                                if (!shortcut.isExternal && !active) {
+                                  startNavigation(shortcut.href);
+                                }
                               }}
                               className={`
                                 py-1.5 px-2.5 rounded-lg text-xs transition-colors truncate
