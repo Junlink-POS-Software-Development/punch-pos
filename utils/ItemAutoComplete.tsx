@@ -102,15 +102,38 @@ const ItemAutocomplete = forwardRef<HTMLInputElement, ItemAutocompleteProps>(
           window.dispatchEvent(
             new CustomEvent("pharmacy-search-nav", { detail: { key: e.key } })
           );
+          window.dispatchEvent(
+            new CustomEvent("retail-search-nav", { detail: { key: e.key } })
+          );
+          window.dispatchEvent(
+            new CustomEvent("terminal-search-nav", { detail: { key: e.key } })
+          );
           return;
         }
         if (e.key === "Enter") {
-          const customEvent = new CustomEvent("pharmacy-search-nav", {
+          const pharmEvent = new CustomEvent("pharmacy-search-nav", {
             detail: { key: "Enter" },
             cancelable: true,
           });
-          window.dispatchEvent(customEvent);
-          if (customEvent.defaultPrevented) {
+          window.dispatchEvent(pharmEvent);
+
+          const retailEvent = new CustomEvent("retail-search-nav", {
+            detail: { key: "Enter" },
+            cancelable: true,
+          });
+          window.dispatchEvent(retailEvent);
+
+          const terminalEvent = new CustomEvent("terminal-search-nav", {
+            detail: { key: "Enter" },
+            cancelable: true,
+          });
+          window.dispatchEvent(terminalEvent);
+
+          if (
+            pharmEvent.defaultPrevented ||
+            retailEvent.defaultPrevented ||
+            terminalEvent.defaultPrevented
+          ) {
             e.preventDefault();
             return;
           }

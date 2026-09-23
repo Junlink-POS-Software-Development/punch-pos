@@ -1,11 +1,11 @@
 import React from "react";
 import { useFormContext } from "react-hook-form";
-import { QuickPickGrid } from "./action-panel/quickpick-grid/QuickPickGrid";
 import { ActionButtons } from "./action-panel/ActionButtons";
 import { Numpad } from "./action-panel/Numpad";
 import { PosFormValues } from "../utils/posSchema";
 
 interface ActionPanelProps {
+  cart?: React.ReactNode;
   onAddToCart: () => void;
   onClearAll: () => void;
   onCharge: () => void;
@@ -25,6 +25,7 @@ interface ActionPanelProps {
 }
 
 export function ActionPanel({
+  cart,
   onAddToCart,
   onClearAll,
   onCharge,
@@ -40,12 +41,6 @@ export function ActionPanel({
   onOpenScaleModal,
 }: ActionPanelProps) {
   const { setValue, getValues } = useFormContext<PosFormValues>();
-
-  const handleQuickPickSelect = (item: any) => {
-    console.log("Selected:", item);
-    setValue("barcode", item.sku, { shouldValidate: true });
-        setActiveField("quantity");
-  };
 
   const handleNumpadPress = (key: string) => {
     // Attempt global dispatch first
@@ -88,7 +83,7 @@ export function ActionPanel({
     }
 
     if (activeField) {
-        setValue(activeField as any, activeField === "quantity" ? 0 : "");
+      setValue(activeField as any, activeField === "quantity" ? 0 : "");
     }
   };
 
@@ -105,45 +100,41 @@ export function ActionPanel({
   };
 
   return (
-    <div className="flex flex-col bg-card border-l border-border h-full w-full overflow-hidden shadow-sm p-3">
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="text-foreground font-lexend font-medium text-base sm:text-lg">Action Panel</h2>
-      </div>
+    <div className="flex flex-col bg-card border-l border-border h-full w-full overflow-hidden shadow-sm p-2 sm:p-2.5 gap-2">
+      {/* 1. Terminal Cart Table (above keyboard) */}
+      {cart && (
+        <div className="flex-1 min-h-0 overflow-hidden border border-border bg-card rounded-2xl shadow-xs">
+          {cart}
+        </div>
+      )}
 
-      {/* 1. Quick Pick Grid - scrollable area */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <QuickPickGrid onSelect={handleQuickPickSelect} />
-      </div>
+      {/* 2. Virtual Keyboard Area with Squeezed Quick Action Buttons */}
+      <div className="shrink-0 flex flex-col gap-2 bg-muted/20 border border-border/80 rounded-2xl p-2 sm:p-2.5 shadow-xs">
+        <ActionButtons 
+          compact={true}
+          onAdd={onAddToCart}
+          onDiscount={onDiscount}
+          onVoucher={onVoucher}
+          onOpenDrawer={() => console.log("Open Drawer")} 
+          onCharge={onCharge}
+          onIncreaseQty={handleIncreaseQty}
+          onDecreaseQty={handleDecreaseQty}
+          onClearInput={() => {
+            setValue("barcode", "");
+            setValue("quantity", null);
+            setValue("customerName", null);
+            setActiveField("barcode");
+          }}
+          onClearAll={onClearAll}
+          isFreeMode={isFreeMode}
+          onToggleFreeMode={onToggleFreeMode}
+          onSendKitchen={onSendKitchen}
+          onSplitCheck={onSplitCheck}
+          onOpenTableModal={onOpenTableModal}
+          onOpenScaleModal={onOpenScaleModal}
+        />
 
-      {/* 2. Action Buttons */}
-      <div className="shrink-0 mt-2">
-         <ActionButtons 
-            onAdd={onAddToCart}
-            onDiscount={onDiscount}
-            onVoucher={onVoucher}
-            onOpenDrawer={() => console.log("Open Drawer")} 
-            onCharge={onCharge}
-            onIncreaseQty={handleIncreaseQty}
-            onDecreaseQty={handleDecreaseQty}
-            onClearInput={() => {
-              setValue("barcode", "");
-              setValue("quantity", null);
-              setValue("customerName", null);
-              setActiveField("barcode");
-            }}
-            onClearAll={onClearAll}
-            isFreeMode={isFreeMode}
-            onToggleFreeMode={onToggleFreeMode}
-            onSendKitchen={onSendKitchen}
-            onSplitCheck={onSplitCheck}
-            onOpenTableModal={onOpenTableModal}
-            onOpenScaleModal={onOpenScaleModal}
-         />
-      </div>
-
-      {/* 3. Numpad — always tablet mode (virtual keyboard default with numpad toggle) */}
-      <div className="flex flex-col shrink-0 mt-2 min-h-[260px]">
-         <Numpad onKeyPress={handleNumpadPress} onClear={handleClearInput} isTabletMode={true} />
+        <Numpad onKeyPress={handleNumpadPress} onClear={handleClearInput} isTabletMode={true} />
       </div>
     </div>
   );

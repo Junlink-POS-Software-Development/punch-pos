@@ -22,7 +22,9 @@ import {
   X,
   Package,
   Layers,
+  Sparkles,
 } from "lucide-react";
+import { QuickPickGrid } from "../action-panel/quickpick-grid/QuickPickGrid";
 
 interface PharmacyEquivalentsHubProps {
   onSelectItem: (item: { sku: string; itemName: string }) => void;
@@ -45,6 +47,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
   const [filterType, setFilterType] = useState<"all" | "generic" | "branded" | "rx">("all");
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [isManualSearch, setIsManualSearch] = useState(false);
+  const [idleViewTab, setIdleViewTab] = useState<"quickpick" | "directory">("quickpick");
   const listContainerRef = useRef<HTMLDivElement>(null);
 
   // Helper to get stock quantity from inventory data
@@ -589,90 +592,129 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
 
       {/* IDLE / MEDICINE DIRECTORY VIEW */}
       {!hasQuery && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden py-1.5 space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold px-1 shrink-0">
-            <span>Fast Selection • Available Medicines ({allItems.length}):</span>
-            <span className="text-[10px]">Type in search or select directly below</span>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden py-1 space-y-1.5">
+          {/* View Switcher: Quick Pick (Default) vs All Medicines */}
+          <div className="flex items-center justify-between text-[11px] px-1 shrink-0">
+            <div className="flex items-center gap-1.5 bg-muted/60 p-0.5 rounded-lg border border-border/60">
+              <button
+                type="button"
+                onClick={() => setIdleViewTab("quickpick")}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  idleViewTab === "quickpick"
+                    ? "bg-card text-foreground shadow-xs border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <span>Quick Pick</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIdleViewTab("directory")}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  idleViewTab === "directory"
+                    ? "bg-card text-foreground shadow-xs border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Package className="w-3.5 h-3.5 text-blue-500" />
+                <span>All Medicines ({allItems.length})</span>
+              </button>
+            </div>
+
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              {idleViewTab === "quickpick"
+                ? "Tap to select • Type barcode to search"
+                : "Type in search or select directly below"}
+            </span>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
-            {allItems.slice(0, 10).map((item) => {
-              const meta = extractPharmacyMeta(item);
-              const stock = getStock(item.sku);
-              const price = item.sellingPrice ?? item.salesPrice ?? 0;
+          {/* Quick Pick View (Default) */}
+          {idleViewTab === "quickpick" ? (
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col pt-1">
+              <QuickPickGrid onSelect={handleSelectItem} />
+            </div>
+          ) : (
+            /* Directory List View */
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
+              {allItems.slice(0, 30).map((item) => {
+                const meta = extractPharmacyMeta(item);
+                const stock = getStock(item.sku);
+                const price = item.sellingPrice ?? item.salesPrice ?? 0;
 
-              return (
-                <div
-                  key={item.id || item.sku}
-                  className="flex items-center justify-between p-2 rounded-xl bg-card border border-border/70 hover:border-primary/40 hover:bg-muted/30 transition-all"
-                >
-                  <div className="min-w-0 flex-1 pr-2">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="font-bold text-xs text-foreground truncate">{item.itemName}</span>
-                      {meta.brandType && (
-                        <span
-                          className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase ${
-                            meta.brandType === "generic"
-                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                              : "bg-blue-500/15 text-blue-600 dark:text-blue-400"
-                          }`}
-                        >
-                          {meta.brandType === "generic" ? "Generic" : "Branded"}
+                return (
+                  <div
+                    key={item.id || item.sku}
+                    className="flex items-center justify-between p-2 rounded-xl bg-card border border-border/70 hover:border-primary/40 hover:bg-muted/30 transition-all"
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="font-bold text-xs text-foreground truncate">{item.itemName}</span>
+                        {meta.brandType && (
+                          <span
+                            className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase ${
+                              meta.brandType === "generic"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                : "bg-blue-500/15 text-blue-600 dark:text-blue-400"
+                            }`}
+                          >
+                            {meta.brandType === "generic" ? "Generic" : "Branded"}
+                          </span>
+                        )}
+                        {meta.isRx && (
+                          <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-red-500/15 text-red-600 dark:text-red-400">
+                            Rx
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap text-[10px] mt-0.5">
+                        {meta.genericName ? (
+                          <span className="font-semibold text-foreground/80 truncate max-w-[120px]">{meta.genericName}</span>
+                        ) : null}
+                        <span className="px-1.5 py-0.2 rounded font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+                          Dosage: {meta.dosage || "—"}
                         </span>
-                      )}
-                      {meta.isRx && (
-                        <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-red-500/15 text-red-600 dark:text-red-400">
-                          Rx
+                        {meta.formulation ? (
+                          <span className="text-muted-foreground">Form: {meta.formulation}</span>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="text-right">
+                        <span className="font-mono font-bold text-xs text-foreground block">
+                          ₱{price.toFixed(2)}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap text-[10px] mt-0.5">
-                      {meta.genericName ? (
-                        <span className="font-semibold text-foreground/80 truncate max-w-[120px]">{meta.genericName}</span>
-                      ) : null}
-                      <span className="px-1.5 py-0.2 rounded font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30">
-                        Dosage: {meta.dosage || "—"}
-                      </span>
-                      {meta.formulation ? (
-                        <span className="text-muted-foreground">Form: {meta.formulation}</span>
-                      ) : null}
-                    </div>
-                  </div>
+                        <span className="text-[9px] text-muted-foreground block">
+                          Stock: {stock}
+                        </span>
+                      </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="text-right">
-                      <span className="font-mono font-bold text-xs text-foreground block">
-                        ₱{price.toFixed(2)}
-                      </span>
-                      <span className="text-[9px] text-muted-foreground block">
-                        Stock: {stock}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelectItem(item)}
-                      className="px-2 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                    >
-                      Select
-                    </button>
-
-                    {onAddToCartDirect && (
                       <button
                         type="button"
-                        onClick={() => handleAddDirect(item)}
-                        disabled={stock <= 0}
-                        className="p-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 rounded-lg transition-colors cursor-pointer"
-                        title="1-click add"
+                        onClick={() => handleSelectItem(item)}
+                        className="px-2 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors cursor-pointer"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        Select
                       </button>
-                    )}
+
+                      {onAddToCartDirect && (
+                        <button
+                          type="button"
+                          onClick={() => handleAddDirect(item)}
+                          disabled={stock <= 0}
+                          className="p-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 rounded-lg transition-colors cursor-pointer"
+                          title="1-click add"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -23,7 +23,8 @@ import { Item } from "@/app/inventory/components/item-registration/utils/itemTyp
 import { TransactionSuccessToast } from "./components/TransactionSuccessToast";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { PharmacyEquivalentsHub } from "./components/pharmacy/PharmacyEquivalentsHub";
-import { Pill, ChefHat, UtensilsCrossed, Divide, Scale } from "lucide-react";
+import { RetailProductSearchHub } from "./components/retail/RetailProductSearchHub";
+import { Pill, ChefHat, UtensilsCrossed, Divide, Scale, ShoppingBag } from "lucide-react";
 import { TableSelectorModal } from "./modals/TableSelectorModal";
 import { ModifierModal } from "./modals/ModifierModal";
 import { SplitCheckModal } from "./modals/SplitCheckModal";
@@ -84,6 +85,16 @@ const DesktopSalesTerminal = () => {
   const [isRxVerified, setIsRxVerified] = useState(false);
   const rxCartItems = useMemo(() => cartItems.filter((item) => item.isRx), [cartItems]);
   const [showShortcutsInPharmacy, setShowShortcutsInPharmacy] = useState(false);
+  const [showShortcutsInRetail, setShowShortcutsInRetail] = useState(false);
+
+  // Auto-switch to search view when typing in barcode field
+  const watchedBarcode = methods.watch("barcode");
+  useEffect(() => {
+    if (watchedBarcode && watchedBarcode.trim().length > 0) {
+      setShowShortcutsInPharmacy(false);
+      setShowShortcutsInRetail(false);
+    }
+  }, [watchedBarcode]);
 
   // Restaurant State & Modals
   const {
@@ -403,12 +414,35 @@ const DesktopSalesTerminal = () => {
     }
   };
 
+  const renderCart = (
+    <TerminalCart
+      rows={cartItems}
+      onRemoveItem={onRemoveItem}
+      onUpdateItem={onUpdateItem}
+      onItemDiscountClick={handleOpenItemDiscount}
+      onItemModifierClick={handleOpenModifier}
+      onSendKitchen={handleSendKitchen}
+      onSplitCheck={() => setIsSplitModalOpen(true)}
+      onOrderDiscountClick={handleOpenTransactionDiscount}
+      orderDiscountAmount={methods.watch("orderDiscountAmount")}
+      orderDiscountValue={methods.watch("orderDiscountValue")}
+      orderDiscountType={methods.watch("orderDiscountType") as DiscountType | null}
+      onRemoveOrderDiscount={() => {
+        methods.setValue("orderDiscountType", null);
+        methods.setValue("orderDiscountValue", null);
+        methods.setValue("orderDiscountAmount", null);
+      }}
+      onCharge={handleInitiateCharge}
+      onOpenScaleModal={() => setIsScaleModalOpen(true)}
+    />
+  );
+
   return (
     <PosThemeWrapper className="relative h-full overflow-hidden">
       <div className="relative flex flex-row h-full overflow-hidden">
         <FormProvider {...methods}>
           {/* LEFT PANEL: Transaction Details */}
-          <div className={`flex flex-col flex-1 p-2 h-full min-w-0 ${!isTabletMode ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className="flex flex-col flex-1 p-2 h-full min-w-0 overflow-hidden">
               {isAnimating ? (
                  <div className="w-full h-full flex items-center justify-center bg-card rounded-2xl border border-border shadow-sm">
                     <div className="flex flex-col items-center gap-4">
@@ -468,11 +502,11 @@ const DesktopSalesTerminal = () => {
                 onSubmit={methods.handleSubmit(onDoneSubmit)}
                 className={`
                   w-full h-full gap-4
-                  ${!isTabletMode ? 'grid grid-cols-2 grid-rows-[minmax(0,1fr)] min-h-0 overflow-hidden' : 'flex flex-col min-h-full'}
+                  ${!isTabletMode ? 'grid grid-cols-2 grid-rows-[minmax(0,1fr)] min-h-0 overflow-hidden' : 'flex flex-col h-full min-h-0 overflow-hidden'}
                 `}
               >
                 {/* Left Column Wrapper: Header + Inputs */}
-                <div className={`flex flex-col ${!isTabletMode ? 'h-full min-h-0 overflow-hidden' : ''}`}>
+                <div className="flex flex-col h-full min-h-0 overflow-hidden flex-1">
                     <TerminalHeader 
                       isTabletMode={isTabletMode}
                       setCustomerId={setCustomerId} 
@@ -486,9 +520,9 @@ const DesktopSalesTerminal = () => {
                       onOpenScaleModal={() => setIsScaleModalOpen(true)}
                     />
 
-                    {/* Inline Shortcuts Guide or Pharmacy Equivalents Hub - Fills space in desktop mode or renders scrollable list in tablet mode */}
-                    {(!isTabletMode || isPharmacy) && (
-                      <div className={`mt-2 ${!isTabletMode ? 'flex-1 min-h-0' : 'h-72 shrink-0 overflow-hidden mb-2'}`}>
+                    {/* Inline Shortcuts Guide or Product Search Hub (Pharmacy / Retail) */}
+                    {!isRestaurantActive && (
+                      <div className="mt-2 flex-1 min-h-0 overflow-hidden">
                         {isPharmacy ? (
                           !showShortcutsInPharmacy ? (
                             <PharmacyEquivalentsHub
@@ -520,38 +554,48 @@ const DesktopSalesTerminal = () => {
                             </div>
                           )
                         ) : (
-                          <ShortcutsGuide isInline />
+                          !showShortcutsInRetail ? (
+                            <RetailProductSearchHub
+                              onSelectItem={(item) => {
+                                methods.setValue("barcode", item.sku);
+                                setActiveField("quantity");
+                              }}
+                              onAddToCartDirect={(item) => {
+                                methods.setValue("barcode", item.sku);
+                                methods.setValue("quantity", 1);
+                                onAddToCart();
+                              }}
+                              onToggleShortcuts={() => setShowShortcutsInRetail(true)}
+                              showShortcutsToggle={true}
+                            />
+                          ) : (
+                            <div className="flex flex-col gap-1.5 h-full">
+                              <div className="flex items-center justify-between px-1">
+                                <span className="text-xs text-muted-foreground font-medium">Keyboard Shortcuts</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowShortcutsInRetail(false)}
+                                  className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                                >
+                                  <ShoppingBag className="w-3 h-3" /> Back to Product Search
+                                </button>
+                              </div>
+                              <ShortcutsGuide isInline />
+                            </div>
+                          )
                         )}
                       </div>
                     )}
                 </div>
 
-                {/* Right Column: Cart */}
-                <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
-                  {/* Desktop Cart */}
-                  <div className="h-full">
-                  <TerminalCart
-                      rows={cartItems}
-                      onRemoveItem={onRemoveItem}
-                      onUpdateItem={onUpdateItem}
-                      onItemDiscountClick={handleOpenItemDiscount}
-                      onItemModifierClick={handleOpenModifier}
-                      onSendKitchen={handleSendKitchen}
-                      onSplitCheck={() => setIsSplitModalOpen(true)}
-                      onOrderDiscountClick={handleOpenTransactionDiscount}
-                      orderDiscountAmount={methods.watch("orderDiscountAmount")}
-                      orderDiscountValue={methods.watch("orderDiscountValue")}
-                      orderDiscountType={methods.watch("orderDiscountType") as DiscountType | null}
-                      onRemoveOrderDiscount={() => {
-                        methods.setValue("orderDiscountType", null);
-                        methods.setValue("orderDiscountValue", null);
-                        methods.setValue("orderDiscountAmount", null);
-                      }}
-                      onCharge={handleInitiateCharge}
-                      onOpenScaleModal={() => setIsScaleModalOpen(true)}
-                    />
+                {/* Right Column: Cart (Desktop Mode Only) */}
+                {!isTabletMode && (
+                  <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
+                    <div className="h-full">
+                      {renderCart}
+                    </div>
                   </div>
-                </div>
+                )}
               </form>
               )}
           </div>
@@ -559,10 +603,11 @@ const DesktopSalesTerminal = () => {
           {/* RIGHT PANEL: Action Panel — only visible in tablet mode when not in restaurant mode */}
           <div className={`
             h-full transition-all duration-300 ease-in-out
-            ${isTabletMode && !isRestaurantActive ? "w-[650px] xl:w-[700px]" : "w-0 overflow-hidden"}
+            ${isTabletMode && !isRestaurantActive ? "w-[560px] lg:w-[620px] xl:w-[680px]" : "w-0 overflow-hidden"}
           `}>
             {isTabletMode && !isRestaurantActive && (
               <ActionPanel 
+                cart={renderCart}
                 onAddToCart={onAddToCart}
                 onClearAll={handleClearTerminal}
                 onCharge={handleInitiateCharge}

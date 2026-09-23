@@ -120,7 +120,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setIsCaps(!isCaps)}
                   className={`
-                    w-12 sm:w-16 min-h-[44px] sm:min-h-[52px] rounded shadow-sm border font-bold text-[10px] sm:text-xs transition-all flex items-center justify-center
+                    w-12 sm:w-16 min-h-[38px] sm:min-h-[44px] rounded shadow-sm border font-bold text-[10px] sm:text-xs transition-all flex items-center justify-center
                     ${isCaps ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"}
                   `}
                 >
@@ -135,7 +135,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setIsShift(!isShift)}
                   className={`
-                    w-12 sm:w-16 min-h-[44px] sm:min-h-[52px] rounded shadow-sm border font-bold text-[10px] sm:text-xs transition-all flex items-center justify-center
+                    w-12 sm:w-16 min-h-[38px] sm:min-h-[44px] rounded shadow-sm border font-bold text-[10px] sm:text-xs transition-all flex items-center justify-center
                     ${isShift ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"}
                   `}
                 >
@@ -179,7 +179,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                         handleKeyEnd(key);
                     }}
                     className={`
-                      relative flex-1 max-w-12 min-w-8 min-h-[44px] sm:min-h-[52px] 
+                      relative flex-1 max-w-12 min-w-8 min-h-[38px] sm:min-h-[44px] 
                       bg-muted hover:bg-muted/80 text-foreground border-border 
                       font-bold text-sm sm:text-base rounded shadow-sm border 
                       active:scale-95 flex items-center justify-center transition-all
@@ -202,7 +202,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
               type="button"
               onClick={onClear}
               onMouseDown={(e) => e.preventDefault()}
-              className="flex-[0.5] min-w-12 min-h-[44px] sm:min-h-[52px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-xs sm:text-sm rounded shadow-sm border border-red-500/30 active:scale-95 transition-all flex items-center justify-center"
+              className="flex-[0.5] min-w-12 min-h-[38px] sm:min-h-[44px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-xs sm:text-sm rounded shadow-sm border border-red-500/30 active:scale-95 transition-all flex items-center justify-center"
             >
               Clear
             </button>
@@ -212,7 +212,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                 e.preventDefault();
                 onKeyPress(" ");
               }}
-              className="flex-2 min-h-[44px] sm:min-h-[52px] bg-muted hover:bg-muted/80 text-foreground border-border font-bold text-base sm:text-lg rounded shadow-sm border active:scale-95 transition-all flex items-center justify-center"
+              className="flex-2 min-h-[38px] sm:min-h-[44px] bg-muted hover:bg-muted/80 text-foreground border-border font-bold text-base sm:text-lg rounded shadow-sm border active:scale-95 transition-all flex items-center justify-center"
             >
               Space
             </button>
@@ -222,7 +222,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                 e.preventDefault();
                 onKeyPress("Backspace");
               }}
-              className="flex-[0.5] min-w-12 min-h-[44px] sm:min-h-[52px] bg-muted hover:bg-muted/80 text-foreground border-border font-bold text-base sm:text-xl rounded shadow-sm border active:scale-95 transition-all flex items-center justify-center"
+              className="flex-[0.5] min-w-12 min-h-[38px] sm:min-h-[44px] bg-muted hover:bg-muted/80 text-foreground border-border font-bold text-base sm:text-xl rounded shadow-sm border active:scale-95 transition-all flex items-center justify-center"
             >
               ⌫
             </button>
@@ -232,7 +232,7 @@ export const Numpad = ({ onKeyPress, onClear, isTabletMode }: NumpadProps) => {
                 e.preventDefault();
                 onKeyPress("Enter");
               }}
-              className="flex-1 min-w-16 min-h-[44px] sm:min-h-[52px] bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm sm:text-base rounded shadow-sm border border-primary/20 active:scale-95 transition-all flex items-center justify-center"
+              className="flex-1 min-w-16 min-h-[38px] sm:min-h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm sm:text-base rounded shadow-sm border border-primary/20 active:scale-95 transition-all flex items-center justify-center"
             >
               Enter
             </button>

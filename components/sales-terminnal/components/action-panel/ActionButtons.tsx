@@ -21,6 +21,8 @@ interface ActionButtonsProps {
   onOpenTableModal?: () => void;
   // Grocery actions
   onOpenScaleModal?: () => void;
+  // Compact mode for squeezing into tablet keyboard
+  compact?: boolean;
 }
 
 export const ActionButtons = ({
@@ -39,6 +41,7 @@ export const ActionButtons = ({
   onSplitCheck,
   onOpenTableModal,
   onOpenScaleModal,
+  compact = false,
 }: ActionButtonsProps) => {
   const { modules, isPharmacy, isRestaurant, isGrocery } = useBusinessMode();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -70,6 +73,176 @@ export const ActionButtons = ({
     e.preventDefault(); // Prevent mouse events firing after touch
     handleMouseUp();
   };
+
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-1.5 w-full select-none">
+        {/* Row 1: Quick Action Buttons */}
+        <div className="flex items-center gap-1 sm:gap-1.5 w-full">
+          <button
+            type="button"
+            onClick={onAdd}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex-1 min-w-0 h-8 sm:h-8.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 active:scale-95 cursor-pointer shadow-xs"
+            title="Add Item (Enter)"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">ADD</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onDiscount}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex-1 min-w-0 h-8 sm:h-8.5 bg-muted hover:bg-muted/80 border border-border text-foreground font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 active:scale-95 cursor-pointer shadow-xs"
+            title="Order / Item Discount"
+          >
+            <Tag className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">DISC</span>
+          </button>
+
+          {(modules.statutory_sc_pwd || isPharmacy) && (
+            <button
+              type="button"
+              onClick={onDiscount}
+              onMouseDown={(e) => e.preventDefault()}
+              className="flex-1 min-w-0 h-8 sm:h-8.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+              title="Senior Citizen & PWD Statutory 20% Discount"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">SC/PWD</span>
+            </button>
+          )}
+
+          {(modules.table_management || isRestaurant) && onOpenTableModal && (
+            <button
+              type="button"
+              onClick={onOpenTableModal}
+              onMouseDown={(e) => e.preventDefault()}
+              className="flex-1 min-w-0 h-8 sm:h-8.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+              title="Floor Plan & Tables"
+            >
+              <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">TABLE</span>
+            </button>
+          )}
+
+          {(modules.kitchen_display || isRestaurant) && onSendKitchen && (
+            <button
+              type="button"
+              onClick={onSendKitchen}
+              onMouseDown={(e) => e.preventDefault()}
+              className="flex-1 min-w-0 h-8 sm:h-8.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+              title="Send Order to Kitchen (KOT)"
+            >
+              <ChefHat className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">KITCHEN</span>
+            </button>
+          )}
+
+          {(modules.split_check || isRestaurant) && onSplitCheck && (
+            <button
+              type="button"
+              onClick={onSplitCheck}
+              onMouseDown={(e) => e.preventDefault()}
+              className="flex-1 min-w-0 h-8 sm:h-8.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+              title="Split Bill"
+            >
+              <Divide className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">SPLIT</span>
+            </button>
+          )}
+
+          {(modules.weighed_items || isGrocery) && onOpenScaleModal && (
+            <button
+              type="button"
+              onClick={onOpenScaleModal}
+              onMouseDown={(e) => e.preventDefault()}
+              className="flex-1 min-w-0 h-8 sm:h-8.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+              title="Weighing Scale & Produce PLU Lookup [F4]"
+            >
+              <Scale className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">SCALE</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onVoucher}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex-1 min-w-0 h-8 sm:h-8.5 bg-muted hover:bg-muted/80 border border-border text-foreground font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 active:scale-95 cursor-pointer shadow-xs"
+            title="Redeem Voucher"
+          >
+            <Ticket className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">VOUCH</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleFreeMode}
+            onMouseDown={(e) => e.preventDefault()}
+            className={`flex-1 min-w-0 h-8 sm:h-8.5 border font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow-xs
+              ${isFreeMode 
+                ? "bg-purple-600 border-purple-500 text-white animate-pulse" 
+                : "bg-muted hover:bg-muted/80 border-border text-foreground"}
+            `}
+            title="Free Item"
+          >
+            <Gift className={`w-3.5 h-3.5 shrink-0 ${isFreeMode ? "text-white" : ""}`} />
+            <span className="truncate">FREE</span>
+          </button>
+
+          <button
+            type="button"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => timerRef.current && clearTimeout(timerRef.current)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="flex-1 min-w-0 h-8 sm:h-8.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 font-bold rounded-lg transition-colors text-[10px] sm:text-xs flex items-center justify-center gap-1 active:scale-95 cursor-pointer shadow-xs"
+            title="Short press: Clear Input | Long press: Clear All"
+          >
+            <Eraser className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">CLEAR</span>
+          </button>
+        </div>
+
+        {/* Row 2: Qty Adjustment & Charge Button */}
+        <div className="flex items-center gap-1.5 h-9 sm:h-10 w-full">
+          <button
+            type="button"
+            onClick={onDecreaseQty}
+            onMouseDown={(e) => e.preventDefault()}
+            className="w-12 sm:w-14 h-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-colors flex items-center justify-center active:scale-95 cursor-pointer shadow-xs"
+            title="Decrease Quantity"
+          >
+            <Minus className="w-5 h-5" />
+          </button>
+          
+          <button
+            type="button"
+            onClick={onCharge}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex-1 h-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-sm sm:text-base rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+            title="Process Payment (F2)"
+          >
+            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>CHARGE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onIncreaseQty}
+            onMouseDown={(e) => e.preventDefault()}
+            className="w-12 sm:w-14 h-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-colors flex items-center justify-center active:scale-95 cursor-pointer shadow-xs"
+            title="Increase Quantity"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">

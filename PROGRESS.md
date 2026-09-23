@@ -60,6 +60,17 @@ This document tracks the phased implementation of making `pos-next` a universal 
 
 ## 📝 Activity Log & Progress Notes
 
+### [2026-09-23] - General Retail Live Product Search Hub in Keyboard Shortcuts Area
+- **Retail Product Search & Quick Catalog Hub** (`RetailProductSearchHub.tsx`):
+  - Created dedicated retail search hub occupying the keyboard shortcuts area below `TerminalHeader` in General Retail mode (mirroring Pharmacy & Healthcare layout).
+  - Streams real-time search results as the cashier scans or types in the barcode input, displaying product name, SKU, price, stock level, category badge, and action buttons (`[✓ Select]` and `[+ Add]`).
+  - Seamless keyboard navigation (`ArrowDown`, `ArrowUp`, `Enter`) with auto-scroll and selection.
+  - Idle state provides dual-mode view: category filter tabs to browse available store inventory, and `QuickPickGrid` touch tiles.
+  - Added header toggle button to switch between Product Search Directory and Keyboard Shortcuts Guide at any time, with auto-switch back to search upon typing.
+- **Terminal Input Streamlining** (`FormFields.tsx`, `ItemAutoComplete.tsx`):
+  - Set `disableDropdown={true}` on sales terminal barcode input to prevent floating popovers from occluding the form fields.
+  - Dispatches `retail-search-nav` and `terminal-search-nav` events on arrow keys and Enter.
+
 ### [2026-09-21] - Stock Management & Item Autocomplete Dropdown Refinement
 - **Decoupled Autocomplete Dropdown Suppression** (`ItemAutoComplete.tsx`):
   - Fixed hardcoded `disableDropdown || isPharmacy` that inadvertently silenced the autocomplete dropdown in `StockForm.tsx` (Manage Stocks) and `CogsForm.tsx` (Cashout) when in Pharmacy mode.
