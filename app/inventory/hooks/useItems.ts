@@ -190,9 +190,11 @@ export const useItems = () => {
         });
       }
 
+      console.log(`🔄 [useItems] [${operation}] Optimistically updating query caches for:`, variables);
       return { prevItems, prevInfinite, prevPos };
     },
     onError: (err: any, variables: any, context: any) => {
+      console.error(`💥 [useItems] [${operation}] Mutation failed. Rolling back optimistic updates:`, err);
       if (context?.prevItems) {
         queryClient.setQueryData(["items"], context.prevItems);
       }
@@ -205,6 +207,7 @@ export const useItems = () => {
       console.error(`${operation} failed:`, err);
     },
     onSettled: () => {
+      console.log(`🏁 [useItems] [${operation}] Mutation settled. Refreshing inventory caches.`);
       queryClient.invalidateQueries({ queryKey: ["items"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-infinite"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-all-pos"] });
@@ -231,10 +234,17 @@ export const useItems = () => {
     item: Item,
     options?: { onSuccess?: () => void; onError?: (err: Error) => void }
   ) => {
+    console.log("📡 [useItems] addItem triggered for:", item.itemName);
     setIsProcessing(true);
     addMutation.mutate(item, {
-      onSuccess: () => options?.onSuccess?.(),
-      onError: (err) => options?.onError?.(err as Error)
+      onSuccess: () => {
+        console.log("✅ [useItems] addItem mutation completed successfully for:", item.itemName);
+        options?.onSuccess?.();
+      },
+      onError: (err) => {
+        console.error("❌ [useItems] addItem mutation onError caught:", err);
+        options?.onError?.(err as Error);
+      }
     });
   };
 

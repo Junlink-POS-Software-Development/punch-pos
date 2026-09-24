@@ -102,8 +102,13 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
     }, 50);
   };
 
+  const onSubmitWrapper = (e: React.FormEvent) => {
+    console.log("📝 [SingleItemForm] Form submit triggered with formData:", formData);
+    handleSingleSubmit(e);
+  };
+
   return (
-    <form onSubmit={handleSingleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form onSubmit={onSubmitWrapper} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Top Row: Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-2.5">
@@ -597,6 +602,9 @@ const SingleItemForm: React.FC<SingleItemFormProps> = ({
         <button
           type="submit"
           disabled={isProcessing}
+          onClick={() => {
+            console.log("🖱️ [SingleItemForm] 'Create Item' button clicked. isProcessing:", isProcessing);
+          }}
           className="px-10 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/25 transition-all disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0"
         >
           {isProcessing ? "Saving..." : "Create Item"}

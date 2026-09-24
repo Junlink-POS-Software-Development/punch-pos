@@ -58,11 +58,19 @@ export const useItemReg = () => {
 
   const handleSingleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("📝 [useItemReg] handleSingleSubmit called with formData:", formData);
+
     const finalSKU = formData.sku.trim() || generateAutoSKU(formData.category);
     
     const selectedCat = categories.find(
       (c) => c.id === formData.category || c.category === formData.category
     );
+    console.log("🔍 [useItemReg] Category match result:", {
+      inputCategory: formData.category,
+      matchedCategoryId: selectedCat?.id,
+      matchedCategoryName: selectedCat?.category,
+      finalSKU,
+    });
 
     const newItem: Item = {
       itemName: formData.name,
@@ -93,11 +101,15 @@ export const useItemReg = () => {
       isPerishable: formData.isPerishable || false,
     };
 
+    console.log("📦 [useItemReg] Prepared newItem payload for addItem:", newItem);
+
     addItem(newItem, {
       onSuccess: async () => {
+        console.log("🎉 [useItemReg] Item registered successfully:", newItem.itemName);
         // Handle Initial Stock
         const initialStock = parseFloat(formData.stock) || 0;
         if (initialStock > 0) {
+          console.log("📥 [useItemReg] Inserting initial stock:", initialStock, "for item:", newItem.itemName);
           try {
             await insertStock({
               itemName: newItem.itemName,
@@ -106,14 +118,19 @@ export const useItemReg = () => {
               capitalPrice: 0,
               notes: "Initial stock upon registration",
             });
+            console.log("✅ [useItemReg] Initial stock inserted successfully.");
           } catch (err) {
-            console.error("Failed to insert initial stock:", err);
+            console.error("❌ [useItemReg] Failed to insert initial stock:", err);
             // We don't block the UI for stock failure if item was created
           }
         }
 
         resetForm();
         setViewMode("list");
+      },
+      onError: (err: Error) => {
+        console.error("❌ [useItemReg] Registration failed in onError handler:", err);
+        alert(`Failed to register item "${newItem.itemName}": ${err.message}`);
       },
     });
   };

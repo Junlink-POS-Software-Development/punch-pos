@@ -35,6 +35,38 @@ interface ItemDbRow {
   is_perishable?: boolean;
 }
 
+// Extended columns added in migrations that may not exist in some database environments
+const EXTENDED_COLUMNS: (keyof ItemDbRow)[] = [
+  "generic_name",
+  "dosage",
+  "formulation",
+  "is_rx",
+  "is_weighed",
+  "unit_of_measure",
+  "plu_code",
+  "tare_weight",
+  "pack_barcode",
+  "pack_quantity",
+  "pack_selling_price",
+  "is_perishable",
+];
+
+const stripExtendedColumns = (payload: DbItemObject): DbItemObject => {
+  const stripped = { ...payload };
+  for (const col of EXTENDED_COLUMNS) {
+    delete stripped[col];
+  }
+  return stripped;
+};
+
+const isSchemaColumnError = (error: any): boolean => {
+  if (!error) return false;
+  if (error.code === "PGRST204") return true;
+  const msg = (error.message || "").toLowerCase();
+  if (msg.includes("column") || msg.includes("schema cache") || msg.includes("does not exist")) return true;
+  return EXTENDED_COLUMNS.some((col) => msg.includes(col.toLowerCase()));
+};
+
 // ... (DbItemObject and toDatabaseObject remain UNCHANGED) ...
 type DbItemObject = Partial<ItemDbRow>;
 
@@ -229,23 +261,34 @@ export const fetchItemsPaginated = async (
 
 
 export const insertItem = async (item: Item): Promise<Item> => {
+  console.log("🌐 [item.api] insertItem invoked with item:", item);
   const supabase = await getSupabase();
 
   const dbItem = toDatabaseObject(item);
+  console.log("🛠️ [item.api] Initial toDatabaseObject output:", dbItem);
   
   // Fetch current user's store_id to ensure RLS 'WITH CHECK' passes
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("store_id")
-    .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-    .single();
+  const { data: authData } = await supabase.auth.getUser();
+  const currentUserId = authData?.user?.id;
+  console.log("👤 [item.api] Current auth user id:", currentUserId);
 
-  if (userError) {
-    console.error("Failed to fetch user store_id for insertion:", userError);
-  } else if (userData?.store_id) {
-    (dbItem as ItemDbRow & { store_id: string }).store_id = userData.store_id;
+  if (currentUserId) {
+    (dbItem as any).user_id = currentUserId;
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", currentUserId)
+      .single();
+
+    if (userError) {
+      console.warn("⚠️ [item.api] Failed to fetch user store_id for insertion:", userError);
+    } else if (userData?.store_id) {
+      (dbItem as ItemDbRow & { store_id: string }).store_id = userData.store_id;
+      console.log("🏪 [item.api] Bound store_id to item payload:", userData.store_id);
+    }
   }
   
+  console.log("💾 [item.api] Inserting item into 'items' table:", dbItem);
   let { data: insertedData, error } = await supabase
     .from("items")
     .insert(dbItem)
@@ -253,39 +296,51 @@ export const insertItem = async (item: Item): Promise<Item> => {
     .single();
 
   if (error) {
-    // Graceful fallback if database migration hasn't been applied yet
-    if (error.message?.includes("generic_name") || error.message?.includes("is_rx") || error.code === "PGRST204") {
-      console.warn("Pharmacy columns missing in Supabase schema cache. Retrying base insert. Run migration 20260920010000_add_pharmacy_fields_and_item_batches.sql.");
-      const fallbackItem = { ...dbItem };
-      delete fallbackItem.generic_name;
-      delete fallbackItem.dosage;
-      delete fallbackItem.formulation;
-      delete fallbackItem.is_rx;
+    console.warn("⚠️ [item.api] Primary insert failed:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
+
+    if (isSchemaColumnError(error)) {
+      console.warn("⚠️ [item.api] Extended columns missing in Supabase schema cache. Retrying base insert with metadata safely preserved in description tag...");
+      const fallbackItem = stripExtendedColumns(dbItem);
+      console.log("🔄 [item.api] Retrying insert with stripped fallback payload:", fallbackItem);
+
       const retry = await supabase
         .from("items")
         .insert(fallbackItem)
         .select()
         .single();
+
       if (retry.error) {
+        console.error("❌ [item.api] Fallback insert failed:", retry.error);
         throw new Error(retry.error.message);
       }
+      console.log("✅ [item.api] Fallback insert succeeded! Created row:", retry.data);
       insertedData = retry.data;
     } else {
-      console.error("Supabase insert error:", error);
+      console.error("❌ [item.api] Supabase insert error:", error);
       throw new Error(error.message);
     }
+  } else {
+    console.log("✅ [item.api] Primary insert succeeded! Created row:", insertedData);
   }
 
-  return fromDatabaseObject(insertedData);
+  const mapped = fromDatabaseObject(insertedData);
+  console.log("📦 [item.api] Returning mapped Item:", mapped);
+  return mapped;
 };
 
 export const updateItem = async (item: Item): Promise<Item> => {
   if (!item.id) throw new Error("Item ID is required for update");
+  console.log("🌐 [item.api] updateItem invoked for item ID:", item.id, item);
 
   const dbItem = toDatabaseObject(item); 
   // IMPORTANT: Remove 'id' from the update payload. 
   // It's used in the .eq() filter, and some databases/RLS might object to it being in the body.
   const { id: _, ...updateData } = dbItem;
+  console.log("🛠️ [item.api] Updating payload:", updateData);
 
   const supabase = await getSupabase();
   let { data, error } = await supabase
@@ -296,30 +351,38 @@ export const updateItem = async (item: Item): Promise<Item> => {
     .single();
 
   if (error) {
-    if (error.message?.includes("generic_name") || error.message?.includes("is_rx") || error.code === "PGRST204") {
-      console.warn("Pharmacy columns missing in Supabase schema cache. Retrying base update.");
-      const fallbackData = { ...updateData };
-      delete fallbackData.generic_name;
-      delete fallbackData.dosage;
-      delete fallbackData.formulation;
-      delete fallbackData.is_rx;
+    console.warn("⚠️ [item.api] Primary update failed:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
+
+    if (isSchemaColumnError(error)) {
+      console.warn("⚠️ [item.api] Extended columns missing in Supabase schema cache. Retrying base update...");
+      const fallbackData = stripExtendedColumns(updateData as DbItemObject);
+      console.log("🔄 [item.api] Retrying update with stripped fallback payload:", fallbackData);
+
       const retry = await supabase
         .from("items")
         .update(fallbackData)
         .eq("id", item.id)
         .select()
         .single();
+
       if (retry.error) {
+        console.error("❌ [item.api] Fallback update failed:", retry.error);
         throw new Error(retry.error.message);
       }
+      console.log("✅ [item.api] Fallback update succeeded! Updated row:", retry.data);
       data = retry.data;
     } else {
-      console.error("Supabase update error detail:", JSON.stringify(error, null, 2));
+      console.error("❌ [item.api] Supabase update error detail:", JSON.stringify(error, null, 2));
       throw new Error(error.message);
     }
+  } else {
+    console.log("✅ [item.api] Primary update succeeded! Updated row:", data);
   }
   
- 
   return fromDatabaseObject(data);
 };
 
@@ -374,21 +437,59 @@ export const checkItemExistence = async (
 };
 
 export const insertManyItems = async (items: Item[]): Promise<Item[]> => {
+  console.log("🌐 [item.api] insertManyItems invoked with count:", items.length);
+  const supabase = await getSupabase();
+  const { data: authData } = await supabase.auth.getUser();
+  const currentUserId = authData?.user?.id;
+
+  let storeId: string | undefined;
+  if (currentUserId) {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("store_id")
+      .eq("user_id", currentUserId)
+      .single();
+    storeId = userData?.store_id;
+    console.log("🏪 [item.api] Found store_id for batch insert:", storeId);
+  }
+
   const itemsToInsert = items.map((item) => {
     const { id, ...rest } = item;
-    return toDatabaseObject(rest); // Correctly maps categories to IDs
+    const dbItem = toDatabaseObject(rest);
+    if (storeId) (dbItem as any).store_id = storeId;
+    if (currentUserId) (dbItem as any).user_id = currentUserId;
+    return dbItem;
   });
 
-  const supabase = await getSupabase();
-  const { data, error } = await supabase
+  console.log("🚀 [item.api] Executing Supabase insertMany with items count:", itemsToInsert.length);
+  let { data, error } = await supabase
     .from("items")
     .insert(itemsToInsert)
     .select();
 
   if (error) {
-    console.error("Supabase insertMany error:", error);
-    throw new Error(error.message);
+    console.warn("⚠️ [item.api] Primary insertMany failed:", error);
+    if (isSchemaColumnError(error)) {
+      console.warn("⚠️ [item.api] Extended columns missing in Supabase schema cache for insertMany. Retrying base insertMany...");
+      const fallbackItems = itemsToInsert.map((item) => stripExtendedColumns(item));
+      const retry = await supabase
+        .from("items")
+        .insert(fallbackItems)
+        .select();
+
+      if (retry.error) {
+        console.error("❌ [item.api] Fallback insertMany failed:", retry.error);
+        throw new Error(retry.error.message);
+      }
+      console.log("✅ [item.api] Fallback insertMany succeeded! Inserted count:", retry.data?.length);
+      data = retry.data;
+    } else {
+      console.error("❌ [item.api] Supabase insertMany error:", error);
+      throw new Error(error.message);
+    }
+  } else {
+    console.log("✅ [item.api] Primary insertMany succeeded! Inserted count:", data?.length);
   }
 
-  return data.map(fromDatabaseObject);
+  return (data || []).map(fromDatabaseObject);
 };
