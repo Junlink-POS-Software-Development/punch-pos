@@ -35,7 +35,10 @@ export interface NavItemConfig {
   hiddenInGrid?: boolean;
 }
 
-export function getNavItems(showKitchenKds: boolean = false): NavItemConfig[] {
+export function getNavItems(
+  showKitchenKds: boolean = false,
+  showCustomers: boolean = true
+): NavItemConfig[] {
   return [
     {
       id: "terminal",
@@ -113,16 +116,20 @@ export function getNavItems(showKitchenKds: boolean = false): NavItemConfig[] {
           },
         ]
       : []),
-    {
-      id: "customers",
-      text: "Customers",
-      desc: "Customer directory & groups",
-      Icon: Users,
-      href: "/customers",
-      shortcuts: [
-        { label: "Customer List", href: "/customers", isDefault: true },
-      ],
-    },
+    ...(showCustomers
+      ? [
+          {
+            id: "customers",
+            text: "Customers",
+            desc: "Customer directory & groups",
+            Icon: Users,
+            href: "/customers",
+            shortcuts: [
+              { label: "Customer List", href: "/customers", isDefault: true },
+            ],
+          },
+        ]
+      : []),
     {
       id: "google-workspace",
       text: "Workspace",

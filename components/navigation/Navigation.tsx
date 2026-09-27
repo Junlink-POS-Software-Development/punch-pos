@@ -16,6 +16,7 @@ import { getStoreInfo } from "@/app/actions/store";
 import { DEFAULT_PAYMENT_PAGE_SIZE, formatPaymentRecord } from "@/app/transactions/lib/paymentCache";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { getNavItems, getActiveNavItem, isShortcutActive } from "./navConfig";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 interface NavigationProps {
   variant?: "grid" | "sidebar";
@@ -29,6 +30,14 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const isTabletMode = posMode === "tablet";
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showCustomers = mounted ? !isCustomerCrmDisabled : true;
 
   // Track which sub-sections are open in expanded mode
   const [openSectionIds, setOpenSectionIds] = useState<Record<string, boolean>>({});
@@ -37,7 +46,7 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const sidebarLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const navItems = React.useMemo(() => getNavItems(showKitchenKds), [showKitchenKds]);
+  const navItems = React.useMemo(() => getNavItems(showKitchenKds, showCustomers), [showKitchenKds, showCustomers]);
 
   // Handle mouse enter on sidebar: cancel any pending auto-close timer (do NOT auto-open)
   const handleSidebarEnter = () => {

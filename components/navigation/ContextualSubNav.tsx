@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { getNavItems, getActiveNavItem, isShortcutActive } from "./navConfig";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { ChevronRight } from "lucide-react";
 
 export function ContextualSubNav() {
@@ -14,11 +15,19 @@ export function ContextualSubNav() {
   const { isFullscreen, posMode, recordSidebarInteraction, startNavigation } = useViewStore();
   const { isRestaurant, modules } = useBusinessMode();
   const showKitchenKds = isRestaurant || modules.kitchen_display;
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isTabletMode = posMode === "tablet";
 
   if (isFullscreen) return null;
 
-  const navItems = getNavItems(showKitchenKds);
+  const showCustomers = mounted ? !isCustomerCrmDisabled : true;
+  const navItems = getNavItems(showKitchenKds, showCustomers);
   const activeItem = getActiveNavItem(pathname, navItems);
 
   if (!activeItem || !activeItem.shortcuts || activeItem.shortcuts.length <= 1) {

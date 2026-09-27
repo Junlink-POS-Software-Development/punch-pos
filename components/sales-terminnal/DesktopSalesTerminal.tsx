@@ -501,7 +501,7 @@ const DesktopSalesTerminal = () => {
                 id="sales-form"
                 onSubmit={methods.handleSubmit(onDoneSubmit)}
                 className={`
-                  w-full h-full gap-4
+                  w-full h-full gap-2.5 sm:gap-4
                   ${!isTabletMode ? 'grid grid-cols-2 grid-rows-[minmax(0,1fr)] min-h-0 overflow-hidden' : 'flex flex-col h-full min-h-0 overflow-hidden'}
                 `}
               >
@@ -522,7 +522,7 @@ const DesktopSalesTerminal = () => {
 
                     {/* Inline Shortcuts Guide or Product Search Hub (Pharmacy / Retail) */}
                     {!isRestaurantActive && (
-                      <div className="mt-2 flex-1 min-h-0 overflow-hidden">
+                      <div className="mt-1 flex-1 min-h-0 overflow-hidden">
                         {isPharmacy ? (
                           !showShortcutsInPharmacy ? (
                             <PharmacyEquivalentsHub
@@ -590,7 +590,7 @@ const DesktopSalesTerminal = () => {
 
                 {/* Right Column: Cart (Desktop Mode Only) */}
                 {!isTabletMode && (
-                  <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-[400px] shadow-sm">
+                  <div className="border border-border bg-card rounded-2xl w-full flex-1 overflow-hidden min-h-0 sm:min-h-[300px] shadow-sm">
                     <div className="h-full">
                       {renderCart}
                     </div>

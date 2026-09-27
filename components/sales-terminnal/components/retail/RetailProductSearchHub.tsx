@@ -196,26 +196,26 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
   };
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-2.5 sm:p-3 shadow-sm h-full max-h-full min-h-0 flex flex-col overflow-hidden">
+    <div className="bg-card border border-border rounded-2xl p-2 sm:p-2.5 shadow-sm h-full max-h-full min-h-0 flex flex-col overflow-hidden">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-border/60 shrink-0">
+      <div className="flex items-center justify-between pb-1.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
-            <ShoppingBag className="w-4 h-4" />
+          <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
+            <ShoppingBag className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider truncate">
               {hasQuery
                 ? `Product Search Results (${searchResults.length})`
-                : `Product Catalog & Quick Directory (${allItems.length})`}
+                : `Product Catalog (${allItems.length})`}
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20 shrink-0 font-semibold">
                 Retail Catalog
               </span>
             </h3>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate hidden xs:block">
               {hasQuery
-                ? `Showing products matching "${currentBarcode}"`
-                : "Type in search above or click any product to quickly select/add"}
+                ? `Matching "${currentBarcode}"`
+                : "Search above or click product to select/add"}
             </p>
           </div>
         </div>
@@ -236,7 +236,7 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
             <button
               type="button"
               onClick={onToggleShortcuts}
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors border border-border cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors border border-border cursor-pointer"
               title="Switch to Keyboard Shortcuts Guide"
             >
               <Keyboard className="w-3.5 h-3.5" />
@@ -248,12 +248,12 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
 
       {/* Idle View Mode Switcher (only shown when not actively searching) */}
       {!hasQuery && (
-        <div className="flex items-center justify-between text-[11px] pt-1.5 pb-1 px-0.5 shrink-0">
-          <div className="flex items-center gap-1.5 bg-muted/60 p-0.5 rounded-lg border border-border/60">
+        <div className="flex items-center justify-between text-[11px] pt-1 pb-1 px-0.5 shrink-0">
+          <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/60">
             <button
               type="button"
               onClick={() => setIdleViewTab("directory")}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-0.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 idleViewTab === "directory"
                   ? "bg-card text-foreground shadow-xs border border-border/80"
                   : "text-muted-foreground hover:text-foreground"
@@ -265,7 +265,7 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
             <button
               type="button"
               onClick={() => setIdleViewTab("quickpick")}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-0.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 idleViewTab === "quickpick"
                   ? "bg-card text-foreground shadow-xs border border-border/80"
                   : "text-muted-foreground hover:text-foreground"
@@ -278,7 +278,7 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
 
           <span className="text-[10px] text-muted-foreground hidden sm:inline">
             {idleViewTab === "quickpick"
-              ? "Tap touch tiles to select • Type barcode to search"
+              ? "Tap tiles to select • Type barcode to search"
               : "Filter by category or click to add"}
           </span>
         </div>
@@ -292,14 +292,14 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
       ) : (
         <>
           {/* Category Filter Chips Bar */}
-          <div className="flex items-center gap-1.5 py-2 overflow-x-auto shrink-0 text-[11px] custom-scrollbar">
-            <span className="text-muted-foreground font-semibold shrink-0 mr-1 text-[10px] uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 py-1 sm:py-1.5 overflow-x-auto shrink-0 text-[11px] custom-scrollbar">
+            <span className="text-muted-foreground font-semibold shrink-0 mr-1 text-[9px] uppercase tracking-wider">
               Category:
             </span>
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
-              className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer whitespace-nowrap text-[10px] sm:text-[11px] ${
                 selectedCategory === "all"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "bg-muted text-muted-foreground hover:text-foreground"
@@ -313,7 +313,7 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer whitespace-nowrap text-[10px] sm:text-[11px] ${
                   selectedCategory === cat.id
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -329,7 +329,7 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
         {searchResults.length > 0 ? (
           <div
             ref={listContainerRef}
-            className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar"
+            className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1 custom-scrollbar"
           >
             {searchResults.map((item, index) => {
               const stock = getStock(item.sku);
@@ -345,55 +345,55 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
                 <div
                   key={item.id || item.sku}
                   onClick={() => setHighlightedIndex(index)}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-150 gap-2 ${
+                  className={`flex items-center justify-between p-1.5 sm:p-2 rounded-lg sm:rounded-xl border transition-all duration-150 gap-2 ${
                     isHighlighted
-                      ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm"
+                      ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-xs"
                       : "border-border/80 bg-card hover:bg-muted/50 hover:border-primary/40"
                   }`}
                 >
                   {/* Left: Product Icon & Metadata */}
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-lg bg-muted/60 border border-border/60 flex items-center justify-center shrink-0 text-muted-foreground">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted/60 border border-border/60 flex items-center justify-center shrink-0 text-muted-foreground">
                       {isWeighed ? (
-                        <Scale className="w-4 h-4 text-amber-500" />
+                        <Scale className="w-3.5 h-3.5 text-amber-500" />
                       ) : packQuantity ? (
-                        <Layers className="w-4 h-4 text-indigo-500" />
+                        <Layers className="w-3.5 h-3.5 text-indigo-500" />
                       ) : (
-                        <Package className="w-4 h-4 text-primary" />
+                        <Package className="w-3.5 h-3.5 text-primary" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-sm text-foreground truncate">
+                      <div className="flex items-center gap-1.5 flex-nowrap truncate">
+                        <span className="font-bold text-xs sm:text-sm text-foreground truncate">
                           {item.itemName}
                         </span>
 
                         {catName && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border/50">
+                          <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-muted text-muted-foreground border border-border/50 shrink-0">
                             {catName}
                           </span>
                         )}
 
                         {isWeighed && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                          <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0">
                             ⚖️ Weighed ({unitOfMeasure})
                           </span>
                         )}
 
                         {packQuantity && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
-                            📦 Pack of {packQuantity}
+                          <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 shrink-0">
+                            📦 Pack {packQuantity}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                        <span className="font-mono text-[11px] text-muted-foreground/80">
+                      <div className="flex items-center gap-1.5 mt-0.2 text-[10px] sm:text-[11px] text-muted-foreground truncate">
+                        <span className="font-mono text-muted-foreground/80 shrink-0">
                           SKU: {item.sku}
                         </span>
                         {item.description && (
-                          <span className="truncate max-w-[200px] text-[11px] opacity-75">
+                          <span className="truncate max-w-[180px] opacity-75 hidden xs:inline">
                             • {item.description}
                           </span>
                         )}
@@ -402,18 +402,18 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
                   </div>
 
                   {/* Right: Price, Stock & Selector Buttons */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-border/40">
-                    <div className="text-left sm:text-right">
-                      <span className="font-mono font-black text-sm text-foreground block">
+                  <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                    <div className="text-right">
+                      <span className="font-mono font-black text-xs sm:text-sm text-foreground block leading-tight">
                         ₱{price.toFixed(2)}
                         {isWeighed && (
-                          <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                          <span className="text-[9px] font-normal text-muted-foreground ml-0.5">
                             /{unitOfMeasure}
                           </span>
                         )}
                       </span>
                       <span
-                        className={`text-[10px] font-bold block ${
+                        className={`text-[9px] sm:text-[10px] font-bold block leading-tight ${
                           stock > 5
                             ? "text-muted-foreground"
                             : stock > 0
@@ -421,20 +421,20 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
                             : "text-destructive font-black"
                         }`}
                       >
-                        {stock > 0 ? `Stocks: ${stock}` : "Out of stock"}
+                        {stock > 0 ? `Stock: ${stock}` : "Out"}
                       </span>
                     </div>
 
                     {/* Selector Controls */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 sm:gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleSelectItem(item)}
-                        className="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-primary/20"
+                        className="px-2 sm:px-2.5 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-primary/20"
                         title="Select item into transaction form"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Select</span>
+                        <Check className="w-3 h-3" />
+                        <span className="hidden sm:inline">Select</span>
                       </button>
 
                       {onAddToCartDirect && (
@@ -442,11 +442,11 @@ export const RetailProductSearchHub: React.FC<RetailProductSearchHubProps> = ({
                           type="button"
                           onClick={() => handleAddDirect(item)}
                           disabled={stock <= 0}
-                          className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                          className="px-2 sm:px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
                           title={stock > 0 ? "Direct 1-click add to cart" : "Out of stock"}
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add</span>
+                          <Plus className="w-3 h-3" />
+                          <span className="hidden sm:inline">Add</span>
                         </button>
                       )}
                     </div>

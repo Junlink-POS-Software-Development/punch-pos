@@ -5,6 +5,7 @@ import { useFormContext, Controller } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
 import ItemAutocomplete from "../../../utils/ItemAutoComplete";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 type FormFieldsProps = {
   onAddToCartClick: () => void; // Back to sync
@@ -17,6 +18,15 @@ type FormFieldsProps = {
 export const FormFields = React.memo<FormFieldsProps>(
   ({ onAddToCartClick, onDoneSubmitTrigger, setActiveField, activeField, isTabletMode }) => {
     const { isPharmacy } = useBusinessMode();
+    const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+      setMounted(true);
+    }, []);
+
+    const showCustomer = mounted ? !isCustomerCrmDisabled : true;
+
     const { register, control, setValue, setFocus } =
       useFormContext<PosFormValues>();
     
@@ -83,13 +93,17 @@ export const FormFields = React.memo<FormFieldsProps>(
     };
 
     const fields: FieldConfig[] = [
-      {
-        title: "Customer Name",
-        id: "customerName",
-        label: "Customer Name:",
-        type: "text",
-        noAutoComplete: true,
-      },
+      ...(showCustomer
+        ? [
+            {
+              title: "Customer Name",
+              id: "customerName" as const,
+              label: "Customer Name:",
+              type: "text" as const,
+              noAutoComplete: true,
+            },
+          ]
+        : []),
       { 
         title: isPharmacy ? "Medicine / Barcode" : "Barcode", 
         id: "barcode", 
@@ -103,15 +117,26 @@ export const FormFields = React.memo<FormFieldsProps>(
       "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
     return (
-      <div className="flex flex-col justify-center p-2 w-full">
+      <div className="flex flex-col justify-center p-1.5 sm:p-2 w-full">
         {/* Changed from grid to flex row for single line layout - stacks on mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4 w-full text-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-1.5 sm:gap-3 w-full text-foreground">
           {fields.map((field) => (
-            <div key={field.id} className={`w-full ${field.id === "customerName" ? "sm:w-[30%]" : field.id === "barcode" ? "sm:w-[40%]" : "sm:w-[30%]"} flex flex-col gap-1`}>
+            <div
+              key={field.id}
+              className={`w-full ${
+                field.id === "customerName"
+                  ? "sm:w-[30%]"
+                  : field.id === "barcode"
+                  ? showCustomer
+                    ? "sm:w-[40%]"
+                    : "sm:w-[70%]"
+                  : "sm:w-[30%]"
+              } flex flex-col gap-0.5 sm:gap-1`}
+            >
               <label
                 htmlFor={field.id}
                 title={field.title}
-                className="font-medium text-xs sm:text-sm text-muted-foreground"
+                className="font-medium text-[11px] sm:text-xs text-muted-foreground"
               >
                 {field.label}
               </label>
@@ -147,7 +172,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                             });
                             setActiveField?.("quantity");
                           }}
-                          className="px-3 w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground rounded-lg border border-input focus:border-primary transition-colors focus:outline-none"
+                          className="px-2.5 sm:px-3 w-full h-8.5 sm:h-9.5 text-xs sm:text-sm bg-background text-foreground rounded-lg border border-input focus:border-primary transition-colors focus:outline-none"
                           inputMode={isTabletMode ? "none" : undefined}
                           disableDropdown={true}
                           showChevron={false}
@@ -183,7 +208,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         onFocus={() => setActiveField?.("quantity")}
                         onKeyDown={handleKeyDown}
                         inputMode={isTabletMode ? "none" : undefined}
-                        className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${noSpinnerClass}`}
+                        className={`w-full h-8.5 sm:h-9.5 text-xs sm:text-sm bg-background text-foreground px-2.5 sm:px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${noSpinnerClass}`}
                       />
                     )}
                   />
@@ -198,7 +223,7 @@ export const FormFields = React.memo<FormFieldsProps>(
                         if (field.id === "barcode") setActiveField?.("barcode");
                         else setActiveField?.(null);
                     }}
-                    className={`w-full h-10 sm:h-12 text-sm sm:text-base bg-background text-foreground px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${
+                    className={`w-full h-8.5 sm:h-9.5 text-xs sm:text-sm bg-background text-foreground px-2.5 sm:px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${
                       field.hideSpinners ? noSpinnerClass : ""
                     }`}
                     {...((field.id === "customerName") && {

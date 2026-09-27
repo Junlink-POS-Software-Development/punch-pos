@@ -2,6 +2,7 @@
 
 import { Keyboard, X, Command } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 interface ShortcutsGuideProps {
   isInline?: boolean;
@@ -9,6 +10,14 @@ interface ShortcutsGuideProps {
 
 export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showCustomer = mounted ? !isCustomerCrmDisabled : true;
 
   // Close on Escape key if open
   useEffect(() => {
@@ -27,7 +36,7 @@ export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
     { key: "Alt + D", label: "Dashboard" },
     { key: "Alt + T", label: "Transactions History" },
     { key: "Alt + I", label: "Inventory Management" },
-    { key: "Alt + C", label: "Customer Database" },
+    ...(showCustomer ? [{ key: "Alt + C", label: "Customer Database" }] : []),
     { key: "Alt + E", label: "Expenses" },
     { key: "Alt + R", label: "Reports" },
     { key: "Alt + S", label: "Settings" },
@@ -38,7 +47,7 @@ export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
     { key: "Tab", label: "Toggle Fullscreen Mode", alt: "Hide / Show Header & Sidebar" },
     { key: "Alt + M", label: "Toggle Tablet / Desktop Mode", alt: "Touch Action Panel" },
     { key: "Alt + P", label: "Customize POS Theme", alt: "Colors, Fonts & Shadows" },
-    { key: "Alt + F1", label: "Search Customer" },
+    ...(showCustomer ? [{ key: "Alt + F1", label: "Search Customer" }] : []),
     { key: "Alt + F3", label: "Free Item Modal" },
     { key: "Enter on Qty", label: "Add to Checkout" },
   ];
@@ -98,10 +107,10 @@ export const ShortcutsGuide = ({ isInline = false }: ShortcutsGuideProps) => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="group flex justify-center items-center bg-muted/50 hover:bg-primary/10 border border-border hover:border-primary/50 rounded-lg w-10 h-10 transition-all duration-300"
+        className="group flex justify-center items-center bg-muted/50 hover:bg-primary/10 border border-border hover:border-primary/50 rounded-lg w-7 h-7 sm:w-8 sm:h-8 transition-all duration-300"
         title="View Keyboard Shortcuts"
       >
-        <Keyboard className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        <Keyboard className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
       </button>
 
       {/* Modal Overlay */}

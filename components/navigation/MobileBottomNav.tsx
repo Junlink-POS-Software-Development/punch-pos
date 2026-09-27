@@ -15,6 +15,7 @@ import { useViewStore } from "@/components/window-layouts/store/useViewStore";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { getNavItems, isShortcutActive, NavItemConfig } from "./navConfig";
 import { ContextualSubNav } from "./ContextualSubNav";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -54,7 +55,15 @@ export function MobileBottomNav() {
     };
   }, []);
 
-  const navItems = getNavItems(showKitchenKds);
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showCustomers = mounted ? !isCustomerCrmDisabled : true;
+  const navItems = getNavItems(showKitchenKds, showCustomers);
 
   // Primary 4 tabs on the bottom bar: terminal, dashboard, inventory, transactions
   const primaryTabIds = ["terminal", "dashboard", "inventory", "transactions"];

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 // Components
 import { CustomerHeaderSwitcher } from "./components/layout/CustomerHeaderSwitcher";
@@ -29,8 +31,16 @@ interface CustomerFeatureLayoutProps {
  * Full-width dashboard layout for the customer management feature.
  */
 export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProps) {
+  const router = useRouter();
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
   const viewMode = useCustomerStore((s) => s.viewMode);
   const isHeaderCollapsed = useCustomerStore((s) => s.isHeaderCollapsed);
+
+  useEffect(() => {
+    if (isCustomerCrmDisabled) {
+      router.replace("/");
+    }
+  }, [isCustomerCrmDisabled, router]);
 
   // Initialize data with hydration
   useCustomerData({ initialData });
@@ -40,6 +50,10 @@ export function CustomerFeatureLayout({ initialData }: CustomerFeatureLayoutProp
   const MemoizedKpiCards = useMemo(() => <CustomerKpiCards />, []);
   const MemoizedToolbar = useMemo(() => <CustomerToolbar />, []);
   const MemoizedContent = useMemo(() => <CustomerContentSwitcher />, []);
+
+  if (isCustomerCrmDisabled) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col bg-background w-full h-screen overflow-hidden font-sans text-foreground">

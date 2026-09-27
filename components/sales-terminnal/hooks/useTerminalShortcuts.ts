@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useViewStore } from "@/components/window-layouts/store/useViewStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 interface UseTerminalShortcutsProps {
   onClear: () => void;
@@ -58,8 +59,10 @@ export const useTerminalShortcuts = ({
 
         switch (key) {
           case "c":
-            event.preventDefault();
-            router.push("/customers");
+            if (!useSettingsStore.getState().isCustomerCrmDisabled) {
+              event.preventDefault();
+              router.push("/customers");
+            }
             break;
           case "d":
             event.preventDefault();

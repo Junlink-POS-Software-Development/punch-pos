@@ -166,12 +166,12 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
   const showSearchResultsView = Boolean(hasQuery && (!exactItem || isManualSearch));
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-2.5 sm:p-3 shadow-sm h-full max-h-full min-h-0 flex flex-col overflow-hidden">
+    <div className="bg-card border border-border rounded-2xl p-2 sm:p-2.5 shadow-sm h-full max-h-full min-h-0 flex flex-col overflow-hidden">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-border/60 shrink-0">
+      <div className="flex items-center justify-between pb-1.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
-            <Pill className="w-4 h-4" />
+          <div className="p-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <Pill className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider truncate">
@@ -184,12 +184,12 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                 RA 6675
               </span>
             </h3>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate hidden xs:block">
               {showEquivalentsView
-                ? "Philippine Generics Act • Compare prices & offer affordable alternatives"
+                ? "Philippine Generics Act • Compare prices & offer alternatives"
                 : showSearchResultsView
                 ? `Showing medicines matching "${currentBarcode}"`
-                : "Search by Brand Name, Generic Molecule, Dosage, or Formulation"}
+                : "Search by Brand Name, Molecule, Dosage, or Formulation"}
             </p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
             <button
               type="button"
               onClick={() => setIsManualSearch(true)}
-              className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20 cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20 cursor-pointer"
               title="Show all matching search results"
             >
               <Search className="w-3 h-3" />
@@ -225,7 +225,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
             <button
               type="button"
               onClick={onToggleShortcuts}
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors border border-border cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors border border-border cursor-pointer"
               title="Switch to Keyboard Shortcuts Guide"
             >
               <Keyboard className="w-3.5 h-3.5" />
@@ -237,17 +237,17 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
 
       {/* SEARCH RESULTS LIST VIEW */}
       {showSearchResultsView && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden py-1.5">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden py-1">
           {/* Filter Chips Bar */}
           {rawSearchResults.length > 0 && (
-            <div className="flex items-center gap-1.5 mb-2 pb-1 overflow-x-auto shrink-0 text-[11px]">
-              <span className="text-muted-foreground font-semibold shrink-0 mr-1 text-[10px] uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 mb-1.5 pb-0.5 overflow-x-auto shrink-0 text-[11px]">
+              <span className="text-muted-foreground font-semibold shrink-0 mr-1 text-[9px] uppercase tracking-wider">
                 Filter:
               </span>
               <button
                 type="button"
                 onClick={() => setFilterType("all")}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer text-[10px] sm:text-[11px] ${
                   filterType === "all"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -258,7 +258,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterType("generic")}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer text-[10px] sm:text-[11px] ${
                   filterType === "generic"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -269,7 +269,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterType("branded")}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer text-[10px] sm:text-[11px] ${
                   filterType === "branded"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -280,7 +280,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterType("rx")}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full font-bold transition-all cursor-pointer text-[10px] sm:text-[11px] ${
                   filterType === "rx"
                     ? "bg-red-600 text-white shadow-xs"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -295,7 +295,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
           {filteredSearchResults.length > 0 ? (
             <div
               ref={listContainerRef}
-              className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1"
+              className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1 custom-scrollbar"
             >
               {filteredSearchResults.map((item, index) => {
                 const meta = extractPharmacyMeta(item);
@@ -307,22 +307,22 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                   <div
                     key={item.id || item.sku}
                     onClick={() => setHighlightedIndex(index)}
-                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border transition-all duration-150 gap-2 ${
+                    className={`flex items-center justify-between p-1.5 sm:p-2 rounded-lg sm:rounded-xl border transition-all duration-150 gap-2 ${
                       isHighlighted
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm"
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-xs"
                         : "border-border/80 bg-card hover:bg-muted/50 hover:border-primary/40"
                     }`}
                   >
                     {/* Left: Metadata */}
-                    <div className="flex-1 min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-sm text-foreground truncate">
+                    <div className="flex-1 min-w-0 pr-1.5">
+                      <div className="flex items-center gap-1.5 flex-nowrap truncate">
+                        <span className="font-bold text-xs sm:text-sm text-foreground truncate">
                           {item.itemName}
                         </span>
 
                         {meta.brandType && (
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[9px] font-bold tracking-wider uppercase ${
+                            className={`px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold tracking-wider uppercase shrink-0 ${
                               meta.brandType === "generic"
                                 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                                 : "bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30"
@@ -333,67 +333,63 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                         )}
 
                         {meta.isRx && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-black tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                          <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-black tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 shrink-0">
                             Rx
                           </span>
                         )}
                       </div>
 
                       {/* Molecule, Dosage & Formulation Chips */}
-                      <div className="flex items-center gap-1.5 flex-wrap mt-1 text-xs">
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[10px] sm:text-[11px] text-muted-foreground truncate">
                         {meta.genericName && (
-                          <span className="text-muted-foreground truncate">
-                            <span className="opacity-75 font-normal">Molecule:</span>{" "}
-                            <strong className="font-semibold text-foreground">{meta.genericName}</strong>
+                          <span className="truncate max-w-[140px]">
+                            <strong className="font-semibold text-foreground/90">{meta.genericName}</strong>
                           </span>
                         )}
 
-                        {/* Dedicated Dosage Badge */}
-                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border flex items-center gap-0.5 ${
-                          meta.dosage
-                            ? "bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/30"
-                            : "bg-muted text-muted-foreground border-border/50 opacity-60"
-                        }`}>
-                          <span>Dosage:</span> {meta.dosage || "—"}
-                        </span>
+                        {meta.dosage && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30 shrink-0">
+                            {meta.dosage}
+                          </span>
+                        )}
 
                         {meta.formulation && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-500/15 text-purple-800 dark:text-purple-200 border border-purple-500/30">
-                            <span>Form:</span> {meta.formulation}
+                          <span className="opacity-75 hidden sm:inline shrink-0">
+                            • {meta.formulation}
                           </span>
                         )}
 
-                        <span className="text-[10px] font-mono text-muted-foreground/75 ml-1">
-                          SKU: {item.sku}
+                        <span className="font-mono text-muted-foreground/70 shrink-0 hidden xs:inline">
+                          • {item.sku}
                         </span>
                       </div>
                     </div>
 
                     {/* Right: Price, Stock & Selector Buttons */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-border/40">
-                      <div className="text-left sm:text-right">
-                        <span className="font-mono font-black text-sm text-foreground block">
+                    <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                      <div className="text-right">
+                        <span className="font-mono font-black text-xs sm:text-sm text-foreground block leading-tight">
                           ₱{price.toFixed(2)}
                         </span>
                         <span
-                          className={`text-[10px] font-bold block ${
-                            stock > 0 ? "text-muted-foreground" : "text-destructive"
+                          className={`text-[9px] sm:text-[10px] font-bold block leading-tight ${
+                            stock > 0 ? "text-muted-foreground" : "text-destructive font-black"
                           }`}
                         >
-                          {stock > 0 ? `Stocks: ${stock}` : "Out of stock"}
+                          {stock > 0 ? `Stock: ${stock}` : "Out"}
                         </span>
                       </div>
 
                       {/* Selector Controls */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1 sm:gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleSelectItem(item)}
-                          className="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-primary/20"
+                          className="px-2 sm:px-2.5 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-primary/20"
                           title="Select item into transaction form"
                         >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Select</span>
+                          <Check className="w-3 h-3" />
+                          <span className="hidden sm:inline">Select</span>
                         </button>
 
                         {onAddToCartDirect && (
@@ -401,11 +397,11 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                             type="button"
                             onClick={() => handleAddDirect(item)}
                             disabled={stock <= 0}
-                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                            className="px-2 sm:px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
                             title={stock > 0 ? "Direct 1-click add to cart" : "Out of stock"}
                           >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Add</span>
+                            <Plus className="w-3 h-3" />
+                            <span className="hidden sm:inline">Add</span>
                           </button>
                         )}
                       </div>
@@ -415,16 +411,16 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
               })}
             </div>
           ) : (
-            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl my-auto">
-              <Search className="w-6 h-6 mx-auto mb-2 text-muted-foreground/60" />
+            <div className="p-4 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl my-auto">
+              <Search className="w-5 h-5 mx-auto mb-1.5 text-muted-foreground/60" />
               <p className="font-bold text-foreground">No medicines found matching "{currentBarcode}"</p>
-              <p className="text-[11px] opacity-75 mt-1">
-                Try searching by Generic Molecule (e.g. Paracetamol), strength (e.g. 500mg), or dosage form (e.g. Syrup).
+              <p className="text-[10px] opacity-75 mt-0.5">
+                Try searching by Generic Molecule (e.g. Paracetamol), strength (e.g. 500mg), or dosage form.
               </p>
               <button
                 type="button"
                 onClick={() => setValue("barcode", "")}
-                className="mt-3 px-3 py-1 bg-muted hover:bg-muted/80 text-foreground font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                className="mt-2 px-2.5 py-0.5 bg-muted hover:bg-muted/80 text-foreground font-semibold rounded-lg text-xs transition-colors cursor-pointer"
               >
                 Clear Search & Browse All
               </button>
@@ -437,12 +433,12 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
       {showEquivalentsView && exactItem && (
         <div className="flex-1 min-h-0 overflow-y-auto py-1.5 space-y-2.5 pr-1">
           {/* Active Selected Medicine Card */}
-          <div className="flex items-center justify-between text-xs bg-muted/40 p-2.5 rounded-xl border border-border/60">
+          <div className="flex items-center justify-between text-xs bg-muted/40 p-1.5 sm:p-2 rounded-lg border border-border/60">
             <div className="truncate pr-2">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-foreground">{exactItem.itemName}</span>
+                <span className="font-bold text-foreground text-xs sm:text-sm">{exactItem.itemName}</span>
                 <span
-                  className={`text-[9px] font-black uppercase px-2 py-0.2 rounded ${
+                  className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
                     exactMeta?.brandType === "generic"
                       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                       : "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30"
@@ -451,13 +447,13 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                   {exactMeta?.brandType === "generic" ? "💊 Generic" : "🏷️ Branded"}
                 </span>
                 {exactMeta?.isRx && (
-                  <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                  <span className="text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
                     Rx
                   </span>
                 )}
               </div>
               {exactMeta?.genericName && (
-                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.2 truncate">
                   Molecule: <strong className="text-primary">{exactMeta.genericName}</strong>
                   {exactMeta.dosage ? ` • ${exactMeta.dosage}` : ""}
                   {exactMeta.formulation ? ` • ${exactMeta.formulation}` : ""}
@@ -467,10 +463,10 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
 
             <div className="flex items-center gap-2 shrink-0">
               <div className="text-right">
-                <span className="font-mono font-bold text-foreground text-sm block">
+                <span className="font-mono font-bold text-foreground text-xs sm:text-sm block leading-tight">
                   ₱{(exactItem.sellingPrice ?? exactItem.salesPrice ?? 0).toFixed(2)}
                 </span>
-                <span className="text-[10px] text-muted-foreground block">
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground block leading-tight">
                   Stocks: {getStock(exactItem.sku)}
                 </span>
               </div>
@@ -480,7 +476,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                   setValue("barcode", "");
                   setIsManualSearch(true);
                 }}
-                className="px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg border border-border transition-colors cursor-pointer"
+                className="px-2 py-0.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border border-border transition-colors cursor-pointer"
               >
                 Change
               </button>
@@ -497,7 +493,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {equivalents.map((alt) => {
                   const altSku = alt.sku || "";
                   const altItem = alt as any;
@@ -508,7 +504,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                   return (
                     <div
                       key={altSku || alt.id}
-                      className="flex flex-col justify-between p-2.5 rounded-xl bg-card border border-border/80 hover:border-primary/50 transition-all shadow-xs group"
+                      className="flex flex-col justify-between p-2 rounded-lg bg-card border border-border/80 hover:border-primary/50 transition-all shadow-xs group"
                     >
                       <div className="flex items-start justify-between gap-1">
                         <div className="min-w-0 flex-1">
@@ -526,12 +522,12 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                               {alt.meta.brandType === "generic" ? "Generic" : "Branded"}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.2">
+                            <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/30">
                               Dosage: {alt.meta.dosage || "—"}
                             </span>
                             {alt.meta.formulation && (
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[10px] text-muted-foreground truncate">
                                 • {alt.meta.formulation}
                               </span>
                             )}
@@ -539,11 +535,11 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                         </div>
 
                         <div className="text-right shrink-0">
-                          <span className="font-mono font-bold text-xs text-foreground block">
+                          <span className="font-mono font-bold text-xs text-foreground block leading-tight">
                             ₱{price.toFixed(2)}
                           </span>
                           {alt.isCheaper && (
-                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-0.5">
+                            <span className="text-[8px] sm:text-[9px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-0.5">
                               <TrendingDown className="w-2.5 h-2.5" />
                               Save ₱{alt.savings.toFixed(2)}
                             </span>
@@ -551,13 +547,13 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/40">
+                      <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-border/40">
                         <span
-                          className={`text-[10px] font-bold ${
+                          className={`text-[9px] sm:text-[10px] font-bold ${
                             altStock > 0 ? "text-muted-foreground" : "text-destructive"
                           }`}
                         >
-                          Stocks: {altStock}
+                          Stock: {altStock}
                         </span>
 
                         <button
@@ -568,7 +564,7 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
                               onAddToCartDirect(alt);
                             }
                           }}
-                          className="px-2 py-0.8 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                          className="px-2 py-0.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-[10px] font-bold rounded-md transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <ArrowRightLeft className="w-2.5 h-2.5" />
                           <span>Switch</span>
@@ -717,15 +713,6 @@ export const PharmacyEquivalentsHub: React.FC<PharmacyEquivalentsHubProps> = ({
           )}
         </div>
       )}
-
-      {/* Footer Notice */}
-      <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground shrink-0">
-        <span className="flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-          List-Based Selection Active
-        </span>
-        <span>Philippine Generics Act (RA 6675)</span>
-      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CustomerSearchModal } from "../../modals/CustomerSearchModal";
 import { useTerminalHeader } from "./hooks/useTerminalHeader";
 import { CashierInfo } from "./components/CashierInfo";
@@ -10,6 +11,7 @@ import { ProductDisplay } from "./components/ProductDisplay";
 import { FormFields } from "../FormFields";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { UtensilsCrossed, Scale } from "lucide-react";
 
 type TerminalHeaderProps = {
@@ -54,6 +56,15 @@ export const TerminalHeader = ({
     handleCustomerNameChange,
   } = useTerminalHeader(setCustomerId);
 
+  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showCustomer = mounted ? !isCustomerCrmDisabled : true;
+
   const statusColor = isBackdating ? "text-amber-500" : "text-primary";
   const borderColor = isBackdating
     ? "border-amber-500/30"
@@ -64,19 +75,21 @@ export const TerminalHeader = ({
 
   return (
     <>
-      <CustomerSearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelect={handleCustomerSelect}
-      />
+      {showCustomer && (
+        <CustomerSearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onSelect={handleCustomerSelect}
+        />
+      )}
 
       <div
-        className={`relative z-20 flex flex-col mb-2 shrink-0 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border/50" : borderColor} bg-card/50`}
+        className={`relative z-20 flex flex-col mb-1.5 shrink-0 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border/50" : borderColor} bg-card/50`}
       >
-        <div className="flex flex-row items-stretch w-full min-h-[240px]">
+        <div className="flex flex-row items-stretch w-full min-h-[120px] sm:min-h-[135px] lg:min-h-[150px]">
           {/* LEFT SECTION: Cashier, Customer, Tools */}
-          <div className="flex flex-col justify-between p-6 w-[35%] border-r border-border bg-muted/20">
-            <div className="space-y-4">
+          <div className="flex flex-col justify-between p-2.5 sm:p-3 lg:p-3.5 w-[38%] xl:w-[35%] border-r border-border bg-muted/20">
+            <div className="space-y-1.5 sm:space-y-2">
               <CashierInfo user={user} statusColor={statusColor} />
 
               {/* Restaurant Active Table Selector */}
@@ -84,17 +97,17 @@ export const TerminalHeader = ({
                 <button
                   type="button"
                   onClick={onOpenTableModal}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-primary/40 hover:border-primary hover:bg-primary/5 transition-all text-left shadow-xs cursor-pointer group"
+                  className="w-full flex items-center justify-between p-2 rounded-lg bg-card border border-primary/40 hover:border-primary hover:bg-primary/5 transition-all text-left shadow-xs cursor-pointer group"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
-                      <UtensilsCrossed className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="p-1 rounded bg-primary/10 text-primary shrink-0">
+                      <UtensilsCrossed className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block leading-tight">
+                      <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider block leading-tight">
                         Active Table
                       </span>
-                      <div className="flex items-center gap-1.5 truncate">
+                      <div className="flex items-center gap-1 truncate">
                         <span className="text-xs font-black text-foreground truncate">
                           {activeTable
                             ? `${activeTable.tableNumber} • ${activeTable.tableName || activeTable.floorZone}`
@@ -102,7 +115,7 @@ export const TerminalHeader = ({
                         </span>
                         {activeTable?.status && (
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase shrink-0 ${
+                            className={`px-1 py-0.2 rounded text-[7px] font-bold uppercase shrink-0 ${
                               activeTable.status === "occupied"
                                 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                 : activeTable.status === "billing"
@@ -118,7 +131,7 @@ export const TerminalHeader = ({
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-primary font-bold group-hover:underline shrink-0 ml-1">
+                  <span className="text-[9px] text-primary font-bold group-hover:underline shrink-0 ml-1">
                     Floor Plan
                   </span>
                 </button>
@@ -129,15 +142,15 @@ export const TerminalHeader = ({
                 <button
                   type="button"
                   onClick={onOpenScaleModal}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-amber-500/40 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-left shadow-xs cursor-pointer group"
+                  className="w-full flex items-center justify-between p-2 rounded-lg bg-card border border-amber-500/40 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-left shadow-xs cursor-pointer group"
                   title="Open Weighing Scale & Produce PLU Lookup [F4]"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
-                      <Scale className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="p-1 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+                      <Scale className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block leading-tight">
+                      <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider block leading-tight">
                         Weighed Goods
                       </span>
                       <span className="text-xs font-black text-foreground truncate">
@@ -145,31 +158,33 @@ export const TerminalHeader = ({
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/20">
+                  <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/20">
                     F4
                   </span>
                 </button>
               )}
 
-              <CustomerSelector
-                customerName={customerName || ""}
-                isCustomerSelected={!!isCustomerSelected}
-                onSearchOpen={() => setIsSearchOpen(true)}
-                onClearCustomer={handleClearCustomer}
-              />
+              {showCustomer && (
+                <CustomerSelector
+                  customerName={customerName || ""}
+                  isCustomerSelected={!!isCustomerSelected}
+                  onSearchOpen={() => setIsSearchOpen(true)}
+                  onClearCustomer={handleClearCustomer}
+                />
+              )}
             </div>
             
-            <div className="mt-auto pt-4">
+            <div className="mt-auto pt-1.5 sm:pt-2">
               <HeaderToolbar onOpenThemeModal={onOpenThemeModal} />
             </div>
           </div>
 
           {/* RIGHT SECTION: Total, Time, Product Status */}
-          <div className="relative flex-1 p-6 bg-card">
+          <div className="relative flex-1 p-2.5 sm:p-3 lg:p-3.5 bg-card">
 
             {/* Top Right: Time */}
-            <div className="absolute top-6 right-6 z-20">
-              <div className="bg-muted/50 px-4 py-2 rounded-lg border border-border backdrop-blur-sm shadow-sm">
+            <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20">
+              <div className="bg-muted/50 px-2.5 py-1 rounded-md sm:rounded-lg border border-border backdrop-blur-sm shadow-xs">
                 <TimeDisplay
                   isBackdating={isBackdating}
                   customTransactionDate={customTransactionDate}
@@ -178,8 +193,8 @@ export const TerminalHeader = ({
               </div>
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 top-16 flex items-center justify-start pl-8 z-10 pointer-events-none">
-              <div className="pointer-events-auto max-w-[60%]">
+            <div className="absolute inset-x-0 bottom-0 top-7 sm:top-8 flex items-center justify-start pl-3 sm:pl-4 z-10 pointer-events-none">
+              <div className="pointer-events-auto max-w-[65%]">
                 <ProductDisplay
                   currentProduct={currentProduct}
                   isBackdating={isBackdating}
@@ -188,12 +203,12 @@ export const TerminalHeader = ({
             </div>
 
             {/* Bottom Right: Grand Total */}
-            <div className="absolute bottom-8 right-8 z-20">
+            <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-20">
               <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-[10px] uppercase tracking-[0.2em] mb-1">
+                <span className="text-muted-foreground text-[9px] sm:text-[10px] uppercase tracking-[0.2em] mb-0.5">
                   Grand Total
                 </span>
-                <span className="pos-total-glow font-bold text-[2.5rem] text-primary tracking-tighter leading-none transition-all duration-300">
+                <span className="pos-total-glow font-bold text-xl sm:text-2xl lg:text-3xl text-primary tracking-tighter leading-none transition-all duration-300">
                   ₱{grandTotal.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,

@@ -5,6 +5,7 @@ import { PosLayoutSettings } from "./PosLayoutSettings";
 import { VoucherSettings } from "./VoucherSettings";
 import { LowStockSettings } from "./LowStockSettings";
 import { PriceEditingSettings } from "./PriceEditingSettings";
+import { CustomerCrmSettings } from "./CustomerCrmSettings";
 import { BackdateSettings } from "../../backdating/BackdatingSettings";
 
 export const PreferencesTab = () => {
@@ -17,6 +18,10 @@ export const PreferencesTab = () => {
 
       <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
         <PosLayoutSettings />
+      </div>
+
+      <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">
+        <CustomerCrmSettings />
       </div>
 
       <div className="bg-card/50 p-8 border border-border rounded-xl shadow-sm backdrop-blur-sm">

@@ -8,9 +8,12 @@ interface SettingsState {
   currency: CurrencyCode;
   lowStockThreshold: number;
   isPriceEditingEnabled: boolean;
+  isCustomerCrmDisabled: boolean;
   setCurrency: (currency: CurrencyCode) => void;
   setLowStockThreshold: (threshold: number) => void;
   setPriceEditingEnabled: (enabled: boolean) => void;
+  setCustomerCrmDisabled: (disabled: boolean) => void;
+  setCustomerCrmEnabled: (enabled: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -20,9 +23,12 @@ export const useSettingsStore = create<SettingsState>()(
       // UPDATED: Hardcoded default to 100
       lowStockThreshold: 100, 
       isPriceEditingEnabled: false,
+      isCustomerCrmDisabled: false,
       setCurrency: (currency) => set({ currency }),
       setLowStockThreshold: (lowStockThreshold) => set({ lowStockThreshold }),
       setPriceEditingEnabled: (enabled) => set({ isPriceEditingEnabled: enabled }),
+      setCustomerCrmDisabled: (disabled) => set({ isCustomerCrmDisabled: disabled }),
+      setCustomerCrmEnabled: (enabled) => set({ isCustomerCrmDisabled: !enabled }),
     }),
     {
       name: 'pos-settings-storage',
