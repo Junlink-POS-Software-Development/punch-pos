@@ -193,6 +193,23 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
     }));
   };
 
+  const handleOpenSidebarForItem = (itemId: string, hasShortcuts?: boolean) => {
+    recordSidebarInteraction();
+    if (sidebarLeaveTimeoutRef.current) {
+      clearTimeout(sidebarLeaveTimeoutRef.current);
+      sidebarLeaveTimeoutRef.current = null;
+    }
+    if (flyoutTimeoutRef.current) {
+      clearTimeout(flyoutTimeoutRef.current);
+      flyoutTimeoutRef.current = null;
+    }
+    setFlyoutItemId(null);
+    setSidebarCollapsed(false);
+    if (hasShortcuts && itemId) {
+      setOpenSectionIds((prev) => ({ ...prev, [itemId]: true }));
+    }
+  };
+
   return (
     <>
       <aside
@@ -216,6 +233,11 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                 clearTimeout(sidebarLeaveTimeoutRef.current);
                 sidebarLeaveTimeoutRef.current = null;
               }
+              if (flyoutTimeoutRef.current) {
+                clearTimeout(flyoutTimeoutRef.current);
+                flyoutTimeoutRef.current = null;
+              }
+              setFlyoutItemId(null);
               toggleSidebar();
             }}
             className="top-4 -right-3.5 z-50 absolute flex items-center justify-center bg-background border border-border shadow-md p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex cursor-pointer"
@@ -231,7 +253,17 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         )}
 
         {/* Header / Logo Area */}
-        <div className="flex items-center h-16 border-b border-border px-4 overflow-hidden shrink-0">
+        <div 
+          onClick={() => {
+            if (isSidebarCollapsed) {
+              handleOpenSidebarForItem("", false);
+            }
+          }}
+          className={`flex items-center h-16 border-b border-border px-4 overflow-hidden shrink-0 ${
+            isSidebarCollapsed ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""
+          }`}
+          title={isSidebarCollapsed ? "Expand sidebar" : undefined}
+        >
           <div className="flex items-center gap-3 shrink-0">
             {storeInfo.img ? (
               <div className="w-10 h-10 min-w-[40px] rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center">
@@ -286,52 +318,78 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                 onMouseLeave={handleFlyoutLeave}
               >
                 <div className="flex items-center w-full">
-                  <Link
-                    href={item.href}
-                    onClick={(e) => {
-                      recordSidebarInteraction();
-                      if (!isActive) {
-                        startNavigation(item.href);
-                      }
-                      // If expanded and item has shortcuts, ensure section is opened
-                      if (isExpanded && hasShortcuts) {
-                        if (isActive) {
-                          // Already on section, toggle accordion
-                          toggleSection(item.id, e);
-                        } else {
-                          // Navigating to section, ensure it's open
-                          setOpenSectionIds((prev) => ({ ...prev, [item.id]: true }));
+                  {isExpanded ? (
+                    <Link
+                      href={item.href}
+                      onClick={(e) => {
+                        recordSidebarInteraction();
+                        if (!isActive) {
+                          startNavigation(item.href);
                         }
-                      }
-                    }}
-                    className={`
-                      flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 flex-1 min-w-0
-                      ${
-                        isActive
-                          ? "bg-primary/10 text-primary border border-primary/20 font-semibold"
-                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-transparent"
-                      }
-                      ${!isExpanded ? "justify-center" : ""}
-                    `}
-                  >
-                    <div className="relative shrink-0">
-                      <item.Icon
-                        className={`
-                          w-5 h-5 transition-transform duration-200
-                          ${isActive ? "scale-105" : ""}
-                        `}
-                      />
-                      {item.hasNotification && (
-                        <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
-                      )}
-                    </div>
+                        // If expanded and item has shortcuts, ensure section is opened
+                        if (hasShortcuts) {
+                          if (isActive) {
+                            // Already on section, toggle accordion
+                            toggleSection(item.id, e);
+                          } else {
+                            // Navigating to section, ensure it's open
+                            setOpenSectionIds((prev) => ({ ...prev, [item.id]: true }));
+                          }
+                        }
+                      }}
+                      className={`
+                        flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 flex-1 min-w-0 cursor-pointer
+                        ${
+                          isActive
+                            ? "bg-primary/10 text-primary border border-primary/20 font-semibold"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-transparent"
+                        }
+                      `}
+                    >
+                      <div className="relative shrink-0">
+                        <item.Icon
+                          className={`
+                            w-5 h-5 transition-transform duration-200
+                            ${isActive ? "scale-105" : ""}
+                          `}
+                        />
+                        {item.hasNotification && (
+                          <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+                        )}
+                      </div>
 
-                    {isExpanded && (
                       <span className="text-sm font-medium tracking-tight truncate flex-1">
                         {item.text}
                       </span>
-                    )}
-                  </Link>
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSidebarForItem(item.id, hasShortcuts)}
+                      className={`
+                        flex items-center justify-center px-3 py-2.5 rounded-xl transition-all duration-200 flex-1 min-w-0 cursor-pointer
+                        ${
+                          isActive
+                            ? "bg-primary/10 text-primary border border-primary/20 font-semibold"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-transparent"
+                        }
+                      `}
+                      aria-label={`Open sidebar for ${item.text}`}
+                      title={item.text}
+                    >
+                      <div className="relative shrink-0">
+                        <item.Icon
+                          className={`
+                            w-5 h-5 transition-transform duration-200
+                            ${isActive ? "scale-105" : ""}
+                          `}
+                        />
+                        {item.hasNotification && (
+                          <span className="top-0 right-0 absolute bg-red-500 shadow-sm rounded-full w-2 h-2" />
+                        )}
+                      </div>
+                    </button>
+                  )}
 
                   {/* Explicit chevron button when expanded for instant accordion toggle */}
                   {isExpanded && hasShortcuts && (
@@ -403,12 +461,18 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                     onMouseLeave={handleFlyoutLeave}
                     className="absolute left-full top-0 ml-3 z-50 min-w-[210px] bg-card border border-border rounded-xl shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="flex items-center gap-2 px-2.5 py-2 border-b border-border/60 mb-1">
-                      <item.Icon className="w-4 h-4 text-primary shrink-0" />
-                      <div className="font-semibold text-xs text-foreground truncate">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSidebarForItem(item.id, hasShortcuts)}
+                      className="flex items-center gap-2 px-2.5 py-2 border-b border-border/60 mb-1 w-full text-left cursor-pointer hover:bg-muted/60 rounded-lg transition-colors group"
+                      title="Open sidebar"
+                    >
+                      <item.Icon className="w-4 h-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+                      <div className="font-semibold text-xs text-foreground truncate flex-1">
                         {item.text}
                       </div>
-                    </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </button>
 
                     {hasShortcuts ? (
                       <div className="flex flex-col space-y-0.5">
@@ -442,9 +506,13 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
                         })}
                       </div>
                     ) : (
-                      <div className="px-2.5 py-1 text-[11px] text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSidebarForItem(item.id, false)}
+                        className="px-2.5 py-1 text-[11px] text-muted-foreground w-full text-left cursor-pointer hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
+                      >
                         {item.desc || item.text}
-                      </div>
+                      </button>
                     )}
                   </div>
                 )}
@@ -454,7 +522,17 @@ const Navigation = React.memo(({ variant = "grid" }: NavigationProps) => {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-border shrink-0 text-center">
+        <div 
+          onClick={() => {
+            if (isSidebarCollapsed) {
+              handleOpenSidebarForItem("", false);
+            }
+          }}
+          className={`p-3 border-t border-border shrink-0 text-center ${
+            isSidebarCollapsed ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""
+          }`}
+          title={isSidebarCollapsed ? "Expand sidebar" : undefined}
+        >
           {isExpanded ? (
             <p className="text-[10px] text-muted-foreground tracking-tight">
               PUNCH POS System
