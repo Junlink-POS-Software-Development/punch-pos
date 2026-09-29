@@ -120,11 +120,13 @@ export const useBatchStockForm = (items: Item[]) => {
       };
     });
 
+    setBatchData({});
+    setStep("selection");
+    onSuccess();
+
     await addBatchStockEntry(payload, {
-      onSuccess: () => {
-        setBatchData({});
-        setStep("selection");
-        onSuccess();
+      onError: (err) => {
+        alert("Batch update failed: " + err.message);
       },
     });
   };

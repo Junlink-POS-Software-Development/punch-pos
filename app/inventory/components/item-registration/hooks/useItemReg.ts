@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import imageCompression from "browser-image-compression";
+import { useQueryClient } from "@tanstack/react-query";
 import { useItems } from "../../../hooks/useItems";
 import { Item } from "../utils/itemTypes";
 import { insertManyItems } from "../lib/item.api";
@@ -17,6 +18,7 @@ const generateAutoSKU = (category?: string) => {
 };
 
 export const useItemReg = () => {
+  const queryClient = useQueryClient();
   // Use Zustand store for view state
   const { viewMode, setViewMode, addTab, setAddTab } = useItemRegStore();
   
@@ -242,6 +244,11 @@ export const useItemReg = () => {
         // 1. Insert Items
         await insertManyItems(itemsToInsert); 
         
+        // Invalidate queries so newly imported items appear immediately in the table
+        queryClient.invalidateQueries({ queryKey: ["inventory-infinite"] });
+        queryClient.invalidateQueries({ queryKey: ["inventory-all-pos"] });
+        queryClient.invalidateQueries({ queryKey: ["items"] });
+
         // For now, clear and reset
         setBatchRawText("");
         setParsedBatchItems([]);

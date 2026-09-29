@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { extractPharmacyMeta, stripPharmacyMetaFromDescription, BrandType } from "@/lib/utils/pharmacyMeta";
+import { extractGroceryMeta, stripGroceryMetaFromDescription } from "@/lib/utils/groceryMeta";
 
 const getSupabase = async () => {
   return createClient();
@@ -27,6 +28,15 @@ export interface InventoryItem {
   brand_type?: BrandType | null;
   batch_number?: string | null;
   expiry_date?: string | null;
+  // Grocery & Weighed fields
+  is_weighed?: boolean;
+  unit_of_measure?: string;
+  plu_code?: string | null;
+  tare_weight?: number;
+  pack_barcode?: string | null;
+  pack_quantity?: number;
+  pack_selling_price?: number | null;
+  is_perishable?: boolean;
 }
 
 // Pagination Params
@@ -99,12 +109,13 @@ export const fetchInventory = async (
     return { data: [], count: 0 };
   }
 
-  // 5. Map data and enrich with Pharmacy Metadata (from columns, description tag, or heuristics)
+  // 5. Map data and enrich with Pharmacy and Grocery Metadata
   const mappedData = (data as any[] || []).map((item) => {
     const meta = extractPharmacyMeta(item);
+    const groceryMeta = extractGroceryMeta(item);
     return {
       ...item,
-      description: stripPharmacyMetaFromDescription(item.description),
+      description: stripGroceryMetaFromDescription(stripPharmacyMetaFromDescription(item.description)),
       // Fallback to cost_price if sales_price is missing
       sales_price: item.sales_price ?? item.cost_price ?? 0,
       unit_cost: item.unit_cost ?? 0,
@@ -115,6 +126,15 @@ export const fetchInventory = async (
       brand_type: meta.brandType ?? null,
       batch_number: meta.batchNumber ?? item.batch_number ?? null,
       expiry_date: meta.expiryDate ?? item.expiry_date ?? null,
+      // Grocery fields
+      is_weighed: groceryMeta.isWeighed ?? item.is_weighed ?? false,
+      unit_of_measure: groceryMeta.unitOfMeasure ?? item.unit_of_measure ?? "pc",
+      plu_code: groceryMeta.pluCode ?? item.plu_code ?? null,
+      tare_weight: groceryMeta.tareWeight ?? item.tare_weight ?? 0,
+      pack_barcode: groceryMeta.packBarcode ?? item.pack_barcode ?? null,
+      pack_quantity: groceryMeta.packQuantity ?? item.pack_quantity ?? 1,
+      pack_selling_price: groceryMeta.packSellingPrice ?? item.pack_selling_price ?? null,
+      is_perishable: groceryMeta.isPerishable ?? item.is_perishable ?? false,
     };
   });
 

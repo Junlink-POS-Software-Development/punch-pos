@@ -44,30 +44,29 @@ const StockManagementContent = () => {
 
   const handleStockSubmit = (data: StockFormSchema) => {
     if (editingItem) {
+      const currentId = editingItem.id;
+      const currentItemName = editingItem.item_name;
+      setEditingItem(null);
+      setIsModalOpen(false);
+
       editStockEntry(
-        editingItem.id,
+        currentId,
         {
-          itemName: editingItem.item_name,
+          itemName: currentItemName,
           stockFlow: data.stockFlow,
           quantity: data.quantity,
           capitalPrice: 0,
           notes: data.notes ?? "",
         },
         {
-          onSuccess: () => {
-            setEditingItem(null);
-            setIsModalOpen(false);
-          },
           onError: (err) => {
             setErrorMessage(err.message);
           }
         }
       );
     } else {
+      setIsModalOpen(false);
       addStockEntry(data, {
-        onSuccess: () => {
-          setIsModalOpen(false);
-        },
         onError: (err) => {
           setErrorMessage(err.message);
         }

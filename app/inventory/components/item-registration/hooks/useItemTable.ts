@@ -15,7 +15,7 @@ import {
 export type { SortKey, SortConfig } from "../store/useItemRegStore";
 
 export const useItemTable = () => {
-  const { removeItem, editItem } = useItems();
+  const { removeItem, removeItems, editItem } = useItems();
   const {
     inventory,
     totalCount,
@@ -124,7 +124,7 @@ export const useItemTable = () => {
 
   const handleDeleteSelected = () => {
     if (confirm(`Delete ${selectedItems.length} items?`)) {
-      selectedItems.forEach((id) => removeItem(id));
+      removeItems(selectedItems);
       setSelectedItems([]);
     }
   };
@@ -180,7 +180,7 @@ export const useItemTable = () => {
         id: item.item_id,
         itemName: edits.item_name,
         sku: edits.sku,
-        salesPrice: 0,
+        salesPrice: item.unit_cost ?? 0,
         sellingPrice: parseFloat(edits.sales_price) || 0,
         description: finalDescription,
         imageUrl: edits.image_url,

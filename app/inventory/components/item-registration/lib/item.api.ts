@@ -409,6 +409,30 @@ export const deleteItem = async (id: string): Promise<void> => {
   }
 };
 
+export const deleteItems = async (ids: string[]): Promise<void> => {
+  if (!ids || ids.length === 0) return;
+  const supabase = await getSupabase();
+
+  // 1. Delete dependent stock_flow records first
+  const { error: stockError } = await supabase
+    .from("stock_flow")
+    .delete()
+    .in("item_id", ids);
+
+  if (stockError) {
+    console.error("Supabase delete stock_flow error:", stockError);
+    throw new Error(stockError.message);
+  }
+
+  // 2. Delete the items
+  const { error } = await supabase.from("items").delete().in("id", ids);
+
+  if (error) {
+    console.error("Supabase delete error:", error);
+    throw new Error(error.message);
+  }
+};
+
 export const checkItemExistence = async (
   field: "itemName" | "sku",
   value: string,
