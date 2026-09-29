@@ -58,6 +58,7 @@ const DesktopSalesTerminal = () => {
     clearErrorMessage,
     transactionToast,
     clearTransactionToast,
+    customerId,
     setCustomerId,
     setCartItems,
   } = usePosForm();
@@ -509,6 +510,7 @@ const DesktopSalesTerminal = () => {
                 <div className="flex flex-col h-full min-h-0 overflow-hidden flex-1">
                     <TerminalHeader 
                       isTabletMode={isTabletMode}
+                      customerId={customerId}
                       setCustomerId={setCustomerId} 
                       grandTotal={cartItems.reduce((sum, item) => sum + (item.total || 0), 0)}
                       onAddToCartClick={onAddToCart}

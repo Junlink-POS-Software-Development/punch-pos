@@ -1,9 +1,8 @@
-// app/inventory/components/stock-management/components/FormFields.tsx
-
 import React from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { PosFormValues } from "../utils/posSchema";
 import ItemAutocomplete from "../../../utils/ItemAutoComplete";
+import { CustomerAutoComplete } from "./CustomerAutoComplete";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { useSettingsStore } from "@/store/useSettingsStore";
 
@@ -13,10 +12,20 @@ type FormFieldsProps = {
   setActiveField?: (field: "customerName" | "barcode" | "quantity" | "freeSearch" | "freeQty" | null) => void;
   activeField?: "customerName" | "barcode" | "quantity" | "freeSearch" | "freeQty" | null;
   isTabletMode?: boolean;
+  customerId?: string | null;
+  setCustomerId?: (id: string | null) => void;
 };
 
 export const FormFields = React.memo<FormFieldsProps>(
-  ({ onAddToCartClick, onDoneSubmitTrigger, setActiveField, activeField, isTabletMode }) => {
+  ({
+    onAddToCartClick,
+    onDoneSubmitTrigger,
+    setActiveField,
+    activeField,
+    isTabletMode,
+    customerId,
+    setCustomerId,
+  }) => {
     const { isPharmacy } = useBusinessMode();
     const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
     const [mounted, setMounted] = React.useState(false);
@@ -31,8 +40,15 @@ export const FormFields = React.memo<FormFieldsProps>(
       useFormContext<PosFormValues>();
     
     // Direct refs for inputs to ensure reliable focus
+    const customerInputRef = React.useRef<HTMLInputElement>(null);
     const barcodeInputRef = React.useRef<HTMLInputElement>(null);
     const quantityInputRef = React.useRef<HTMLInputElement>(null);
+
+    const focusCustomer = React.useCallback(() => {
+      setTimeout(() => {
+        customerInputRef.current?.focus();
+      }, 50);
+    }, []);
 
     const focusBarcode = React.useCallback(() => {
       setTimeout(() => {
@@ -48,12 +64,14 @@ export const FormFields = React.memo<FormFieldsProps>(
 
     // Listen to activeField prop changes to set focus
     React.useEffect(() => {
-      if (activeField === "barcode") {
+      if (activeField === "customerName") {
+        focusCustomer();
+      } else if (activeField === "barcode") {
         focusBarcode();
       } else if (activeField === "quantity") {
         focusQuantity();
       }
-    }, [activeField, focusBarcode, focusQuantity]);
+    }, [activeField, focusCustomer, focusBarcode, focusQuantity]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== "Enter") return;
@@ -142,7 +160,44 @@ export const FormFields = React.memo<FormFieldsProps>(
               </label>
 
               <div className="w-full">
-                {field.id === "barcode" ? (
+                {field.id === "customerName" ? (
+                  <Controller
+                    control={control}
+                    name="customerName"
+                    render={({
+                      field: { onChange, value, onBlur, ref: formRef },
+                      fieldState: { error },
+                    }) => (
+                      <CustomerAutoComplete
+                        ref={(e) => {
+                          formRef(e);
+                          (customerInputRef as any).current = e;
+                        }}
+                        id="customerName"
+                        value={value ? String(value) : ""}
+                        onChange={(val) => {
+                          onChange(val);
+                          if (!val) setCustomerId?.(null);
+                        }}
+                        onCustomerSelect={(customer) => {
+                          setValue("customerName", customer.full_name, { shouldValidate: true });
+                          setCustomerId?.(customer.id);
+                          setActiveField?.("barcode");
+                        }}
+                        onClear={() => {
+                          setValue("customerName", "", { shouldValidate: true });
+                          setCustomerId?.(null);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setActiveField?.("customerName")}
+                        onBlur={onBlur}
+                        isTabletMode={isTabletMode}
+                        isCustomerSelected={!!customerId}
+                        error={error?.message}
+                      />
+                    )}
+                  />
+                ) : field.id === "barcode" ? (
                   <Controller
                     control={control}
                     name="barcode"
@@ -226,9 +281,6 @@ export const FormFields = React.memo<FormFieldsProps>(
                     className={`w-full h-8.5 sm:h-9.5 text-xs sm:text-sm bg-background text-foreground px-2.5 sm:px-3 rounded-lg border border-input focus:border-primary transition-colors focus:outline-none ${
                       field.hideSpinners ? noSpinnerClass : ""
                     }`}
-                    {...((field.id === "customerName") && {
-                      onKeyDown: handleKeyDown,
-                    })}
                   />
                 )}
               </div>

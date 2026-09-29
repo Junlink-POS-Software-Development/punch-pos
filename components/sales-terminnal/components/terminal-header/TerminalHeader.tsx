@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CustomerSearchModal } from "../../modals/CustomerSearchModal";
 import { useTerminalHeader } from "./hooks/useTerminalHeader";
 import { CashierInfo } from "./components/CashierInfo";
-import { CustomerSelector } from "./components/CustomerSelector";
 import { HeaderToolbar } from "./components/HeaderToolbar";
 import { TimeDisplay } from "./components/TimeDisplay";
 import { ProductDisplay } from "./components/ProductDisplay";
 import { FormFields } from "../FormFields";
 import { useBusinessMode } from "@/app/hooks/useBusinessMode";
 import { useRestaurantStore } from "@/app/restaurant/stores/useRestaurantStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
 import { UtensilsCrossed, Scale } from "lucide-react";
 
 type TerminalHeaderProps = {
+  customerId?: string | null;
   setCustomerId: (id: string | null) => void;
   grandTotal: number;
   // Form Interaction Props
@@ -28,6 +25,7 @@ type TerminalHeaderProps = {
   onOpenScaleModal?: () => void;
 };
 export const TerminalHeader = ({
+  customerId,
   setCustomerId,
   grandTotal,
   onAddToCartClick,
@@ -44,44 +42,19 @@ export const TerminalHeader = ({
   const activeTable = tables.find((t) => t.id === activeTableId);
   const {
     user,
-    isSearchOpen,
-    setIsSearchOpen,
-    customerName,
-    handleCustomerSelect,
-    handleClearCustomer,
     currentProduct,
     isBackdating,
     customTransactionDate,
     setCustomTransactionDate,
-    handleCustomerNameChange,
   } = useTerminalHeader(setCustomerId);
-
-  const isCustomerCrmDisabled = useSettingsStore((s) => s.isCustomerCrmDisabled);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const showCustomer = mounted ? !isCustomerCrmDisabled : true;
 
   const statusColor = isBackdating ? "text-amber-500" : "text-primary";
   const borderColor = isBackdating
     ? "border-amber-500/30"
     : "border-transparent";
 
-  const isCustomerSelected =
-    customerName && customerName !== "" && customerName !== "Walk-in Customer";
-
   return (
     <>
-      {showCustomer && (
-        <CustomerSearchModal
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          onSelect={handleCustomerSelect}
-        />
-      )}
 
       <div
         className={`relative z-20 flex flex-col mb-1.5 shrink-0 rounded-xl w-full text-foreground shadow-sm transition-all duration-300 border ${borderColor === "border-transparent" ? "border-border/50" : borderColor} bg-card/50`}
@@ -163,15 +136,6 @@ export const TerminalHeader = ({
                   </span>
                 </button>
               )}
-
-              {showCustomer && (
-                <CustomerSelector
-                  customerName={customerName || ""}
-                  isCustomerSelected={!!isCustomerSelected}
-                  onSearchOpen={() => setIsSearchOpen(true)}
-                  onClearCustomer={handleClearCustomer}
-                />
-              )}
             </div>
             
             <div className="mt-auto pt-1.5 sm:pt-2">
@@ -227,6 +191,8 @@ export const TerminalHeader = ({
             setActiveField={setActiveField}
             activeField={activeField}
             isTabletMode={isTabletMode}
+            customerId={customerId}
+            setCustomerId={setCustomerId}
           />
         </div>
       </div>

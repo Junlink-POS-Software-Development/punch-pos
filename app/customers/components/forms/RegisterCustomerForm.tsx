@@ -22,9 +22,10 @@ import { FormFooter } from "./register-customer/FormFooter";
 import { ErrorMessage } from "../../../../components/sales-terminnal/components/ErrorMessage";
 
 interface RegisterCustomerFormProps {
-  onSuccess: () => void;
+  onSuccess: (customer?: Customer) => void;
   onCancel: () => void;
   initialData?: Customer;
+  initialName?: string;
 }
 
 /**
@@ -36,6 +37,7 @@ export function RegisterCustomerForm({
   onSuccess,
   onCancel,
   initialData,
+  initialName,
 }: RegisterCustomerFormProps) {
   const { groups } = useCustomerData();
   const { refreshData } = useCustomerMutations();
@@ -60,18 +62,30 @@ export function RegisterCustomerForm({
   } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      full_name: initialData?.full_name || "",
+      full_name: initialData?.full_name || initialName || "",
       phone_number: initialData?.phone_number || "",
       email: initialData?.email || "",
       address: initialData?.address || "",
       remarks: initialData?.remarks || "",
       group_id: initialData?.group_id || "",
-      birthdate: initialData?.birthdate || "",
+      birthdate: initialData?.birthdate || "2000-01-01",
       date_of_registration: initialData?.date_of_registration || new Date().toISOString().split("T")[0],
-      civil_status: (initialData?.civil_status as any) || "",
-      gender: (initialData?.gender as any) || "",
+      civil_status: (initialData?.civil_status as any) || "Single",
+      gender: (initialData?.gender as any) || "Not Specified",
     },
   });
+
+  React.useEffect(() => {
+    if (initialName && !initialData?.full_name) {
+      setValue("full_name", initialName);
+    }
+  }, [initialName, initialData, setValue]);
+
+  React.useEffect(() => {
+    if (groups.length > 0 && !initialData?.group_id) {
+      setValue("group_id", groups[0].id);
+    }
+  }, [groups, initialData, setValue]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -215,7 +229,8 @@ export function RegisterCustomerForm({
     setLoading(true);
     setErrorMessage(null);
     try {
-      if (initialData) {
+      let createdCustomer: Customer | undefined;
+      if (initialData?.id) {
         // 1. Update existing customer
         const payload = {
           ...data,
@@ -228,6 +243,7 @@ export function RegisterCustomerForm({
         };
         const result = await updateCustomerAction(initialData.id, payload);
         if (!result.success) throw new Error(result.error);
+        createdCustomer = initialData;
       } else {
         // 2. Create new customer
         const formData = new FormData();
@@ -262,12 +278,14 @@ export function RegisterCustomerForm({
           setLoading(false);
           return;
         }
+
+        createdCustomer = result.data;
       }
 
       await refreshData();
       reset();
       setCompressedFiles([]);
-      onSuccess();
+      onSuccess(createdCustomer);
     } catch (error: any) {
       console.error("Submission failed:", error);
       setErrorMessage(error.message || "An unexpected error occurred.");
@@ -296,7 +314,7 @@ export function RegisterCustomerForm({
       setCompressedFiles([]);
       setPendingFormData(null);
       setShowDuplicateModal(false);
-      onSuccess();
+      onSuccess(result?.data);
     } catch (error: any) {
       setErrorMessage("Failed to create duplicate customer.");
     } finally {
