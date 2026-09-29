@@ -21,6 +21,8 @@
   --color-input: var(--color-input);
   --color-ring: var(--color-ring);
   --color-card: var(--color-card);
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
 }
 
 :root {
@@ -48,6 +50,8 @@
   --color-input: #e2e8f0; /* slate-200 */
   --color-ring: #2563eb; /* blue-600 */
   --color-card: #ffffff;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
 }
 
 .dark {
@@ -75,6 +79,8 @@
   --color-input: #334155; /* slate-700 (was slate-800) */
   --color-ring: #3b82f6; /* blue-500 */
   --color-card: #1e293b; /* slate-800 */
+  --color-popover: #1e293b; /* slate-800 */
+  --color-popover-foreground: #f8fafc;
 }
 
 body {

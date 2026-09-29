@@ -176,7 +176,7 @@ export const FileCard: React.FC<FileCardProps> = ({
               />
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 bottom-full mb-1 z-40 w-44 rounded-xl border border-border bg-popover p-1 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+                className="absolute right-0 bottom-full mb-1 z-40 w-44 rounded-xl border border-border bg-card dark:bg-slate-900 p-1 shadow-xl animate-in fade-in zoom-in-95 duration-150"
               >
                 <button
                   type="button"
@@ -219,7 +219,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                     </button>
 
                     {showMoveSubmenu && (
-                      <div className="absolute left-full bottom-0 ml-1 w-40 rounded-xl border border-border bg-popover p-1 shadow-xl">
+                      <div className="absolute left-full bottom-0 ml-1 w-44 max-h-52 overflow-y-auto rounded-xl border border-border bg-card dark:bg-slate-900 p-1 shadow-xl flex flex-col space-y-0.5">
                         {otherFolders.map((f) => (
                           <button
                             key={f.id}
@@ -229,7 +229,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                               setShowMoveSubmenu(false);
                               onMoveToFolder(file, f.name);
                             }}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-xs text-foreground hover:bg-primary/10 hover:text-primary transition-colors text-left truncate"
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-xs text-foreground hover:bg-primary/10 hover:text-primary transition-colors text-left truncate cursor-pointer"
                           >
                             <span className="truncate">{f.displayName}</span>
                           </button>

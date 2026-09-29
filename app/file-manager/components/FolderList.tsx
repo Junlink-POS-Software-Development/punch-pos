@@ -239,7 +239,7 @@ export const FolderList: React.FC<FolderListProps> = ({
                         />
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 top-full mt-1 z-40 w-36 rounded-xl border border-border bg-popover p-1 shadow-xl animate-in zoom-in-95 duration-150"
+                          className="absolute right-0 top-full mt-1 z-40 w-36 rounded-xl border border-border bg-card dark:bg-slate-900 p-1 shadow-xl animate-in zoom-in-95 duration-150"
                         >
                           <button
                             type="button"
